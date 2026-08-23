@@ -4,10 +4,15 @@ import {
   buildCollagePrompt,
   buildDoodlePrompt,
   buildFullBodyCollagePrompt,
+  buildGiftPrompt,
+  buildMoodCaptionPrompt,
+  buildStickerPrompt,
   GENERATION_MODES,
   pick,
+  pickMany,
   SURPRISE_PROMPTS,
   THEMES,
+  VIRAL_MOOD_WORDS,
 } from "../../lib/doodle-constants";
 
 const inputSchema = z.object({
@@ -19,7 +24,11 @@ const inputSchema = z.object({
   description: z
     .string()
     .optional()
-    .describe("For 'surprise' only: an optional character description. Ignored by the other skills."),
+    .describe(
+      "Optional extra guidance from the user, used differently per skill: for 'surprise' it's the character " +
+        "description; for 'gift' it's scanned for an occasion (e.g. 'birthday', 'thank you') that changes the " +
+        "card's embellishments and message. Ignored by every other skill.",
+    ),
   refImageUrl: z
     .string()
     .optional()
@@ -84,6 +93,18 @@ export const generateDoodleTool = createTool({
       case "full-body":
         prompt = buildFullBodyCollagePrompt();
         aspectRatio = "3:2";
+        break;
+      case "stickers":
+        prompt = buildStickerPrompt();
+        aspectRatio = "1:1";
+        break;
+      case "mood-captions":
+        prompt = buildMoodCaptionPrompt(pickMany(VIRAL_MOOD_WORDS, 6));
+        aspectRatio = "3:2";
+        break;
+      case "gift":
+        prompt = buildGiftPrompt(input.description);
+        aspectRatio = "1:1";
         break;
       case "surprise": {
         const desc = input.description?.trim() || pick(SURPRISE_PROMPTS);
