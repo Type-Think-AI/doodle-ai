@@ -1,42 +1,47 @@
 ---
 name: sticker-pack
-description: 'Roadmap preview, not yet runnable. Would slice a doodle into a sheet of die-cut stickers with paper grain and a soft drop shadow.'
+description: 'Use when the user wants a sticker sheet, die-cut stickers, printable stickers, or several playful sticker poses from a photo.'
 license: MIT
-user-invocable: false
+user-invocable: true
 metadata:
   id: stickers
   displayName: Sticker Pack
   tagline: Die-cut sticker sheets from your doodles
-  desc: 'Slices a doodle into a sheet of die-cut stickers with paper grain and a soft drop shadow.'
-  longDesc: 'On the roadmap: feed a photo or an existing doodle through a cut-out pass that finds clean silhouettes, then lays each one on a sticker sheet with paper grain, a white die-cut border, and a soft contact shadow.'
+  desc: 'Turns a photo into a sheet of separate die-cut doodle stickers with paper grain and soft shadows.'
+  longDesc: 'Creates a square sticker sheet from a photo, with several distinct illustrated poses of the same character, an even white die-cut border, subtle paper grain, and soft contact shadows.'
   category: freeform
-  tags: [stickers, die cut, roadmap]
-  runnable: false
+  tags: [stickers, die cut, printable]
+  runnable: true
   requiresPhoto: true
   aspectRatio: '1:1'
   sampleIndex: 4
   order: 4
 ---
 
-# Sticker Pack (roadmap)
+# Sticker Pack
 
-Not yet implemented. This package exists so the skill appears in the
-catalog with accurate copy, and so the eventual implementation has a home.
-`runnable: false` keeps it out of the agent, so the model is never offered
-a skill it cannot actually run.
+Turn one uploaded photo into a square sheet of separate die-cut doodle
+stickers featuring the same illustrated character in several poses.
 
-## Intended behaviour
+## When this is the right skill
 
-Take a photo or an existing doodle and produce a sticker sheet:
+Pick this skill for sticker sheets, printable stickers, die-cut sticker
+packs, messaging stickers, or a set of playful character reactions.
 
-1. Find clean silhouettes in the source artwork.
-2. Cut each one out with a white die-cut border of even thickness.
-3. Lay the cut-outs across a sheet with paper grain texture.
-4. Add a soft contact shadow under each sticker.
+## What to draw
 
-## Open questions before building
+Create four or five separate head-and-shoulders stickers of the same
+recognizable character. Give every sticker its own clean white die-cut border,
+subtle paper grain, and soft contact shadow. Use a clean warm-white sheet
+background with enough space between stickers.
 
-- Should the source be a fresh photo, or only doodles already generated in
-  the current thread?
-- How many stickers per sheet, and is the count user-controlled?
-- Does the sheet need to be print-ready (bleed, cut lines, fixed DPI)?
+## How to run it
+
+1. Confirm a photo is attached. If none is available, ask the user to attach one.
+2. Call `generateDoodle` with `skill: "stickers"` and the uploaded photo as `imageUrl`.
+3. Pass `refImageUrl` when the message includes a separate style reference.
+4. Report the result briefly; the app renders the image itself.
+
+## Following up
+
+Offer a different sticker pose set, a mood-caption collage, or a full-body action collage.
