@@ -1,0 +1,739 @@
+/* DoodleBooth home styles, migrated from DoodleMe (src/app/globals.css).
+   Scoped under .doodle-page so this cannot leak into other DoodleBooth
+   surfaces that share the same document.
+   Fonts fall back to system stacks — no new font dependency is added. */
+
+.doodle-page {
+  --paper: #FBF5E9;
+  --ink: #20180F;
+  --ink-soft: #6B6156;
+  --coral: #FF6B4A;
+  --coral-dark: #D9502F;
+  --line: #E4D9C2;
+  --card: #ffffff;
+  --doodle-hand: "Caveat", "Comic Sans MS", cursive;
+  --doodle-body: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  background: var(--paper);
+  background-image: radial-gradient(var(--line) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--doodle-body);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px 48px;
+}
+
+/* The migrated page owns the whole viewport; neutralize the shared app shell
+   so it does not impose a site-wide max-width or padding on this route. */
+.doodle-page.doodle-page { max-width: none; margin-inline: 0; padding-inline: 16px; }
+
+.doodle-page * { box-sizing: border-box; }
+
+.doodle-main { width: 100%; max-width: 420px; }
+
+/* Splash */
+.doodle-page .splash {
+  position: fixed; inset: 0; background: var(--paper); z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .45s ease;
+}
+.doodle-page .splash.hide { opacity: 0; pointer-events: none; }
+.doodle-page .splash svg { width: 120px; height: 120px; }
+.doodle-page .splash path, .doodle-page .splash circle { stroke-dasharray: 400; stroke-dashoffset: 400; }
+
+.doodle-page .topbar { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 2px; }
+.doodle-page .brand {
+  font-family: var(--doodle-hand);
+  font-weight: 700;
+  font-size: 40px;
+  text-align: center;
+  margin: 0;
+  transform: rotate(-1deg);
+}
+.doodle-page .settings-btn {
+  position: absolute; right: 0; top: 2px;
+  width: 36px; height: 36px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.doodle-page .settings-btn svg { width: 18px; height: 18px; }
+.doodle-page .tag {
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+.doodle-page .key-hint { text-align: center; font-size: 12px; color: var(--coral-dark); margin-bottom: 12px; }
+.doodle-page .key-hint button {
+  background: none; border: none; color: var(--coral-dark); text-decoration: underline;
+  cursor: pointer; font-family: inherit; font-size: inherit;
+}
+
+.doodle-page .samples { display: flex; justify-content: center; gap: 8px; margin-bottom: 22px; }
+.doodle-page .samples svg { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--ink); background: #fff; }
+
+.doodle-page .themes { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+.doodle-page .theme-btn {
+  border: 2px solid var(--ink); background: #fff; border-radius: 999px; padding: 6px 14px;
+  font-family: var(--doodle-body); font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.doodle-page .theme-btn .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.doodle-page .theme-btn[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+.doodle-page .panel {
+  background: var(--card);
+  border: 2.5px solid var(--ink);
+  border-radius: 26px 8px 26px 8px / 8px 26px 8px 26px;
+  padding: 22px;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.doodle-page .dropzone {
+  border: 2.5px dashed var(--ink-soft); border-radius: 18px; padding: 26px 16px;
+  text-align: center; cursor: pointer; transition: border-color .15s ease, background .15s ease;
+}
+.doodle-page .dropzone:hover, .doodle-page .dropzone.drag { border-color: var(--coral); background: #FFF6F0; }
+.doodle-page .dropzone svg { width: 40px; height: 40px; margin-bottom: 8px; }
+.doodle-page .dropzone p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+.doodle-page .dropzone p.main { color: var(--ink); font-weight: 500; margin-bottom: 2px; }
+.doodle-page input[type=file] { display: none; }
+.doodle-page .preview-row { display: flex; align-items: center; gap: 12px; }
+.doodle-page .preview-row img { width: 64px; height: 64px; object-fit: cover; border-radius: 50%; border: 2.5px solid var(--ink); }
+.doodle-page .preview-row .meta { flex: 1; font-size: 13px; color: var(--ink-soft); }
+.doodle-page .preview-row .meta.uploading { color: var(--coral); }
+.doodle-page .preview-row .meta.done { color: #37B24D; }
+.doodle-page .preview-row .meta.error { color: var(--coral-dark); }
+.doodle-page .preview-row button.link {
+  background: none; border: none; color: var(--coral-dark); font-size: 13px; cursor: pointer;
+  padding: 0; text-decoration: underline; font-family: var(--doodle-body);
+}
+.doodle-page .cta {
+  width: 100%; height: 54px; margin-top: 16px;
+  border: 2.5px solid var(--ink);
+  border-radius: 225px 15px 255px 15px / 15px 255px 15px 225px;
+  background: var(--coral); color: #fff;
+  font-family: var(--doodle-body); font-weight: 500; font-size: 16px; cursor: pointer;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+}
+.doodle-page .cta:hover:not(:disabled) { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
+.doodle-page .cta:active:not(:disabled) { transform: translate(1px,1px); box-shadow: 2px 2px 0 var(--ink); }
+.doodle-page .cta:disabled { opacity: .55; cursor: default; box-shadow: 4px 4px 0 var(--ink); transform: none; }
+.doodle-page .cta.ghost { background: #fff; color: var(--ink); margin-top: 10px; box-shadow: 3px 3px 0 var(--ink); height: 46px; font-size: 14px; }
+.doodle-page .cta.ghost:hover { box-shadow: 5px 5px 0 var(--ink); }
+.doodle-page button:focus-visible, .doodle-page .dropzone:focus-visible, .doodle-page input:focus-visible { outline: 3px solid #6FB6D9; outline-offset: 2px; }
+.doodle-page .status { text-align: center; font-size: 14px; color: var(--ink-soft); margin-top: 14px; min-height: 20px; }
+.doodle-page .status.err { color: var(--coral-dark); }
+
+/* Agent mode recommendation widget (experimental, local dev only — see README.md) */
+.doodle-page .agent-ask { margin-top: 14px; }
+.doodle-page .agent-ask-toggle,
+.doodle-page #agentAskToggle {
+  background: none; border: none; color: var(--coral-dark); font-size: 13px; cursor: pointer;
+  padding: 0; text-decoration: underline; font-family: var(--doodle-body); display: block; margin: 0 auto;
+}
+.doodle-page .agent-ask-body {
+  margin-top: 10px; padding: 12px; border: 2px dashed var(--ink); border-radius: 14px; background: #FFF9F2;
+}
+.doodle-page .agent-ask-label { display: block; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 6px; }
+.doodle-page .agent-ask-body textarea {
+  width: 100%; resize: vertical; font-family: var(--doodle-body); font-size: 14px;
+  padding: 8px 10px; border: 2px solid var(--ink); border-radius: 10px; box-sizing: border-box;
+}
+.doodle-page .agent-ask-body .cta.ghost { margin-top: 8px; height: 38px; font-size: 13px; }
+.doodle-page .agent-ask-status { font-size: 12.5px; color: var(--ink-soft); margin: 6px 0 0; min-height: 16px; }
+.doodle-page .agent-ask-status.err { color: var(--coral-dark); }
+.doodle-page .agent-ask-answer { font-size: 13px; color: var(--ink); margin: 6px 0 0; line-height: 1.4; }
+
+/* Highlight applied to whichever generation button the agent recommends. */
+.doodle-page .cta.agent-recommended {
+  outline: 3px solid #6FB6D9; outline-offset: 2px;
+  animation: agentGlow 1.4s ease-in-out infinite;
+}
+@keyframes agentGlow {
+  0%, 100% { box-shadow: 4px 4px 0 var(--ink); }
+  50% { box-shadow: 4px 4px 0 var(--ink), 0 0 0 4px rgba(111,182,217,.45); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .doodle-page .cta.agent-recommended { animation: none; }
+}
+.doodle-page .result { text-align: center; }
+.doodle-page .result-stage { width: 220px; height: 220px; margin: 0 auto 14px; border-radius: 50%; border: 2.5px solid var(--ink); overflow: hidden; }
+.doodle-page .result-stage img { width: 100%; height: 100%; object-fit: cover; }
+.doodle-page .result-actions { display: flex; gap: 10px; margin-top: 14px; }
+.doodle-page .result-actions .cta { margin-top: 0; }
+.doodle-page .footer-note { text-align: center; font-size: 11.5px; color: var(--ink-soft); margin-top: 18px; line-height: 1.5; }
+.doodle-page .footer-note a { color: var(--coral-dark); }
+
+/* Utility to toggle blocks from the client script without inline styles. */
+.doodle-page [hidden] { display: none !important; }
+
+/* settings modal */
+.doodle-page .modal-backdrop {
+  position: fixed; inset: 0; background: rgba(32,24,15,.35); z-index: 40;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.doodle-page .modal-backdrop.open { display: flex; }
+.doodle-page .modal {
+  width: 100%; max-width: 420px; background: var(--card);
+  border: 2.5px solid var(--ink); border-radius: 22px 22px 0 0;
+  padding: 20px 22px 26px; box-shadow: 0 -4px 0 var(--ink);
+}
+@media (min-width: 460px) {
+  .doodle-page .modal-backdrop { align-items: center; }
+  .doodle-page .modal { border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); }
+}
+.doodle-page .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.doodle-page .modal-head h2 { font-family: var(--doodle-hand); font-size: 26px; margin: 0; font-weight: 700; }
+.doodle-page .modal-close { background: none; border: none; cursor: pointer; padding: 4px; }
+.doodle-page .modal-close svg { width: 20px; height: 20px; }
+.doodle-page .key-field label { font-size: 12.5px; color: var(--ink-soft); display: block; margin-bottom: 6px; }
+.doodle-page .key-field input {
+  width: 100%; height: 44px; padding: 0 12px; border: 2px solid var(--ink); border-radius: 10px;
+  font-family: var(--doodle-body); font-size: 16px;
+}
+.doodle-page .key-field a { display: inline-block; margin-top: 8px; font-size: 12.5px; color: var(--coral-dark); }
+.doodle-page .key-saved { font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .doodle-page * { transition: none !important; animation: none !important; }
+}
+
+
+/* Reference-inspired motion layer: playful, physical, and state-driven. */
+@keyframes doodleRise { from { opacity: 0; transform: translateY(14px) rotate(var(--tilt, 0deg)); } to { opacity: 1; transform: translateY(0) rotate(var(--tilt, 0deg)); } }
+@keyframes doodleFloat { 0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); } 50% { transform: translateY(-5px) rotate(calc(var(--tilt, 0deg) * -1)); } }
+@keyframes doodleWiggle { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg) translateY(-1px); } }
+@keyframes doodleShine { from { transform: translateX(-120%) skewX(-18deg); } to { transform: translateX(180%) skewX(-18deg); } }
+@keyframes doodlePulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 74, 0); } 50% { box-shadow: 0 0 0 6px rgba(255, 107, 74, .13); } }
+@keyframes doodlePrint { 0% { opacity: 0; transform: translateY(26px) rotate(2deg) scale(.98); } 70% { transform: translateY(-3px) rotate(-1.5deg) scale(1.01); } 100% { opacity: 1; transform: translateY(0) rotate(-1deg) scale(1); } }
+@keyframes splashStroke { to { stroke-dashoffset: 0; } }
+@keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+
+.doodle-page .splash svg { animation: doodleWiggle 1.1s ease-in-out .35s both; }
+.doodle-page .splash path, .doodle-page .splash circle { animation: splashStroke .85s cubic-bezier(.2,.8,.2,1) forwards; }
+.doodle-page .splash #p2 { animation-delay: .12s; }
+.doodle-page .splash #p3 { animation-delay: .28s; }
+.doodle-page .splash #p4 { animation-delay: .36s; }
+.doodle-page .splash #p5 { animation-delay: .44s; }
+.doodle-page .topbar { animation: doodleRise .55s cubic-bezier(.2,.8,.2,1) .08s both; }
+.doodle-page .brand { animation: doodleWiggle 2.8s ease-in-out 1s infinite; }
+.doodle-page .settings-btn { transition: transform .2s cubic-bezier(.2,.8,.2,1), background .2s ease; }
+.doodle-page .settings-btn:hover { transform: rotate(18deg) scale(1.06); background: #FFF6F0; }
+.doodle-page .tag, .doodle-page .key-hint { animation: doodleRise .5s ease .18s both; }
+.doodle-page .samples { animation: doodleRise .55s ease .3s both; }
+.doodle-page .samples > div { --tilt: 0deg; animation: doodleFloat 3.2s ease-in-out infinite; }
+.doodle-page .samples > div:nth-child(2) { --tilt: -1deg; animation-delay: -.7s; }
+.doodle-page .samples > div:nth-child(3) { --tilt: 1deg; animation-delay: -1.3s; }
+.doodle-page .samples > div:nth-child(4) { --tilt: -1deg; animation-delay: -1.9s; }
+.doodle-page .samples > div:nth-child(5) { --tilt: 1deg; animation-delay: -2.5s; }
+.doodle-page .samples svg { transition: transform .2s ease, box-shadow .2s ease; }
+.doodle-page .samples svg:hover { transform: translateY(-5px) rotate(-4deg) scale(1.08); box-shadow: 3px 3px 0 var(--ink); }
+.doodle-page .themes { animation: doodleRise .55s ease .38s both; }
+.doodle-page .theme-btn { transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+.doodle-page .theme-btn:hover { transform: translateY(-2px) rotate(-1deg); box-shadow: 2px 2px 0 var(--ink); }
+.doodle-page .theme-btn:active { transform: translateY(1px); box-shadow: none; }
+.doodle-page .panel { animation: doodleRise .65s cubic-bezier(.2,.8,.2,1) .44s both; }
+.doodle-page .dropzone { animation: doodlePulse 3.4s ease-in-out 1.5s infinite; }
+.doodle-page .dropzone:hover, .doodle-page .dropzone.drag { animation: none; transform: scale(1.01); }
+.doodle-page .cta { position: relative; overflow: hidden; }
+.doodle-page .cta:not(:disabled)::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 28%; background: rgba(255,255,255,.22); transform: translateX(-120%) skewX(-18deg); pointer-events: none; }
+.doodle-page .cta:hover:not(:disabled)::after { animation: doodleShine .65s ease; }
+.doodle-page .preview-row { animation: doodleRise .35s ease both; }
+.doodle-page .result-stage { animation: doodlePrint .65s cubic-bezier(.2,.85,.3,1.18) both; }
+.doodle-page .result-actions { animation: doodleRise .45s ease .18s both; }
+.doodle-page .modal-backdrop.open { animation: modalFade .2s ease both; }
+.doodle-page .modal-backdrop.open .modal { animation: modalUp .42s cubic-bezier(.2,.8,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .doodle-page .splash svg, .doodle-page .splash path, .doodle-page .splash circle,
+  .doodle-page .brand, .doodle-page .samples > div, .doodle-page .dropzone { animation: none !important; }
+}
+
+
+/* Cabinet composition from doodlebooth.html */
+.doodle-page .panel {
+  background: #F4EBDB;
+  border: 3px solid var(--ink);
+  border-radius: 26px 26px 10px 10px;
+  padding: 20px 22px 0;
+  box-shadow: 6px 6px 0 var(--ink);
+  overflow: hidden;
+}
+.doodle-page .dropzone {
+  aspect-ratio: 1 / 1;
+  max-height: 230px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  background: #EFE6D3;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: inset 0 8px 18px rgba(27,23,18,.16), 0 3px 0 rgba(27,23,18,.14);
+}
+.doodle-page .dropzone svg { width: 34px; height: 34px; }
+.doodle-page .cta { background: var(--ink); box-shadow: 4px 4px 0 var(--coral); }
+.doodle-page .cta.ghost { background: #fff; box-shadow: 3px 3px 0 var(--ink); }
+.doodle-page .booth-base {
+  margin: 20px -22px 0;
+  padding: 12px 22px 16px;
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+.doodle-page .slot-mouth { width: 56%; height: 5px; background: #000; border-radius: 2px; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+.doodle-page .slot-label { font-size: 10px; color: #fff; opacity: .55; letter-spacing: 1.4px; text-transform: uppercase; }
+.doodle-page .feet { display: flex; justify-content: space-between; padding: 0 26px; margin-top: -1px; }
+.doodle-page .feet span { width: 34px; height: 9px; background: var(--ink); border-radius: 0 0 5px 5px; }
+.doodle-page #generateBtn::before { content: "●"; margin-right: 8px; color: #FFCE52; }
+.doodle-page .result-stage { border-radius: 6px; box-shadow: 3px 3px 0 var(--ink); }
+
+
+/* Fail-safe: the intro can never keep the app blocked if client JS is delayed. */
+@keyframes splashAutoHide { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+.doodle-page .splash { animation: splashAutoHide .45s ease 1.35s forwards; }
+
+
+/* Final polish: full-width upload window, without the cramped nested frame. */
+.doodle-page .dropzone {
+  width: 100%;
+  height: auto;
+  min-height: 188px;
+  max-height: none;
+  aspect-ratio: auto;
+  margin: 0 0 14px;
+  padding: 24px 16px;
+  border: 2px solid var(--ink-soft);
+  border-style: solid;
+  border-radius: 16px;
+  box-shadow: inset 0 5px 14px rgba(27,23,18,.08);
+}
+.doodle-page .dropzone:hover,
+.doodle-page .dropzone.drag {
+  border-color: var(--coral);
+  background: #FFF6F0;
+}
+.doodle-page .panel { border-width: 2.5px; }
+.doodle-page .cta,
+.doodle-page .cta.ghost { width: 100%; }
+
+
+/* The cabinet is the only frame; keep the upload area borderless. */
+.doodle-page .dropzone,
+.doodle-page .dropzone:hover,
+.doodle-page .dropzone.drag {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: 188px;
+  width: 100%;
+}
+
+
+/* Printed result strip: the booth feeds the finished doodle out as paper. */
+@keyframes printFeed {
+  0% { opacity: 0; max-height: 0; transform: translateY(-28px) rotate(2deg); }
+  65% { opacity: 1; transform: translateY(4px) rotate(-1.8deg); }
+  100% { opacity: 1; max-height: 520px; transform: translateY(0) rotate(-1deg); }
+}
+.doodle-page .result.print-strip {
+  display: block;
+  width: min(100%, 280px);
+  max-width: 640px;
+  max-height: 420px;
+  margin: 0 auto 14px;
+  padding: 10px 10px 14px;
+  overflow: hidden;
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: 3px 3px 0 var(--ink);
+  animation: printFeed .65s cubic-bezier(.2,.85,.3,1.18) both;
+}
+.doodle-page .print-strip .stub {
+  margin: 0 0 6px;
+  text-align: center;
+  font-family: var(--doodle-hand);
+  font-size: 15px;
+  font-weight: 700;
+}
+.doodle-page .print-strip .strip-avatar,
+.doodle-page .print-strip .result-stage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  margin: 0;
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: none;
+}
+.doodle-page .print-strip .result-stage.square-result {
+  width: min(100%, 420px);
+  max-width: 420px;
+  max-height: 420px;
+  aspect-ratio: 1 / 1;
+}
+.doodle-page .print-strip .strip-avatar img,
+.doodle-page .print-strip .result-stage img,
+.doodle-page .print-strip .result-stage svg { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.doodle-page .print-strip .strip-actions { display: flex; gap: 8px; margin-top: 10px; }
+.doodle-page .print-strip .strip-btn { min-height: 38px; height: 38px; margin: 0; padding: 0 8px; border-radius: 8px; font-size: 12.5px; box-shadow: none; }
+@keyframes tokenDrop {
+  0% { transform: translateY(-12px) rotate(-12deg); opacity: .2; }
+  60% { transform: translateY(2px) rotate(8deg); opacity: 1; }
+  100% { transform: translateY(0) rotate(0); opacity: 1; }
+}
+.doodle-page #generateBtn.token-drop::before { animation: tokenDrop .5s cubic-bezier(.4,0,.2,1); }
+
+
+/* Slow thermal-printer feed: reveal the paper edge first, then the full strip. */
+@keyframes printRoll {
+  0% {
+    opacity: 0;
+    max-height: 0;
+    margin-top: -32px;
+    padding-top: 0;
+    padding-bottom: 0;
+    transform: translateY(-18px) rotate(0deg);
+  }
+  18% {
+    opacity: 1;
+    max-height: 28px;
+    margin-top: -12px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    transform: translateY(0) rotate(.4deg);
+  }
+  58% {
+    max-height: 260px;
+    margin-top: 8px;
+    padding-top: 10px;
+    padding-bottom: 12px;
+    transform: translateY(2px) rotate(-.5deg);
+  }
+  100% {
+    opacity: 1;
+    max-height: 520px;
+    margin-top: 14px;
+    padding-top: 10px;
+    padding-bottom: 14px;
+    transform: translateY(0) rotate(-1deg);
+  }
+}
+.doodle-page .result.print-strip {
+  animation: printRoll 2.4s cubic-bezier(.2,.75,.25,1) both;
+}
+
+
+/* Share row on the printed result strip */
+.doodle-page .share-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 10px;
+}
+.doodle-page .share-btn {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.doodle-page .share-btn svg { width: 16px; height: 16px; }
+.doodle-page .share-btn:hover { transform: translateY(-2px); box-shadow: 2px 2px 0 var(--ink); }
+.doodle-page .share-btn:active { transform: translateY(1px); box-shadow: none; }
+.doodle-page .share-whatsapp:hover { background: #25D366; color: #fff; border-color: #128C4A; }
+.doodle-page .share-x:hover { background: var(--ink); color: #fff; }
+.doodle-page .share-copy:hover { background: var(--coral); color: #fff; border-color: var(--coral-dark); }
+.doodle-page .share-copied {
+  text-align: center;
+  font-size: 12px;
+  color: #37B24D;
+  margin: 8px 0 0;
+}
+
+/* Moodboard: locally-saved doodles */
+.doodle-page .moodboard {
+  width: 100%;
+  max-width: 420px;
+  margin: 24px auto 0;
+}
+.doodle-page .moodboard-title {
+  font-family: var(--doodle-hand);
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 2px;
+  transform: rotate(-1deg);
+}
+.doodle-page .moodboard-sub {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+.doodle-page .moodboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.doodle-page .moodboard-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  transform: rotate(var(--tilt, 0deg));
+}
+.doodle-page .moodboard-cell:nth-child(3n+1) { --tilt: -1.5deg; }
+.doodle-page .moodboard-cell:nth-child(3n+2) { --tilt: 1deg; }
+.doodle-page .moodboard-cell:nth-child(3n+3) { --tilt: -0.5deg; }
+.doodle-page .moodboard-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.doodle-page .moodboard-remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.doodle-page .moodboard-remove:hover { background: var(--coral); color: #fff; border-color: var(--coral-dark); }
+
+
+/* Full-screen doodle viewer (Google Photos style) */
+.doodle-page .result-stage,
+.doodle-page .moodboard-cell {
+  cursor: zoom-in;
+}
+body.lightbox-lock { overflow: hidden; }
+
+.doodle-page .lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 11, 6, .92);
+  animation: modalFade .2s ease both;
+}
+.doodle-page .lightbox-backdrop.open { display: flex; }
+.doodle-page .lightbox-figure {
+  margin: 0;
+  max-width: min(92vw, 640px);
+  max-height: 82vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: doodlePrint .35s cubic-bezier(.2,.85,.3,1.1) both;
+}
+.doodle-page .lightbox-figure img {
+  max-width: 100%;
+  max-height: 82vh;
+  border-radius: 10px;
+  border: 2.5px solid #fff;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  object-fit: contain;
+  display: block;
+}
+.doodle-page .lightbox-close,
+.doodle-page .lightbox-nav {
+  position: absolute;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+.doodle-page .lightbox-close:hover,
+.doodle-page .lightbox-nav:hover { background: rgba(255,255,255,.2); }
+.doodle-page .lightbox-close {
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+}
+.doodle-page .lightbox-close svg { width: 18px; height: 18px; }
+.doodle-page .lightbox-nav {
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translateY(-50%);
+}
+.doodle-page .lightbox-nav:hover { transform: translateY(-50%) scale(1.05); }
+.doodle-page .lightbox-nav svg { width: 22px; height: 22px; }
+.doodle-page .lightbox-prev { left: 14px; }
+.doodle-page .lightbox-next { right: 14px; }
+.doodle-page .lightbox-counter {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  color: #fff;
+  font-size: 12.5px;
+  opacity: .8;
+  letter-spacing: .3px;
+}
+
+@media (max-width: 520px) {
+  .doodle-page .lightbox-nav { width: 38px; height: 38px; }
+  .doodle-page .lightbox-prev { left: 6px; }
+  .doodle-page .lightbox-next { right: 6px; }
+}
+
+
+/* Camera capture entry point and live viewfinder dialog */
+.doodle-page .camera-open-btn {
+  width: 100%;
+  height: 46px;
+  margin: 0 0 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--doodle-body);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
+}
+.doodle-page .camera-open-btn svg { width: 18px; height: 18px; }
+.doodle-page .camera-open-btn:hover { transform: translateY(-1px); box-shadow: 3px 3px 0 var(--ink); background: #FFF6F0; }
+.doodle-page .camera-open-btn:active { transform: translateY(1px); box-shadow: none; }
+
+.doodle-page .camera-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: none;
+  flex-direction: column;
+  background: #0c0906;
+  animation: modalFade .2s ease both;
+}
+.doodle-page .camera-backdrop.open { display: flex; }
+.doodle-page .camera-stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.doodle-page .camera-stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.doodle-page .camera-stage video[data-facing="environment"] { transform: none; }
+.doodle-page .camera-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.doodle-page .camera-close svg { width: 18px; height: 18px; }
+.doodle-page .camera-error {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 280px;
+  text-align: center;
+  color: #fff;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 14px 18px;
+  background: rgba(255,255,255,.08);
+  border-radius: 12px;
+}
+.doodle-page .camera-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px calc(20px + env(safe-area-inset-bottom, 0px));
+  background: #0c0906;
+}
+.doodle-page .camera-controls-spacer,
+.doodle-page .camera-switch {
+  width: 44px;
+  height: 44px;
+}
+.doodle-page .camera-switch {
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.doodle-page .camera-switch svg { width: 20px; height: 20px; }
+.doodle-page .camera-shutter {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+}
+.doodle-page .camera-shutter::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .12s ease;
+}
+.doodle-page .camera-shutter:active::after { transform: scale(.82); }

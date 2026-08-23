@@ -1,0 +1,197 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import { SAMPLE_PRESETS } from '../lib/doodle-constants';
+import { buildAvatarSVG } from '../lib/doodle-avatar';
+import '../styles/doodle.css';
+
+// Sample avatars are pure SVG strings built at build time — decorative only.
+const sampleSvgs = SAMPLE_PRESETS.map((preset) =>
+	buildAvatarSVG(preset, { id: 'sample', label: 'Sample', bg: '#fff', accent: '#FF6B4A' }),
+);
+---
+
+<AppLayout
+	title="DoodleBooth — AI Doodle Avatar Generator from Your Photo"
+	description="Turn your photo into a playful hand-drawn doodle avatar with DoodleBooth, powered by PicX AI."
+>
+	<!-- Splash: hand-drawn face that strokes in, then fades (client-driven). -->
+	<div class="doodle-page">
+		<div class="splash" id="splash" aria-hidden="true">
+			<svg viewBox="0 0 240 240" fill="none">
+				<ellipse cx="120" cy="130" rx="58" ry="54" stroke="#20180F" stroke-width="5" id="p1" />
+				<path d="M62 88 C70 50, 95 34, 120 34 C148 34, 172 46, 178 86" stroke="#20180F" stroke-width="5" stroke-linecap="round" id="p2" />
+				<circle cx="100" cy="128" r="4" fill="#20180F" id="p3" />
+				<circle cx="140" cy="128" r="4" fill="#20180F" id="p4" />
+				<path d="M100 156 Q120 170 140 156" stroke="#20180F" stroke-width="4" stroke-linecap="round" id="p5" />
+			</svg>
+		</div>
+
+		<main class="doodle-main">
+			<!-- Topbar -->
+			<div class="topbar">
+				<h1 class="brand">DoodleBooth</h1>
+				<button class="settings-btn" id="settingsBtn" type="button" aria-label="Settings" aria-haspopup="dialog">
+					<svg viewBox="0 0 24 24" fill="none" stroke="#20180F" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"></path></svg>
+				</button>
+			</div>
+			<p class="tag">Turn a photo into a doodle avatar or collage.</p>
+
+			<!-- API key hint (hidden by the client once a key is present) -->
+			<p class="key-hint" id="keyHint">
+				⚙️ <button type="button" id="keyHintBtn">Add your PicX API key</button> to generate with AI
+			</p>
+
+			<!-- Decorative sample rail (build-time SVG) -->
+			<div class="samples" aria-hidden="true">
+				{sampleSvgs.map((svg) => <div set:html={svg} />)}
+			</div>
+
+			<!-- Theme picker -->
+			<div class="themes" id="themes" role="group" aria-label="Choose a theme">
+				<button class="theme-btn" type="button" data-theme-id="pastel" aria-pressed="true"><span class="dot" style="background:#FF8FB1"></span>Pastel</button>
+				<button class="theme-btn" type="button" data-theme-id="neon" aria-pressed="false"><span class="dot" style="background:#39FF88"></span>Neon</button>
+				<button class="theme-btn" type="button" data-theme-id="sunset" aria-pressed="false"><span class="dot" style="background:#FF6B4A"></span>Sunset</button>
+				<button class="theme-btn" type="button" data-theme-id="mono" aria-pressed="false"><span class="dot" style="background:#20180F"></span>Mono</button>
+			</div>
+
+				<div class="panel">
+					<!-- Upload / generate view -->
+				<div id="panelInput">
+					<label class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload a photo" for="fileInput">
+						<svg viewBox="0 0 24 24" fill="none" stroke="#20180F" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4"></path><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+						<p class="main">Tap to upload a photo</p>
+						<p>or drag one in</p>
+					</label>
+
+					<button class="camera-open-btn" type="button" id="cameraOpenBtn">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"></path><circle cx="12" cy="13.5" r="3.5"></circle></svg>
+						Take a photo
+					</button>
+					<input type="file" id="cameraFallbackInput" accept="image/*" capture="environment" hidden />
+
+					<div class="preview-row" id="previewRow" hidden>
+						<img id="previewImg" alt="Your uploaded photo" />
+						<div class="meta idle" id="previewMeta">Ready to doodle</div>
+						<button class="link" type="button" id="changeBtn">Change</button>
+					</div>
+
+					<input type="file" id="fileInput" accept="image/*" />
+
+					<div class="agent-ask" id="agentAsk">
+						<button class="link" type="button" id="agentAskToggle">Not sure which mode? Ask the assistant</button>
+						<div class="agent-ask-body" id="agentAskBody" hidden>
+							<label for="agentAskInput" class="agent-ask-label">Describe what you want</label>
+							<textarea id="agentAskInput" placeholder="e.g. I want a fun action shot of me doing karate" rows="2"></textarea>
+							<button class="cta ghost" type="button" id="agentAskSubmit">Ask</button>
+							<p class="agent-ask-status" id="agentAskStatus" role="status" aria-live="polite"></p>
+							<p class="agent-ask-answer" id="agentAskAnswer" hidden></p>
+						</div>
+					</div>
+
+					<button class="cta ghost" type="button" id="normalBtn">Convert to normal doodle</button>
+					<button class="cta" type="button" id="generateBtn">Create my doodle collage</button>
+					<button class="cta ghost" type="button" id="fullBodyBtn">Create full-body action collage</button>
+					<button class="cta ghost" type="button" id="surpriseBtn">No photo? Surprise me</button>
+					<p class="status" id="statusMsg" role="status" aria-live="polite"></p>
+				</div>
+
+				<!-- Result view -->
+
+				<div class="booth-base" aria-hidden="true">
+					<span class="slot-mouth"></span>
+					<span class="slot-label">collect your doodle</span>
+				</div>
+			</div>
+			<div class="feet" aria-hidden="true"><span></span><span></span></div>
+
+			<div class="result print-strip" id="resultView" hidden>
+				<p class="stub">your doodle creation · booth #1</p>
+				<div class="strip-avatar result-stage" id="resultStage" role="button" tabindex="0" aria-label="View full doodle"></div>
+				<div class="result-actions strip-actions">
+					<button class="cta ghost strip-btn" type="button" id="downloadBtn">Download</button>
+					<button class="cta ghost strip-btn" type="button" id="retryBtn">Try another</button>
+				</div>
+				<div class="share-row" id="shareRow">
+					<button class="share-btn share-whatsapp" type="button" id="shareWhatsappBtn" aria-label="Share on WhatsApp">
+						<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.87.5 3.62 1.44 5.13L2 22l5.13-1.55a9.8 9.8 0 0 0 4.9 1.31h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2Zm5.8 14.02c-.24.68-1.4 1.3-1.93 1.38-.5.08-1.13.11-1.82-.11-.42-.13-.96-.31-1.65-.6-2.9-1.25-4.79-4.16-4.93-4.35-.15-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.02-2.41.26-.29.57-.36.76-.36h.55c.18 0 .43-.03.66.5.24.55.83 2.03.9 2.18.07.15.11.32.02.51-.09.19-.14.31-.27.48-.13.17-.29.38-.41.51-.13.15-.27.31-.12.58.16.28.71 1.18 1.53 1.91 1.05.94 1.94 1.23 2.22 1.37.28.14.44.12.6-.05.16-.17.68-.79.86-1.06.18-.27.36-.22.6-.13.24.08 1.51.71 1.77.84.26.13.44.19.5.3.06.11.06.62-.18 1.3Z"/></svg>
+					</button>
+					<button class="share-btn share-x" type="button" id="shareXBtn" aria-label="Share on X">
+						<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2H22l-7.2 8.24L22.6 22h-6.9l-5.4-7.06L4 22H1l7.7-8.8L1.4 2h7l4.9 6.5L18.9 2Zm-2.4 18h1.9L7.6 4H5.6l10.9 16Z"/></svg>
+					</button>
+					<button class="share-btn share-copy" type="button" id="shareCopyBtn" aria-label="Copy link">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+					</button>
+				</div>
+				<p class="share-copied" id="shareCopied" hidden>Link copied ✓</p>
+			</div>
+
+			<!-- Moodboard: locally-saved doodles, read from localStorage only. -->
+			<section class="moodboard" id="moodboardSection" hidden aria-labelledby="moodboardTitle">
+				<h2 class="moodboard-title" id="moodboardTitle">Your moodboard</h2>
+				<p class="moodboard-sub">Doodles you've generated on this device.</p>
+				<div class="moodboard-grid" id="moodboardGrid"></div>
+			</section>
+
+			<p class="footer-note">
+				Powered by <a href="https://ai.picxstudio.com" target="_blank" rel="noopener noreferrer">PicX AI Studio</a>.
+				Your photo is stored as a managed PicX asset so it can be processed; remove it from PicX when you no longer need it.
+			</p>
+		</main>
+
+		<!-- Full-screen image viewer: opened from the result strip or a moodboard tile. -->
+		<div class="lightbox-backdrop" id="lightboxBackdrop" role="dialog" aria-modal="true" aria-label="Doodle viewer">
+			<button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close viewer">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+			</button>
+			<button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous doodle">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"></path></svg>
+			</button>
+			<figure class="lightbox-figure">
+				<img id="lightboxImg" alt="Doodle avatar, full view" />
+			</figure>
+			<button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Next doodle">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>
+			</button>
+			<p class="lightbox-counter" id="lightboxCounter" hidden></p>
+		</div>
+
+		<!-- Camera capture: live viewfinder with shutter, using getUserMedia. -->
+		<div class="camera-backdrop" id="cameraBackdrop" role="dialog" aria-modal="true" aria-label="Take a photo">
+			<div class="camera-stage">
+				<video id="cameraVideo" autoplay playsinline muted></video>
+				<canvas id="cameraCanvas" hidden></canvas>
+				<button class="camera-close" id="cameraClose" type="button" aria-label="Close camera">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+				</button>
+				<p class="camera-error" id="cameraError" hidden></p>
+			</div>
+			<div class="camera-controls">
+				<button class="camera-switch" id="cameraSwitch" type="button" aria-label="Switch camera" hidden>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 2l4 4-4 4"></path><path d="M21 6H8a5 5 0 0 0-5 5"></path><path d="M7 22l-4-4 4-4"></path><path d="M3 18h13a5 5 0 0 0 5-5"></path></svg>
+				</button>
+				<button class="camera-shutter" id="cameraShutter" type="button" aria-label="Capture photo"></button>
+				<span class="camera-controls-spacer" aria-hidden="true"></span>
+			</div>
+		</div>
+
+		<!-- Settings modal -->
+		<div class="modal-backdrop" id="settingsBackdrop">
+			<div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
+				<div class="modal-head">
+					<h2>Settings</h2>
+					<button class="modal-close" type="button" id="settingsClose" aria-label="Close settings">
+						<svg viewBox="0 0 24 24" fill="none" stroke="#20180F" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+					</button>
+				</div>
+				<div class="key-field">
+					<label for="apiKeyInput">PicX API Key</label>
+					<input type="password" id="apiKeyInput" placeholder="pxsk_..." autocomplete="off" />
+					<a href="https://ai.picxstudio.com/api" target="_blank" rel="noopener noreferrer">Get a free key at PicX Studio ↗</a>
+					<p class="key-saved" id="keySaved" hidden>✓ Key saved locally. It's only sent to PicX API for generation.</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="../scripts/doodle.ts"></script>
+</AppLayout>

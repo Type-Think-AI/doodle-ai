@@ -1,0 +1,239 @@
+/* Content page styles (About, and other prose pages) — DoodleBooth theme */
+
+/* Width and horizontal padding come from the global app shell in app.css. */
+.page {
+  padding-bottom: 80px;
+}
+
+.page-hero {
+  text-align: center;
+  padding: 20px 0 34px;
+}
+.page-hero .eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dimmer);
+}
+.page-hero h1 {
+  margin-top: 10px;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+@media (max-width: 560px) {
+  .page-hero h1 {
+    font-size: 1.55rem;
+  }
+}
+.page-hero h1 .grad {
+  background: var(--ig-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.page-hero .lede {
+  margin: 12px auto 0;
+  max-width: 560px;
+  color: var(--text-dim);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Prose */
+.prose {
+  overflow-wrap: break-word;
+}
+.prose a,
+.prose code {
+  overflow-wrap: anywhere;
+}
+.prose h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 36px 0 10px;
+}
+.prose h2:first-child {
+  margin-top: 0;
+}
+.prose p {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.prose strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.prose a {
+  color: var(--accent);
+  font-weight: 600;
+}
+.prose a:hover {
+  text-decoration: underline;
+}
+
+/* Numbered step list */
+.steps {
+  list-style: none;
+  counter-reset: step;
+  margin: 4px 0 8px;
+}
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 12px 0 12px 44px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.93rem;
+  line-height: 1.6;
+}
+.steps li:last-child {
+  border-bottom: none;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.steps li b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Fact grid */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 8px 0 4px;
+}
+.fact {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.fact .k {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dimmer);
+  font-weight: 700;
+}
+.fact .v {
+  margin-top: 4px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Callout */
+.callout {
+  background: var(--accent-softer);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 22px 0;
+}
+.callout p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+/* Origin / credit card */
+.origin {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  margin: 8px 0 4px;
+}
+.origin-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+}
+.origin-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--card-hover);
+  flex-shrink: 0;
+}
+.origin-name {
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.origin-meta {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--text-dimmer);
+}
+.origin blockquote {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-softer);
+  border-radius: 0 10px 10px 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  font-style: italic;
+}
+.origin-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 14px;
+}
+.origin-links a {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.origin-links a:hover {
+  text-decoration: underline;
+}
+
+/* CTA */
+.page-cta {
+  margin-top: 40px;
+  text-align: center;
+}
+.page-cta a {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 13px 26px;
+  border-radius: 999px;
+  transition: filter 0.15s ease;
+}
+.page-cta a:hover {
+  filter: brightness(1.08);
+}

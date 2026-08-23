@@ -1,0 +1,32 @@
+{
+  "name": "doodlebooth-agent",
+  "description": "Standalone next-version DoodleBooth Agent for normal doodles, collages, action modes, and future skills.",
+  "dependencies": {
+    "@astrojs/cloudflare": "12.6.12",
+    "@astrojs/mdx": "4.3.13",
+    "@astrojs/rss": "4.0.14",
+    "@mastra/core": "1.61.0",
+    "astro": "5.16.9",
+    "picx-ai": "0.2.1",
+    "typescript": "5.9.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.0",
+    "wrangler": "4.88.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "private": true,
+  "scripts": {
+    "astro": "astro",
+    "build": "astro build",
+    "cf-typegen": "wrangler types",
+    "check": "astro build && tsc && wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "dev": "astro dev",
+    "preview": "astro build && wrangler dev"
+  },
+  "type": "module"
+}

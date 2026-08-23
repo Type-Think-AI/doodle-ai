@@ -1,0 +1,102 @@
+/* DoodleBooth app styles */
+:root {
+  --bg: #faf7f5;
+  --card: #ffffff;
+  --card-hover: #f5f1ee;
+  --border: #eee1db;
+  --text: #18181b;
+  --text-dim: #6b6b76;
+  --text-dimmer: #9a9aa5;
+  --accent: #e2725b;
+  --accent-soft: rgba(226, 114, 91, 0.12);
+  --accent-softer: rgba(226, 114, 91, 0.06);
+  --accent-soft-hover: rgba(226, 114, 91, 0.19);
+  --accent-softer-hover: rgba(226, 114, 91, 0.12);
+  --gold: #c9960c;
+  --silver: #8c8c96;
+  --bronze: #b06a2e;
+  --ig1: #feda75;
+  --ig2: #fa7e1e;
+  --ig3: #d62976;
+  --ig4: #962fbf;
+  --ig5: #4f5bd5;
+  --ig-gradient: linear-gradient(45deg, var(--ig1), var(--ig2), var(--ig3), var(--ig4), var(--ig5));
+  --radius: 18px;
+
+  /* Shared app shell metrics — navbar, main and footer all read these
+     so the horizontal edges can never drift out of alignment. */
+  --shell-max: 920px;
+  --shell-pad: 40px;
+}
+
+/* Responsive padding scale for the shell */
+@media (max-width: 900px) {
+  :root { --shell-pad: 24px; }
+}
+@media (max-width: 560px) {
+  :root { --shell-pad: 16px; }
+}
+
+/* ---------------------------------------------------------------------------
+   GLOBAL APP SHELL
+   One rule owns the horizontal geometry for every page in the project.
+   Any new page inherits it automatically by using <main>, or by adding the
+   .shell class to its top-level container. Never re-declare max-width or
+   horizontal padding on a page — set --shell-max locally if a page genuinely
+   needs a different measure.
+   --------------------------------------------------------------------------- */
+main,
+.page,
+.admin-wrap,
+.shell {
+  width: 100%;
+  max-width: var(--shell-max);
+  margin-inline: auto;
+  padding-inline: var(--shell-pad);
+  min-width: 0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body > main,
+body > .page {
+  flex: 1 0 auto;
+}
+
+body > footer {
+  margin-top: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* Dark mode */
+body.dark {
+  --bg: #121011;
+  --card: #1c1a1b;
+  --card-hover: #252223;
+  --border: #332e2c;
+  --text: #f6f3f2;
+  --text-dim: #aba5a2;
+  --text-dimmer: #726c6a;
+  --accent-soft: rgba(226, 114, 91, 0.20);
+  --accent-softer: rgba(226, 114, 91, 0.1);
+  --accent-soft-hover: rgba(226, 114, 91, 0.29);
+  --accent-softer-hover: rgba(226, 114, 91, 0.17);
+}

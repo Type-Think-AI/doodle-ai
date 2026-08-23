@@ -1,0 +1,105 @@
+---
+---
+
+<header class="app-header">
+  <div class="logo">
+    <img class="mark" src="/icon-192.png" alt="doodlebooth.lol" width="48" height="48" />
+    <a href="/">doodlebooth<span>.lol</span></a>
+  </div>
+  <nav class="nav-links">
+    <a href="/blog">Blog</a>
+    <a href="/about">About</a>
+    <button class="theme-toggle" id="themeToggle" title="Switch theme">☾</button>
+  </nav>
+</header>
+
+<style>
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px var(--shell-pad);
+    width: 100%;
+    max-width: var(--shell-max);
+    margin: 0 auto;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.34rem;
+    font-family: "Arial Rounded MT Bold", "Trebuchet MS", Arial, sans-serif;
+    letter-spacing: -0.03em;
+  }
+  .logo .mark {
+    width: 48px;
+    height: 48px;
+    border-radius: 11px;
+    display: block;
+    object-fit: contain;
+  }
+  .logo span {
+    background: var(--ig-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .nav-links {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .nav-links a {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-weight: 500;
+    transition: color 0.15s ease;
+  }
+  .nav-links a:hover {
+    color: var(--text);
+  }
+  .nav-links a:focus-visible,
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+    color: var(--text);
+  }
+  .theme-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--card-hover);
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+  }
+  .theme-toggle:hover {
+    color: var(--text);
+  }
+  @media (max-width: 480px) {
+    .app-header {
+      padding: 14px var(--shell-pad);
+    }
+    .logo {
+      font-size: 1.08rem;
+      gap: 8px;
+    }
+    .logo .mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+    }
+    .nav-links {
+      gap: 12px;
+    }
+    .nav-links a {
+      font-size: 0.82rem;
+    }
+  }
+</style>

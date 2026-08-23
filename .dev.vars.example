@@ -1,0 +1,2 @@
+# Local-only secrets for DoodleBooth Agent. Copy to .dev.vars and fill real values.
+OPENROUTER_API_KEY=replace-with-your-openrouter-key

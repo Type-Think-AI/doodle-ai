@@ -1,0 +1,118 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/app.css';
+import '../styles/page.css';
+---
+
+<AppLayout
+	title="About — doodlebooth.lol"
+	description="What doodlebooth.lol is: a shared wall where anyone can draw a quick doodle and drop it in for everyone to see."
+>
+	<Navbar />
+
+	<main class="page">
+		<div class="page-hero">
+			<div class="eyebrow">About</div>
+			<h1>A shared wall for <span class="grad">tiny doodles</span></h1>
+			<p class="lede">
+				doodlebooth.lol is a public drawing wall. Sketch something in the booth, drop it in, and
+				it lands on the wall next to everyone else's. No skill required — the messier the better.
+			</p>
+		</div>
+
+		<div class="prose">
+			<h2>The idea</h2>
+			<p>
+				Everyone doodles. On napkins, in the margins of notebooks, on the back of receipts — and
+				then throws them away. So we built the dumbest, most honest home for them:
+				<strong>one wall, open to anyone, where a 20-second scribble sits right next to
+				everyone else's</strong>. No accounts, no feed algorithm, no likes to chase.
+			</p>
+			<p>
+				A stick figure counts. A masterpiece counts. They land on the same wall and that's the
+				whole point.
+			</p>
+
+			<h2>How it works</h2>
+			<ol class="steps">
+				<li><b>Open the booth.</b> A blank canvas, a few brushes, and some colors. No sign up, no login, no email.</li>
+				<li><b>Draw something.</b> Anything. Takes twenty seconds or twenty minutes — your call.</li>
+				<li><b>Drop it on the wall.</b> Your doodle joins the shared wall for everyone to see.</li>
+				<li><b>Browse the rest.</b> Scroll the wall and enjoy what strangers have scribbled.</li>
+			</ol>
+
+			<h2>Real drawings, stored simply</h2>
+			<p>
+				Doodles are saved as images the moment you drop them in, then served from our own storage
+				so the wall loads fast. Nothing is generated or mocked — every square on the wall is
+				something a real person drew in the booth.
+			</p>
+
+			<div class="facts">
+				<div class="fact">
+					<div class="k">Who can draw</div>
+					<div class="v">Anyone</div>
+				</div>
+				<div class="fact">
+					<div class="k">Login required</div>
+					<div class="v">None</div>
+				</div>
+				<div class="fact">
+					<div class="k">Cost</div>
+					<div class="v">Free</div>
+				</div>
+				<div class="fact">
+					<div class="k">Skill needed</div>
+					<div class="v">Zero</div>
+				</div>
+			</div>
+
+			<h2>What this isn't</h2>
+			<p>
+				There's no scoring, no ranking, and no reward for drawing — you're adding a doodle to a
+				novelty wall and nothing more. We don't ask for your password, we don't build a profile
+				of you, and we only ever store the drawing you chose to submit.
+			</p>
+
+			<div class="callout">
+				<p>
+					<strong>On moderation:</strong> if a doodle on the wall shouldn't be there, we'll take
+					it down. No form, no questions. See the terms for what's allowed.
+				</p>
+			</div>
+
+			<h2>Who made this</h2>
+			<p>
+				doodlebooth.lol is a small side project — built fast, deployed on Cloudflare's edge, and
+				intentionally kept to one screen. It's the kind of thing that exists because it was fun
+				enough to ship.
+			</p>
+		</div>
+
+		<div class="page-cta">
+			<a href="/">Go draw something →</a>
+		</div>
+	</main>
+
+	<Footer />
+
+	<script>
+		// Theme toggle (shared with the wall).
+		const themeToggle = document.getElementById('themeToggle');
+		if (themeToggle) {
+			const saved = localStorage.getItem('doodlebooth-theme');
+			if (saved === 'dark') {
+				document.body.classList.add('dark');
+				themeToggle.textContent = '☀';
+			}
+			themeToggle.addEventListener('click', () => {
+				document.body.classList.toggle('dark');
+				const isDark = document.body.classList.contains('dark');
+				localStorage.setItem('doodlebooth-theme', isDark ? 'dark' : 'light');
+				themeToggle.textContent = isDark ? '☀' : '☾';
+			});
+		}
+	</script>
+</AppLayout>

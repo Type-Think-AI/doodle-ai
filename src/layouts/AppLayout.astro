@@ -1,0 +1,109 @@
+---
+interface Props {
+	title?: string;
+	description?: string;
+	image?: string;
+	noindex?: boolean;
+}
+
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+
+const {
+	title = `${SITE_TITLE} — AI Doodle Avatar Generator`,
+	description = SITE_DESCRIPTION,
+	image = '/icon-512.png',
+	noindex = false,
+} = Astro.props;
+
+const site = Astro.site ?? new URL('https://doodlebooth.lol');
+const canonical = new URL(Astro.url.pathname, site);
+const ogImage = new URL(image, site);
+
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@graph': [
+		{
+			'@type': 'WebSite',
+			'@id': `${site.href}#website`,
+			name: 'DoodleBooth',
+			url: site.href,
+			description: SITE_DESCRIPTION,
+		},
+		{
+			'@type': 'SoftwareApplication',
+			'@id': `${site.href}#application`,
+			name: 'DoodleBooth',
+			applicationCategory: 'MultimediaApplication',
+			operatingSystem: 'Web',
+			url: site.href,
+			description: SITE_DESCRIPTION,
+			image: ogImage.href,
+			isAccessibleForFree: true,
+		},
+	],
+};
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="application-name" content="DoodleBooth" />
+		<meta name="referrer" content="strict-origin-when-cross-origin" />
+
+		<!-- Icons -->
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<link rel="manifest" href="/site.webmanifest" />
+		<meta name="theme-color" content="#e2725b" />
+
+		<!-- Primary -->
+		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="doodlebooth.lol" />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:alt" content="DoodleBooth hand-drawn avatar creator" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImage} />
+		<meta name="twitter:image:alt" content="DoodleBooth hand-drawn avatar creator" />
+
+		<!-- Structured data -->
+		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+		<!--
+			DataFast analytics (default script — uses cookies for visitor identification).
+			Added here so every page, current and future, is covered from one place.
+			Notes:
+			 - Cookie usage is disclosed in /privacy. If this is ever swapped for
+			   script.cookieless.js, the DataFast dashboard toggle must match the URL.
+			 - DataFast disables itself on localhost, so this only reports in production.
+		-->
+		<script
+			defer
+			data-website-id="dfid_dmS4cKTHVBZqQ8Yln9TTM"
+			data-domain="doodlebooth.lol"
+			src="https://datafa.st/js/script.js"
+		></script>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>

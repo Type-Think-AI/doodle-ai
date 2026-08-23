@@ -1,0 +1,30 @@
+# DoodleBooth
+
+> DoodleBooth turns a selected photo into a playful, hand-drawn doodle avatar using the PicX image API.
+
+## Product
+- Homepage: https://doodlebooth.lol/
+- Upload a photo and generate a doodle avatar.
+- Choose Pastel, Neon, Sunset, or Mono visual themes.
+- Download the generated avatar locally as `doodlebooth-avatar.png`.
+
+## Technical flow
+1. The browser selects a photo.
+2. `/api/upload` sends it to PicX managed assets.
+3. The returned managed asset URL is sent to `/api/generate`.
+4. PicX returns the generated image URL.
+5. The browser downloads the result locally.
+
+## Important boundaries
+- DoodleBooth is an Astro 5 application deployed to Cloudflare Workers.
+- It does not use a local database, D1, R2, or Cloudinary.
+- User images are processed through PicX managed assets.
+- API routes are implementation endpoints and should not be indexed.
+
+## Public pages
+- [Homepage](https://doodlebooth.lol/)
+- [About](https://doodlebooth.lol/about/)
+- [Blog](https://doodlebooth.lol/blog/)
+- [Privacy](https://doodlebooth.lol/privacy/)
+- [Terms](https://doodlebooth.lol/terms/)
+- [Sitemap](https://doodlebooth.lol/sitemap.xml)

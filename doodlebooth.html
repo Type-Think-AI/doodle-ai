@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Doodle Booth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF5E9;
+    --ink:#1B1712;
+    --pink:#FF6B4A;
+    --gold:#E8A33D;
+    --coral:#FF6B4A;
+    --ink-soft:#6B6156;
+    --line:#E4D9C2;
+    --card:#ffffff;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:radial-gradient(var(--line) 1px, transparent 1px);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:26px 16px 48px;
+  }
+  main{ width:100%; max-width:420px; }
+
+  /* splash */
+  .splash{ position:fixed; inset:0; background:var(--paper); z-index:60; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; transition:opacity .45s ease; }
+  .splash.hide{ opacity:0; pointer-events:none; }
+  .splash svg{ width:100px; height:100px; }
+  .splash path, .splash circle{ stroke-dasharray:400; stroke-dashoffset:400; }
+  .splash .word{ font-family:'Caveat', cursive; font-weight:700; font-size:30px; letter-spacing:.3px; opacity:0; transition:opacity .4s ease .5s; }
+  .splash.show-word .word{ opacity:1; }
+
+  /* booth cabinet */
+  .cabinet{
+    position:relative;
+    background:var(--card);
+    border:3px solid var(--ink);
+    border-radius:26px 26px 10px 10px;
+    box-shadow:6px 6px 0 var(--ink);
+    overflow:hidden;
+  }
+  /* marquee sign */
+  .marquee{
+    position:relative;
+    background:var(--card);
+    border-bottom:3px solid var(--ink);
+    padding:22px 20px 18px;
+    text-align:center;
+  }
+  .settings-btn{
+    position:absolute; right:12px; top:12px; width:32px; height:32px;
+    border:2px solid var(--ink); border-radius:50%; background:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:3;
+  }
+  .settings-btn svg{ width:16px; height:16px; }
+  .wordmark{
+    font-family:'Caveat', cursive; font-weight:700;
+    font-size:44px; line-height:1; letter-spacing:.3px;
+    margin:0 0 8px; color:var(--ink);
+    transform:rotate(-1.2deg);
+  }
+  .tag-line{
+    display:inline-block; font-size:11.5px; font-weight:500; color:#fff;
+    background:var(--pink); padding:4px 12px; border-radius:999px;
+    border:2px solid var(--ink); letter-spacing:.3px;
+  }
+
+  /* booth body */
+  .booth-body{
+    background:#F4EBDB;
+    padding:20px 22px 18px;
+  }
+  .step-label{ font-size:12px; color:var(--ink-soft); margin:0 0 9px; text-align:center; }
+  .step-label b{ color:var(--ink); }
+  .pill-row{ display:flex; gap:8px; justify-content:center; margin-bottom:18px; flex-wrap:wrap; }
+  .theme-btn{
+    border:2px solid var(--ink); background:#fff; border-radius:999px; padding:6px 13px;
+    font-family:'Space Grotesk', sans-serif; font-size:12.5px; cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .theme-btn .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .theme-btn[aria-pressed="true"]{ background:var(--ink); color:#fff; }
+
+  /* booth base */
+  .booth-base{
+    background:var(--ink);
+    padding:12px 22px 16px;
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+  }
+  .slot-mouth{
+    width:56%; height:5px; background:#000; border-radius:2px;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.08);
+  }
+  .slot-label{ font-size:10px; color:#fff; opacity:.55; letter-spacing:1.4px; text-transform:uppercase; }
+  .feet{ display:flex; justify-content:space-between; padding:0 26px; margin-top:-3px; }
+  .feet span{ width:34px; height:9px; background:var(--ink); border-radius:0 0 5px 5px; display:block; }
+
+  /* window */
+  .window{
+    position:relative; width:100%; aspect-ratio:1/1; max-height:230px;
+    border:3px solid var(--ink); border-radius:18px; background:#EFE6D3;
+    overflow:hidden; cursor:pointer; margin:0 auto 8px;
+    box-shadow:inset 0 8px 18px rgba(27,23,18,.22), inset 0 -2px 6px rgba(27,23,18,.10), 0 3px 0 rgba(27,23,18,.14);
+  }
+  .win-layer{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:14px; }
+  .win-layer.active{ display:flex; }
+  .win-idle svg{ width:34px; height:34px; margin-bottom:6px; }
+  .win-idle p{ margin:0; font-size:13px; color:var(--ink-soft); }
+  .win-idle p.main{ color:var(--ink); font-weight:500; margin-bottom:2px; }
+  .win-idle img{ width:64px; height:64px; object-fit:cover; border-radius:50%; border:2.5px solid var(--ink); margin-bottom:6px; }
+  .win-countdown{ z-index:3; }
+  .countdown-text{ font-family:'Space Grotesk', sans-serif; font-weight:500; font-size:42px; color:var(--pink); display:inline-block; }
+  .countdown-text.small{ font-size:19px; color:var(--ink); }
+  .win-flash{ position:absolute; inset:0; background:radial-gradient(circle, #fff 0%, #fff 60%, rgba(255,255,255,.4) 100%); opacity:0; z-index:6; pointer-events:none; transition:opacity .15s ease; }
+  .iris{
+    position:absolute; inset:-4%; background:var(--ink); z-index:5;
+    clip-path:circle(0% at 50% 50%);
+    transition:clip-path .55s cubic-bezier(.6,0,.35,1);
+  }
+  .iris.closed{ clip-path:circle(75% at 50% 50%); }
+  .shutter-msg{
+    position:absolute; inset:0; z-index:6; display:none; align-items:center; justify-content:center;
+    color:#fff; font-size:12.5px; opacity:.9; letter-spacing:.5px;
+  }
+  .shutter-msg.show{ display:flex; }
+  .win-result img, .win-result svg{ width:100%; height:100%; }
+
+  input[type=file]{ display:none; }
+  .change-link{
+    display:block; text-align:center; background:none; border:none; color:var(--pink);
+    font-size:12.5px; cursor:pointer; margin:0 0 14px; text-decoration:underline;
+    font-family:'Space Grotesk', sans-serif;
+  }
+
+  .token-btn{
+    width:100%; height:56px; border:3px solid var(--ink); border-radius:16px;
+    background:var(--ink); color:#fff; font-family:'Space Grotesk', sans-serif; font-weight:500; font-size:15px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+    box-shadow:4px 4px 0 var(--pink); transition:transform .12s ease, box-shadow .12s ease, background .12s ease, color .12s ease;
+  }
+  .token-btn:hover:not(:disabled){ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--pink); }
+  .token-btn:active:not(:disabled){ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--pink); }
+  .token-btn:disabled{
+    cursor:default; transform:none; box-shadow:none;
+    background:#fff; color:var(--ink-soft); border-color:var(--line);
+  }
+  .token-btn:disabled .coin{ background:var(--line); border-color:#fff; }
+  .coin{
+    width:20px; height:20px; border-radius:50%; background:var(--gold); border:2px solid #fff;
+    display:inline-block; flex-shrink:0; position:relative;
+  }
+  .coin.drop{ animation:coinDrop .5s cubic-bezier(.4,0,.2,1); }
+  @keyframes coinDrop{
+    0%{ transform:translateY(-22px) rotate(0); opacity:0; }
+    45%{ opacity:1; }
+    70%{ transform:translateY(2px) rotate(300deg); }
+    100%{ transform:translateY(0) rotate(360deg); opacity:1; }
+  }
+  .coin.drop::after{
+    content:''; position:absolute; inset:-4px; border-radius:50%; border:2px solid var(--gold);
+    animation:coinRing .4s ease .35s;
+  }
+  @keyframes coinRing{
+    0%{ transform:scale(.4); opacity:.9; }
+    100%{ transform:scale(2.2); opacity:0; }
+  }
+  .ghost-link{
+    display:block; width:100%; text-align:center; background:none; border:none;
+    color:var(--ink-soft); font-size:12.5px; cursor:pointer; margin-top:10px; text-decoration:underline;
+    font-family:'Space Grotesk', sans-serif;
+  }
+  .status{ text-align:center; font-size:13px; color:var(--ink-soft); margin-top:12px; min-height:18px; }
+  .err{ color:var(--pink); }
+
+  /* printed strip */
+  .print-strip{
+    max-width:220px; margin:0 auto; background:#fff; border:2.5px solid var(--ink); border-radius:6px;
+    padding:10px 10px 14px; box-shadow:3px 3px 0 var(--ink);
+    transform:translateY(-30px) rotate(0deg); opacity:0; max-height:0; overflow:hidden;
+    transition:transform .3s ease, opacity .3s ease, max-height .3s ease, margin .3s ease;
+  }
+  .print-strip.peek{ opacity:1; max-height:22px; margin-top:14px; transform:translateY(0) rotate(0deg); transition-duration:.35s; }
+  .print-strip.show{
+    opacity:1; max-height:400px; margin-top:14px;
+    transform:translateY(0) rotate(-1.2deg);
+    transition:transform .55s cubic-bezier(.2,.85,.3,1.25), opacity .3s ease, max-height .55s cubic-bezier(.2,.85,.3,1.05), margin .3s ease;
+  }
+  .print-strip .stub{ font-family:'Caveat', cursive; font-weight:700; font-size:15px; text-align:center; margin:0 0 6px; }
+  .strip-avatar{ width:100%; aspect-ratio:1/1; border-radius:4px; overflow:hidden; border:1.5px solid var(--line); }
+  .strip-avatar img, .strip-avatar svg{ width:100%; height:100%; }
+  .strip-actions{ display:flex; gap:8px; margin-top:10px; }
+  .strip-btn{
+    flex:1; height:38px; border:2px solid var(--ink); border-radius:8px; background:#fff;
+    font-family:'Space Grotesk', sans-serif; font-size:12.5px; cursor:pointer;
+  }
+  .strip-btn.primary{ background:var(--pink); color:#fff; }
+
+  button:focus-visible, .window:focus-visible, input:focus-visible{ outline:3px solid #6FB6D9; outline-offset:2px; }
+  .footer-note{ text-align:center; font-size:11px; color:var(--ink-soft); margin-top:16px; line-height:1.5; }
+
+  /* settings modal */
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(27,23,18,.4); z-index:40; display:none; align-items:flex-end; justify-content:center; }
+  .modal-backdrop.open{ display:flex; }
+  .modal{ width:100%; max-width:420px; background:var(--card); border:3px solid var(--ink); border-radius:22px 22px 0 0; padding:20px 22px 26px; box-shadow:0 -4px 0 var(--ink); }
+  @media (min-width:460px){ .modal-backdrop{ align-items:center; } .modal{ border-radius:22px; box-shadow:5px 5px 0 var(--ink); } }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .modal-head h2{ font-family:'Caveat', cursive; font-size:26px; margin:0; font-weight:700; }
+  .modal-close{ background:none; border:none; cursor:pointer; padding:4px; }
+  .modal-close svg{ width:20px; height:20px; }
+  .mode-toggle{ display:flex; gap:8px; margin-bottom:14px; }
+  .mode-btn{ flex:1; border:2px solid var(--ink); background:#fff; border-radius:12px; padding:10px 8px; font-family:'Space Grotesk', sans-serif; font-size:13px; cursor:pointer; }
+  .mode-btn[aria-pressed="true"]{ background:var(--ink); color:#fff; }
+  .key-field{ display:none; }
+  .key-field.show{ display:block; }
+  .key-field label{ font-size:12.5px; color:var(--ink-soft); display:block; margin-bottom:6px; }
+  .key-field input{ width:100%; height:44px; padding:0 12px; border:2px solid var(--ink); border-radius:10px; font-family:'Space Grotesk', sans-serif; font-size:14px; }
+  .key-field a{ display:inline-block; margin-top:8px; font-size:12.5px; color:var(--pink); }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="splash" id="splash" aria-hidden="true">
+  <svg viewBox="0 0 240 240" fill="none">
+    <ellipse cx="120" cy="130" rx="58" ry="54" stroke="#1B1712" stroke-width="5" id="p1"/>
+    <path d="M62 88 C70 50, 95 34, 120 34 C148 34, 172 46, 178 86" stroke="#1B1712" stroke-width="5" stroke-linecap="round" id="p2"/>
+    <circle cx="100" cy="128" r="4" fill="#1B1712" id="p3"/>
+    <circle cx="140" cy="128" r="4" fill="#1B1712" id="p4"/>
+    <path d="M100 156 Q120 170 140 156" stroke="#1B1712" stroke-width="4" stroke-linecap="round" id="p5"/>
+  </svg>
+  <span class="word">Doodle Booth</span>
+</div>
+
+<main>
+  <div class="cabinet">
+    <div class="marquee">
+      <button class="settings-btn" id="settingsBtn" aria-label="Settings" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1B1712" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>
+      </button>
+      <h1 class="wordmark">Doodle Booth</h1>
+      <p class="tag-line">Free · unlimited doodles</p>
+    </div>
+
+    <div class="booth-body">
+      <p class="step-label"><b>1</b> · Pick your frame</p>
+      <div class="pill-row" id="themes" role="group" aria-label="Choose a frame"></div>
+
+      <div class="window" id="windowEl" tabindex="0" role="button" aria-label="Upload a photo">
+        <div class="win-layer win-idle active" id="winIdle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1B1712" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <p class="main">Look at the window</p>
+          <p>tap to upload a photo</p>
+        </div>
+        <div class="win-layer win-countdown" id="winCountdown">
+          <span class="countdown-text" id="countdownText">Get Ready</span>
+        </div>
+        <div class="win-layer win-result" id="winResult"></div>
+        <div class="win-flash" id="winFlash"></div>
+        <div class="iris" id="iris"></div>
+        <div class="shutter-msg" id="shutterMsg"><span id="shutterMsgText">developing</span></div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*">
+      <button class="change-link" id="changePhoto" style="display:none;">Change photo</button>
+
+      <p class="step-label"><b>2</b> · Insert token</p>
+      <button class="token-btn" id="generateBtn" disabled>
+        <span class="coin" id="coinIcon"></span> Insert token to doodle
+      </button>
+      <button class="ghost-link" id="surpriseBtn">No photo? Surprise me instead</button>
+      <p class="status" id="statusMsg"></p>
+    </div>
+
+    <div class="booth-base">
+      <div class="slot-mouth" aria-hidden="true"></div>
+      <span class="slot-label">collect your doodle</span>
+    </div>
+  </div>
+  <div class="feet" aria-hidden="true"><span></span><span></span></div>
+
+  <div class="print-strip" id="printStrip">
+    <p class="stub">your doodle · booth #1</p>
+    <div class="strip-avatar" id="stripAvatar"></div>
+    <div class="strip-actions">
+      <button class="strip-btn primary" id="downloadBtn">Download</button>
+      <button class="strip-btn" id="retryBtn">Try again</button>
+    </div>
+  </div>
+
+  <p class="footer-note">Your photo is analyzed once to guide the drawing, then discarded. Nothing is stored.</p>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="modal-head">
+      <h2>Settings</h2>
+      <button class="modal-close" id="modalClose" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1B1712" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="mode-toggle" role="group" aria-label="Generation mode">
+      <button class="mode-btn" id="modeDoodleBtn" aria-pressed="true" type="button">Doodle · free</button>
+      <button class="mode-btn" id="modeAiBtn" aria-pressed="false" type="button">AI art · your key</button>
+    </div>
+    <div class="key-field" id="keyField">
+      <label for="apiKeyInput">Gemini API key</label>
+      <input type="password" id="apiKeyInput" placeholder="Paste your key" autocomplete="off">
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" id="getKeyLink">Get a free key ↗</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- theme (frame) data ---------- */
+var THEMES = [
+  { id:"pastel", label:"Pastel", bg:"#FCEFE3", accent:"#FF8FB1" },
+  { id:"neon",   label:"Neon",   bg:"#171423", accent:"#39FF88" },
+  { id:"sunset", label:"Sunset", bg:"#2B1B3D", accent:"#FF6B4A" },
+  { id:"mono",   label:"Mono",   bg:"#F2F0EA", accent:"#1B1712" }
+];
+var currentTheme = THEMES[0];
+var currentMode = "doodle";
+var apiKey = "";
+
+/* ---------- splash ---------- */
+(function splash(){
+  var el = document.getElementById("splash");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!reduce){
+    ["p1","p2","p3","p4","p5"].forEach(function(id, i){
+      var node = document.getElementById(id);
+      var len = node.getTotalLength ? node.getTotalLength() : 200;
+      node.style.strokeDasharray = len;
+      node.style.strokeDashoffset = len;
+      node.style.transition = "stroke-dashoffset .5s ease " + (i*140) + "ms";
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ node.style.strokeDashoffset = 0; }); });
+    });
+  }
+  setTimeout(function(){ el.classList.add("show-word"); }, reduce ? 0 : 550);
+  var wait = reduce ? 300 : 1500;
+  setTimeout(function(){
+    el.classList.add("hide");
+    setTimeout(function(){ el.style.display = "none"; }, 450);
+  }, wait);
+})();
+
+/* ---------- doodle drawing library ---------- */
+function wobbleFilterDefs(){
+  return '<filter id="wob" x="-20%" y="-20%" width="140%" height="140%">' +
+    '<feTurbulence type="fractalNoise" baseFrequency="0.01 0.03" numOctaves="2" seed="4" result="n"/>' +
+    '<feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter>';
+}
+var HAIR = {
+  "curly-crop": function(c){
+    var d = []; var xs = [58,74,90,106,122,138,154,170,182];
+    xs.forEach(function(x,i){ var y = 62 + (i%2===0?0:6); d.push('<circle cx="'+x+'" cy="'+y+'" r="16" fill="'+c+'" stroke="#1B1712" stroke-width="4"/>'); });
+    return d.join('');
+  },
+  "long-wavy": function(c){
+    return '<path d="M58 100 C50 55, 80 30, 120 30 C160 30, 190 55, 182 100 C188 140, 178 195, 160 215 C168 170, 158 140, 150 118 C150 150, 145 190, 132 210 C138 170, 132 140, 120 122 C120 155, 112 195, 100 212 C104 172, 96 140, 88 118 C82 150, 70 190, 58 208 C68 168, 62 140, 58 100 Z" fill="'+c+'" stroke="#1B1712" stroke-width="4"/>';
+  },
+  "spiky": function(c){
+    var pts = "60,95 72,40 86,92 100,32 114,92 128,38 142,92 156,42 168,92 180,95";
+    return '<polygon points="'+pts+'" fill="'+c+'" stroke="#1B1712" stroke-width="4" stroke-linejoin="round"/>';
+  },
+  "buzz-fade": function(c){
+    return '<path d="M60 95 C58 55, 85 38, 120 38 C155 38, 182 55, 180 95 C180 80, 160 62, 120 62 C80 62, 60 80, 60 95 Z" fill="'+c+'" stroke="#1B1712" stroke-width="4"/>' +
+      '<circle cx="90" cy="55" r="2" fill="#1B1712" opacity=".5"/><circle cx="110" cy="48" r="2" fill="#1B1712" opacity=".5"/><circle cx="132" cy="50" r="2" fill="#1B1712" opacity=".5"/><circle cx="150" cy="58" r="2" fill="#1B1712" opacity=".5"/>';
+  },
+  "double-bun": function(c){
+    return '<path d="M60 98 C58 60, 84 42, 120 42 C156 42, 182 60, 180 98 Z" fill="'+c+'" stroke="#1B1712" stroke-width="4"/>' +
+      '<circle cx="82" cy="44" r="17" fill="'+c+'" stroke="#1B1712" stroke-width="4"/>' +
+      '<circle cx="158" cy="44" r="17" fill="'+c+'" stroke="#1B1712" stroke-width="4"/>';
+  },
+  "straight-bob": function(c){
+    return '<path d="M56 130 C52 60, 82 34, 120 34 C158 34, 188 60, 184 130 L184 108 C184 84, 158 66, 120 66 C82 66, 56 84, 56 108 Z" fill="'+c+'" stroke="#1B1712" stroke-width="4"/>' +
+      '<path d="M112 66 L108 96 M128 66 L132 96" stroke="#1B1712" stroke-width="3" fill="none"/>';
+  }
+};
+var EYES = {
+  smile: '<path d="M84 122 Q95 112 106 122" stroke="#1B1712" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M134 122 Q145 112 156 122" stroke="#1B1712" stroke-width="4" fill="none" stroke-linecap="round"/>',
+  wink: '<path d="M84 122 Q95 112 106 122" stroke="#1B1712" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="145" cy="120" r="6" fill="#1B1712"/><circle cx="147" cy="118" r="1.6" fill="#fff"/>',
+  surprised: '<circle cx="95" cy="122" r="9" fill="#fff" stroke="#1B1712" stroke-width="3.5"/><circle cx="95" cy="122" r="4" fill="#1B1712"/>' +
+    '<circle cx="145" cy="122" r="9" fill="#fff" stroke="#1B1712" stroke-width="3.5"/><circle cx="145" cy="122" r="4" fill="#1B1712"/>',
+  smirk: '<path d="M82 114 Q95 108 108 113" stroke="#1B1712" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="95" cy="122" r="5" fill="#1B1712"/>' +
+    '<path d="M136 120 Q146 116 156 120" stroke="#1B1712" stroke-width="4" fill="none" stroke-linecap="round"/>',
+  serious: '<path d="M85 121 L107 121" stroke="#1B1712" stroke-width="4" stroke-linecap="round"/><path d="M135 121 L157 121" stroke="#1B1712" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M82 111 L108 115" stroke="#1B1712" stroke-width="3" stroke-linecap="round"/><path d="M134 115 L160 111" stroke="#1B1712" stroke-width="3" stroke-linecap="round"/>'
+};
+var MOUTH = {
+  "smile-open": '<path d="M100 158 Q120 176 140 158 Q120 168 100 158 Z" fill="#B23A2E" stroke="#1B1712" stroke-width="3.5"/>',
+  "smile-closed": '<path d="M100 160 Q120 172 140 160" stroke="#1B1712" stroke-width="4" fill="none" stroke-linecap="round"/>',
+  "smirk-mouth": '<path d="M102 162 Q122 168 136 156" stroke="#1B1712" stroke-width="4" fill="none" stroke-linecap="round"/>',
+  "neutral": '<path d="M104 162 L136 162" stroke="#1B1712" stroke-width="4" stroke-linecap="round"/>',
+  "surprised-o": '<ellipse cx="120" cy="162" rx="8" ry="10" fill="#B23A2E" stroke="#1B1712" stroke-width="3.5"/>'
+};
+function earrings(style, accent){
+  if(style === "none") return '';
+  if(style === "stud") return '<circle cx="58" cy="140" r="4" fill="'+accent+'" stroke="#1B1712" stroke-width="2"/><circle cx="182" cy="140" r="4" fill="'+accent+'" stroke="#1B1712" stroke-width="2"/>';
+  if(style === "hoop") return '<circle cx="58" cy="146" r="8" fill="none" stroke="'+accent+'" stroke-width="4"/><circle cx="182" cy="146" r="8" fill="none" stroke="'+accent+'" stroke-width="4"/>';
+  return '<path d="M58 138 q0 16 0 22" stroke="'+accent+'" stroke-width="3"/><circle cx="58" cy="164" r="5" fill="'+accent+'" stroke="#1B1712" stroke-width="2"/>' +
+    '<path d="M182 138 q0 16 0 22" stroke="'+accent+'" stroke-width="3"/><circle cx="182" cy="164" r="5" fill="'+accent+'" stroke="#1B1712" stroke-width="2"/>';
+}
+function glasses(){
+  return '<circle cx="95" cy="122" r="17" fill="#fff" fill-opacity=".15" stroke="#1B1712" stroke-width="3.5"/>' +
+    '<circle cx="145" cy="122" r="17" fill="#fff" fill-opacity=".15" stroke="#1B1712" stroke-width="3.5"/>' +
+    '<path d="M112 122 L128 122" stroke="#1B1712" stroke-width="3.5"/>';
+}
+function noseRing(){ return '<circle cx="118" cy="145" r="3.5" fill="none" stroke="#1B1712" stroke-width="2.5"/>'; }
+function freckles(){
+  var d=[[88,138],[96,142],[104,136],[136,136],[144,142],[152,138]];
+  return d.map(function(p){ return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="1.6" fill="#1B1712" opacity=".55"/>'; }).join('');
+}
+function headband(accent){ return '<path d="M58 92 Q120 74 182 92" stroke="'+accent+'" stroke-width="9" fill="none" stroke-linecap="round"/>'; }
+function buildAvatarSVG(attrs, theme){
+  var hairFn = HAIR[attrs.hairStyle] || HAIR["curly-crop"];
+  var eyes = EYES[attrs.expression] || EYES.smile;
+  var mouth = MOUTH[attrs.mouth] || MOUTH["smile-closed"];
+  var acc = attrs.accessories || [];
+  var overlays = '';
+  if(acc.indexOf("earrings") > -1) overlays += earrings(attrs.earringStyle || "hoop", theme.accent);
+  if(acc.indexOf("glasses") > -1) overlays += glasses();
+  if(acc.indexOf("nose-ring") > -1) overlays += noseRing();
+  if(acc.indexOf("freckles") > -1) overlays += freckles();
+  if(acc.indexOf("headband") > -1) overlays += headband(theme.accent);
+  return '<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Doodle avatar">' +
+    '<defs>' + wobbleFilterDefs() + '</defs>' +
+    '<rect width="240" height="240" fill="' + theme.bg + '"/>' +
+    '<g filter="url(#wob)">' +
+      '<g data-stage="1">' +
+        '<ellipse cx="120" cy="132" rx="62" ry="58" fill="' + attrs.skinTone + '" stroke="#1B1712" stroke-width="5"/>' +
+        '<ellipse cx="60" cy="132" rx="9" ry="13" fill="' + attrs.skinTone + '" stroke="#1B1712" stroke-width="4"/>' +
+        '<ellipse cx="180" cy="132" rx="9" ry="13" fill="' + attrs.skinTone + '" stroke="#1B1712" stroke-width="4"/>' +
+      '</g>' +
+      '<g data-stage="2">' + hairFn(attrs.hairColor) + '</g>' +
+      '<g data-stage="3">' + eyes + '</g>' +
+      '<g data-stage="4">' + mouth + '</g>' +
+      '<g data-stage="5">' +
+        '<ellipse cx="90" cy="152" rx="10" ry="6" fill="' + theme.accent + '" opacity=".45"/>' +
+        '<ellipse cx="150" cy="152" rx="10" ry="6" fill="' + theme.accent + '" opacity=".45"/>' +
+        overlays +
+      '</g>' +
+    '</g></svg>';
+}
+
+/* ---------- self-drawing reveal ---------- */
+var DRAW_STAGE_MS = { 1:430, 2:520, 3:300, 4:240, 5:290 };
+
+function animateDraw(container, startDelay){
+  var svg = container.querySelector("svg");
+  if(!svg) return 0;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce) return 0;
+
+  var cursor = startDelay || 0;
+  var stages = svg.querySelectorAll("[data-stage]");
+
+  Array.prototype.forEach.call(stages, function(stage){
+    var key = stage.getAttribute("data-stage");
+    var dur = DRAW_STAGE_MS[key] || 400;
+    var shapes = stage.querySelectorAll("path, ellipse, circle, polygon, rect, line");
+    var n = shapes.length || 1;
+    var per = Math.max(140, dur / n);
+
+    Array.prototype.forEach.call(shapes, function(el, i){
+      var delay = cursor + i * per * 0.55;
+      var hasStroke = el.getAttribute("stroke") && el.getAttribute("stroke") !== "none";
+      var fill = el.getAttribute("fill");
+      var hasFill = fill && fill !== "none";
+
+      if(hasFill){
+        el.style.fillOpacity = "0";
+        el.style.transition = "fill-opacity 320ms ease " + (delay + per * 0.5) + "ms";
+      }
+
+      if(hasStroke){
+        var len = 0;
+        try { len = el.getTotalLength(); } catch(e) { len = 0; }
+        if(len > 0){
+          el.style.strokeDasharray = len;
+          el.style.strokeDashoffset = len;
+          var strokeTrans = "stroke-dashoffset " + per + "ms cubic-bezier(.45,.05,.35,1) " + delay + "ms";
+          el.style.transition = el.style.transition ? el.style.transition + ", " + strokeTrans : strokeTrans;
+        }
+      }
+    });
+    cursor += dur;
+  });
+
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(svg.querySelectorAll("[data-stage] *"), function(el){
+        if(el.style.strokeDashoffset) el.style.strokeDashoffset = "0";
+        if(el.style.fillOpacity === "0") el.style.fillOpacity = "";
+      });
+    });
+  });
+
+  return cursor + 320;
+}
+
+/* ---------- random fictional generator ---------- */
+var HAIR_KEYS = Object.keys(HAIR);
+var EXPR_KEYS = Object.keys(EYES);
+var MOUTH_KEYS = Object.keys(MOUTH);
+var HAIR_COLORS = ["#FF6FA0","#4FD1C5","#7C7CE8","#FFB54A","#2E2E2E","#E85D5D","#37B24D"];
+var SKIN_TONES = ["#F6D2B0","#EAB48A","#C88A5E","#8A5A3C","#FBE3C6"];
+var ACC_POOL = ["earrings","glasses","nose-ring","freckles","headband"];
+var EARRING_STYLES = ["hoop","stud","dangle"];
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function randomAttrs(){
+  var accCount = Math.floor(Math.random()*3);
+  var accs = []; var pool = ACC_POOL.slice();
+  for(var i=0;i<accCount;i++){ var idx = Math.floor(Math.random()*pool.length); accs.push(pool.splice(idx,1)[0]); }
+  return { hairStyle: pick(HAIR_KEYS), hairColor: pick(HAIR_COLORS), skinTone: pick(SKIN_TONES),
+    expression: pick(EXPR_KEYS), mouth: pick(MOUTH_KEYS), accessories: accs, earringStyle: pick(EARRING_STYLES) };
+}
+
+/* ---------- frame (theme) picker ---------- */
+(function renderThemes(){
+  var el = document.getElementById("themes");
+  THEMES.forEach(function(t, i){
+    var btn = document.createElement("button");
+    btn.className = "theme-btn"; btn.type = "button";
+    btn.setAttribute("aria-pressed", i===0 ? "true" : "false");
+    btn.innerHTML = '<span class="dot" style="background:' + t.accent + '"></span>' + t.label;
+    btn.addEventListener("click", function(){
+      currentTheme = t;
+      Array.prototype.forEach.call(el.children, function(b){ b.setAttribute("aria-pressed","false"); });
+      btn.setAttribute("aria-pressed","true");
+    });
+    el.appendChild(btn);
+  });
+})();
+
+/* ---------- settings modal ---------- */
+var settingsBtn = document.getElementById("settingsBtn");
+var modalBackdrop = document.getElementById("modalBackdrop");
+var modalClose = document.getElementById("modalClose");
+var modeDoodleBtn = document.getElementById("modeDoodleBtn");
+var modeAiBtn = document.getElementById("modeAiBtn");
+var keyField = document.getElementById("keyField");
+var apiKeyInput = document.getElementById("apiKeyInput");
+function openModal(){ modalBackdrop.classList.add("open"); apiKeyInput && apiKeyInput.focus(); }
+function closeModal(){ modalBackdrop.classList.remove("open"); settingsBtn.focus(); }
+settingsBtn.addEventListener("click", openModal);
+modalClose.addEventListener("click", closeModal);
+modalBackdrop.addEventListener("click", function(e){ if(e.target === modalBackdrop) closeModal(); });
+document.addEventListener("keydown", function(e){ if(e.key === "Escape" && modalBackdrop.classList.contains("open")) closeModal(); });
+function setMode(mode){
+  currentMode = mode;
+  modeDoodleBtn.setAttribute("aria-pressed", mode === "doodle" ? "true" : "false");
+  modeAiBtn.setAttribute("aria-pressed", mode === "ai-art" ? "true" : "false");
+  keyField.classList.toggle("show", mode === "ai-art");
+}
+modeDoodleBtn.addEventListener("click", function(){ setMode("doodle"); });
+modeAiBtn.addEventListener("click", function(){ setMode("ai-art"); });
+apiKeyInput.addEventListener("input", function(){ apiKey = apiKeyInput.value.trim(); });
+
+/* ---------- window / upload flow ---------- */
+var windowEl = document.getElementById("windowEl");
+var fileInput = document.getElementById("fileInput");
+var winIdle = document.getElementById("winIdle");
+var winCountdown = document.getElementById("winCountdown");
+var winResult = document.getElementById("winResult");
+var winFlash = document.getElementById("winFlash");
+var iris = document.getElementById("iris");
+var shutterMsg = document.getElementById("shutterMsg");
+var shutterMsgText = document.getElementById("shutterMsgText");
+var countdownText = document.getElementById("countdownText");
+var changePhoto = document.getElementById("changePhoto");
+var generateBtn = document.getElementById("generateBtn");
+var coinIcon = document.getElementById("coinIcon");
+var surpriseBtn = document.getElementById("surpriseBtn");
+var statusMsg = document.getElementById("statusMsg");
+var printStrip = document.getElementById("printStrip");
+var stripAvatar = document.getElementById("stripAvatar");
+var downloadBtn = document.getElementById("downloadBtn");
+var retryBtn = document.getElementById("retryBtn");
+
+var uploadedBase64 = null;
+var uploadedMediaType = null;
+
+function showWinLayer(id){
+  [winIdle, winCountdown, winResult].forEach(function(l){ l.classList.remove("active"); });
+  document.getElementById(id).classList.add("active");
+}
+
+windowEl.addEventListener("click", function(){ if(!printStrip.classList.contains("show")) fileInput.click(); });
+windowEl.addEventListener("keydown", function(e){ if((e.key === "Enter" || e.key === " ") && !printStrip.classList.contains("show")){ e.preventDefault(); fileInput.click(); } });
+fileInput.addEventListener("change", function(){ if(fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]); });
+changePhoto.addEventListener("click", function(e){
+  e.stopPropagation();
+  uploadedBase64 = null; uploadedMediaType = null;
+  winIdle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#1B1712" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><p class="main">Look at the window</p><p>tap to upload a photo</p>';
+  changePhoto.style.display = "none";
+  generateBtn.disabled = true;
+  statusMsg.textContent = ""; statusMsg.classList.remove("err");
+});
+function handleFile(file){
+  if(!file.type.startsWith("image/")){
+    statusMsg.textContent = "That doesn't look like an image."; statusMsg.classList.add("err"); return;
+  }
+  statusMsg.textContent = ""; statusMsg.classList.remove("err");
+  var reader = new FileReader();
+  reader.onload = function(){
+    var result = reader.result;
+    uploadedMediaType = file.type;
+    uploadedBase64 = result.split(",")[1];
+    winIdle.innerHTML = '<img src="' + result + '" alt="Your uploaded photo"><p class="main">Ready to doodle</p>';
+    changePhoto.style.display = "block";
+    generateBtn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ---------- Claude vision analysis (Doodle mode) ---------- */
+var ANALYZE_PROMPT = "Look at this photo and describe the person as a naive-doodle fashion-chibi avatar: bold graphic hair shapes, rough marker edges, playful and flat, no photorealism. " +
+  "Respond with ONLY a raw JSON object, no markdown fences, no other text, matching exactly this shape:\n" +
+  '{"hairStyle":"curly-crop|long-wavy|spiky|buzz-fade|double-bun|straight-bob","hairColor":"#hex","skinTone":"#hex","expression":"smile|wink|surprised|smirk|serious","mouth":"smile-open|smile-closed|smirk-mouth|neutral|surprised-o","accessories":["earrings"|"glasses"|"nose-ring"|"freckles"|"headband", up to 3],"earringStyle":"hoop|stud|dangle"}\n' +
+  "Pick the closest enum values only. hairColor and skinTone should be real hex colors sampled from the photo. This is for a fun illustrated avatar, not identification.";
+
+async function analyzePhoto(base64, mediaType){
+  var response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6", max_tokens: 500,
+      messages: [{ role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+        { type: "text", text: ANALYZE_PROMPT }
+      ]}]
+    })
+  });
+  if(!response.ok) throw new Error("Request failed");
+  var data = await response.json();
+  var textBlock = (data.content || []).find(function(b){ return b.type === "text"; });
+  if(!textBlock) throw new Error("No response");
+  var clean = textBlock.text.replace(/```json|```/g, "").trim();
+  var attrs = JSON.parse(clean);
+  if(!HAIR[attrs.hairStyle]) attrs.hairStyle = "curly-crop";
+  if(!EYES[attrs.expression]) attrs.expression = "smile";
+  if(!MOUTH[attrs.mouth]) attrs.mouth = "smile-closed";
+  if(!Array.isArray(attrs.accessories)) attrs.accessories = [];
+  if(!/^#[0-9a-fA-F]{3,6}$/.test(attrs.hairColor||"")) attrs.hairColor = pick(HAIR_COLORS);
+  if(!/^#[0-9a-fA-F]{3,6}$/.test(attrs.skinTone||"")) attrs.skinTone = pick(SKIN_TONES);
+  return attrs;
+}
+
+/* ---------- Gemini image generation (AI art mode) ---------- */
+async function generateWithGemini(key, base64, mediaType, themeLabel){
+  var prompt = "Turn this portrait into a naive doodle fashion-chibi avatar: bold graphic hair shapes, rough marker or dry-brush edges, restrained watercolor-like color, flat and expressive, clean white or warm-white background, no photorealism, no text, no watermark. " + themeLabel + " mood. Keep it recognizable but clearly illustrated.";
+  var res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=" + encodeURIComponent(key), {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contents: [{ parts: [
+      { text: prompt },
+      { inline_data: { mime_type: mediaType, data: base64 } }
+    ]}]})
+  });
+  if(!res.ok) throw new Error("Gemini request failed");
+  var data = await res.json();
+  var parts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+  var imgPart = parts.find(function(p){ return p.inlineData || p.inline_data; });
+  if(!imgPart) throw new Error("No image returned");
+  var inline = imgPart.inlineData || imgPart.inline_data;
+  return "data:" + (inline.mimeType || inline.mime_type) + ";base64," + inline.data;
+}
+
+/* ---------- booth sequence: coin -> countdown -> flash -> shutter -> print ---------- */
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+async function setCountdown(text, small){
+  countdownText.textContent = text;
+  countdownText.classList.toggle("small", !!small);
+  countdownText.style.animation = "none";
+  void countdownText.offsetWidth;
+  countdownText.style.animation = "popIn .3s ease";
+}
+var styleTag = document.createElement("style");
+styleTag.textContent = "@keyframes popIn{0%{transform:scale(.5);opacity:0;}70%{transform:scale(1.12);opacity:1;}100%{transform:scale(1);}}";
+document.head.appendChild(styleTag);
+
+async function flash(){
+  winFlash.style.opacity = "1";
+  await sleep(110);
+  winFlash.style.opacity = "0";
+}
+var dotsTimer = null;
+function closeShutter(){
+  iris.classList.add("closed");
+  shutterMsg.classList.add("show");
+  var n = 0;
+  dotsTimer = setInterval(function(){ n = (n+1) % 4; shutterMsgText.textContent = "developing" + ".".repeat(n); }, 350);
+}
+function openShutter(){
+  iris.classList.remove("closed");
+  shutterMsg.classList.remove("show");
+  clearInterval(dotsTimer);
+  shutterMsgText.textContent = "developing";
+}
+
+function currentResultHTML(){
+  return { svg: null, img: null };
+}
+
+async function runBoothSequence(getResult){
+  generateBtn.disabled = true; surpriseBtn.disabled = true;
+  coinIcon.classList.add("drop");
+  await sleep(350);
+  coinIcon.classList.remove("drop");
+
+  showWinLayer("winCountdown");
+  await setCountdown("Get Ready", true); await sleep(550);
+  await setCountdown("3"); await sleep(520);
+  await setCountdown("2"); await sleep(520);
+  await setCountdown("1"); await sleep(480);
+
+  await flash();
+  closeShutter();
+  statusMsg.textContent = "";
+
+  var resultPromise = getResult();
+  var minWait = sleep(450);
+  var result;
+  try{
+    await minWait;
+    result = await resultPromise;
+  }catch(err){
+    openShutter();
+    showWinLayer("winIdle");
+    statusMsg.textContent = "Couldn't doodle that one. Try again.";
+    statusMsg.classList.add("err");
+    generateBtn.disabled = false; surpriseBtn.disabled = false;
+    return;
+  }
+
+  statusMsg.textContent = "";
+  var IRIS_MS = 560;
+  if(result.kind === "svg"){
+    winResult.innerHTML = result.markup;
+    showWinLayer("winResult");
+    var drawMs = animateDraw(winResult, IRIS_MS);
+    openShutter();
+    await sleep(Math.max(drawMs, IRIS_MS + 200));
+    stripAvatar.innerHTML = result.markup;
+  } else {
+    winResult.innerHTML = '<img src="' + result.markup + '" alt="Your doodle avatar">';
+    stripAvatar.innerHTML = '<img src="' + result.markup + '" alt="Your doodle avatar">';
+    showWinLayer("winResult");
+    openShutter();
+    await sleep(IRIS_MS);
+  }
+  await sleep(200);
+  printStrip.classList.add("peek");
+  await sleep(300);
+  printStrip.classList.add("show");
+  generateBtn.disabled = false; surpriseBtn.disabled = false;
+}
+
+generateBtn.addEventListener("click", function(){
+  if(!uploadedBase64) return;
+  if(currentMode === "ai-art" && !apiKey){
+    statusMsg.textContent = "Add your API key in settings first.";
+    statusMsg.classList.add("err");
+    return;
+  }
+  runBoothSequence(async function(){
+    if(currentMode === "ai-art"){
+      var dataUrl = await generateWithGemini(apiKey, uploadedBase64, uploadedMediaType, currentTheme.label);
+      return { kind:"img", markup: dataUrl };
+    } else {
+      var attrs = await analyzePhoto(uploadedBase64, uploadedMediaType);
+      return { kind:"svg", markup: buildAvatarSVG(attrs, currentTheme) };
+    }
+  });
+});
+
+surpriseBtn.addEventListener("click", function(){
+  if(!uploadedBase64){
+    runBoothSequence(async function(){
+      return { kind:"svg", markup: buildAvatarSVG(randomAttrs(), currentTheme) };
+    });
+  } else {
+    runBoothSequence(async function(){
+      return { kind:"svg", markup: buildAvatarSVG(randomAttrs(), currentTheme) };
+    });
+  }
+});
+
+retryBtn.addEventListener("click", function(){
+  printStrip.classList.remove("show", "peek");
+  showWinLayer("winIdle");
+  winIdle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#1B1712" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><p class="main">Look at the window</p><p>tap to upload a photo</p>';
+  changePhoto.style.display = "none";
+  uploadedBase64 = null; uploadedMediaType = null;
+  generateBtn.disabled = true;
+  statusMsg.textContent = "";
+});
+
+downloadBtn.addEventListener("click", function(){
+  var imgEl = stripAvatar.querySelector("img");
+  if(imgEl){
+    var a = document.createElement("a");
+    a.download = "doodlebooth-avatar.png"; a.href = imgEl.src; a.click();
+    return;
+  }
+  var svgEl = stripAvatar.querySelector("svg");
+  var svgData = new XMLSerializer().serializeToString(svgEl);
+  var img = new Image();
+  var svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  var url = URL.createObjectURL(svgBlob);
+  img.onload = function(){
+    var canvas = document.createElement("canvas");
+    canvas.width = 480; canvas.height = 480;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, 480, 480);
+    URL.revokeObjectURL(url);
+    var link = document.createElement("a");
+    link.download = "doodlebooth-avatar.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+  img.src = url;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import Navbar from '../../components/Navbar.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+import FormattedDate from '../../components/FormattedDate.astro';
+import '../../styles/app.css';
+import '../../styles/page.css';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<AppLayout
+	title="Blog — doodlebooth.lol"
+	description="Notes, updates, and stories from the doodlebooth.lol wall."
+>
+	<Navbar />
+
+	<main class="page">
+		<div class="page-hero">
+			<div class="eyebrow">Blog</div>
+			<h1>The <span class="grad">doodlebooth</span> journal</h1>
+			<p class="lede">Updates, ideas, and the occasional deep dive from behind the wall.</p>
+		</div>
+
+		<ul class="post-grid">
+			{
+				posts.map((post) => (
+					<li>
+						<a href={`/blog/${post.id}/`}>
+							<div class="post-thumb">
+								<img src={post.data.heroImage} alt="" loading="lazy" />
+							</div>
+							<h3 class="post-title">{post.data.title}</h3>
+							<p class="post-date">
+								<FormattedDate date={post.data.pubDate} />
+							</p>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</main>
+
+	<Footer />
+
+	<script>
+		const themeToggle = document.getElementById('themeToggle');
+		if (themeToggle) {
+			const saved = localStorage.getItem('doodlebooth-theme');
+			if (saved === 'dark') {
+				document.body.classList.add('dark');
+				themeToggle.textContent = '☀';
+			}
+			themeToggle.addEventListener('click', () => {
+				document.body.classList.toggle('dark');
+				const isDark = document.body.classList.contains('dark');
+				localStorage.setItem('doodlebooth-theme', isDark ? 'dark' : 'light');
+				themeToggle.textContent = isDark ? '☀' : '☾';
+			});
+		}
+	</script>
+</AppLayout>
+
+<style>
+	.post-grid {
+		list-style: none;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 22px;
+		padding: 0;
+		margin: 8px 0 0;
+	}
+	.post-grid li:first-child {
+		grid-column: 1 / -1;
+	}
+	.post-grid a {
+		display: block;
+	}
+	.post-thumb {
+		border-radius: 14px;
+		overflow: hidden;
+		background: var(--card-hover);
+		aspect-ratio: 2 / 1;
+		border: 1px solid var(--border);
+	}
+	.post-thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		transition: transform 0.3s ease;
+	}
+	.post-grid a:hover .post-thumb img {
+		transform: scale(1.03);
+	}
+	.post-title {
+		margin: 12px 0 2px;
+		font-size: 1.05rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		color: var(--text);
+	}
+	.post-grid li:first-child .post-title {
+		font-size: 1.4rem;
+	}
+	.post-date {
+		font-size: 0.8rem;
+		color: var(--text-dimmer);
+	}
+	.post-grid a:hover .post-title {
+		color: var(--accent);
+	}
+	@media (max-width: 560px) {
+		.post-grid {
+			grid-template-columns: 1fr;
+			gap: 18px;
+		}
+	}
+</style>

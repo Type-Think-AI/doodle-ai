@@ -1,0 +1,152 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import AppLayout from './AppLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import '../styles/app.css';
+import '../styles/page.css';
+
+type Props = CollectionEntry<'blog'>['data'];
+
+const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+---
+
+<AppLayout title={`${title} — doodlebooth.lol`} description={description} image={heroImage}>
+	<Navbar />
+
+	<main class="page">
+		<article>
+			{heroImage && (
+				<div class="post-hero">
+					<img src={heroImage} alt="" />
+				</div>
+			)}
+			<div class="page-hero" style="padding-bottom: 20px;">
+				<div class="eyebrow">
+					<FormattedDate date={pubDate} />
+					{updatedDate && <span> · updated <FormattedDate date={updatedDate} /></span>}
+				</div>
+				<h1>{title}</h1>
+			</div>
+			<div class="prose">
+				<slot />
+			</div>
+		</article>
+	</main>
+
+	<Footer />
+
+	<script>
+		const themeToggle = document.getElementById('themeToggle');
+		if (themeToggle) {
+			const saved = localStorage.getItem('doodlebooth-theme');
+			if (saved === 'dark') {
+				document.body.classList.add('dark');
+				themeToggle.textContent = '☀';
+			}
+			themeToggle.addEventListener('click', () => {
+				document.body.classList.toggle('dark');
+				const isDark = document.body.classList.contains('dark');
+				localStorage.setItem('doodlebooth-theme', isDark ? 'dark' : 'light');
+				themeToggle.textContent = isDark ? '☀' : '☾';
+			});
+		}
+	</script>
+</AppLayout>
+
+<style>
+	.post-hero {
+		width: 100%;
+		max-width: 100%;
+		border-radius: 16px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+		margin: 8px 0 4px;
+		aspect-ratio: 2 / 1;
+	}
+	.post-hero img {
+		width: 100%;
+		max-width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+	/* Blog markdown extras not covered by page.css */
+	.prose :global(ul),
+	.prose :global(ol) {
+		color: var(--text-dim);
+		font-size: 0.95rem;
+		line-height: 1.7;
+		padding-left: 1.3em;
+		margin-bottom: 14px;
+	}
+	.prose :global(li) {
+		margin-bottom: 6px;
+	}
+	.prose :global(blockquote) {
+		border-left: 3px solid var(--accent);
+		padding-left: 16px;
+		margin: 18px 0;
+		color: var(--text-dim);
+		font-style: italic;
+	}
+	.prose :global(img) {
+		max-width: 100%;
+		border-radius: 12px;
+		margin: 18px 0;
+	}
+	.prose :global(code) {
+		background: var(--card-hover);
+		padding: 2px 6px;
+		border-radius: 6px;
+		font-size: 0.85em;
+	}
+	.prose :global(pre) {
+		background: var(--card-hover);
+		padding: 16px;
+		border-radius: 12px;
+		overflow-x: auto;
+		margin: 18px 0;
+		border: 1px solid var(--border);
+	}
+	.prose :global(pre code) {
+		background: none;
+		padding: 0;
+	}
+	.prose :global(h1) {
+		font-size: 1.5rem;
+		font-weight: 800;
+		margin: 30px 0 10px;
+		color: var(--text);
+	}
+	.prose :global(h3) {
+		font-size: 0.98rem;
+		font-weight: 700;
+		margin: 24px 0 8px;
+		color: var(--text);
+	}
+	.prose :global(hr) {
+		border: none;
+		border-top: 1px solid var(--border);
+		margin: 24px 0;
+	}
+	.prose :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 18px 0;
+		font-size: 0.9rem;
+		display: block;
+		overflow-x: auto;
+	}
+	.prose :global(th),
+	.prose :global(td) {
+		border: 1px solid var(--border);
+		padding: 8px 12px;
+		text-align: left;
+	}
+	.prose :global(th) {
+		color: var(--text);
+		font-weight: 700;
+	}
+</style>

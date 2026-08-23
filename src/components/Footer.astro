@@ -1,0 +1,135 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+	<div class="footer-inner">
+		<div class="footer-brand">
+			<img class="fmark" src="/icon-192.png" alt="" width="38" height="38" />
+			<span class="fname">doodlebooth<span class="grad">.lol</span></span>
+		</div>
+
+		<nav class="footer-nav">
+			<a href="/">Wall</a>
+			<a href="/blog">Blog</a>
+			<a href="/about">About</a>
+			<a href="/terms">Terms</a>
+			<a href="/privacy">Privacy</a>
+			<a href="mailto:yash@typethink.ai">Support</a>
+		</nav>
+
+		<div class="footer-social">
+			<a href="https://x.com/yash__patidar_" target="_blank" rel="noopener noreferrer" aria-label="Creator on X">
+				<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+					<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+				</svg>
+			</a>
+		</div>
+	</div>
+
+	<div class="footer-legal">
+		&copy; {year} doodlebooth.lol · A for-fun side project
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		border-top: 1px solid var(--border);
+		margin-top: 60px;
+		padding: 28px var(--shell-pad) 40px;
+	}
+	.footer-inner {
+		width: 100%;
+		max-width: var(--shell-max);
+		margin: 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		flex-wrap: wrap;
+	}
+	.footer-brand {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-weight: 800;
+		font-size: 1.1rem;
+		font-family: "Arial Rounded MT Bold", "Trebuchet MS", Arial, sans-serif;
+		letter-spacing: -0.03em;
+	}
+	.footer-brand .fmark {
+		width: 38px;
+		height: 38px;
+		border-radius: 10px;
+		display: block;
+	}
+	.footer-brand .grad {
+		background: var(--ig-gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+	.footer-nav {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 10px 16px;
+	}
+	.footer-nav a {
+		font-size: 0.84rem;
+		color: var(--text-dim);
+		font-weight: 500;
+		transition: color 0.15s ease;
+	}
+	.footer-nav a:hover {
+		color: var(--text);
+	}
+	.footer-nav a:focus-visible,
+	.footer-social a:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+		border-radius: 6px;
+		color: var(--text);
+	}
+	.footer-social {
+		display: flex;
+		gap: 10px;
+	}
+	.footer-social a {
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--card-hover);
+		color: var(--text-dim);
+		transition: color 0.15s ease, background 0.15s ease;
+	}
+	.footer-social a:hover {
+		color: var(--text);
+		background: var(--accent-soft);
+	}
+	.footer-legal {
+		max-width: 720px;
+		margin: 20px auto 0;
+		text-align: center;
+		font-size: 0.74rem;
+		color: var(--text-dimmer);
+	}
+	.footer-legal a {
+		color: var(--text-dim);
+		font-weight: 600;
+	}
+	.footer-legal a:hover {
+		color: var(--text);
+		text-decoration: underline;
+	}
+	@media (max-width: 520px) {
+		.footer-inner {
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+		}
+	}
+</style>
