@@ -1,0 +1,159 @@
+---
+import AppShellLayout from '../layouts/AppShellLayout.astro';
+---
+
+<AppShellLayout title="Characters — Doodle AI" active="characters">
+	<div class="chars-page">
+		<h1>Characters</h1>
+		<p class="chars-sub">Reusable reference photos — mention one with @ in any chat instead of re-uploading.</p>
+
+		<div class="chars-grid" id="charsGrid">
+			<button class="chars-add-card" id="charsAddCard" type="button">
+				<span class="chars-add-icon">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+				</span>
+				<span>Add character</span>
+			</button>
+		</div>
+		<input type="file" id="charsFileInput" accept="image/*" hidden />
+	</div>
+
+	<div class="chars-modal-backdrop" id="charsModalBackdrop">
+		<div class="chars-modal">
+			<img id="charsModalPreview" alt="New character preview" />
+			<label for="charsNameInput" class="chars-modal-label">Name</label>
+			<input id="charsNameInput" type="text" placeholder="e.g. Baby Alex" autocomplete="off" />
+			<p class="chars-modal-status" id="charsModalStatus" role="status" aria-live="polite"></p>
+			<div class="chars-modal-actions">
+				<button type="button" id="charsModalCancel" class="chars-modal-btn">Cancel</button>
+				<button type="button" id="charsModalSave" class="chars-modal-btn chars-modal-btn-primary" disabled>Save</button>
+			</div>
+		</div>
+	</div>
+</AppShellLayout>
+
+<script src="../scripts/app/characters-page.ts"></script>
+
+<style>
+	.chars-page { max-width: 1000px; margin: 0 auto; padding: 26px 40px 64px; }
+	.chars-page h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); margin: 0 0 6px; }
+	.chars-sub { margin: 0 0 24px; font-size: 14px; color: var(--text-dimmer); }
+
+	.chars-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+	.chars-add-card {
+		aspect-ratio: 1 / 1;
+		border-radius: 16px;
+		border: 2px dashed var(--border3);
+		background: transparent;
+		color: var(--text-dim);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		cursor: pointer;
+		font-family: inherit;
+		font-size: 12.5px;
+	}
+	.chars-add-card:hover { border-color: var(--accent); color: var(--text); }
+	.chars-add-icon {
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		border: 1px solid var(--border3);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.chars-modal-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 60;
+		display: none;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.6);
+	}
+	.chars-modal-backdrop.open { display: flex; }
+	.chars-modal {
+		width: 100%;
+		max-width: 340px;
+		background: var(--card);
+		border: 1px solid var(--border2);
+		border-radius: 18px;
+		padding: 20px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.chars-modal img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 12px; background: var(--surface2); }
+	.chars-modal-label { font-size: 12.5px; color: var(--text-dim); }
+	.chars-modal input[type='text'] {
+		height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border2);
+		background: var(--surface2); color: var(--text); font-size: 14px; font-family: inherit;
+	}
+	.chars-modal-status { font-size: 12.5px; color: var(--text-dim); margin: 0; min-height: 16px; }
+	.chars-modal-actions { display: flex; gap: 10px; margin-top: 4px; }
+	.chars-modal-btn {
+		flex: 1; height: 40px; border-radius: 999px; border: 1px solid var(--border3);
+		background: transparent; color: var(--text); font-family: inherit; font-size: 13.5px; cursor: pointer;
+	}
+	.chars-modal-btn-primary { background: var(--send-bg); color: var(--send-fg); border: 0; }
+	.chars-modal-btn:disabled { opacity: 0.5; cursor: default; }
+
+	@media (max-width: 980px) {
+		.chars-grid { grid-template-columns: repeat(4, 1fr); }
+	}
+	@media (max-width: 720px) {
+		.chars-page { padding: 20px; }
+		.chars-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+	}
+</style>
+
+<style is:global>
+	/* Character cards are built client-side by characters-page.ts, so this
+	   block is global — Astro's scoped-CSS attribute never reaches elements
+	   created after the initial render. */
+	.chars-card {
+		position: relative;
+		aspect-ratio: 1 / 1;
+		border-radius: 16px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+	}
+	.chars-card img { width: 100%; height: 100%; object-fit: cover; display: block; overflow: hidden; font-size: 0; color: transparent; }
+	.chars-card-name {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: 18px 10px 8px;
+		background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+		color: #fff;
+		font-size: 12.5px;
+		font-weight: 500;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.chars-card-remove {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		width: 22px;
+		height: 22px;
+		border: 1px solid var(--border3);
+		border-radius: 50%;
+		background: rgba(15, 15, 15, 0.72);
+		color: #fff;
+		font-size: 14px;
+		line-height: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		padding: 0;
+	}
+	.chars-card-remove:hover { background: var(--accent); color: var(--send-fg); }
+</style>

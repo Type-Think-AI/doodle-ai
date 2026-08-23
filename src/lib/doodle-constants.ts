@@ -1,6 +1,13 @@
-/* DoodleBooth avatar constants, migrated from DoodleBooth (src/app/page.tsx).
+/* Doodle AI avatar constants, migrated from Doodle AI (src/app/page.tsx).
    Framework-agnostic data + prompt strings shared by the client script and
    the SVG avatar builder. No DOM access here. */
+
+/* The generation modes generate-doodle.ts can actually execute. This is the
+   contract between the skill packages (each src/mastra/skills/<name>/SKILL.md, whose
+   `metadata.id` must be one of these) and the tool that runs them —
+   src/lib/skill-loader.ts fails the build if the two ever drift apart. */
+export const GENERATION_MODES = ["normal", "collage", "full-body", "surprise"] as const;
+export type GenerationMode = (typeof GENERATION_MODES)[number];
 
 export interface Theme {
   id: string;
@@ -175,8 +182,7 @@ export const SAMPLE_PRESETS: AvatarAttrs[] = [
 ];
 
 export const STORAGE_KEY = "doodleme_api_key";
-export const STYLE_THEME_STORAGE_KEY = "doodlebooth-style-theme";
-export const DEFAULT_SKILL_STORAGE_KEY = "doodlebooth-default-skill";
+export const STYLE_THEME_STORAGE_KEY = "doodleai-style-theme";
 export const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 export function pick<T>(arr: T[]): T {

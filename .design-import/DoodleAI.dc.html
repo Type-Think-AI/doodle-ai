@@ -45,7 +45,7 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2.5 15c1.5-6.5 3-9.5 4.8-9.5S9 10 11 10s2-6 4.3-6 2.6 6.8 4.2 6.8 1.5-2.3 3-2.3" stroke="#3D2900" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </span>
           <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
-            <span style="font-size:16px; font-weight:600; letter-spacing:-0.02em; color:var(--text); white-space:nowrap;">DoodleBooth AI</span>
+            <span style="font-size:16px; font-weight:600; letter-spacing:-0.02em; color:var(--text); white-space:nowrap;">Doodle AI</span>
           </sc-if>
           <button onClick="{{ toggleCollapsed }}" style="{{ collapseBtnStyle }}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
@@ -534,7 +534,7 @@
               <div style="display:flex; justify-content:center;">
                 <span style="display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:var(--blueFaint); font-size:12.5px; color:var(--text);">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="3" stroke="var(--blue)" stroke-width="1.7"></rect></svg>
-                  DoodleBooth for iOS
+                  Doodle AI for iOS
                   <span style="color:var(--blue);">Try it</span>
                 </span>
               </div>
@@ -836,7 +836,7 @@ class Component extends DCLogic {
 
       detail: {
         name: s.detail.name, tagline: s.detail.tagline, kind: s.detail.kind,
-        installs: s.detail.installs, author: s.detail.author + "@DoodleBooth",
+        installs: s.detail.installs, author: s.detail.author + "@Doodle AI",
         authorImg: img(s.detail.authorSeed, 60, 60), img: img(s.detail.seed, 200, 200),
         shotA: img(s.detail.seed + "-a", 700, 700), shotB: img(s.detail.seed + "-b", 700, 700),
         longDesc: s.detail.longDesc, tags: s.detail.tags.map(name => ({name}))

@@ -7,61 +7,63 @@ import '../styles/page.css';
 ---
 
 <AppLayout
-	title="About — doodlebooth.lol"
-	description="What doodlebooth.lol is: a shared wall where anyone can draw a quick doodle and drop it in for everyone to see."
+	title="About — doodleai.art"
+	description="What doodleai.art is: chat with an agent, attach a photo, and get back a hand-drawn doodle avatar or collage. No accounts, bring your own API key."
 >
 	<Navbar />
 
 	<main class="page">
 		<div class="page-hero">
 			<div class="eyebrow">About</div>
-			<h1>A shared wall for <span class="grad">tiny doodles</span></h1>
+			<h1>A doodle booth you <span class="grad">chat</span> with</h1>
 			<p class="lede">
-				doodlebooth.lol is a public drawing wall. Sketch something in the booth, drop it in, and
-				it lands on the wall next to everyone else's. No skill required — the messier the better.
+				doodleai.art turns a photo into a hand-drawn doodle avatar or collage. Instead of a form,
+				you talk to an agent: attach a photo (or just describe a character), say what you want, and
+				it draws it.
 			</p>
 		</div>
 
 		<div class="prose">
 			<h2>The idea</h2>
 			<p>
-				Everyone doodles. On napkins, in the margins of notebooks, on the back of receipts — and
-				then throws them away. So we built the dumbest, most honest home for them:
-				<strong>one wall, open to anyone, where a 20-second scribble sits right next to
-				everyone else's</strong>. No accounts, no feed algorithm, no likes to chase.
+				Most "AI photo" tools are a picker full of filters. This one is a conversation — attach a
+				photo, tell the agent what you're after, and it picks the right doodle style, generates it,
+				and lets you keep refining ("thicker outline", "warmer paper") until it's right.
 			</p>
 			<p>
-				A stick figure counts. A masterpiece counts. They land on the same wall and that's the
-				whole point.
+				<strong>No accounts.</strong> You bring your own PicX API key (free to get, see Settings),
+				and everything you create — chats, saved doodles, saved reference photos — lives only in
+				your browser.
 			</p>
 
 			<h2>How it works</h2>
 			<ol class="steps">
-				<li><b>Open the booth.</b> A blank canvas, a few brushes, and some colors. No sign up, no login, no email.</li>
-				<li><b>Draw something.</b> Anything. Takes twenty seconds or twenty minutes — your call.</li>
-				<li><b>Drop it on the wall.</b> Your doodle joins the shared wall for everyone to see.</li>
-				<li><b>Browse the rest.</b> Scroll the wall and enjoy what strangers have scribbled.</li>
+				<li><b>Add a PicX API key.</b> One free key from PicX Studio, pasted into Settings. Nothing is stored on our servers.</li>
+				<li><b>Start a chat.</b> Attach a photo, mention a saved character with @, or just describe someone for a surprise.</li>
+				<li><b>The agent draws it.</b> It picks a skill — a single avatar, a close-up collage, a full-body action collage — and generates it.</li>
+				<li><b>Keep it or refine it.</b> Ask for changes, remix, save to your moodboard, or download.</li>
 			</ol>
 
-			<h2>Real drawings, stored simply</h2>
+			<h2>Bring your own key</h2>
 			<p>
-				Doodles are saved as images the moment you drop them in, then served from our own storage
-				so the wall loads fast. Nothing is generated or mocked — every square on the wall is
-				something a real person drew in the booth.
+				Generation runs through PicX's API using <strong>your</strong> key, and the chat runs on a
+				model via OpenRouter. That means no signup on our end, no subscription to us, and no
+				middleman marking up the cost of generation — you deal with PicX and OpenRouter directly for
+				anything beyond their free tiers.
 			</p>
 
 			<div class="facts">
-				<div class="fact">
-					<div class="k">Who can draw</div>
-					<div class="v">Anyone</div>
-				</div>
 				<div class="fact">
 					<div class="k">Login required</div>
 					<div class="v">None</div>
 				</div>
 				<div class="fact">
-					<div class="k">Cost</div>
+					<div class="k">Cost to use this site</div>
 					<div class="v">Free</div>
+				</div>
+				<div class="fact">
+					<div class="k">Your data on our servers</div>
+					<div class="v">None</div>
 				</div>
 				<div class="fact">
 					<div class="k">Skill needed</div>
@@ -71,28 +73,21 @@ import '../styles/page.css';
 
 			<h2>What this isn't</h2>
 			<p>
-				There's no scoring, no ranking, and no reward for drawing — you're adding a doodle to a
-				novelty wall and nothing more. We don't ask for your password, we don't build a profile
-				of you, and we only ever store the drawing you chose to submit.
+				There's no feed, no public gallery, and nothing you make here is visible to anyone but you —
+				your chats, moodboard, and saved characters stay in your browser's local storage. We don't
+				build a profile of you and we don't see your API key, your photos, or your conversations
+				beyond the single request needed to generate a reply.
 			</p>
-
-			<div class="callout">
-				<p>
-					<strong>On moderation:</strong> if a doodle on the wall shouldn't be there, we'll take
-					it down. No form, no questions. See the terms for what's allowed.
-				</p>
-			</div>
 
 			<h2>Who made this</h2>
 			<p>
-				doodlebooth.lol is a small side project — built fast, deployed on Cloudflare's edge, and
-				intentionally kept to one screen. It's the kind of thing that exists because it was fun
-				enough to ship.
+				doodleai.art is a small side project — built fast, deployed on Cloudflare's edge. It's
+				the kind of thing that exists because it was fun enough to ship.
 			</p>
 		</div>
 
 		<div class="page-cta">
-			<a href="/">Go draw something →</a>
+			<a href="/">Start doodling →</a>
 		</div>
 	</main>
 

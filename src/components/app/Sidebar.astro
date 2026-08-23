@@ -1,15 +1,15 @@
 ---
 interface Props {
-  active: "home" | "skills" | "moodboards" | "settings";
+  active: "chat" | "skills" | "moodboards" | "characters" | "settings";
 }
 const { active } = Astro.props;
 
 const navItems = [
   {
-    key: "home",
-    href: "/",
-    label: "New doodle",
-    icon: '<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+    key: "characters",
+    href: "/characters",
+    label: "Characters",
+    icon: '<circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.6"/><path d="M5 20c1.3-3.8 4.3-5.8 7-5.8s5.7 2 7 5.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   {
     key: "moodboards",
@@ -37,24 +37,29 @@ const navItems = [
     <span class="sidebar-mark" aria-hidden="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2.5 15c1.5-6.5 3-9.5 4.8-9.5S9 10 11 10s2-6 4.3-6 2.6 6.8 4.2 6.8 1.5-2.3 3-2.3" stroke="#3D2900" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </span>
-    <span class="sidebar-word">DoodleBooth</span>
+    <span class="sidebar-word">Doodle AI</span>
     <button class="sidebar-collapse" id="sidebarCollapse" type="button" aria-label="Collapse sidebar">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
   </div>
 
   <nav class="sidebar-nav" aria-label="Main">
+    <a href="/" class="sidebar-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+      <span class="sidebar-label">New chat</span>
+    </a>
     {navItems.map((item) => (
       <a href={item.href} class="sidebar-link" aria-current={active === item.key ? "page" : undefined} data-active={active === item.key ? "true" : "false"}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" set:html={item.icon} />
         <span class="sidebar-label">{item.label}</span>
       </a>
     ))}
-    <button class="sidebar-link" id="akkuNavToggle" type="button">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="4" y="6.5" width="16" height="12" rx="4.5" stroke="currentColor" stroke-width="1.6"/><circle cx="9.5" cy="12.5" r="1.25" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.25" fill="currentColor"/><path d="M12 6.5V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <span class="sidebar-label">Akku</span>
-    </button>
   </nav>
+
+  <div class="sidebar-chats" id="sidebarChats">
+    <div class="sidebar-chats-title sidebar-label">Chats</div>
+    <div class="sidebar-chats-list" id="sidebarChatsList"></div>
+  </div>
 
   <div class="sidebar-bottom">
     <a class="sidebar-key-status" id="sidebarKeyStatus" href="/settings">
@@ -150,6 +155,42 @@ const navItems = [
   .sidebar-link:hover { background: var(--hover); color: var(--text); }
   .sidebar-link[data-active="true"] { background: var(--hover); color: var(--text); }
   .sidebar-link svg { flex: 0 0 auto; }
+
+  .sidebar-chats {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sidebar-chats-title {
+    padding: 4px 10px 2px;
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    color: var(--text-dimmer);
+    text-transform: uppercase;
+  }
+  .sidebar-chats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: auto;
+    min-height: 0;
+  }
+  .sidebar-chat-link {
+    display: block;
+    padding: 7px 10px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sidebar-chat-link:hover { background: var(--hover); color: var(--text); }
+  .sidebar-chat-link[data-active="true"] { background: var(--hover); color: var(--text); }
+  .sidebar-chats-empty { padding: 6px 10px; font-size: 12.5px; color: var(--text-dimmer); }
+  .sidebar.collapsed .sidebar-chats { display: none; }
 
   .sidebar-bottom {
     margin-top: auto;

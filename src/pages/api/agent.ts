@@ -1,28 +1,52 @@
 import type { APIContext } from "astro";
+import { z } from "zod";
+import { mastra } from "../../mastra";
 import { recommendDoodleMode } from "../../lib/doodle-mode-recommender";
+import { bridgeCloudflareEnv } from "../../lib/env-bridge";
 
 export const prerender = false;
+
+const recommendationSchema = z.object({
+  mode: z.enum(["normal", "collage", "full-body"]),
+  reason: z.string(),
+});
 
 /**
  * POST /api/agent
  *
  * Accepts JSON: { "message": string }
  * Returns JSON: { "mode": "normal" | "collage" | "full-body", "reason": string }
- * from the local DoodleBooth skills layer. This endpoint deliberately has no
- * model-provider dependency, so local testing works without an API key.
+ *
+ * Tries the real Mastra `doodleAgent` (OpenRouter model, see
+ * src/mastra/agents/doodle-agent.ts) first. That needs OPENROUTER_API_KEY
+ * set (.dev.vars locally) and currently only runs reliably in local Node
+ * dev — see README.md's Cloudflare/Mastra note. Any failure there (missing
+ * key, model error, the Cloudflare Worker limitation) falls back to the
+ * local rule-based recommender so the endpoint never hard-fails.
  */
 export async function POST(context: APIContext) {
+  let message: string | undefined;
   try {
     const body = await context.request.json().catch(() => ({}));
-    const { message } = body as { message?: string };
-
-    if (!message || typeof message !== "string" || !message.trim()) {
-      return json({ error: "A message is required" }, 400);
-    }
-
-    return json(recommendDoodleMode(message));
+    message = (body as { message?: string }).message;
   } catch {
     return json({ error: "Invalid agent request" }, 400);
+  }
+  if (!message || typeof message !== "string" || !message.trim()) {
+    return json({ error: "A message is required" }, 400);
+  }
+
+  try {
+    const agent = mastra.getAgent("doodleAgent");
+    const result = await agent.generate(
+      `Decide which doodle generation mode best fits this request and give one brief reason:\n\n"${message}"`,
+      { structuredOutput: { schema: recommendationSchema } },
+    );
+    return json(result.object);
+  } catch {
+    // No OPENROUTER_API_KEY, model/network error, or the Cloudflare Worker
+    // build not supporting @mastra/core yet — fall back to local rules.
+    return json(recommendDoodleMode(message));
   }
 }
 

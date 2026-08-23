@@ -1,5 +1,6 @@
 import type { APIContext } from "astro";
 import { getCollection } from "astro:content";
+import { SKILLS } from "../lib/skills";
 
 export const prerender = false;
 
@@ -21,7 +22,7 @@ interface Entry {
 }
 
 export async function GET(context: APIContext) {
-  const site = context.site ?? new URL("https://doodlebooth.lol");
+  const site = context.site ?? new URL("https://doodleai.art");
 
   const posts = await getCollection("blog");
 
@@ -31,12 +32,19 @@ export async function GET(context: APIContext) {
     .sort((a, b) => b.getTime() - a.getTime())[0];
 
   const entries: Entry[] = [
-    // The wall changes every time someone drops a doodle.
-    { path: "/", changefreq: "daily", priority: "1.0" },
+    // "/" is now a personal chat landing page (client-rendered, per-browser
+    // localStorage state) — no unique public content to index. /skills is
+    // the app's real public content (the marketplace + each skill's page).
+    { path: "/skills/", changefreq: "weekly", priority: "0.9" },
     { path: "/blog/", lastmod: newestPost, changefreq: "weekly", priority: "0.8" },
     { path: "/about/", changefreq: "monthly", priority: "0.6" },
     { path: "/terms/", changefreq: "yearly", priority: "0.3" },
     { path: "/privacy/", changefreq: "yearly", priority: "0.3" },
+    ...SKILLS.filter((s) => s.runnable).map((skill) => ({
+      path: `/skills/${skill.id}/`,
+      changefreq: "monthly" as const,
+      priority: "0.7",
+    })),
     ...posts.map((post) => ({
       path: `/blog/${post.id}/`,
       lastmod: post.data.updatedDate ?? post.data.pubDate,

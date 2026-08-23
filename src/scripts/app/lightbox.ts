@@ -2,6 +2,8 @@
    includes <Lightbox /> calls initLightbox() once, then openLightbox(items,
    startUrl) whenever a tile/result is clicked. */
 
+import { setImageSrc } from "./dom-utils";
+
 let items: string[] = [];
 let index = 0;
 let ready = false;
@@ -26,7 +28,7 @@ function updateNav(): void {
 function showAt(i: number): void {
   if (items.length === 0 || !img) return;
   index = (i + items.length) % items.length;
-  img.src = items[index];
+  setImageSrc(img, items[index]);
   updateNav();
 }
 

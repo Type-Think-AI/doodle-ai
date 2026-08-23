@@ -1,11 +1,11 @@
 ---
 interface Props {
-  active: "home" | "skills" | "moodboards" | "settings";
+  active: "chat" | "skills" | "moodboards" | "characters" | "settings";
 }
 const { active } = Astro.props;
 
 const items = [
-  { key: "home", href: "/", label: "Home", icon: '<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>' },
+  { key: "chat", href: "/", label: "Chat", icon: '<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>' },
   { key: "skills", href: "/skills", label: "Skills", icon: '<circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="16" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 13.6 13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' },
   { key: "moodboards", href: "/moodboards", label: "Boards", icon: '<rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 15l4.2-3.6L12 15l3-2.4 5.5 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' },
   { key: "settings", href: "/settings", label: "Settings", icon: '<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z" stroke="currentColor" stroke-width="1.8"/>' },

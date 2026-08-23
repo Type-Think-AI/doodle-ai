@@ -5,7 +5,7 @@
 
 export type ThemeName = "dark" | "light";
 
-export const THEME_STORAGE_KEY = "doodlebooth-theme";
+export const THEME_STORAGE_KEY = "doodleai-theme";
 
 export function getStoredTheme(): ThemeName {
   try {

@@ -67,6 +67,10 @@
 	.lightbox-nav svg { width: 22px; height: 22px; }
 	.lightbox-prev { left: 14px; }
 	.lightbox-next { right: 14px; }
+	/* Higher specificity than the bare .lightbox-close, .lightbox-nav rule
+	   above (which sets display:flex unconditionally), so the `hidden`
+	   attribute toggled from lightbox.ts actually hides these. */
+	.lightbox-nav[hidden] { display: none; }
 	.lightbox-counter {
 		position: absolute;
 		bottom: 18px;

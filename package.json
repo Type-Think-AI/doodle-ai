@@ -1,6 +1,6 @@
 {
-  "name": "doodlebooth-agent",
-  "description": "Standalone next-version DoodleBooth Agent for normal doodles, collages, action modes, and future skills.",
+  "name": "doodleai-agent",
+  "description": "Standalone next-version Doodle AI for normal doodles, collages, action modes, and future skills.",
   "dependencies": {
     "@astrojs/cloudflare": "12.6.12",
     "@astrojs/mdx": "4.3.13",
@@ -21,6 +21,7 @@
   "private": true,
   "scripts": {
     "astro": "astro",
+    "brand:assets": "node scripts/generate-brand-assets.mjs",
     "build": "astro build",
     "cf-typegen": "wrangler types",
     "check": "astro build && tsc && wrangler deploy --dry-run",

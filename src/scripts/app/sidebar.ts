@@ -1,11 +1,12 @@
 /* Sidebar interactivity: collapse toggle (persisted), API-key status pill,
-   theme toggle, and the Akku helper-panel toggle button. Runs on every app
-   shell page (imported by Sidebar.astro). */
+   and theme toggle. Runs on every app shell page (imported by
+   Sidebar.astro). */
 
 import { STORAGE_KEY } from "../../lib/doodle-constants";
 import { getStoredTheme, toggleTheme } from "../../lib/theme";
+import { listThreads } from "./chat-store";
 
-const SIDEBAR_COLLAPSED_KEY = "doodlebooth-sidebar-collapsed";
+const SIDEBAR_COLLAPSED_KEY = "doodleai-sidebar-collapsed";
 
 function initSidebar(): void {
   const sidebar = document.getElementById("sidebar");
@@ -16,7 +17,28 @@ function initSidebar(): void {
   const keyLabel = document.getElementById("sidebarKeyLabel");
   const themeToggle = document.getElementById("sidebarThemeToggle");
   const themeLabel = document.getElementById("sidebarThemeLabel");
-  const akkuToggle = document.getElementById("akkuNavToggle");
+  const chatsList = document.getElementById("sidebarChatsList");
+
+  /* ---- Chats ---- */
+  if (chatsList) {
+    const threads = listThreads();
+    const activeId = window.location.pathname.match(/\/c\/([^/]+)/)?.[1];
+    if (threads.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "sidebar-chats-empty";
+      empty.textContent = "No chats yet";
+      chatsList.appendChild(empty);
+    } else {
+      threads.slice(0, 20).forEach((t) => {
+        const link = document.createElement("a");
+        link.href = `/c/${t.id}`;
+        link.className = "sidebar-chat-link";
+        link.textContent = t.title;
+        link.dataset.active = String(t.id === activeId);
+        chatsList.appendChild(link);
+      });
+    }
+  }
 
   /* ---- Collapse ---- */
   let collapsed = false;
@@ -54,11 +76,6 @@ function initSidebar(): void {
       themeLabel.textContent = labelFor(toggleTheme());
     });
   }
-
-  /* ---- Akku helper toggle ---- */
-  akkuToggle?.addEventListener("click", () => {
-    document.dispatchEvent(new CustomEvent("doodlebooth:toggle-helper"));
-  });
 }
 
 if (document.readyState === "loading") {

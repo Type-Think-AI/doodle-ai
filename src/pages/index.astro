@@ -1,51 +1,32 @@
 ---
 import AppShellLayout from '../layouts/AppShellLayout.astro';
 import SkillCard from '../components/app/SkillCard.astro';
-import { SKILLS, SKILL_CATEGORIES } from '../lib/skills';
+import PromptComposer from '../components/app/PromptComposer.astro';
+import { SKILLS } from '../lib/skills';
 ---
 
 <AppShellLayout
-	title="DoodleBooth — AI Doodle Avatar Generator from Your Photo"
-	description="Turn your photo into a playful hand-drawn doodle avatar with DoodleBooth, powered by PicX AI."
-	active="home"
-	crumb="Chaos"
+	title="Doodle AI — AI Doodle Avatar Generator from Your Photo"
+	description="Turn your photo into a playful hand-drawn doodle avatar with Doodle AI, powered by PicX AI."
+	active="chat"
 >
-	<div class="home">
-		<h1 class="home-title">What should we doodle?</h1>
+	<div class="home-page">
+		<div class="home-hero">
+			<h1>What should we doodle?</h1>
+			<p class="home-sub">Attach a photo and tell me what you want, or just describe a character for a surprise.</p>
+			<PromptComposer id="home" variant="hero" placeholder="Describe a doodle or attach a photo" />
+		</div>
 
-		<div class="home-prompt">
-			<textarea id="homePrompt" placeholder="Describe a doodle or drop a photo" rows="2"></textarea>
-			<div class="home-prompt-row">
-				<button class="home-icon-btn" id="homePhotoBtn" type="button" aria-label="Start from a photo">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
-				</button>
-				<a class="home-icon-btn" href="/skills" aria-label="Browse skills">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+		<div class="home-skills">
+			<div class="home-skills-head">
+				<h2>Skills</h2>
+				<a href="/skills">Browse all
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
 				</a>
-				<p class="home-status" id="homeStatus" role="status" aria-live="polite"></p>
-				<button class="home-send" id="homeSend" type="button" aria-label="Send">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
-				</button>
 			</div>
-		</div>
-
-		<div class="home-tabs-row">
-			<div class="home-tabs" id="homeTabs" role="tablist" aria-label="Filter skills">
-				{SKILL_CATEGORIES.map((c, i) => (
-					<button type="button" class="home-tab" data-cat={c.id} aria-pressed={i === 0 ? "true" : "false"}>{c.label}</button>
-				))}
+			<div class="home-skills-grid">
+				{SKILLS.map((skill) => <SkillCard skill={skill} />)}
 			</div>
-			<a class="home-browse-all" href="/skills">Browse all
-				<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
-			</a>
-		</div>
-
-		<div class="home-grid" id="homeGrid">
-			{SKILLS.map((skill) => (
-				<div class="home-grid-item" data-category={skill.category}>
-					<SkillCard skill={skill} />
-				</div>
-			))}
 		</div>
 	</div>
 </AppShellLayout>
@@ -53,124 +34,23 @@ import { SKILLS, SKILL_CATEGORIES } from '../lib/skills';
 <script src="../scripts/app/home.ts"></script>
 
 <style>
-	.home {
-		max-width: 1120px;
-		margin: 0 auto;
-		padding: 40px 40px 64px;
-	}
-	.home-title {
-		text-align: center;
-		font-size: 40px;
-		font-weight: 500;
-		letter-spacing: -0.03em;
-		color: var(--text);
-		margin: 0 0 30px;
-	}
+	.home-page { max-width: 1000px; margin: 0 auto; padding: 48px 20px 64px; }
 
-	.home-prompt {
-		max-width: 720px;
-		margin: 0 auto;
-		border-radius: 24px;
-		background: var(--prompt-bg);
-		border: 1px solid var(--border2);
-		padding: 16px;
-		box-shadow: 0 1px 4px rgba(2, 4, 26, 0.16);
-	}
-	.home-prompt textarea {
-		width: 100%;
-		border: 0;
-		outline: none;
-		resize: none;
-		background: transparent;
-		color: var(--text);
-		font-size: 16px;
-		line-height: 24px;
-		font-family: inherit;
-	}
-	.home-prompt-row {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin-top: 10px;
-	}
-	.home-icon-btn {
-		width: 36px;
-		height: 36px;
-		border-radius: 10px;
-		border: 1px solid var(--border3);
-		background: transparent;
-		color: var(--text-dim);
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.home-icon-btn:hover { background: var(--icon-hover); }
-	.home-status {
-		margin: 0 0 0 6px;
-		font-size: 12.5px;
-		color: var(--text-dimmer);
-		flex: 1;
-		min-width: 0;
-	}
-	.home-status[data-err="true"] { color: #ff8a8a; }
-	.home-send {
-		margin-left: auto;
-		width: 34px;
-		height: 34px;
-		border-radius: 50%;
-		border: 1px solid var(--border3);
-		background: var(--icon-hover);
-		color: var(--text-dim);
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex: 0 0 34px;
-	}
-	.home-send:hover:not(:disabled) { background: var(--send-bg); color: var(--send-fg); border-color: transparent; }
-	.home-send:disabled { opacity: 0.5; cursor: default; }
+	.home-hero { max-width: 680px; margin: 0 auto 56px; text-align: left; }
+	.home-hero h1 { font-size: 34px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); margin: 0 0 8px; text-align: center; }
+	.home-sub { font-size: 14px; color: var(--text-dimmer); margin: 0 0 26px; text-align: center; }
 
-	.home-tabs-row {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		margin: 52px 0 20px;
-	}
-	.home-tabs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-	.home-tab {
-		border: 0;
-		border-radius: 999px;
-		padding: 8px 16px;
-		font-size: 14px;
-		cursor: pointer;
-		background: transparent;
-		color: var(--text-dim);
-		font-family: inherit;
-	}
-	.home-tab[aria-pressed="true"] { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
-	.home-browse-all {
-		margin-left: auto;
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		color: var(--text);
-		font-size: 14px;
-	}
-
-	.home-grid {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 26px 20px;
-	}
-	.home-grid-item[hidden] { display: none; }
+	.home-skills-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+	.home-skills-head h2 { font-size: 18px; font-weight: 600; color: var(--text); margin: 0; }
+	.home-skills-head a { margin-left: auto; display: flex; align-items: center; gap: 6px; color: var(--text); font-size: 13.5px; }
+	.home-skills-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 
 	@media (max-width: 980px) {
-		.home-grid { grid-template-columns: repeat(3, 1fr); }
+		.home-skills-grid { grid-template-columns: repeat(3, 1fr); }
 	}
 	@media (max-width: 720px) {
-		.home { padding: 24px 20px 48px; }
-		.home-title { font-size: 28px; }
-		.home-grid { grid-template-columns: repeat(2, 1fr); gap: 16px 12px; }
+		.home-page { padding: 32px 16px 48px; }
+		.home-hero h1 { font-size: 26px; }
+		.home-skills-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
 	}
 </style>

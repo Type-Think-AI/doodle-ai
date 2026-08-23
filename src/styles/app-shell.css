@@ -1,8 +1,8 @@
 /* App shell chrome shared by Home, Skills, Create, Moodboards, Settings.
    Per-page content styling lives with each page; this file only owns the
-   sidebar+header+content+helper grid and responsive collapse to a bottom
-   tab bar. Component-level styles (Sidebar, MobileNav, AkkuPanel) live in
-   their own .astro files. */
+   sidebar+content grid and its responsive collapse to a bottom tab bar.
+   Component-level styles (Sidebar, MobileNav) live in their own .astro
+   files. */
 
 html,
 body {
@@ -25,43 +25,6 @@ body {
   background: var(--surface);
 }
 
-.app-shell-header {
-  height: 56px;
-  flex: 0 0 56px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.app-shell-crumb {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text);
-}
-
-.app-shell-helper-btn {
-  margin-left: auto;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.app-shell-helper-btn:hover { color: var(--text); background: var(--hover); }
-
-.app-shell-body {
-  flex: 1;
-  display: flex;
-  min-height: 0;
-}
-
 .app-shell-content {
   flex: 1;
   min-width: 0;
@@ -70,7 +33,5 @@ body {
 
 @media (max-width: 860px) {
   .app-shell { height: auto; overflow: visible; }
-  .app-shell-body { flex-direction: column; }
   .app-shell-content { padding-bottom: 72px; }
-  .app-shell-helper-btn { display: none; }
 }

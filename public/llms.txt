@@ -1,12 +1,12 @@
-# DoodleBooth
+# Doodle AI
 
-> DoodleBooth turns a selected photo into a playful, hand-drawn doodle avatar using the PicX image API.
+> Doodle AI turns a selected photo into a playful, hand-drawn doodle avatar using the PicX image API.
 
 ## Product
-- Homepage: https://doodlebooth.lol/
+- Homepage: https://doodleai.art/
 - Upload a photo and generate a doodle avatar.
 - Choose Pastel, Neon, Sunset, or Mono visual themes.
-- Download the generated avatar locally as `doodlebooth-avatar.png`.
+- Download the generated avatar locally as `doodleai-avatar.png`.
 
 ## Technical flow
 1. The browser selects a photo.
@@ -16,15 +16,15 @@
 5. The browser downloads the result locally.
 
 ## Important boundaries
-- DoodleBooth is an Astro 5 application deployed to Cloudflare Workers.
+- Doodle AI is an Astro 5 application deployed to Cloudflare Workers.
 - It does not use a local database, D1, R2, or Cloudinary.
 - User images are processed through PicX managed assets.
 - API routes are implementation endpoints and should not be indexed.
 
 ## Public pages
-- [Homepage](https://doodlebooth.lol/)
-- [About](https://doodlebooth.lol/about/)
-- [Blog](https://doodlebooth.lol/blog/)
-- [Privacy](https://doodlebooth.lol/privacy/)
-- [Terms](https://doodlebooth.lol/terms/)
-- [Sitemap](https://doodlebooth.lol/sitemap.xml)
+- [Homepage](https://doodleai.art/)
+- [About](https://doodleai.art/about/)
+- [Blog](https://doodleai.art/blog/)
+- [Privacy](https://doodleai.art/privacy/)
+- [Terms](https://doodleai.art/terms/)
+- [Sitemap](https://doodleai.art/sitemap.xml)

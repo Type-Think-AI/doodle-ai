@@ -4,7 +4,7 @@ export const prerender = false;
 
 // robots.txt — allow public pages, disallow API routes, point to sitemap.
 export function GET(context: APIContext) {
-	const site = context.site ?? new URL('https://doodlebooth.lol');
+	const site = context.site ?? new URL('https://doodleai.art');
 	const body = `User-agent: *
 Allow: /
 Disallow: /api/

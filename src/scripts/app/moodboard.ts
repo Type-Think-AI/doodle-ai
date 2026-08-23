@@ -2,7 +2,7 @@
    Used by the /create/[skill] result view (adds) and /moodboards (reads,
    removes). Ported unchanged from the old doodle.ts single-page app. */
 
-const MOODBOARD_KEY = "doodlebooth_moodboard";
+const MOODBOARD_KEY = "doodleai_moodboard";
 const MOODBOARD_LIMIT = 24;
 
 export interface MoodboardItem {

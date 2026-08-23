@@ -49,7 +49,7 @@ export async function POST(context: APIContext) {
       return json({ error: "Images must be 20 MB or smaller" }, 400);
     }
 
-    // Use the published PicX SDK so DoodleBooth stays aligned with the public
+    // Use the published PicX SDK so Doodle AI stays aligned with the public
     // managed-assets contract and its multipart handling.
     const asset = await new PicX(apiKey).assets.create({
       file: image,

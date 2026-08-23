@@ -1,11 +1,7 @@
-/* Settings page: API key persistence, appearance toggle, and the two local
-   "doodle defaults" preferences (visual style + default skill). */
+/* Settings page: API key persistence, appearance toggle, and the "doodle
+   defaults" visual-style preference. */
 
-import {
-  DEFAULT_SKILL_STORAGE_KEY,
-  STORAGE_KEY,
-  STYLE_THEME_STORAGE_KEY,
-} from "../../lib/doodle-constants";
+import { STORAGE_KEY, STYLE_THEME_STORAGE_KEY } from "../../lib/doodle-constants";
 import { getStoredTheme, setTheme, type ThemeName } from "../../lib/theme";
 
 function initSettings(): void {
@@ -13,7 +9,6 @@ function initSettings(): void {
   const keySaved = document.getElementById("keySaved");
   const appearanceRow = document.getElementById("appearanceRow");
   const styleSelect = document.getElementById("styleThemeSelect") as HTMLSelectElement | null;
-  const defaultSkillSelect = document.getElementById("defaultSkillSelect") as HTMLSelectElement | null;
   if (!apiKeyInput) return;
 
   /* ---- API key ---- */
@@ -62,21 +57,6 @@ function initSettings(): void {
     styleSelect.addEventListener("change", () => {
       try {
         localStorage.setItem(STYLE_THEME_STORAGE_KEY, styleSelect.value);
-      } catch {
-        /* storage unavailable — preference stays session-only */
-      }
-    });
-  }
-
-  if (defaultSkillSelect) {
-    try {
-      defaultSkillSelect.value = localStorage.getItem(DEFAULT_SKILL_STORAGE_KEY) || "normal";
-    } catch {
-      defaultSkillSelect.value = "normal";
-    }
-    defaultSkillSelect.addEventListener("change", () => {
-      try {
-        localStorage.setItem(DEFAULT_SKILL_STORAGE_KEY, defaultSkillSelect.value);
       } catch {
         /* storage unavailable — preference stays session-only */
       }

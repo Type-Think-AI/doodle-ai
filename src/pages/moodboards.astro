@@ -3,7 +3,7 @@ import AppShellLayout from '../layouts/AppShellLayout.astro';
 import Lightbox from '../components/app/Lightbox.astro';
 ---
 
-<AppShellLayout title="Moodboards — DoodleBooth" active="moodboards" crumb="Moodboards" showHelper={false}>
+<AppShellLayout title="Moodboards — Doodle AI" active="moodboards">
 	<div class="mood-page">
 		<h1>Moodboards</h1>
 		<p class="mood-sub">Doodles you've generated on this device, saved locally in your browser.</p>
@@ -50,7 +50,7 @@ import Lightbox from '../components/app/Lightbox.astro';
 		cursor: pointer;
 	}
 	.mood-cell:hover { border-color: var(--border3); }
-	.mood-cell img { width: 100%; display: block; }
+	.mood-cell img { width: 100%; display: block; overflow: hidden; font-size: 0; color: transparent; }
 	.mood-remove {
 		position: absolute;
 		top: 6px;

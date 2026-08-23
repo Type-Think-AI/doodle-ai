@@ -1,4 +1,4 @@
-/* DoodleBooth app styles — Chaos Doodle Studio design tokens.
+/* Doodle AI app styles — Chaos Doodle Studio design tokens.
    Dark is the default palette (matches the product's default theme);
    [data-theme="light"] on <html> overrides it. Set/toggled by
    src/lib/theme.ts, applied without a flash by the inline snippet in

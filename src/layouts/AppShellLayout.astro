@@ -2,17 +2,14 @@
 import AppLayout from './AppLayout.astro';
 import Sidebar from '../components/app/Sidebar.astro';
 import MobileNav from '../components/app/MobileNav.astro';
-import AkkuPanel from '../components/app/AkkuPanel.astro';
 import '../styles/app-shell.css';
 
 interface Props {
   title: string;
   description?: string;
-  active: 'home' | 'skills' | 'moodboards' | 'settings';
-  crumb?: string;
-  showHelper?: boolean;
+  active: 'chat' | 'skills' | 'moodboards' | 'characters' | 'settings';
 }
-const { title, description, active, crumb, showHelper = true } = Astro.props;
+const { title, description, active } = Astro.props;
 ---
 
 <AppLayout title={title} description={description}>
@@ -20,27 +17,11 @@ const { title, description, active, crumb, showHelper = true } = Astro.props;
     <Sidebar active={active} />
 
     <div class="app-shell-main">
-      <header class="app-shell-header">
-        <span class="app-shell-crumb">{crumb ?? title}</span>
-        <button class="app-shell-helper-btn" id="shellHelperToggle" type="button" aria-label="Toggle Akku assistant">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="6.5" width="16" height="12" rx="4.5" stroke="currentColor" stroke-width="1.7"/></svg>
-        </button>
-      </header>
-
-      <div class="app-shell-body">
-        <div class="app-shell-content">
-          <slot />
-        </div>
-        <AkkuPanel open={showHelper} />
+      <div class="app-shell-content">
+        <slot />
       </div>
     </div>
   </div>
 
   <MobileNav active={active} />
 </AppLayout>
-
-<script>
-  document.getElementById('shellHelperToggle')?.addEventListener('click', () => {
-    document.dispatchEvent(new CustomEvent('doodlebooth:toggle-helper'));
-  });
-</script>

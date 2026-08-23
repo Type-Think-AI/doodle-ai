@@ -17,7 +17,7 @@ const {
 	noindex = false,
 } = Astro.props;
 
-const site = Astro.site ?? new URL('https://doodlebooth.lol');
+const site = Astro.site ?? new URL('https://doodleai.art');
 const canonical = new URL(Astro.url.pathname, site);
 const ogImage = new URL(image, site);
 
@@ -27,14 +27,14 @@ const jsonLd = {
 		{
 			'@type': 'WebSite',
 			'@id': `${site.href}#website`,
-			name: 'DoodleBooth',
+			name: 'Doodle AI',
 			url: site.href,
 			description: SITE_DESCRIPTION,
 		},
 		{
 			'@type': 'SoftwareApplication',
 			'@id': `${site.href}#application`,
-			name: 'DoodleBooth',
+			name: 'Doodle AI',
 			applicationCategory: 'MultimediaApplication',
 			operatingSystem: 'Web',
 			url: site.href,
@@ -52,7 +52,7 @@ const jsonLd = {
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
-		<meta name="application-name" content="DoodleBooth" />
+		<meta name="application-name" content="Doodle AI" />
 		<meta name="referrer" content="strict-origin-when-cross-origin" />
 
 		<!-- Sets [data-theme] before first paint so a stored "light" preference
@@ -90,12 +90,12 @@ const jsonLd = {
 
 		<!-- Open Graph -->
 		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content="doodlebooth.lol" />
+		<meta property="og:site_name" content="doodleai.art" />
 		<meta property="og:url" content={canonical} />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta property="og:image" content={ogImage} />
-		<meta property="og:image:alt" content="DoodleBooth hand-drawn avatar creator" />
+		<meta property="og:image:alt" content="Doodle AI hand-drawn avatar creator" />
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
 
@@ -104,7 +104,7 @@ const jsonLd = {
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={ogImage} />
-		<meta name="twitter:image:alt" content="DoodleBooth hand-drawn avatar creator" />
+		<meta name="twitter:image:alt" content="Doodle AI hand-drawn avatar creator" />
 
 		<!-- Structured data -->
 		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
@@ -120,7 +120,7 @@ const jsonLd = {
 		<script
 			defer
 			data-website-id="dfid_dmS4cKTHVBZqQ8Yln9TTM"
-			data-domain="doodlebooth.lol"
+			data-domain="doodleai.art"
 			src="https://datafa.st/js/script.js"
 		></script>
 	</head>

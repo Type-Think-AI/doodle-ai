@@ -2,6 +2,7 @@
 
 import { loadMoodboard, removeFromMoodboard, type MoodboardItem } from "./moodboard";
 import { initLightbox, openLightbox } from "./lightbox";
+import { setImageSrc, guardBfcacheRestore } from "./dom-utils";
 
 function initMoodboardsPage(): void {
   const grid = document.getElementById("moodGrid");
@@ -23,9 +24,9 @@ function initMoodboardsPage(): void {
       cell.setAttribute("aria-label", "View full doodle");
 
       const img = document.createElement("img");
-      img.src = item.url;
       img.alt = "Saved doodle";
       img.loading = "lazy";
+      setImageSrc(img, item.url);
       cell.appendChild(img);
 
       const removeBtn = document.createElement("button");
@@ -54,6 +55,7 @@ function initMoodboardsPage(): void {
   }
 
   render();
+  guardBfcacheRestore();
 }
 
 if (document.readyState === "loading") {

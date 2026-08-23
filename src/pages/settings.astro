@@ -1,19 +1,16 @@
 ---
 import AppShellLayout from '../layouts/AppShellLayout.astro';
-import { SKILLS } from '../lib/skills';
 import { THEMES } from '../lib/doodle-constants';
-
-const runnableSkills = SKILLS.filter((s) => s.runnable);
 ---
 
-<AppShellLayout title="Settings — DoodleBooth" active="settings" crumb="Settings" showHelper={false}>
+<AppShellLayout title="Settings — Doodle AI" active="settings">
 	<div class="settings-page">
 		<h1>Settings</h1>
 
 		<section>
 			<h2>PicX API key</h2>
 			<p class="settings-hint">
-				DoodleBooth is bring-your-own-key: your PicX API key is stored only in this browser's
+				Doodle AI is bring-your-own-key: your PicX API key is stored only in this browser's
 				local storage and sent directly to PicX when you upload or generate. There's no account
 				or server-side storage.
 			</p>
@@ -50,15 +47,6 @@ const runnableSkills = SKILLS.filter((s) => s.runnable);
 				</div>
 				<select id="styleThemeSelect">
 					{THEMES.map((t) => <option value={t.id}>{t.label}</option>)}
-				</select>
-			</div>
-			<div class="pref-row">
-				<div class="pref-label">
-					<span>Default skill</span>
-					<span class="pref-sub">Used by Home's photo button</span>
-				</div>
-				<select id="defaultSkillSelect">
-					{runnableSkills.map((s) => <option value={s.id}>{s.name}</option>)}
 				</select>
 			</div>
 		</section>
