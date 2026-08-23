@@ -18,7 +18,11 @@ const thumb = buildSkillThumbnail(skill);
 		</a>
 
 		<div class="detail-head">
-			<div class="detail-thumb" set:html={thumb} />
+			{skill.thumbnailUrl ? (
+				<div class="detail-thumb"><img src={skill.thumbnailUrl} alt={`${skill.name} sample output`} loading="lazy" /></div>
+			) : (
+				<div class="detail-thumb" set:html={thumb} />
+			)}
 			<div class="detail-headings">
 				<span class="detail-name">{skill.name}</span>
 				<span class="detail-tagline">{skill.tagline}</span>
@@ -68,7 +72,8 @@ const thumb = buildSkillThumbnail(skill);
 		overflow: hidden;
 		border: 1px solid var(--border2);
 	}
-	.detail-thumb :global(svg) { width: 100%; height: 100%; display: block; }
+	.detail-thumb :global(svg),
+	.detail-thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
 	.detail-headings { display: flex; flex-direction: column; gap: 5px; }
 	.detail-name { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); }
 	.detail-tagline { font-size: 14px; color: var(--text-dim); }

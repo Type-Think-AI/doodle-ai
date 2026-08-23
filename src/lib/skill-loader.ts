@@ -53,8 +53,15 @@ export interface SkillDefinition {
   runnable: boolean;
   requiresPhoto: boolean;
   aspectRatio: "1:1" | "3:2";
-  /** Index into SAMPLE_PRESETS (doodle-constants.ts), for a preview thumbnail. */
+  /** Index into SAMPLE_PRESETS (doodle-constants.ts), for a synthetic preview thumbnail. */
   sampleIndex: number;
+  /**
+   * A real generated PicX output, used as the card thumbnail instead of the
+   * synthetic SVG when present. Set this to an actual `generateDoodle`
+   * result for the skill — never a placeholder or unrelated image — so the
+   * marketplace shows what the skill genuinely produces.
+   */
+  thumbnailUrl?: string;
   /** Display order across the UI. */
   order: number;
 }
@@ -181,6 +188,7 @@ function loadSkillDefinitions(): SkillDefinition[] {
       requiresPhoto: requireBoolean(metadata, "requiresPhoto", path),
       aspectRatio: requireOneOf(metadata, "aspectRatio", ASPECT_RATIOS, path),
       sampleIndex: requireNumber(metadata, "sampleIndex", path),
+      thumbnailUrl: optionalString(metadata, "thumbnailUrl", path),
       order: requireNumber(metadata, "order", path),
     } satisfies SkillDefinition;
   });

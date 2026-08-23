@@ -36,8 +36,10 @@ export interface Skill {
   runnable: boolean;
   requiresPhoto: boolean;
   aspectRatio: "1:1" | "3:2";
-  /** Index into SAMPLE_PRESETS (doodle-constants.ts), for a real preview thumbnail. */
+  /** Index into SAMPLE_PRESETS (doodle-constants.ts), used only when thumbnailUrl is unset. */
   sampleIndex: number;
+  /** A real generateDoodle output to show instead of the synthetic SVG preview, when set. */
+  thumbnailUrl?: string;
   /** The agent-facing skill name (kebab-case), i.e. its SKILL.md directory. */
   packageName: string;
 }
@@ -54,6 +56,7 @@ export const SKILLS: Skill[] = SKILL_DEFINITIONS.map((definition) => ({
   requiresPhoto: definition.requiresPhoto,
   aspectRatio: definition.aspectRatio,
   sampleIndex: definition.sampleIndex,
+  thumbnailUrl: definition.thumbnailUrl,
   packageName: definition.name,
 }));
 

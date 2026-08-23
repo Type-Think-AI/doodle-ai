@@ -56,6 +56,17 @@ import PromptComposer from '../../components/app/PromptComposer.astro';
 		background: var(--surface);
 	}
 
+	/* .app-shell drops its fixed viewport height at this same breakpoint
+	   (app-shell.css) so pages with natural page-scroll (Home, Skills,
+	   Moodboards) work on mobile. Chat needs the opposite — a real
+	   viewport-height column so its thread scrolls internally and the
+	   composer stays pinned above the fixed bottom nav — so it restores
+	   that height itself here instead of inheriting the collapsed one.
+	   72px matches .app-shell-content's mobile nav reservation. */
+	@media (max-width: 860px) {
+		.chat-page { height: auto; min-height: calc(100dvh - 72px); }
+	}
+
 	@media (max-width: 720px) {
 		.chat-page { padding: 0 14px; }
 		.chat-empty h1 { font-size: 24px; }
