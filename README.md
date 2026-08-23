@@ -4,32 +4,55 @@ Doodle AI is the separate next-version project for the new Doodle AI direction. 
 
 - Original project: `/Users/yash/picx/doodlebooth`
 - New project: `/Users/yash/picx/doodlebooth-agent`
+- Public repository: [Type-Think-AI/doodle-ai](https://github.com/Type-Think-AI/doodle-ai)
+- Product domain: [doodleai.art](https://doodleai.art)
 
-The old project remains the existing production version. This project is local-only until the new UI, agent skills, and generation flows are approved.
+The old project remains the existing production version. This repository contains the new chat-first application, its Agent Skills workflow, and the Kiro project configuration used to guide development.
+
+> **Current status:** The source is public and locally reproducible. A confirmed live Cloudflare deployment and public demo video are still outstanding; the earlier Worker deployment attempt was cancelled before completion.
 
 ## Product direction
 
-The agent is the decision layer for a scalable skills-based Doodle AI:
+Doodle AI is a conversational creative studio. The agent is the decision layer for a scalable skills-based experience:
 
 - Normal doodle avatar
 - Close-up doodle collage
 - Full-body action collage
-- Future sticker packs, emotional modes, seasonal packs, and paid packs
+- Sticker packs, emotional modes, seasonal packs, and other extensible skills
 
-The goal is to add new capabilities as skills and configuration, instead of creating a separate hardcoded UI for every individual feedback request.
+The goal is to add capabilities as skills and configuration instead of creating a separate hardcoded UI for every individual request.
 
 ## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Framework | Astro 5 + TypeScript |
-| Runtime target | Cloudflare Worker, planned as a separate Worker |
+| Runtime target | Cloudflare Worker `doodleai-agent` |
 | Image generation | PicX API |
 | Agent framework | Mastra |
 | Agent model | OpenRouter `stealth/ox-alpha` for local preview testing |
-| Styling | Existing Doodle AI CSS and Astro markup |
+| Styling | Doodle AI CSS and Astro markup |
 | Package manager | pnpm |
 | Deployment | Wrangler, only after local approval |
+| License | Not selected yet; an OSI-approved license is required before hackathon submission |
+
+## Kiro project setup
+
+This repository uses Kiro's project-scoped configuration rather than copying Claude's local settings:
+
+- `/Users/yash/picx/doodlebooth-agent/.kiro/agents/doodle-ai.md` is the shareable Kiro custom agent. It uses documented Markdown frontmatter, project resources, and capability-based `permissions.rules`.
+- `/Users/yash/picx/doodlebooth-agent/.kiro/steering/doodle-ai-project.md` records project boundaries, architecture conventions, validation commands, and honest hackathon evidence requirements.
+- `/Users/yash/picx/doodlebooth-agent/.kiro/settings/cli.json` is machine-local CLI state and remains ignored; Kiro documents CLI settings as user-scoped at `~/.kiro/settings/cli.json`.
+- The former `/Users/yash/picx/doodlebooth-agent/.claude/settings.local.json` contained local Claude permissions and an MCP enablement flag. Its reusable permission intent was converted into the custom agent. The temporary-file read rule was omitted because it was outside the project, and `playwright-mcp` was not invented as a Kiro server because an enablement name is not a valid command/URL definition.
+
+To use the project agent, open the repository in Kiro IDE or run Kiro CLI from `/Users/yash/picx/doodlebooth-agent`, then select `doodle-ai` from the agent picker. Review or approve write, shell, deployment, and MCP permissions according to your local Kiro policy.
+
+Official references used for this setup:
+
+- [Kiro custom agents](https://kiro.dev/docs/custom-agents/)
+- [Kiro agent configuration reference](https://kiro.dev/docs/custom-agents/configuration-reference/)
+- [Kiro permissions](https://kiro.dev/docs/permissions/)
+- [Kiro configuration scopes](https://kiro.dev/docs/configuration/)
 
 ## Local-first workflow
 
@@ -51,7 +74,7 @@ pnpm build
 pnpm exec wrangler deploy --dry-run
 ```
 
-Do not run `pnpm deploy` until the new project is approved and a new Worker identity/domain has been selected.
+For a submission or release, run the first two checks locally and use the Wrangler dry run before any real deploy. Do not deploy over the original Worker or run a production deploy without explicit approval.
 
 ## Environment
 
@@ -67,12 +90,14 @@ The provided `stealth/ox-alpha` model is a free preview model from an anonymous 
 
 ## Project structure
 
-The app is chat-first: `/` is a prompt-box landing page, `/c/[id]` is a real
-conversation thread (localStorage-backed) with the doodle agent, which can
-actually run a generation mid-conversation via a Mastra tool.
+The app is chat-first: `/` is a prompt-box landing page, `/c/[id]` is a real conversation thread (localStorage-backed) with the doodle agent, which can actually run a generation mid-conversation via a Mastra tool.
 
 ```text
 /Users/yash/picx/doodlebooth-agent/
+├── .kiro/
+│   ├── agents/doodle-ai.md               # Shareable Kiro custom agent
+│   ├── steering/doodle-ai-project.md     # Project conventions and boundaries
+│   └── settings/cli.json                 # Ignored machine-local CLI settings
 ├── src/
 │   ├── mastra/
 │   │   ├── index.ts                       # Mastra instance and agent registry
@@ -95,23 +120,25 @@ actually run a generation mid-conversation via a Mastra tool.
 │   └── lib/{doodle-constants,skills}.ts   # Prompt builders, mode data, skill catalog (from SKILL.md)
 ├── public/                                # Icons, fonts, and static assets
 ├── astro.config.mjs                       # Astro config (incl. Cloudflare/Mastra bundling workaround — see below)
-├── wrangler.json                          # Future Worker identity: doodleai-agent
+├── wrangler.json                          # Worker identity: doodleai-agent
 ├── package.json                           # Project scripts and pinned dependencies
 └── README.md
 ```
 
-## Git and release policy
+## Public release policy
 
-This is a fresh local git repository on branch `main` with no remote configured yet. The old repository remote was intentionally removed so this project cannot accidentally push to or deploy over the original version.
+The public repository is [https://github.com/Type-Think-AI/doodle-ai](https://github.com/Type-Think-AI/doodle-ai). The original repository and Worker remain separate so this project cannot accidentally replace the stable application.
 
 Release sequence:
 
-1. Build and test locally.
-2. Review the new UI and generation results.
-3. Create a new GitHub repository/origin for this project.
-4. Push this project to the new origin.
-5. Create or confirm the separate Cloudflare Worker `doodleai-agent`.
-6. Deploy only after explicit approval.
+1. Preserve and review unrelated working-tree changes.
+2. Run the typecheck, production build, and Wrangler dry run.
+3. Review the UI and generation results locally.
+4. Confirm the separate Cloudflare Worker `doodleai-agent` and domain configuration.
+5. Deploy only after explicit approval.
+6. Run a live smoke test and update the submission testing instructions.
+
+No commit or push is implied by local changes in this working tree; those actions require explicit approval.
 
 ## Skills
 
@@ -142,6 +169,38 @@ Loading happens at **build time** (Vite `import.meta.glob`). Mastra can also tak
 `@mastra/core`'s optional workspace-skills feature statically pulls in a native binary (`@ast-grep/napi`) and a chunk of Node-only CLI process-spawning tooling (`execa` and its dependency chain) that Cloudflare's bundler can't resolve — none of it is on the code path `agent.generate()` + the `generateDoodle` tool actually use. `astro.config.mjs` externalizes that dependency chain (`vite.build.rollupOptions.external` / `vite.ssr.external`) so `pnpm build` succeeds; if a future `@mastra/core` upgrade pulls in a new offender, `pnpm build` will fail with a Rollup "failed to resolve import" error naming it — add it to that same external list.
 
 No D1/KV storage or `@mastra/memory` is configured — conversation history lives client-side in `localStorage` (`src/scripts/app/chat-store.ts`), sent fresh to `/api/chat` every turn; the server stays stateless. This was a deliberate choice to avoid reopening the bundling problem above for a young feature, not a limitation of Mastra itself — see "Next scope" below.
+
+## Kiro hackathon submission preparation
+
+### Recommended category
+
+**Games & Entertainment** is the strongest fit because Doodle AI is an expressive, interactive visual creation experience. **Wildcard / Freestyle** is a reasonable alternative if the current submission form classifies creative AI tools differently. Select exactly one category in the final submission form.
+
+### Repository status and submission blockers
+
+- Working Astro application source with local setup instructions.
+- Public repository: [https://github.com/Type-Think-AI/doodle-ai](https://github.com/Type-Think-AI/doodle-ai).
+- [ ] Select an OSI-approved open-source license with the project owner and add it to `/Users/yash/picx/doodlebooth-agent/` before submission.
+- [ ] Record and publish an English demonstration video shorter than three minutes. Show the running app and explain specifically how Kiro's steering, custom agent, permissions, or spec-driven workflow supported development.
+- [ ] Confirm a public, working demo or test build and add its URL plus any testing instructions to the submission form.
+- [ ] Verify third-party PicX, OpenRouter, Cloudflare, and asset permissions before submission.
+- [ ] Write the final English Devpost description, including the new use case, functionality, category, architecture, and Kiro usage.
+- [ ] Do not claim a live deployment until a Worker deploy and smoke test have completed successfully.
+
+The rules source used for this checklist is [kiro.devpost.com/rules](https://kiro.devpost.com/rules). The originally supplied `https://codingagents.fyi/hackathon/kiro/rules/` page was unavailable during retrieval, so any newer rules must take precedence over this repository checklist.
+
+## Testing instructions
+
+For local judging or review:
+
+1. Use Node and pnpm versions compatible with the lockfile.
+2. Run `pnpm install` in `/Users/yash/picx/doodlebooth-agent`.
+3. Copy `/Users/yash/picx/doodlebooth-agent/.dev.vars.example` to `.dev.vars` and add a valid local `OPENROUTER_API_KEY`.
+4. Run `pnpm dev` and open [http://localhost:4321](http://localhost:4321).
+5. Try the prompt landing page, a conversation at `/c/[id]`, the skills marketplace, settings, and a generation flow if valid PicX credentials are configured.
+6. Run `pnpm exec tsc --noEmit`, `pnpm build`, and `pnpm exec wrangler deploy --dry-run` for non-interactive verification.
+
+This application is BYOK/accountless by design. No real credentials belong in the repository, and no live test credentials are published here.
 
 ## Next scope
 

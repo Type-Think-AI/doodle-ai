@@ -203,5 +203,7 @@ dist
 
 # Playwright MCP screenshots and accessibility snapshots
 .playwright-mcp/
-# Local Kiro workspace settings
-.kiro/
+# Local Claude configuration
+.claude/
+# Local Kiro CLI settings
+.kiro/settings/cli.json
