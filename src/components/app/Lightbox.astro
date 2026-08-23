@@ -1,0 +1,86 @@
+<!-- Full-screen image viewer, shared by /create/[skill] (result) and
+     /moodboards (saved tiles). Wired by src/scripts/app/lightbox.ts —
+     each page calls openLightbox(items, startUrl) from its own script. -->
+<div class="lightbox-backdrop" id="lightboxBackdrop" role="dialog" aria-modal="true" aria-label="Doodle viewer">
+	<button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close viewer">
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+	</button>
+	<button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous doodle">
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"></path></svg>
+	</button>
+	<figure class="lightbox-figure">
+		<img id="lightboxImg" alt="Doodle, full view" />
+	</figure>
+	<button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Next doodle">
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>
+	</button>
+	<p class="lightbox-counter" id="lightboxCounter" hidden></p>
+</div>
+
+<style>
+	body.lightbox-lock { overflow: hidden; }
+
+	.lightbox-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 70;
+		display: none;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.92);
+	}
+	.lightbox-backdrop.open { display: flex; }
+	.lightbox-figure {
+		margin: 0;
+		max-width: min(92vw, 640px);
+		max-height: 82vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.lightbox-figure img {
+		max-width: 100%;
+		max-height: 82vh;
+		border-radius: 10px;
+		border: 2px solid var(--border3);
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+		object-fit: contain;
+		display: block;
+	}
+	.lightbox-close,
+	.lightbox-nav {
+		position: absolute;
+		border: 1px solid var(--border3);
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.08);
+		color: #fff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+	.lightbox-close:hover,
+	.lightbox-nav:hover { background: rgba(255, 255, 255, 0.2); }
+	.lightbox-close { top: 18px; right: 18px; width: 40px; height: 40px; }
+	.lightbox-close svg { width: 18px; height: 18px; }
+	.lightbox-nav { top: 50%; width: 44px; height: 44px; transform: translateY(-50%); }
+	.lightbox-nav svg { width: 22px; height: 22px; }
+	.lightbox-prev { left: 14px; }
+	.lightbox-next { right: 14px; }
+	.lightbox-counter {
+		position: absolute;
+		bottom: 18px;
+		left: 50%;
+		transform: translateX(-50%);
+		margin: 0;
+		color: #fff;
+		font-size: 12.5px;
+		opacity: 0.8;
+	}
+
+	@media (max-width: 520px) {
+		.lightbox-nav { width: 38px; height: 38px; }
+		.lightbox-prev { left: 6px; }
+		.lightbox-next { right: 6px; }
+	}
+</style>

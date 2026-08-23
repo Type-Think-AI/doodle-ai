@@ -1,0 +1,54 @@
+---
+import { buildSkillThumbnail, type Skill } from '../../lib/skills';
+
+interface Props {
+  skill: Skill;
+}
+const { skill } = Astro.props;
+const thumb = buildSkillThumbnail(skill);
+---
+
+<a class="skill-card" href={`/skills/${skill.id}`} data-runnable={skill.runnable ? "true" : "false"}>
+  <div class="skill-card-thumb">
+    <Fragment set:html={thumb} />
+    {!skill.runnable && <span class="skill-card-badge">Coming soon</span>}
+  </div>
+  <div class="skill-card-meta">
+    <span class="skill-card-name">{skill.name}</span>
+    <span class="skill-card-tagline">{skill.tagline}</span>
+  </div>
+</a>
+
+<style is:global>
+  .skill-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: inherit;
+  }
+  .skill-card-thumb {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    transition: border-color 0.15s ease;
+  }
+  .skill-card:hover .skill-card-thumb { border-color: var(--border3); }
+  .skill-card-thumb svg { width: 100%; height: 100%; display: block; }
+  .skill-card[data-runnable="false"] .skill-card-thumb svg { opacity: 0.45; }
+  .skill-card-badge {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(15, 15, 15, 0.72);
+    color: #fff;
+    font-size: 11px;
+  }
+  .skill-card-meta { display: flex; flex-direction: column; gap: 3px; }
+  .skill-card-name { font-size: 14.5px; font-weight: 500; color: var(--text); }
+  .skill-card-tagline { font-size: 12.5px; color: var(--text-dimmer); }
+</style>

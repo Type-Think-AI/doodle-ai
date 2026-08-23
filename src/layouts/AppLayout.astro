@@ -7,6 +7,8 @@ interface Props {
 }
 
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { THEME_STORAGE_KEY } from '../lib/theme';
+import '../styles/app.css';
 
 const {
 	title = `${SITE_TITLE} — AI Doodle Avatar Generator`,
@@ -53,12 +55,31 @@ const jsonLd = {
 		<meta name="application-name" content="DoodleBooth" />
 		<meta name="referrer" content="strict-origin-when-cross-origin" />
 
+		<!-- Sets [data-theme] before first paint so a stored "light" preference
+		     never flashes the dark default. Kept inline (not a module import)
+		     so it runs synchronously, ahead of any other script or stylesheet. -->
+		<script is:inline define:vars={{ THEME_STORAGE_KEY }}>
+			try {
+				if (localStorage.getItem(THEME_STORAGE_KEY) === "light") {
+					document.documentElement.setAttribute("data-theme", "light");
+				}
+			} catch {}
+		</script>
+
 		<!-- Icons -->
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<link rel="manifest" href="/site.webmanifest" />
-		<meta name="theme-color" content="#e2725b" />
+		<meta name="theme-color" content="#fab700" />
+
+		<!-- Space Grotesk: primary typeface across the app shell and marketing pages -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
 
 		<!-- Primary -->
 		<title>{title}</title>

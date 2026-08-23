@@ -38,20 +38,9 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 	<Footer />
 
 	<script>
+		import { initThemeToggle } from '../lib/theme';
 		const themeToggle = document.getElementById('themeToggle');
-		if (themeToggle) {
-			const saved = localStorage.getItem('doodlebooth-theme');
-			if (saved === 'dark') {
-				document.body.classList.add('dark');
-				themeToggle.textContent = '☀';
-			}
-			themeToggle.addEventListener('click', () => {
-				document.body.classList.toggle('dark');
-				const isDark = document.body.classList.contains('dark');
-				localStorage.setItem('doodlebooth-theme', isDark ? 'dark' : 'light');
-				themeToggle.textContent = isDark ? '☀' : '☾';
-			});
-		}
+		if (themeToggle) initThemeToggle(themeToggle);
 	</script>
 </AppLayout>
 

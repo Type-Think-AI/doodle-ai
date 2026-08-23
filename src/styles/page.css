@@ -227,7 +227,7 @@
 .page-cta a {
   display: inline-block;
   background: var(--accent);
-  color: #fff;
+  color: var(--send-fg);
   font-weight: 700;
   font-size: 0.9rem;
   padding: 13px 26px;

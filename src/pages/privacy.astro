@@ -126,4 +126,10 @@ const supportEmail = 'yash@typethink.ai';
 	</main>
 
 	<Footer />
+
+	<script>
+		import { initThemeToggle } from '../lib/theme';
+		const themeToggle = document.getElementById('themeToggle');
+		if (themeToggle) initThemeToggle(themeToggle);
+	</script>
 </AppLayout>

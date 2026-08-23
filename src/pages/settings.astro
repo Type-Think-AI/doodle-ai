@@ -1,0 +1,118 @@
+---
+import AppShellLayout from '../layouts/AppShellLayout.astro';
+import { SKILLS } from '../lib/skills';
+import { THEMES } from '../lib/doodle-constants';
+
+const runnableSkills = SKILLS.filter((s) => s.runnable);
+---
+
+<AppShellLayout title="Settings — DoodleBooth" active="settings" crumb="Settings" showHelper={false}>
+	<div class="settings-page">
+		<h1>Settings</h1>
+
+		<section>
+			<h2>PicX API key</h2>
+			<p class="settings-hint">
+				DoodleBooth is bring-your-own-key: your PicX API key is stored only in this browser's
+				local storage and sent directly to PicX when you upload or generate. There's no account
+				or server-side storage.
+			</p>
+			<label for="apiKeyInput" class="settings-label">API key</label>
+			<input type="password" id="apiKeyInput" placeholder="pxsk_..." autocomplete="off" />
+			<a class="settings-link" href="https://ai.picxstudio.com/api" target="_blank" rel="noopener noreferrer">Get a free key at PicX Studio ↗</a>
+			<p class="settings-saved" id="keySaved" hidden>✓ Key saved locally.</p>
+		</section>
+
+		<div class="settings-divider"></div>
+
+		<section>
+			<h2>Appearance</h2>
+			<div class="appearance-row" id="appearanceRow" role="radiogroup" aria-label="Theme">
+				<button type="button" class="appearance-card" data-theme-opt="dark">
+					<span class="appearance-swatch appearance-swatch-dark"><span></span><span></span></span>
+					<span>Dark</span>
+				</button>
+				<button type="button" class="appearance-card" data-theme-opt="light">
+					<span class="appearance-swatch appearance-swatch-light"><span></span><span></span></span>
+					<span>Light</span>
+				</button>
+			</div>
+		</section>
+
+		<div class="settings-divider"></div>
+
+		<section>
+			<h2>Doodle defaults</h2>
+			<div class="pref-row">
+				<div class="pref-label">
+					<span>Default visual style</span>
+					<span class="pref-sub">Used by Doodle Avatar and Surprise Me</span>
+				</div>
+				<select id="styleThemeSelect">
+					{THEMES.map((t) => <option value={t.id}>{t.label}</option>)}
+				</select>
+			</div>
+			<div class="pref-row">
+				<div class="pref-label">
+					<span>Default skill</span>
+					<span class="pref-sub">Used by Home's photo button</span>
+				</div>
+				<select id="defaultSkillSelect">
+					{runnableSkills.map((s) => <option value={s.id}>{s.name}</option>)}
+				</select>
+			</div>
+		</section>
+	</div>
+</AppShellLayout>
+
+<script src="../scripts/app/settings.ts"></script>
+
+<style>
+	.settings-page { max-width: 640px; margin: 0 auto; padding: 26px 40px 64px; }
+	.settings-page h1 { font-size: 24px; font-weight: 600; color: var(--text); margin: 0 0 24px; }
+	.settings-page h2 { font-size: 17px; font-weight: 600; color: var(--text); margin: 0 0 12px; }
+	.settings-page section { margin-bottom: 8px; }
+	.settings-divider { height: 1px; background: var(--border); margin: 30px 0; }
+
+	.settings-hint { font-size: 13px; line-height: 1.6; color: var(--text-dimmer); margin: 0 0 14px; }
+	.settings-label { display: block; font-size: 12.5px; color: var(--text-dim); margin-bottom: 6px; }
+	#apiKeyInput {
+		width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border2); border-radius: 10px;
+		font-family: inherit; font-size: 14px; background: var(--surface2); color: var(--text); box-sizing: border-box;
+	}
+	.settings-link { display: inline-block; margin-top: 8px; font-size: 12.5px; color: var(--blue); }
+	.settings-saved { font-size: 12px; color: #37b24d; margin-top: 8px; }
+
+	.appearance-row { display: flex; gap: 16px; }
+	.appearance-card {
+		display: flex; flex-direction: column; gap: 10px; align-items: center; cursor: pointer;
+		background: none; border: 0; font-family: inherit; color: var(--text-dim); font-size: 13.5px;
+	}
+	.appearance-swatch {
+		width: 120px; height: 80px; border-radius: 12px; padding: 14px; display: flex; flex-direction: column;
+		gap: 7px; border: 2px solid var(--border2);
+	}
+	.appearance-card[aria-pressed="true"] .appearance-swatch { border-color: var(--blue); }
+	.appearance-card[aria-pressed="true"] { color: var(--text); }
+	.appearance-swatch-dark { background: #1f1f1f; }
+	.appearance-swatch-light { background: #ffffff; }
+	.appearance-swatch span { height: 8px; border-radius: 4px; background: #3a3a3a; }
+	.appearance-swatch-light span { background: #dddddd; }
+	.appearance-swatch span:first-child { width: 64%; }
+	.appearance-swatch span:last-child { width: 40%; }
+
+	.pref-row { display: flex; align-items: center; gap: 16px; padding: 10px 0; }
+	.pref-label { display: flex; flex-direction: column; gap: 3px; }
+	.pref-label span:first-child { font-size: 14.5px; color: var(--text); }
+	.pref-sub { font-size: 12.5px; color: var(--text-dimmer); }
+	.pref-row select {
+		margin-left: auto; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border2);
+		background: var(--surface2); color: var(--text); font-size: 13.5px; font-family: inherit;
+	}
+
+	@media (max-width: 640px) {
+		.settings-page { padding: 20px; }
+		.pref-row { flex-wrap: wrap; }
+		.pref-row select { margin-left: 0; width: 100%; }
+	}
+</style>

@@ -1,0 +1,187 @@
+---
+interface Props {
+  open?: boolean;
+}
+const { open = true } = Astro.props;
+---
+
+<aside class="akku" id="akkuPanel" data-open={open ? "true" : "false"}>
+  <div class="akku-head">
+    <span class="akku-icon" aria-hidden="true">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="6.5" width="16" height="12" rx="4.5" stroke="var(--blue)" stroke-width="1.7"/><circle cx="9.5" cy="12.5" r="1.2" fill="var(--blue)"/><circle cx="14.5" cy="12.5" r="1.2" fill="var(--blue)"/></svg>
+    </span>
+    <span class="akku-title">Akku</span>
+    <span class="akku-sub">skill-aware</span>
+    <button class="akku-close" id="akkuClose" type="button" aria-label="Close Akku">&minus;</button>
+  </div>
+
+  <div class="akku-thread" id="akkuThread">
+    <div class="akku-msg akku-msg-a">
+      <p>I'm Akku. Tell me what you want to doodle and I'll point you at the right skill — a single avatar, a close-up collage, or a full-body action collage.</p>
+    </div>
+  </div>
+
+  <div class="akku-composer">
+    <div class="akku-quickies" id="akkuQuickies">
+      <button type="button" data-quick="make a fun action shot of me dancing">Action collage</button>
+      <button type="button" data-quick="six different close-up expressions">Close-up collage</button>
+      <button type="button" data-quick="just one simple avatar">Single avatar</button>
+    </div>
+    <div class="akku-input-row">
+      <input id="akkuInput" type="text" placeholder="Describe what you want" autocomplete="off" />
+      <button class="akku-send" id="akkuSend" type="button" aria-label="Send">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<script src="../../scripts/app/akku.ts"></script>
+
+<style is:global>
+  /* Thread messages are appended client-side by akku.ts, so this whole
+     block is global — Astro's scoped-CSS attribute never reaches elements
+     created after the initial render. */
+  .akku {
+    width: 320px;
+    flex: 0 0 320px;
+    border-left: 1px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+  .akku[data-open="false"] { display: none; }
+
+  .akku-head {
+    height: 52px;
+    flex: 0 0 52px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .akku-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--blue-faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .akku-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .akku-sub { font-size: 11.5px; color: var(--text-dimmer); }
+  .akku-close {
+    margin-left: auto;
+    border: 0;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 17px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+  }
+
+  .akku-thread {
+    flex: 1;
+    overflow: auto;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .akku-msg { display: flex; }
+  .akku-msg p {
+    max-width: 88%;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    background: var(--card);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .akku-msg-u { justify-content: flex-end; }
+  .akku-msg-u p { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+  .akku-msg-a p { background: var(--card); }
+
+  .akku-recommend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .akku-recommend a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 0;
+    background: var(--send-bg);
+    color: var(--send-fg);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .akku-composer {
+    padding: 12px 12px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .akku-quickies {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .akku-quickies button {
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .akku-quickies button:hover { color: var(--text); border-color: var(--border3); }
+
+  .akku-input-row {
+    border-radius: 14px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    padding: 10px 11px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .akku-input-row input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 13.5px;
+    font-family: inherit;
+  }
+  .akku-send {
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--send-bg);
+    color: var(--send-fg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 27px;
+  }
+
+  @media (max-width: 860px) {
+    .akku { display: none; }
+  }
+</style>

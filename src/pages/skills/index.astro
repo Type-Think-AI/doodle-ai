@@ -1,0 +1,69 @@
+---
+import AppShellLayout from '../../layouts/AppShellLayout.astro';
+import SkillCard from '../../components/app/SkillCard.astro';
+import { SKILLS } from '../../lib/skills';
+---
+
+<AppShellLayout title="Skills — DoodleBooth" active="skills" crumb="Skills">
+	<div class="skills-page">
+		<div class="skills-head">
+			<h1>Skills</h1>
+			<div class="skills-search">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.4" stroke="var(--text-dim)" stroke-width="1.7"></circle><path d="m16 16 4 4" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round"></path></svg>
+				<input id="skillsSearch" type="text" placeholder="Search skills" autocomplete="off" />
+			</div>
+		</div>
+
+		<div class="skills-grid" id="skillsGrid">
+			{SKILLS.map((skill) => (
+				<div class="skills-grid-item" data-search={`${skill.name} ${skill.desc}`.toLowerCase()}>
+					<SkillCard skill={skill} />
+				</div>
+			))}
+		</div>
+		<p class="skills-empty" id="skillsEmpty" hidden>No skills match "<span id="skillsEmptyTerm"></span>".</p>
+	</div>
+</AppShellLayout>
+
+<script src="../../scripts/app/skills-search.ts"></script>
+
+<style>
+	.skills-page { max-width: 1180px; margin: 0 auto; padding: 26px 40px 64px; }
+	.skills-head { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+	.skills-head h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); margin: 0; }
+	.skills-search {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		height: 38px;
+		padding: 0 14px;
+		border-radius: 999px;
+		background: var(--surface2);
+		border: 1px solid var(--border2);
+		width: 280px;
+	}
+	.skills-search input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		outline: none;
+		background: transparent;
+		color: var(--text);
+		font-size: 14px;
+		font-family: inherit;
+	}
+	.skills-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+	.skills-grid-item[hidden] { display: none; }
+	.skills-empty { color: var(--text-dimmer); font-size: 14px; margin-top: 24px; }
+
+	@media (max-width: 980px) {
+		.skills-grid { grid-template-columns: repeat(3, 1fr); }
+	}
+	@media (max-width: 720px) {
+		.skills-page { padding: 20px; }
+		.skills-head { flex-wrap: wrap; }
+		.skills-search { width: 100%; }
+		.skills-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+	}
+</style>

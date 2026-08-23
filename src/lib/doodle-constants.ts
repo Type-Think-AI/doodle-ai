@@ -175,6 +175,8 @@ export const SAMPLE_PRESETS: AvatarAttrs[] = [
 ];
 
 export const STORAGE_KEY = "doodleme_api_key";
+export const STYLE_THEME_STORAGE_KEY = "doodlebooth-style-theme";
+export const DEFAULT_SKILL_STORAGE_KEY = "doodlebooth-default-skill";
 export const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 export function pick<T>(arr: T[]): T {

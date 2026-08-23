@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:0; }
+  * { box-sizing:border-box; }
+  a { color:#3399FF; text-decoration:none; }
+  a:hover { color:#66B2FF; }
+  input, textarea, button { font-family:inherit; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb { background:rgba(140,140,150,.35); border-radius:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  @keyframes dbPulse { 0%,100% { opacity:.3 } 50% { opacity:1 } }
+  @keyframes dbSpin { to { transform:rotate(360deg) } }
+</style>
+</helmet>
+<div style="{{ rootStyle }}">
+
+  <div style="position:fixed; top:14px; right:16px; z-index:60; display:flex; align-items:center; gap:8px; padding:6px; border-radius:999px; background:var(--surface); border:1px solid var(--border2); box-shadow:0 6px 24px rgba(0,0,0,.28);">
+    <sc-for list="{{ deviceOpts }}" as="d" hint-placeholder-count="2">
+      <button onClick="{{ d.pick }}" style="{{ d.style }}">{{ d.label }}</button>
+    </sc-for>
+    <span style="width:1px; height:18px; background:var(--border2);"></span>
+    <sc-for list="{{ themeOpts }}" as="t" hint-placeholder-count="2">
+      <button onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex; height:100vh; width:100%; overflow:hidden;">
+
+      <aside style="{{ sidebarStyle }}">
+        <div style="display:flex; align-items:center; gap:9px; padding:2px 8px 0;">
+          <span style="width:34px; height:34px; border-radius:10px; background:var(--accent); display:flex; align-items:center; justify-content:center; flex:0 0 34px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2.5 15c1.5-6.5 3-9.5 4.8-9.5S9 10 11 10s2-6 4.3-6 2.6 6.8 4.2 6.8 1.5-2.3 3-2.3" stroke="#3D2900" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </span>
+          <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+            <span style="font-size:16px; font-weight:600; letter-spacing:-0.02em; color:var(--text); white-space:nowrap;">DoodleBooth AI</span>
+          </sc-if>
+          <button onClick="{{ toggleCollapsed }}" style="{{ collapseBtnStyle }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+          </button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:3px;">
+          <button onClick="{{ goHome }}" style="{{ newBtnStyle }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">New doodle</sc-if>
+          </button>
+          <button onClick="{{ goMood }}" style="{{ navMood }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="currentColor" stroke-width="1.6"></rect><path d="M3.5 15l4.2-3.6L12 15l3-2.4 5.5 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">Moodboards</sc-if>
+          </button>
+          <button onClick="{{ goSkills }}" style="{{ navSkills }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"></circle><circle cx="16" cy="16" r="3.2" stroke="currentColor" stroke-width="1.6"></circle><path d="M10.4 10.4 13.6 13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">Skills</sc-if>
+          </button>
+          <button onClick="{{ toggleHelper }}" style="{{ navHelper }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="4" y="6.5" width="16" height="12" rx="4.5" stroke="currentColor" stroke-width="1.6"></rect><circle cx="9.5" cy="12.5" r="1.25" fill="currentColor"></circle><circle cx="14.5" cy="12.5" r="1.25" fill="currentColor"></circle><path d="M12 6.5V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">Akku</sc-if>
+          </button>
+          <button style="{{ navPlain }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.6"></circle><path d="M12 8.5V12l2.5 1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">Scheduled</sc-if>
+          </button>
+          <button style="{{ navPlain }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.4" stroke="currentColor" stroke-width="1.6"></circle><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">Search</sc-if>
+          </button>
+        </div>
+
+        <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; flex-direction:column; gap:3px; min-height:0; overflow:auto;">
+            <div style="font-size:11.5px; letter-spacing:.06em; color:var(--muted2); padding:0 10px 4px;">Recents</div>
+            <sc-for list="{{ recents }}" as="r" hint-placeholder-count="4">
+              <button onClick="{{ r.open }}" style="{{ r.style }}">
+                <img src="{{ r.img }}" alt="" style="width:20px; height:20px; border-radius:5px; object-fit:cover; flex:0 0 20px;" />
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.name }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px; position:relative;">
+          <button style="display:flex; align-items:center; justify-content:center; gap:8px; height:42px; border-radius:12px; border:1px solid var(--accentSoft); background:transparent; color:var(--accent); font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--accentFaint);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 3 5 14h5l-1 7 8-11h-5l1-7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">Upgrade to Pro</sc-if>
+          </button>
+
+          <sc-if value="{{ menu }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute; bottom:56px; left:0; width:100%; border-radius:14px; background:var(--surface); border:1px solid var(--border2); box-shadow:0 16px 40px rgba(0,0,0,.4); padding:6px; display:flex; flex-direction:column; gap:2px;">
+              <div style="display:flex; align-items:center; gap:9px; padding:8px 9px 10px;">
+                <img src="{{ avatar }}" alt="" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" />
+                <span style="display:flex; flex-direction:column;">
+                  <span style="font-size:13px; color:var(--text);">Yash Patidar</span>
+                  <span style="font-size:11.5px; color:var(--muted2);">yhpatidar1999@gmail.com</span>
+                </span>
+              </div>
+              <span style="height:1px; background:var(--border); margin:0 4px 4px;"></span>
+              <button onClick="{{ goSettings }}" style="{{ menuItem }}">Settings</button>
+              <button style="{{ menuItem }}">Billing &amp; credits</button>
+              <button onClick="{{ toggleTheme }}" style="{{ menuItem }}">{{ themeMenuLabel }}</button>
+              <button style="{{ menuItem }}">Log out</button>
+            </div>
+          </sc-if>
+
+          <button onClick="{{ toggleMenu }}" style="display:flex; align-items:center; gap:9px; padding:6px; border:0; border-radius:10px; background:transparent; cursor:pointer;" style-hover="background:var(--hover);">
+            <img src="{{ avatar }}" alt="" style="width:26px; height:26px; border-radius:50%; object-fit:cover; flex:0 0 26px;" />
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+              <span style="font-size:13px; color:var(--text);">Yash Patidar</span>
+              <span style="font-size:10.5px; color:var(--muted2); border:1px solid var(--border2); border-radius:5px; padding:2px 5px;">Free</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-left:auto;"><path d="m8 10 4 4 4-4" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round"></path></svg>
+            </sc-if>
+          </button>
+        </div>
+      </aside>
+
+      <main style="flex:1; min-width:0; display:flex; flex-direction:column; background:var(--surface);">
+        <header style="height:56px; flex:0 0 56px; display:flex; align-items:center; gap:10px; padding:0 20px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="7" rx="7" ry="2.6" stroke="var(--muted)" stroke-width="1.6"></ellipse><path d="M5 7v5c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V7" stroke="var(--muted)" stroke-width="1.6"></path></svg>
+          <span style="font-size:15px; font-weight:500; color:var(--text);">{{ crumb }}</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="m8 10 4 4 4-4" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round"></path></svg>
+          <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+            <span style="display:flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--border2); font-size:13px; color:var(--text);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"></circle><circle cx="12" cy="12" r="2.6" fill="currentColor"></circle></svg>
+              {{ credits }}
+            </span>
+            <button onClick="{{ toggleHelper }}" style="width:30px; height:30px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="color:var(--text);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="6.5" width="16" height="12" rx="4.5" stroke="currentColor" stroke-width="1.7"></rect></svg>
+            </button>
+          </div>
+        </header>
+
+        <div style="flex:1; display:flex; min-height:0;">
+          <div style="flex:1; min-width:0; overflow:auto;">
+
+            <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+              <div style="max-width:1120px; margin:0 auto; padding:40px 40px 64px;">
+                <div style="display:flex; justify-content:center;">
+                  <div style="display:flex; align-items:center; gap:10px; padding:9px 16px; border-radius:999px; background:var(--blueFaint); font-size:13.5px; color:var(--text);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="8" width="17" height="12" rx="2" stroke="var(--blue)" stroke-width="1.6"></rect><path d="M12 8v12M3.5 12h17" stroke="var(--blue)" stroke-width="1.6"></path></svg>
+                    +2,000 credits if you upgrade now
+                    <span style="color:var(--blue);">02:14:09</span>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="var(--blue)" stroke-width="1.7" stroke-linecap="round"></path></svg>
+                  </div>
+                </div>
+
+                <h1 style="text-align:center; font-size:40px; font-weight:500; letter-spacing:-0.03em; color:var(--text); margin:44px 0 30px;">What should we doodle?</h1>
+
+                <div style="max-width:720px; margin:0 auto;">
+                  <sc-if value="{{ hasSkill }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:10px; padding:6px 10px 6px 6px; border-radius:10px; background:var(--surface2); border:1px solid var(--border2);">
+                      <img src="{{ skillImg }}" alt="" style="width:22px; height:22px; border-radius:6px; object-fit:cover;" />
+                      <span style="font-size:13px; color:var(--blue);">{{ skillName }}</span>
+                      <button onClick="{{ clearSkill }}" style="border:0; background:transparent; color:var(--muted2); cursor:pointer; font-size:13px;">✕</button>
+                    </div>
+                  </sc-if>
+
+                  <div style="border-radius:24px; background:var(--promptBg); border:1px solid var(--border2); padding:16px; min-height:124px; display:flex; flex-direction:column; box-shadow:0 1px 4px rgba(2,4,26,.16);">
+                    <textarea value="{{ prompt }}" onChange="{{ onPrompt }}" placeholder="Describe a doodle or drop a photo" rows="2" style="width:100%; flex:1; border:0; outline:none; resize:none; background:transparent; color:var(--text); font-size:16px; line-height:24px;"></textarea>
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+                      <button style="{{ circleBtn }}" style-hover="background:var(--iconHover);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+                      </button>
+                      <button onClick="{{ goSkills }}" style="{{ circleBtn }}" style-hover="background:var(--iconHover);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+                      </button>
+                      <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+                        <span style="display:flex; align-items:center; gap:4px; font-size:13.5px; color:var(--muted); cursor:pointer;">Auto
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="m8 10 4 4 4-4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>
+                        </span>
+                        <button style="{{ circleBtn }}" style-hover="background:var(--iconHover);">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="3.5" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.6"></rect><path d="M6 12a6 6 0 0 0 12 0M12 18v2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+                        </button>
+                        <button onClick="{{ send }}" style="{{ sendBtnStyle }}" style-hover="background:var(--accent); color:#1A1A1A;">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:6px; margin:52px 0 20px;">
+                  <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+                    <button onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.name }}</button>
+                  </sc-for>
+                  <button onClick="{{ goSkills }}" style="margin-left:auto; display:flex; align-items:center; gap:7px; border:0; background:transparent; color:var(--text); font-size:14px; cursor:pointer;">Browse all
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
+                  </button>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:26px 20px;">
+                  <sc-for list="{{ featured }}" as="s" hint-placeholder-count="8">
+                    <div onClick="{{ s.open }}" style="cursor:pointer; display:flex; flex-direction:column; gap:11px;" style-hover="opacity:.9;">
+                      <div style="position:relative; border-radius:14px; overflow:hidden; aspect-ratio:4/3; background:var(--surface2);">
+                        <img src="{{ s.img }}" alt="" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                        <span style="{{ s.badgeStyle }}">{{ s.badge }}</span>
+                        <span onClick="{{ s.pick }}" style="{{ s.pickStyle }}" title="Select as active skill">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4 10-10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                        </span>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:5px;">
+                        <span style="font-size:15px; font-weight:500; color:var(--text);">{{ s.name }}</span>
+                        <span style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted2);">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5"></rect><path d="M4 15l4-3.4 3.6 3 2.7-2.1L20 16" stroke="currentColor" stroke-width="1.5"></path></svg>
+                          {{ s.kind }}
+                        </span>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isSkills }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:1180px; margin:0 auto; padding:26px 40px 64px;">
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:26px;">
+                  <h1 style="font-size:30px; font-weight:600; letter-spacing:-0.02em; color:var(--text); margin:0;">Skills</h1>
+                  <div style="display:flex; gap:4px; padding:4px; border-radius:999px; background:var(--surface2);">
+                    <sc-for list="{{ skillTabs }}" as="t" hint-placeholder-count="2">
+                      <button onClick="{{ t.pick }}" style="{{ t.style }}">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5.5h7v13H4zM13 5.5h7v13h-7z" stroke="currentColor" stroke-width="1.5"></path></svg>
+                        {{ t.name }}
+                      </button>
+                    </sc-for>
+                  </div>
+                  <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:9px; height:38px; padding:0 14px; border-radius:999px; background:var(--surface2); border:1px solid var(--border2); width:280px;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.4" stroke="var(--muted)" stroke-width="1.7"></circle><path d="m16 16 4 4" stroke="var(--muted)" stroke-width="1.7" stroke-linecap="round"></path></svg>
+                      <input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search skills" style="flex:1; min-width:0; border:0; outline:none; background:transparent; color:var(--text); font-size:14px;" />
+                      <sc-if value="{{ hasSearch }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ clearSearch }}" style="border:0; background:transparent; color:var(--muted); cursor:pointer;">✕</button>
+                      </sc-if>
+                    </div>
+                    <button style="display:flex; align-items:center; gap:7px; height:38px; padding:0 16px; border:0; border-radius:999px; background:var(--sendBg); color:var(--sendFg); font-size:14px; font-weight:500; cursor:pointer;" style-hover="background:var(--accent); color:#1A1A1A;">New skill
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m8 10 4 4 4-4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:18px;">
+                  <sc-for list="{{ skillList }}" as="s" hint-placeholder-count="8">
+                    <div onClick="{{ s.open }}" style="cursor:pointer; border:1px solid var(--border); border-radius:16px; background:var(--card); padding:12px; display:flex; flex-direction:column; gap:12px;" style-hover="border-color:var(--border3);">
+                      <div style="position:relative; border-radius:11px; overflow:hidden; aspect-ratio:16/10; background:var(--surface2);">
+                        <img src="{{ s.img }}" alt="" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                        <span style="position:absolute; right:8px; bottom:8px; padding:3px 9px; border-radius:999px; background:rgba(15,15,15,.72); color:#fff; font-size:11.5px;">{{ s.kind }}</span>
+                      </div>
+                      <span style="font-size:15px; font-weight:600; color:var(--text);">{{ s.name }}</span>
+                      <p style="margin:0; font-size:13px; line-height:1.5; color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">{{ s.desc }}</p>
+                      <div style="display:flex; align-items:center; gap:8px; margin-top:auto;">
+                        <img src="{{ s.authorImg }}" alt="" style="width:20px; height:20px; border-radius:50%; object-fit:cover;" />
+                        <span style="margin-left:auto; display:flex; align-items:center; gap:5px; font-size:12.5px; color:var(--muted2);">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"></circle><path d="M5 20c1.2-3.4 4-5 7-5s5.8 1.6 7 5" stroke="currentColor" stroke-width="1.7"></path></svg>
+                          {{ s.installs }}
+                        </span>
+                        <span style="{{ s.priceStyle }}">{{ s.price }}</span>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:900px; margin:0 auto; padding:26px 40px 64px;">
+                <button onClick="{{ goSkills }}" style="display:flex; align-items:center; gap:9px; border:0; background:transparent; color:var(--text); font-size:17px; font-weight:600; cursor:pointer; margin-bottom:36px; padding:0;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>
+                  Skills
+                </button>
+
+                <div style="display:flex; align-items:center; gap:18px; margin-bottom:22px;">
+                  <img src="{{ detail.img }}" alt="" style="width:62px; height:62px; border-radius:16px; object-fit:cover; border:1px solid var(--border2);" />
+                  <div style="display:flex; flex-direction:column; gap:5px;">
+                    <span style="font-size:26px; font-weight:600; letter-spacing:-0.02em; color:var(--text);">{{ detail.name }}</span>
+                    <span style="font-size:14px; color:var(--muted);">{{ detail.tagline }}</span>
+                  </div>
+                  <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+                    <button style="height:38px; padding:0 20px; border-radius:999px; border:1px solid var(--border3); background:transparent; color:var(--text); font-size:14px; cursor:pointer;" style-hover="background:var(--hover);">Share</button>
+                    <button onClick="{{ runDetail }}" style="height:38px; padding:0 22px; border-radius:999px; border:0; background:var(--sendBg); color:var(--sendFg); font-size:14px; font-weight:500; cursor:pointer;" style-hover="background:var(--accent); color:#1A1A1A;">Install &amp; run</button>
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:34px; flex-wrap:wrap; padding-bottom:26px; font-size:13.5px; color:var(--muted2);">
+                  <span style="display:flex; align-items:center; gap:8px;">Made by
+                    <img src="{{ detail.authorImg }}" alt="" style="width:20px; height:20px; border-radius:50%; object-fit:cover;" />
+                    <span style="color:var(--text);">{{ detail.author }}</span>
+                  </span>
+                  <span>Installed by <span style="color:var(--text);">{{ detail.installs }}</span></span>
+                  <span>Category <span style="color:var(--text);">{{ detail.kind }}</span></span>
+                  <span>Version <span style="color:var(--text);">v21</span></span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:34px;">
+                  <img src="{{ detail.shotA }}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:16px; border:1px solid var(--border);" />
+                  <img src="{{ detail.shotB }}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:16px; border:1px solid var(--border);" />
+                </div>
+
+                <h2 style="font-size:19px; font-weight:600; color:var(--text); margin:0 0 14px;">Description</h2>
+                <p style="margin:0 0 26px; font-size:15px; line-height:1.75; color:var(--muted); max-width:74ch; text-wrap:pretty;">{{ detail.longDesc }}</p>
+
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                  <sc-for list="{{ detail.tags }}" as="t" hint-placeholder-count="4">
+                    <span style="padding:6px 12px; border-radius:999px; border:1px solid var(--border2); font-size:12.5px; color:var(--muted);">{{ t.name }}</span>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isRun }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:820px; margin:0 auto; padding:26px 40px 30px; display:flex; flex-direction:column; gap:22px; min-height:100%;">
+                <div style="display:flex; justify-content:flex-end;">
+                  <span style="display:flex; align-items:center; gap:9px; padding:11px 16px; border-radius:16px; background:var(--surface2);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="var(--blue)" stroke-width="1.6"></rect><path d="M8 9h8M8 13h5" stroke="var(--blue)" stroke-width="1.6" stroke-linecap="round"></path></svg>
+                    <span style="color:var(--blue); font-size:14.5px;">{{ skillName }}</span>
+                    <span style="color:var(--text); font-size:14.5px;">{{ runPrompt }}</span>
+                  </span>
+                </div>
+
+                <sc-if value="{{ running }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; flex-direction:column; gap:16px;">
+                    <span style="font-size:14px; color:var(--muted2);">Running for 11s</span>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                      <span style="width:15px; height:15px; border-radius:50%; border:2px solid var(--border3); border-top-color:var(--accent); animation:dbSpin .8s linear infinite;"></span>
+                      <span style="font-size:15px; color:var(--muted);">Thinking — choosing brush weight and palette</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px;">
+                      <sc-for list="{{ skeletons }}" as="k" hint-placeholder-count="2">
+                        <div style="aspect-ratio:1/1; border-radius:16px; background:var(--surface2); animation:dbPulse 1.4s ease-in-out infinite;"></div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ ready }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; flex-direction:column; gap:18px;">
+                    <span style="font-size:14px; color:var(--muted2);">Ran for 17s</span>
+                    <p style="margin:0; font-size:15.5px; line-height:1.75; color:var(--text); max-width:70ch; text-wrap:pretty;">{{ agentLine }}</p>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                      <div style="position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--border);">
+                        <img src="{{ runSource }}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block;" />
+                        <span style="position:absolute; left:10px; bottom:10px; padding:4px 10px; border-radius:999px; background:rgba(15,15,15,.7); color:#fff; font-size:11.5px;">Source</span>
+                      </div>
+                      <div style="position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--border);">
+                        <img src="{{ runOutput }}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block;" />
+                        <span style="position:absolute; left:10px; bottom:10px; padding:4px 10px; border-radius:999px; background:rgba(15,15,15,.7); color:#fff; font-size:11.5px;">Doodle · seed 8841</span>
+                      </div>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                      <sc-for list="{{ actions }}" as="a" hint-placeholder-count="4">
+                        <button onClick="{{ a.act }}" style="{{ a.style }}">{{ a.name }}</button>
+                      </sc-for>
+                      <span style="margin-left:auto; font-size:12.5px; color:var(--muted2);">{{ savedNote }}</span>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+                      <sc-for list="{{ variants }}" as="v" hint-placeholder-count="3">
+                        <img src="{{ v.img }}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:12px; border:1px solid var(--border); cursor:pointer;" style-hover="border-color:var(--accent);" />
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <div style="margin-top:auto; padding-top:22px;">
+                  <div style="border-radius:24px; background:var(--promptBg); border:1px solid var(--border2); padding:14px 16px;">
+                    <input value="{{ prompt }}" onChange="{{ onPrompt }}" placeholder="Ask for a change — thicker outline, warmer paper…" style="width:100%; border:0; outline:none; background:transparent; color:var(--text); font-size:16px;" />
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+                      <button style="{{ circleBtn }}" style-hover="background:var(--iconHover);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+                      </button>
+                      <span style="font-size:13px; color:var(--blue);">{{ skillName }}</span>
+                      <button onClick="{{ send }}" style="margin-left:auto; width:32px; height:32px; border-radius:50%; border:0; background:var(--sendBg); color:var(--sendFg); cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:var(--accent); color:#1A1A1A;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isMood }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:1180px; margin:0 auto; padding:26px 40px 64px;">
+                <div style="display:flex; align-items:flex-end; gap:16px; margin-bottom:24px;">
+                  <div>
+                    <h1 style="font-size:30px; font-weight:600; letter-spacing:-0.02em; color:var(--text); margin:0 0 6px;">Moodboards</h1>
+                    <p style="margin:0; font-size:14px; color:var(--muted2);">Chaos · 42 doodles · 6 skills used</p>
+                  </div>
+                  <button style="margin-left:auto; display:flex; align-items:center; gap:7px; height:38px; padding:0 16px; border:1px solid var(--border3); border-radius:999px; background:transparent; color:var(--text); font-size:14px; cursor:pointer;" style-hover="background:var(--hover);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+                    New moodboard
+                  </button>
+                </div>
+                <div style="columns:4; column-gap:16px;">
+                  <sc-for list="{{ board }}" as="b" hint-placeholder-count="12">
+                    <div style="break-inside:avoid; margin-bottom:16px; border-radius:14px; overflow:hidden; border:1px solid var(--border); cursor:pointer;" style-hover="border-color:var(--border3);">
+                      <img src="{{ b.img }}" alt="" style="width:100%; display:block;" />
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:980px; margin:0 auto; padding:26px 40px 64px; display:flex; gap:44px;">
+                <div style="width:190px; flex:0 0 190px;">
+                  <h1 style="font-size:24px; font-weight:600; color:var(--text); margin:0 0 20px;">Settings</h1>
+                  <div style="display:flex; flex-direction:column; gap:3px;">
+                    <sc-for list="{{ settingsNav }}" as="n" hint-placeholder-count="5">
+                      <button style="{{ n.style }}">{{ n.name }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:34px;">
+                  <div>
+                    <h2 style="font-size:17px; font-weight:600; color:var(--text); margin:0 0 18px;">Profile</h2>
+                    <div style="display:flex; align-items:center; gap:16px;">
+                      <img src="{{ avatar }}" alt="" style="width:56px; height:56px; border-radius:50%; object-fit:cover;" />
+                      <div style="display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:19px; font-weight:600; color:var(--text);">Yash Patidar</span>
+                        <span style="font-size:13.5px; color:var(--muted2);">yhpatidar1999@gmail.com</span>
+                      </div>
+                      <button style="margin-left:auto; height:36px; padding:0 18px; border-radius:999px; border:1px solid var(--border3); background:transparent; color:var(--text); font-size:13.5px; cursor:pointer;" style-hover="background:var(--hover);">Change avatar</button>
+                    </div>
+                  </div>
+
+                  <div style="height:1px; background:var(--border);"></div>
+
+                  <div>
+                    <h2 style="font-size:17px; font-weight:600; color:var(--text); margin:0 0 18px;">Appearance</h2>
+                    <div style="display:flex; gap:16px;">
+                      <sc-for list="{{ appearance }}" as="a" hint-placeholder-count="3">
+                        <div onClick="{{ a.pick }}" style="{{ a.wrapStyle }}">
+                          <div style="{{ a.cardStyle }}">
+                            <span style="{{ a.barStyle }}"></span>
+                            <span style="{{ a.bar2Style }}"></span>
+                          </div>
+                          <span style="{{ a.labelStyle }}">{{ a.name }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+
+                  <div style="height:1px; background:var(--border);"></div>
+
+                  <div>
+                    <h2 style="font-size:17px; font-weight:600; color:var(--text); margin:0 0 18px;">Doodle defaults</h2>
+                    <div style="display:flex; flex-direction:column; gap:14px;">
+                      <sc-for list="{{ prefs }}" as="p" hint-placeholder-count="3">
+                        <div style="display:flex; align-items:center; gap:16px;">
+                          <span style="display:flex; flex-direction:column; gap:3px;">
+                            <span style="font-size:14.5px; color:var(--text);">{{ p.name }}</span>
+                            <span style="font-size:12.5px; color:var(--muted2);">{{ p.hint }}</span>
+                          </span>
+                          <span style="margin-left:auto; display:flex; align-items:center; gap:8px; height:36px; padding:0 14px; border-radius:10px; border:1px solid var(--border2); background:var(--surface2); font-size:13.5px; color:var(--text);">{{ p.value }}
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="m8 10 4 4 4-4" stroke="var(--muted)" stroke-width="1.9" stroke-linecap="round"></path></svg>
+                          </span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+          </div>
+
+          <sc-if value="{{ helper }}" hint-placeholder-val="{{ true }}">
+            <aside style="width:320px; flex:0 0 320px; border-left:1px solid var(--border); background:var(--bg); display:flex; flex-direction:column;">
+              <div style="height:52px; display:flex; align-items:center; gap:9px; padding:0 14px; border-bottom:1px solid var(--border);">
+                <span style="width:26px; height:26px; border-radius:8px; background:var(--blueFaint); display:flex; align-items:center; justify-content:center;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="6.5" width="16" height="12" rx="4.5" stroke="var(--blue)" stroke-width="1.7"></rect><circle cx="9.5" cy="12.5" r="1.2" fill="var(--blue)"></circle><circle cx="14.5" cy="12.5" r="1.2" fill="var(--blue)"></circle></svg>
+                </span>
+                <span style="font-size:14px; font-weight:500; color:var(--text);">Akku</span>
+                <span style="font-size:11.5px; color:var(--muted2);">skill-aware</span>
+                <button onClick="{{ toggleHelper }}" style="margin-left:auto; border:0; background:transparent; color:var(--muted); font-size:17px; cursor:pointer;">−</button>
+              </div>
+              <div style="flex:1; overflow:auto; padding:16px 14px; display:flex; flex-direction:column; gap:12px;">
+                <sc-for list="{{ thread }}" as="m" hint-placeholder-count="4">
+                  <div style="{{ m.wrapStyle }}">
+                    <div style="{{ m.bubbleStyle }}">{{ m.text }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="padding:12px 12px 14px; border-top:1px solid var(--border);">
+                <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                  <sc-for list="{{ quickies }}" as="q" hint-placeholder-count="3">
+                    <button onClick="{{ q.act }}" style="padding:6px 11px; border-radius:999px; border:1px solid var(--border2); background:transparent; color:var(--muted); font-size:12px; cursor:pointer;" style-hover="color:var(--text); border-color:var(--border3);">{{ q.name }}</button>
+                  </sc-for>
+                </div>
+                <div style="border-radius:14px; border:1px solid var(--border2); background:var(--surface2); padding:10px 11px; display:flex; align-items:center; gap:9px;">
+                  <input value="{{ chat }}" onChange="{{ onChat }}" placeholder="Message Akku" style="flex:1; min-width:0; border:0; outline:none; background:transparent; color:var(--text); font-size:13.5px;" />
+                  <button onClick="{{ sendChat }}" style="width:27px; height:27px; border-radius:50%; border:0; background:var(--sendBg); color:var(--sendFg); cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:var(--accent); color:#1A1A1A;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </aside>
+          </sc-if>
+        </div>
+      </main>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 20px; background:var(--stage);">
+      <div style="width:390px; height:800px; border-radius:44px; border:1px solid var(--border2); background:var(--bg); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 30px 80px rgba(0,0,0,.45);">
+        <div style="height:52px; flex:0 0 52px; display:flex; align-items:center; gap:10px; padding:0 18px;">
+          <button style="border:0; background:transparent; color:var(--text); cursor:pointer; padding:0; display:flex;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+          </button>
+          <span style="margin:0 auto; display:flex; align-items:center; gap:7px; font-size:15px; font-weight:500; color:var(--text);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="7" rx="7" ry="2.6" stroke="var(--muted)" stroke-width="1.6"></ellipse><path d="M5 7v5c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V7" stroke="var(--muted)" stroke-width="1.6"></path></svg>
+            Chaos
+          </span>
+          <button onClick="{{ goHome }}" style="border:0; background:transparent; color:var(--text); cursor:pointer; padding:0; display:flex;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>
+          </button>
+        </div>
+
+        <div style="flex:1; min-height:0; overflow:auto; padding:0 16px 12px;">
+          <sc-if value="{{ mHome }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:18px; padding-top:26px;">
+              <div style="display:flex; justify-content:center;">
+                <span style="display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:var(--blueFaint); font-size:12.5px; color:var(--text);">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="3" stroke="var(--blue)" stroke-width="1.7"></rect></svg>
+                  DoodleBooth for iOS
+                  <span style="color:var(--blue);">Try it</span>
+                </span>
+              </div>
+              <h1 style="text-align:center; font-size:25px; font-weight:500; letter-spacing:-0.02em; color:var(--text); margin:14px 0 4px;">What should we doodle?</h1>
+              <div style="border-radius:22px; background:var(--surface2); border:1px solid var(--border2); padding:14px;">
+                <textarea value="{{ prompt }}" onChange="{{ onPrompt }}" placeholder="Describe a doodle or drop a photo" rows="2" style="width:100%; border:0; outline:none; resize:none; background:transparent; color:var(--text); font-size:15px; line-height:22px;"></textarea>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                  <button style="{{ circleBtn }}" style-hover="background:var(--iconHover);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+                  </button>
+                  <button onClick="{{ goSkills }}" style="{{ circleBtn }}" style-hover="background:var(--iconHover);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+                  </button>
+                  <span style="margin-left:auto; font-size:13px; color:var(--muted);">Auto ⌄</span>
+                  <button onClick="{{ send }}" style="width:34px; height:34px; border-radius:50%; border:0; background:var(--sendBg); color:var(--sendFg); cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                  </button>
+                </div>
+              </div>
+              <div style="display:flex; gap:6px; overflow:auto; padding-top:14px;">
+                <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+                  <button onClick="{{ t.pick }}" style="{{ t.mStyle }}">{{ t.name }}</button>
+                </sc-for>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px 12px;">
+                <sc-for list="{{ featured }}" as="s" hint-placeholder-count="6">
+                  <div onClick="{{ s.open }}" style="cursor:pointer; display:flex; flex-direction:column; gap:8px;">
+                    <div style="position:relative; border-radius:12px; overflow:hidden; aspect-ratio:1/1;">
+                      <img src="{{ s.img }}" alt="" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                      <span style="{{ s.badgeStyle }}">{{ s.badge }}</span>
+                    </div>
+                    <span style="font-size:13.5px; font-weight:500; color:var(--text);">{{ s.name }}</span>
+                    <span style="font-size:12px; color:var(--muted2);">{{ s.kind }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ mSkills }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:14px; padding-top:12px;">
+              <h1 style="font-size:22px; font-weight:600; color:var(--text); margin:0;">Skills</h1>
+              <div style="display:flex; align-items:center; gap:9px; height:38px; padding:0 14px; border-radius:999px; background:var(--surface2); border:1px solid var(--border2);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.4" stroke="var(--muted)" stroke-width="1.7"></circle><path d="m16 16 4 4" stroke="var(--muted)" stroke-width="1.7" stroke-linecap="round"></path></svg>
+                <input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search skills" style="flex:1; min-width:0; border:0; outline:none; background:transparent; color:var(--text); font-size:14px;" />
+              </div>
+              <sc-for list="{{ skillList }}" as="s" hint-placeholder-count="6">
+                <div onClick="{{ s.open }}" style="display:flex; gap:12px; padding:10px; border-radius:14px; border:1px solid var(--border); background:var(--card); cursor:pointer;">
+                  <img src="{{ s.img }}" alt="" style="width:66px; height:66px; border-radius:10px; object-fit:cover; flex:0 0 66px;" />
+                  <div style="display:flex; flex-direction:column; gap:4px; min-width:0;">
+                    <span style="font-size:14.5px; font-weight:600; color:var(--text);">{{ s.name }}</span>
+                    <span style="font-size:12.5px; line-height:1.45; color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">{{ s.desc }}</span>
+                    <span style="font-size:11.5px; color:var(--muted2);">{{ s.installs }} installs · {{ s.price }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ mRun }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:16px; padding-top:12px;">
+              <div style="display:flex; justify-content:flex-end;">
+                <span style="max-width:80%; padding:10px 14px; border-radius:16px; background:var(--surface2); font-size:14px; color:var(--text);">{{ runPrompt }}</span>
+              </div>
+              <sc-if value="{{ running }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border3); border-top-color:var(--accent); animation:dbSpin .8s linear infinite;"></span>
+                  <span style="font-size:14px; color:var(--muted);">Running…</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ ready }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex; flex-direction:column; gap:14px;">
+                  <span style="font-size:13px; color:var(--muted2);">Ran for 17s</span>
+                  <p style="margin:0; font-size:14.5px; line-height:1.65; color:var(--text);">{{ agentLine }}</p>
+                  <img src="{{ runOutput }}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:16px; border:1px solid var(--border);" />
+                  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
+                    <sc-for list="{{ variants }}" as="v" hint-placeholder-count="3">
+                      <img src="{{ v.img }}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px; border:1px solid var(--border);" />
+                    </sc-for>
+                  </div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <sc-for list="{{ actions }}" as="a" hint-placeholder-count="4">
+                      <button onClick="{{ a.act }}" style="{{ a.style }}">{{ a.name }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ mMood }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:14px; padding-top:12px;">
+              <h1 style="font-size:22px; font-weight:600; color:var(--text); margin:0;">Moodboards</h1>
+              <div style="columns:2; column-gap:10px;">
+                <sc-for list="{{ board }}" as="b" hint-placeholder-count="8">
+                  <img src="{{ b.img }}" alt="" style="width:100%; display:block; border-radius:12px; margin-bottom:10px; break-inside:avoid;" />
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="padding:8px 16px 14px; border-top:1px solid var(--border); display:flex; align-items:center; gap:6px;">
+          <sc-for list="{{ mobileNav }}" as="n" hint-placeholder-count="4">
+            <button onClick="{{ n.pick }}" style="{{ n.style }}">
+              <span style="{{ n.dotStyle }}"></span>
+              {{ n.name }}
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+function hash(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31+str.charCodeAt(i))>>>0; } return h; }
+function img(seed, w, h){
+  const hu = hash(seed);
+  const hue1 = hu % 360, hue2 = (hue1 + 40 + (hu>>8)%60) % 360;
+  const c1 = "hsl(" + hue1 + ",62%,58%)", c2 = "hsl(" + hue2 + ",70%,40%)";
+  const cx = 20 + (hu % 60), cy = 20 + ((hu>>4) % 60);
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + w + "' height='" + h + "' viewBox='0 0 100 100'>"
+    + "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
+    + "<stop offset='0' stop-color='" + c1 + "'/><stop offset='1' stop-color='" + c2 + "'/></linearGradient></defs>"
+    + "<rect width='100' height='100' fill='url(#g)'/>"
+    + "<circle cx='" + cx + "' cy='" + cy + "' r='34' fill='rgba(255,255,255,0.14)'/>"
+    + "</svg>";
+  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+
+const SKILLS = [
+  {id:"avatar", name:"Doodle Avatar", kind:"Image", price:"Free", installs:"538", seed:"doodle-avatar",
+   tagline:"Create fashion-chibi avatars from photos or text",
+   desc:"Turn a portrait or a character idea into a naive doodle fashion-chibi avatar with a childlike yet editorial feel.",
+   longDesc:"Turn a portrait, appearance description, or creative character idea into a distinctive naive doodle fashion-chibi avatar. The style leans on bold graphic hair shapes, rough marker and dry-brush edges, restrained watercolour-like colour, and a clean warm-white ground. Real photos guide recognisable cues — hairstyle silhouette, face shape, expression, accessories — while the result stays clearly illustrated rather than photographic.",
+   tags:["portrait","chibi","dry brush","warm white"], author:"Shuting", authorSeed:"a1"},
+  {id:"stickers", name:"Doodle Stickers", kind:"Image", price:"Paid", installs:"412", seed:"journal-stickers",
+   tagline:"Die-cut sticker sheets from any photo",
+   desc:"Slices a photo into die-cut sticker shapes with paper grain and a soft drop shadow.",
+   longDesc:"Feeds a photo through a cut-out pass that finds clean silhouettes, then lays each one on a sticker sheet with paper grain, a white die-cut border and a soft contact shadow. Good for journal spreads, planner packs and chat packs.",
+   tags:["stickers","die cut","paper grain"], author:"Mimo", authorSeed:"a2"},
+  {id:"bw", name:"Doodle Ink", kind:"Image", price:"Free", installs:"340", seed:"bw-doodle",
+   tagline:"Minimalist hand-drawn ink from photos",
+   desc:"Instantly transform your photos into minimalist black-and-white hand-drawn line art.",
+   longDesc:"A single-weight ink pass: flattens tone, keeps gesture, and redraws the subject as confident hand-drawn contour lines on plain white. Works best on full-body shots and street scenes.",
+   tags:["ink","line art","monochrome"], author:"Rin", authorSeed:"a3"},
+  {id:"daystrip", name:"Doodle Day Strip", kind:"Image", price:"Free", installs:"268", seed:"day-strip",
+   tagline:"Your camera roll as a four-panel diary comic",
+   desc:"Reads today's photos and draws a four-panel diary comic with hand-lettered captions.",
+   longDesc:"Picks four moments out of a day's photos, orders them into a narrative, and draws a diary comic strip with hand lettering and loose panel borders. Captions stay short and first-person.",
+   tags:["comic","diary","lettering"], author:"Tara", authorSeed:"a4"},
+  {id:"freeform", name:"Doodle Scribble", kind:"Image", price:"Free", installs:"1.2k", seed:"freeform-scribble",
+   tagline:"No style lock — the medium changes every run",
+   desc:"Unconstrained pass — you describe the chaos, it invents the medium each run.",
+   longDesc:"The house wildcard. No fixed medium, no fixed palette: each run picks its own tools, so the same prompt can come back as crayon, biro, cut paper or gouache. Use it when you want to be surprised, then fork the run you like into a fixed skill.",
+   tags:["wildcard","mixed media"], author:"Chaos", authorSeed:"a5"},
+  {id:"infographic", name:"Doodle Infographic", kind:"Image", price:"Free", installs:"247", seed:"hand-infographic",
+   tagline:"Notes into doodle diagrams",
+   desc:"Transform complex information into hand-drawn doodle-style vertical infographics.",
+   longDesc:"Reads a note, article or outline and lays it out as a hand-drawn vertical infographic — arrows, boxed callouts, marker highlights, and a legible hierarchy that survives being read on a phone.",
+   tags:["diagram","notes","marker"], author:"Sana", authorSeed:"a6"},
+  {id:"clay", name:"Doodle Clay Figure", kind:"Image", price:"Paid", installs:"193", seed:"clay-character",
+   tagline:"Flat sketches become soft clay figures",
+   desc:"Transform user-supplied simple drawings or sketches into soft clay characters.",
+   longDesc:"Takes a flat sketch and re-renders it as a modelled clay figure with fingerprint texture, gentle studio light and a matte ground — keeping the wonky proportions of the original drawing on purpose.",
+   tags:["clay","3d","soft light"], author:"Lin", authorSeed:"a7"},
+  {id:"zine", name:"Doodle Zine Cover", kind:"Slides", price:"Free", installs:"106", seed:"zine-cover",
+   tagline:"Risograph zine covers from a prompt",
+   desc:"Lays a doodle into a risograph zine cover with two-ink misregistration.",
+   longDesc:"Builds a two-ink risograph cover: hand-drawn subject, big display lettering, deliberate misregistration and paper speckle. Exports as a print-ready plate plus a flat preview.",
+   tags:["riso","print","cover"], author:"Vin", authorSeed:"a8"}
+];
+const TABS = ["For you","Avatars","Stickers","Comics","Freeform","Print"];
+
+class Component extends DCLogic {
+  state = {
+    theme:"dark", device:"desktop", screen:"home", tab:"For you", skillTab:"Explore",
+    skill:null, detail:SKILLS[0], prompt:"", search:"", chat:"",
+    running:false, saved:false, menu:false, helper:true, collapsed:false,
+    thread:[
+      {who:"a", text:"I'm Akku. I hold your skills — point me at a photo or say the vibe and I'll pick one."},
+      {who:"u", text:"make it messier"},
+      {who:"a", text:"Loosened the brush and dropped outline weight to 40%. Rerunning two variants."}
+    ]
+  };
+
+  get pal() {
+    return this.state.theme === "dark" ? {
+      bg:"#0F0F0F", stage:"#0A0A0A", surface:"#141414", surface2:"#141414", card:"#1A1A1A",
+      promptBg:"#1C1C1E", iconBg:"transparent", iconHover:"#2A2A2D",
+      border:"#262626", border2:"#292929", border3:"#3A3A3A", hover:"#1F1F1F",
+      text:"#DDDDDD", muted:"#999999", muted2:"#666666",
+      accent:"#FAB700", accentSoft:"#5A4200", accentFaint:"rgba(250,183,0,.1)",
+      blue:"#3399FF", blueFaint:"rgba(51,153,255,.12)", sendBg:"#FAB700", sendFg:"#3D2900"
+    } : {
+      bg:"#FFFFFF", stage:"#F0F0F0", surface:"#F7F7F7", surface2:"#FFFFFF", card:"#FFFFFF",
+      promptBg:"#FFFFFF", iconBg:"transparent", iconHover:"#F0F0F0",
+      border:"#E5E5E5", border2:"#DDDDDD", border3:"#BFBFBF", hover:"#F0F0F0",
+      text:"#1A1A1A", muted:"#666666", muted2:"#8A8A8A",
+      accent:"#FAB700", accentSoft:"#E8CF8F", accentFaint:"rgba(250,183,0,.14)",
+      blue:"#1A7FE0", blueFaint:"rgba(51,153,255,.1)", sendBg:"#FAB700", sendFg:"#3D2900"
+    };
+  }
+
+  nav(active) {
+    return "display:flex; align-items:center; gap:11px; width:100%; padding:9px 10px; border:0; border-radius:10px; font-size:14px; cursor:pointer; text-align:left; background:"
+      + (active ? "var(--hover); color:var(--text);" : "transparent; color:var(--muted);");
+  }
+  go(screen) { this.setState({screen, menu:false}); }
+  openSkill(s) { this.setState({screen:"detail", detail:s, menu:false}); }
+  run(skill) {
+    this.setState({screen:"run", skill:skill || this.state.skill || SKILLS[0], running:true, saved:false, prompt:""});
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({running:false}), 1700);
+  }
+  componentWillUnmount() { clearTimeout(this._t); }
+
+  renderVals() {
+    const s = this.state, p = this.pal;
+    const vars = Object.keys(p).map(k => "--" + k + ":" + p[k]).join(";");
+    const skill = s.skill || s.detail;
+    const q = s.search.trim().toLowerCase();
+    const list = q ? SKILLS.filter(x => (x.name + x.desc).toLowerCase().includes(q)) : SKILLS;
+    const deco = (arr) => arr.map(x => ({
+      id:x.id, name:x.name, kind:x.kind, price:x.price, installs:x.installs, desc:x.desc,
+      img: img(x.seed, 640, 480), authorImg: img(x.authorSeed, 60, 60),
+      badge: x.price === "Paid" ? "Paid" : "",
+      badgeStyle: x.price === "Paid"
+        ? "position:absolute; right:8px; bottom:8px; padding:3px 10px; border-radius:999px; background:#FAB700; color:#3D2900; font-size:11.5px; font-weight:600;"
+        : "display:none;",
+      priceStyle: "padding:3px 9px; border-radius:6px; font-size:11.5px; background:"
+        + (x.price === "Paid" ? "rgba(250,183,0,.16); color:var(--accent);" : "var(--surface2); color:var(--muted2); border:1px solid var(--border2);"),
+      pickStyle: "position:absolute; left:8px; top:8px; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:"
+        + (skill.id === x.id ? "var(--accent);" : "rgba(15,15,15,.55);"),
+      pick: (e) => { e.stopPropagation(); this.setState({skill:x}); },
+      open: () => this.openSkill(x)
+    }));
+    const pill = (on) => "display:flex; align-items:center; gap:6px; padding:6px 13px; border-radius:999px; border:0; font-size:13px; cursor:pointer; background:"
+      + (on ? "var(--sendBg); color:var(--sendFg);" : "transparent; color:var(--muted);");
+
+    return {
+      rootStyle: vars + "; min-height:100vh; background:var(--stage); color:var(--text); font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif; font-size:14px;",
+      isDesktop: s.device === "desktop", isMobile: s.device === "mobile",
+      collapsed: s.collapsed, expanded: !s.collapsed,
+      toggleCollapsed: () => this.setState({collapsed: !s.collapsed}),
+      sidebarStyle: "flex:0 0 " + (s.collapsed ? "76px" : "258px") + "; width:" + (s.collapsed ? "76px" : "258px") + "; background:var(--bg); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:16px " + (s.collapsed ? "10px" : "12px") + " 12px; gap:20px; transition:width .15s ease;",
+      collapseBtnStyle: "margin-left:auto; width:26px; height:26px; border-radius:7px; border:1px solid var(--border2); background:transparent; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 26px; transform:rotate(" + (s.collapsed ? "0deg" : "180deg") + "); transition:transform .15s ease;",
+      deviceOpts: [{k:"desktop",label:"Desktop"},{k:"mobile",label:"Mobile"}].map(o => ({
+        label:o.label, pick: () => this.setState({device:o.k, menu:false}), style: pill(s.device === o.k)
+      })),
+      themeOpts: [{k:"dark",label:"Dark"},{k:"light",label:"Light"}].map(o => ({
+        label:o.label, pick: () => this.setState({theme:o.k}), style: pill(s.theme === o.k)
+      })),
+      toggleTheme: () => this.setState({theme: s.theme === "dark" ? "light" : "dark", menu:false}),
+      themeMenuLabel: s.theme === "dark" ? "Switch to light" : "Switch to dark",
+
+      isHome: s.screen === "home", isSkills: s.screen === "skills", isDetail: s.screen === "detail",
+      isRun: s.screen === "run", isMood: s.screen === "mood", isSettings: s.screen === "settings",
+      mHome: s.screen === "home" || s.screen === "detail" || s.screen === "settings",
+      mSkills: s.screen === "skills", mRun: s.screen === "run", mMood: s.screen === "mood",
+
+      goHome: () => this.go("home"), goSkills: () => this.go("skills"),
+      goMood: () => this.go("mood"), goSettings: () => this.go("settings"),
+      newBtnStyle: "display:flex; align-items:center; gap:11px; width:100%; padding:10px; border:0; border-radius:10px; background:var(--hover); color:var(--text); font-size:14px; font-weight:500; cursor:pointer; text-align:left;",
+      navMood: this.nav(s.screen === "mood"), navSkills: this.nav(s.screen === "skills" || s.screen === "detail"),
+      navHelper: this.nav(s.helper), navPlain: this.nav(false),
+      menuItem: "text-align:left; padding:9px 10px; border:0; border-radius:9px; background:transparent; color:var(--text); font-size:13.5px; cursor:pointer;",
+      menu: s.menu, toggleMenu: () => this.setState({menu: !s.menu}),
+      helper: s.helper, toggleHelper: () => this.setState({helper: !s.helper}),
+      selectedSkillId: skill.id,
+      avatar: img("yash-avatar", 120, 120),
+      credits: s.saved ? "232" : "236",
+      crumb: s.screen === "mood" ? "Moodboards" : s.screen === "skills" ? "Skills"
+        : s.screen === "settings" ? "Settings" : s.screen === "detail" ? s.detail.name : "Chaos",
+
+      circleBtn: "width:36px; height:36px; border-radius:10px; border:1px solid #4A4A4C; background:transparent; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center;",
+      sendBtnStyle: "width:34px; height:34px; border-radius:50%; border:1px solid var(--border3); background:var(--iconHover); color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center;",
+      prompt: s.prompt, onPrompt: (e) => this.setState({prompt:e.target.value}),
+      send: () => this.run(),
+      hasSkill: !!s.skill, skillName: skill.name, skillImg: img(skill.seed, 60, 60),
+      clearSkill: () => this.setState({skill:null}),
+
+      tabs: TABS.map(name => ({
+        name, pick: () => this.setState({tab:name}),
+        style: "border:0; border-radius:999px; padding:8px 16px; font-size:14px; cursor:pointer; background:"
+          + (name === s.tab ? "var(--surface2); color:var(--text); border:1px solid var(--border2);" : "transparent; color:var(--muted);"),
+        mStyle: "flex:0 0 auto; border:0; border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer; background:"
+          + (name === s.tab ? "var(--surface2); color:var(--text); border:1px solid var(--border2);" : "transparent; color:var(--muted);")
+      })),
+      featured: deco(SKILLS.slice(0, 8)),
+      skillList: deco(list),
+      skillTabs: ["Explore","Yours"].map(name => ({
+        name, pick: () => this.setState({skillTab:name}), style: pill(name === s.skillTab)
+      })),
+      search: s.search, onSearch: (e) => this.setState({search:e.target.value}),
+      hasSearch: !!s.search, clearSearch: () => this.setState({search:""}),
+
+      detail: {
+        name: s.detail.name, tagline: s.detail.tagline, kind: s.detail.kind,
+        installs: s.detail.installs, author: s.detail.author + "@DoodleBooth",
+        authorImg: img(s.detail.authorSeed, 60, 60), img: img(s.detail.seed, 200, 200),
+        shotA: img(s.detail.seed + "-a", 700, 700), shotB: img(s.detail.seed + "-b", 700, 700),
+        longDesc: s.detail.longDesc, tags: s.detail.tags.map(name => ({name}))
+      },
+      runDetail: () => this.run(s.detail),
+
+      running: s.running, ready: !s.running,
+      skeletons: [{},{}],
+      runPrompt: "Run on my selfie, softer outline",
+      agentLine: "Here's the pass — rough brushwork, irregular colour blocks and a warm paper ground. Fork it as a skill if you want this exact recipe again.",
+      runSource: img(skill.seed + "-src", 700, 700),
+      runOutput: img(skill.seed + "-out", 700, 700),
+      variants: ["v1","v2","v3"].map(k => ({img: img(skill.seed + k, 400, 400)})),
+      savedNote: s.saved ? "Saved to Moodboards · seed 8841" : "seed 8841 · 17s",
+      actions: [
+        {name:"Remix", fn:() => this.run(skill)},
+        {name:"Save to moodboard", fn:() => this.setState({saved:true})},
+        {name:"Fork as skill", fn:() => this.go("skills")},
+        {name:"Download", fn:() => this.setState({saved:true})}
+      ].map(a => ({
+        name: a.name === "Save to moodboard" && s.saved ? "Saved ✓" : a.name, act: a.fn,
+        style: "height:32px; padding:0 14px; border-radius:999px; border:1px solid var(--border3); background:transparent; color:var(--text); font-size:13px; cursor:pointer;"
+      })),
+
+      board: [520,700,600,820,560,740,640,880,600,700,540,760].map((h,i) => ({
+        img: img("board-" + i, 500, h)
+      })),
+
+      settingsNav: ["General","Subscription","Connectors","Billing","API keys"].map((name,i) => ({
+        name, style: "text-align:left; padding:9px 12px; border:0; border-radius:9px; font-size:14px; cursor:pointer; background:"
+          + (i === 0 ? "var(--hover); color:var(--text);" : "transparent; color:var(--muted);")
+      })),
+      appearance: [
+        {k:"light", name:"Light", bg:"#FFFFFF", bar:"#DDDDDD"},
+        {k:"system", name:"System", bg:"linear-gradient(90deg,#FFFFFF 50%,#1F1F1F 50%)", bar:"#B0B0B0"},
+        {k:"dark", name:"Dark", bg:"#1F1F1F", bar:"#3A3A3A"}
+      ].map(a => {
+        const on = a.k === s.theme || (a.k === "system" && s.theme === "system");
+        return {
+          name:a.name, pick: () => this.setState({theme: a.k === "system" ? "dark" : a.k}),
+          wrapStyle:"display:flex; flex-direction:column; gap:10px; align-items:center; cursor:pointer;",
+          cardStyle:"width:132px; height:88px; border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:7px; background:" + a.bg
+            + "; border:2px solid " + (on ? "var(--blue)" : "var(--border2)") + ";",
+          barStyle:"height:8px; width:64%; border-radius:4px; background:" + a.bar + ";",
+          bar2Style:"height:8px; width:40%; border-radius:4px; background:" + a.bar + ";",
+          labelStyle:"font-size:13.5px; color:" + (on ? "var(--text)" : "var(--muted)") + ";"
+        };
+      }),
+      prefs: [
+        {name:"Default skill", hint:"Used when you send without picking one", value:"Freeform Scribble"},
+        {name:"Variants per run", hint:"More variants cost more credits", value:"4"},
+        {name:"Output size", hint:"Applies to image skills", value:"2048 px"}
+      ],
+
+      recents: [
+        {name:"pink hair chibi", seed:"r1"}, {name:"cat sticker sheet", seed:"r2"},
+        {name:"tuesday comic strip", seed:"r3"}, {name:"scribble no.44", seed:"r4"}
+      ].map(r => ({
+        name:r.name, img: img(r.seed, 60, 60), open: () => this.go("mood"),
+        style:"display:flex; align-items:center; gap:10px; width:100%; padding:7px 10px; border:0; border-radius:9px; background:transparent; color:var(--muted); font-size:13.5px; cursor:pointer; text-align:left;"
+      })),
+
+      mobileNav: [
+        {k:"home", name:"Home"}, {k:"skills", name:"Skills"},
+        {k:"mood", name:"Boards"}, {k:"run", name:"Runs"}
+      ].map(n => {
+        const on = s.screen === n.k;
+        return {
+          name:n.name, pick: () => this.go(n.k),
+          style:"flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; padding:6px 0; border:0; background:transparent; font-size:11.5px; cursor:pointer; color:" + (on ? "var(--text)" : "var(--muted2)") + ";",
+          dotStyle:"width:6px; height:6px; border-radius:50%; background:" + (on ? "var(--accent)" : "transparent") + ";"
+        };
+      }),
+
+      chat: s.chat, onChat: (e) => this.setState({chat:e.target.value}),
+      sendChat: () => {
+        if (!s.chat.trim()) return;
+        this.setState({chat:"", thread: s.thread.concat([
+          {who:"u", text:s.chat}, {who:"a", text:"On it — rerunning with that note."}
+        ])});
+      },
+      quickies: [
+        {name:"Pick a skill for me", fn:() => this.go("skills")},
+        {name:"Messier brush", fn:() => this.run(skill)},
+        {name:"Make stickers", fn:() => this.openSkill(SKILLS[1])}
+      ].map(x => ({name:x.name, act:x.fn})),
+      thread: s.thread.map(m => ({
+        text:m.text,
+        wrapStyle:"display:flex; " + (m.who === "u" ? "justify-content:flex-end;" : ""),
+        bubbleStyle:"max-width:88%; padding:10px 12px; border-radius:14px; font-size:13.5px; line-height:1.55; background:"
+          + (m.who === "u" ? "var(--surface2); color:var(--text);" : "var(--card); color:var(--muted); border:1px solid var(--border);")
+      }))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

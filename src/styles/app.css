@@ -1,32 +1,75 @@
-/* DoodleBooth app styles */
+/* DoodleBooth app styles — Chaos Doodle Studio design tokens.
+   Dark is the default palette (matches the product's default theme);
+   [data-theme="light"] on <html> overrides it. Set/toggled by
+   src/lib/theme.ts, applied without a flash by the inline snippet in
+   AppLayout.astro's <head>. */
 :root {
-  --bg: #faf7f5;
-  --card: #ffffff;
-  --card-hover: #f5f1ee;
-  --border: #eee1db;
-  --text: #18181b;
-  --text-dim: #6b6b76;
-  --text-dimmer: #9a9aa5;
-  --accent: #e2725b;
-  --accent-soft: rgba(226, 114, 91, 0.12);
-  --accent-softer: rgba(226, 114, 91, 0.06);
-  --accent-soft-hover: rgba(226, 114, 91, 0.19);
-  --accent-softer-hover: rgba(226, 114, 91, 0.12);
-  --gold: #c9960c;
-  --silver: #8c8c96;
-  --bronze: #b06a2e;
-  --ig1: #feda75;
-  --ig2: #fa7e1e;
-  --ig3: #d62976;
-  --ig4: #962fbf;
-  --ig5: #4f5bd5;
-  --ig-gradient: linear-gradient(45deg, var(--ig1), var(--ig2), var(--ig3), var(--ig4), var(--ig5));
+  --bg: #0f0f0f;
+  --stage: #0a0a0a;
+  --surface: #141414;
+  --surface2: #141414;
+  --card: #1a1a1a;
+  --card-hover: #1f1f1f;
+  --prompt-bg: #1c1c1e;
+  --icon-hover: #2a2a2d;
+
+  --border: #262626;
+  --border2: #292929;
+  --border3: #3a3a3a;
+  --hover: #1f1f1f;
+
+  --text: #dddddd;
+  --text-dim: #999999;
+  --text-dimmer: #666666;
+
+  --accent: #fab700;
+  --accent-soft: #5a4200;
+  --accent-softer: rgba(250, 183, 0, 0.1);
+
+  --blue: #3399ff;
+  --blue-faint: rgba(51, 153, 255, 0.12);
+  --send-bg: #fab700;
+  --send-fg: #3d2900;
+
+  /* Wordmark accent gradient (Navbar/Footer logo, page-hero heading) —
+     accent-to-blue, replaces the old Instagram-style gradient. */
+  --ig-gradient: linear-gradient(90deg, var(--accent), var(--blue));
+
   --radius: 18px;
 
   /* Shared app shell metrics — navbar, main and footer all read these
      so the horizontal edges can never drift out of alignment. */
   --shell-max: 920px;
   --shell-pad: 40px;
+}
+
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --stage: #f0f0f0;
+  --surface: #f7f7f7;
+  --surface2: #ffffff;
+  --card: #ffffff;
+  --card-hover: #f0f0f0;
+  --prompt-bg: #ffffff;
+  --icon-hover: #f0f0f0;
+
+  --border: #e5e5e5;
+  --border2: #dddddd;
+  --border3: #bfbfbf;
+  --hover: #f0f0f0;
+
+  --text: #1a1a1a;
+  --text-dim: #666666;
+  --text-dimmer: #8a8a8a;
+
+  --accent: #fab700;
+  --accent-soft: #e8cf8f;
+  --accent-softer: rgba(250, 183, 0, 0.14);
+
+  --blue: #1a7fe0;
+  --blue-faint: rgba(51, 153, 255, 0.1);
+  --send-bg: #fab700;
+  --send-fg: #3d2900;
 }
 
 /* Responsive padding scale for the shell */
@@ -61,7 +104,7 @@ main,
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
@@ -85,18 +128,3 @@ html {
 }
 
 a { color: inherit; text-decoration: none; }
-
-/* Dark mode */
-body.dark {
-  --bg: #121011;
-  --card: #1c1a1b;
-  --card-hover: #252223;
-  --border: #332e2c;
-  --text: #f6f3f2;
-  --text-dim: #aba5a2;
-  --text-dimmer: #726c6a;
-  --accent-soft: rgba(226, 114, 91, 0.20);
-  --accent-softer: rgba(226, 114, 91, 0.1);
-  --accent-soft-hover: rgba(226, 114, 91, 0.29);
-  --accent-softer-hover: rgba(226, 114, 91, 0.17);
-}
