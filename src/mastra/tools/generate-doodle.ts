@@ -1,4 +1,5 @@
 import { createTool } from "@mastra/core/tools";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import {
   buildCollagePrompt,
@@ -14,6 +15,10 @@ import {
   THEMES,
   VIRAL_MOOD_WORDS,
 } from "../../lib/doodle-constants";
+import { refund, spend } from "../../lib/credits";
+import { creditCostForSkill } from "../../lib/credits/costs";
+import type { Db } from "../../db/client";
+import { generation } from "../../db/schema/product";
 
 const inputSchema = z.object({
   skill: z.enum(GENERATION_MODES).describe("Which doodle generation mode to run."),
@@ -41,22 +46,22 @@ const inputSchema = z.object({
 const outputSchema = z.union([
   z.object({ status: z.literal("ok"), url: z.string() }),
   z.object({ status: z.literal("needs-photo"), message: z.string() }),
-  z.object({ status: z.literal("needs-key"), message: z.string() }),
+  z.object({ status: z.literal("insufficient-credits"), message: z.string(), balance: z.number(), required: z.number() }),
   z.object({ status: z.literal("error"), message: z.string() }),
 ]);
 
 interface RequestContextValues {
-  apiKey?: string;
+  /** Server-owned key used for every authenticated generation. */
+  platformPicxKey?: string;
   styleId?: string;
+  userId?: string;
+  db?: Db;
 }
 
 /**
- * Calls the same PicX generate/edit endpoint as src/pages/api/generate.ts,
- * reusing the same prompt builders from doodle-constants.ts. The PicX key
- * and the user's chosen visual style (Settings > Doodle defaults) are BYOK/
- * client-supplied per chat request, threaded in via RequestContext rather
- * than being tool inputs, since the model should never see or need to pass
- * either around.
+ * Calls PicX with the server-owned key and meters every generation against the
+ * signed-in user's credit ledger. The key and user context are request-scoped
+ * values, never tool inputs, so the model cannot see or supply credentials.
  */
 export const generateDoodleTool = createTool({
   id: "generate-doodle",
@@ -69,10 +74,15 @@ export const generateDoodleTool = createTool({
     const requestContext = toolContext?.requestContext as
       | { get<K extends keyof RequestContextValues>(key: K): RequestContextValues[K] }
       | undefined;
-    const apiKey = requestContext?.get("apiKey");
+    const platformKey = requestContext?.get("platformPicxKey");
+    const userId = requestContext?.get("userId");
+    const db = requestContext?.get("db");
 
-    if (!apiKey || !apiKey.trim()) {
-      return { status: "needs-key" as const, message: "No PicX API key is set. Ask the user to add one in Settings." };
+    if (!platformKey || !platformKey.trim()) {
+      return { status: "error" as const, message: "Image generation is not configured on this server." };
+    }
+    if (!userId || !db) {
+      return { status: "error" as const, message: "Sign in to generate a doodle." };
     }
 
     const requiresPhoto = input.skill !== "surprise";
@@ -117,6 +127,47 @@ export const generateDoodleTool = createTool({
         aspectRatio = "1:1";
     }
 
+    // Debit before generating — the concurrency argument for why this is
+    // safe on D1 (and what changes if we ever move off it) lives in
+    // src/lib/credits/index.ts. `generationId` doubles as both the ledger's
+    // idempotency key and the generation row's primary key, so a spend and
+    // its eventual refund are always traceable to the same attempt.
+    const generationId = crypto.randomUUID();
+    if (userId && db) {
+      const cost = creditCostForSkill(input.skill);
+      const spendResult = await spend(db, {
+        userId,
+        amount: cost,
+        reason: "generation",
+        refId: generationId,
+        idempotencyKey: `gen:${generationId}`,
+      });
+      if (!spendResult.ok) {
+        return {
+          status: "insufficient-credits" as const,
+          message: `You need ${spendResult.required} credit${spendResult.required === 1 ? "" : "s"} for this — you have ${spendResult.balance}.`,
+          balance: spendResult.balance,
+          required: spendResult.required,
+        };
+      }
+      // Written *after* the debit succeeds, so a row only ever exists for a
+      // generation credits were actually spent on — the reconciliation job
+      // (src/lib/credits/reconcile.ts) refunds anything left `pending` too
+      // long, which is only correct if every pending row really was charged.
+      await db.insert(generation).values({
+        id: generationId,
+        userId,
+        skillId: input.skill,
+        styleId: styleId ?? null,
+        prompt,
+        sourceAssetUrl: input.imageUrl ?? null,
+        refAssetUrl: input.refImageUrl ?? null,
+        creditsCharged: cost,
+        status: "pending",
+        createdAt: new Date(),
+      });
+    }
+
     try {
       const url =
         requiresPhoto && input.imageUrl
@@ -135,16 +186,45 @@ export const generateDoodleTool = createTool({
 
       const res = await fetch(url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${platformKey}`, "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const data = (await res.json().catch(() => ({}))) as { url?: string; detail?: string; message?: string };
       if (!res.ok || !data.url) {
-        return { status: "error" as const, message: data.detail || data.message || `PicX API error: ${res.status}` };
+        const message = data.detail || data.message || `PicX API error: ${res.status}`;
+        if (userId && db) await refundGeneration(db, generationId, userId, message);
+        return { status: "error" as const, message };
+      }
+      if (userId && db) {
+        await db
+          .update(generation)
+          .set({ status: "ok", outputUrl: data.url, completedAt: new Date() })
+          .where(eq(generation.id, generationId));
       }
       return { status: "ok" as const, url: data.url };
     } catch (err) {
-      return { status: "error" as const, message: err instanceof Error ? err.message : "Generation failed" };
+      const message = err instanceof Error ? err.message : "Generation failed";
+      if (userId && db) await refundGeneration(db, generationId, userId, message);
+      return { status: "error" as const, message };
     }
   },
 });
+
+/**
+ * Reverses a spend for a generation that ultimately failed. Both the ledger
+ * refund and the generation-row update are idempotency-keyed / predicated on
+ * the row still being `pending`, so this is also what the hourly
+ * reconciliation job (src/lib/credits/reconcile.ts) relies on being safe to
+ * call again for the same row.
+ */
+async function refundGeneration(db: Db, generationId: string, userId: string, errorMessage: string): Promise<void> {
+  const row = await db.select({ creditsCharged: generation.creditsCharged }).from(generation).where(eq(generation.id, generationId));
+  const creditsCharged = row[0]?.creditsCharged;
+  if (creditsCharged) {
+    await refund(db, { userId, amount: creditsCharged, refId: generationId, idempotencyKey: `refund:${generationId}` });
+  }
+  await db
+    .update(generation)
+    .set({ status: "refunded", errorCode: errorMessage.slice(0, 200), completedAt: new Date() })
+    .where(eq(generation.id, generationId));
+}

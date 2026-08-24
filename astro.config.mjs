@@ -15,6 +15,18 @@ export default defineConfig({
 	// we control exactly which URLs are listed (it must exclude the noindex
 	// /admin and /bid routes) and what lastmod reports.
 	integrations: [mdx()],
+	// `astro dev`'s own dev server (via platformProxy below) is NOT how this
+	// project develops against the database — see package.json's `dev`
+	// script. Wrangler's mixed-mode "remote bindings" (one binding proxied to
+	// the real Cloudflare resource while `astro dev` serves everything else
+	// locally) turned out to be broken for this account: Cloudflare's preview
+	// session exchange returns an HTML challenge page instead of JSON. `pnpm
+	// dev` instead builds the Worker and runs it under `wrangler dev
+	// --remote --env staging`, Wrangler's older and fully reliable full-remote
+	// mode, which needs no per-binding config here at all. `platformProxy`
+	// stays enabled only so `astro dev` remains available as a manual escape
+	// hatch for UI-only iteration (ephemeral local-emulated D1/KV, no shared
+	// data) if anyone ever wants fast Vite HMR and doesn't need real data.
 	adapter: cloudflare({
 		platformProxy: {
 			enabled: true,

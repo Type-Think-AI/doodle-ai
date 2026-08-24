@@ -1,0 +1,156 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/app.css';
+import '../styles/page.css';
+
+const updated = 'August 2026';
+const supportEmail = 'yash@typethink.ai';
+---
+
+<AppLayout
+	title="Terms of Service — doodleai.art"
+	description="The terms for using Doodle AI, including accounts, image generation, credits, user content, acceptable use, and third-party services."
+>
+	<Navbar />
+
+	<main class="page">
+		<div class="page-hero">
+			<div class="eyebrow">Legal</div>
+			<h1>Terms of <span class="grad">Service</span></h1>
+			<p class="lede">
+				Plain language, no tricks. These terms explain how Doodle AI works, what you are responsible for,
+				and what to expect from this creative tool.
+			</p>
+		</div>
+
+		<div class="prose">
+			<p><strong>Last updated:</strong> {updated}</p>
+
+			<h2>What Doodle AI is</h2>
+			<p>
+				Doodle AI is a conversational creative tool at doodleai.art. It helps you turn descriptions, photos,
+				and references into hand-drawn doodles, collages, stickers, and other visual results. It is an
+				independent side project provided on an as-is basis.
+			</p>
+
+			<h2>Eligibility and accounts</h2>
+			<p>
+				You may browse Doodle AI without an account. Google sign-in is required to upload, generate, save, and
+				synchronize supported chats, moodboards, characters, and generation history across devices. You are
+				responsible for activity performed through your account and for keeping access to your Google account secure.
+			</p>
+			<p>
+				You must provide accurate information when using an account, must not impersonate another person, and
+				must not share or sell access to your account. We may suspend access when necessary to protect the
+				service, users, or third-party providers from abuse.
+			</p>
+
+			<h2>Image generation, PicX, and credits</h2>
+			<p>
+				Doodle AI uses a server-owned PicX connection for image generation and asset uploads. You do not need
+				to provide a provider credential. You must use the service through the supported product flows and follow
+				PicX's terms and API rules.
+			</p>
+			<p>
+				Doodle AI meters generations using account credits. Starter credits, credit
+				costs, available packs, subscriptions, and any applicable prices are shown in the product when those
+				features are enabled. Credits are a service entitlement, not money, and cannot be redeemed for cash or
+				transferred unless we expressly say otherwise. Failed generations may be refunded when the product
+				logic provides for it; a generation is not guaranteed to succeed.
+			</p>
+			<p>
+				Any purchase or subscription is also subject to the price, renewal, cancellation, and refund terms
+				shown at checkout. Payment processing is handled by the applicable payment provider, not by Doodle AI
+				itself. We do not currently promise that any particular credit pack, model, skill, or pricing will
+				remain available.
+			</p>
+
+			<h2>Your content and generated results</h2>
+			<p>
+				You keep whatever rights you have in photos, prompts, references, and other content you submit. You
+				are responsible for having permission to upload, process, and share that content. Do not upload private
+				or sensitive material unless you understand that it may be sent to PicX or another provider to fulfill
+				your request.
+			</p>
+			<p>
+				To provide the service, you give Doodle AI a limited, non-exclusive permission to transmit, store,
+				process, display, and back up your content and generated results as necessary to operate the app,
+				synchronize your account, prevent abuse, and improve reliability. We do not claim ownership of your
+				content or sell it.
+			</p>
+			<p>
+				AI-generated results may be inaccurate, unexpected, similar to other results, or unsuitable for your
+				intended use. You are responsible for reviewing results and for checking whether a result infringes
+				someone else's rights before publishing or using it commercially.
+			</p>
+
+			<h2>Acceptable use</h2>
+			<ul class="steps">
+				<li><b>Use content you have rights to use.</b> Do not upload someone else's photo, artwork, trademark, or personal information without permission.</li>
+				<li><b>Respect people.</b> Do not use Doodle AI to harass, threaten, defame, exploit, or impersonate another person.</li>
+				<li><b>Do not abuse the service.</b> Do not scrape, reverse engineer, bypass rate limits, probe for vulnerabilities, automate generation outside supported flows, or flood the app or its providers.</li>
+				<li><b>Do not break the law.</b> Do not use the service for unlawful, fraudulent, hateful, sexually exploitative, or otherwise harmful activity.</li>
+				<li><b>Do not evade restrictions.</b> Do not use alternate accounts, stolen credentials, or technical workarounds to bypass account, credit, or provider limits.</li>
+			</ul>
+			<p>
+				We may remove content, limit generation, suspend an account, or block traffic when we reasonably
+				believe these terms or a provider's rules have been violated.
+			</p>
+
+			<h2>Third-party services</h2>
+			<p>
+				Doodle AI depends on third-party services, including Cloudflare for hosting and infrastructure, Google
+				for optional sign-in, PicX for image generation and asset hosting, OpenRouter for model routing, and
+				DataFast for analytics. Your use of those services through Doodle AI is also subject to their own
+				terms, privacy policies, availability, and usage limits. We are not responsible for a third party's
+				service outage, policy change, account action, or data handling.
+			</p>
+
+			<h2>Availability and changes</h2>
+			<p>
+				Doodle AI is provided as-is and as-available. We do not guarantee uninterrupted access, permanent
+				storage, compatibility with every browser or device, a particular model, generation speed, or a
+				successful result. Features, skills, providers, limits, and prices may change or be discontinued.
+			</p>
+			<p>
+				We may update these terms when the service or its data practices change. The date at the top shows the
+				latest revision. Continuing to use Doodle AI after an update means you accept the revised terms.
+			</p>
+
+			<h2>Disclaimers</h2>
+			<p>
+				Doodle AI is not legal, medical, financial, mental-health, identity-verification, or professional
+				advice. Do not rely on generated content as a substitute for a qualified professional. You use the
+				service and its results at your own discretion and risk.
+			</p>
+
+			<h2>Limitation of liability</h2>
+			<p>
+				To the maximum extent permitted by law, Doodle AI and its creator are not liable for indirect,
+				incidental, special, consequential, exemplary, or loss-of-data damages, or for losses arising from
+				third-party services, generated content, account access, or service interruption. Nothing in these
+				terms excludes liability that cannot legally be excluded.
+			</p>
+
+			<h2>Contact</h2>
+			<p>
+				Questions, complaints, or account concerns:
+				<a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+			</p>
+		</div>
+
+		<div class="page-cta">
+			<a href="/">Back to the app</a>
+		</div>
+	</main>
+
+	<Footer />
+
+	<script>
+		import { initThemeToggle } from '../lib/theme';
+		const themeToggle = document.getElementById('themeToggle');
+		if (themeToggle) initThemeToggle(themeToggle);
+	</script>
+</AppLayout>

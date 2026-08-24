@@ -2,7 +2,6 @@ import type { APIContext } from "astro";
 import { z } from "zod";
 import { mastra } from "../../mastra";
 import { recommendDoodleMode } from "../../lib/doodle-mode-recommender";
-import { bridgeCloudflareEnv } from "../../lib/env-bridge";
 
 export const prerender = false;
 

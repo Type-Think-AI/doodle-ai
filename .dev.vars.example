@@ -1,2 +1,23 @@
 # Local-only secrets for Doodle AI. Copy to .dev.vars and fill real values.
+# In production these are set with `wrangler secret put <NAME>`.
+
 OPENROUTER_API_KEY=replace-with-your-openrouter-key
+
+# Signing key for Better Auth sessions. Generate with:
+#   openssl rand -base64 32
+BETTER_AUTH_SECRET=replace-with-a-random-32-byte-base64-string
+
+# Optional. Defaults to the request origin, which is correct for both
+# `astro dev` and the deployed Worker. Set it only if the app is served
+# behind a proxy that rewrites the origin.
+# BETTER_AUTH_URL=https://doodleai.art
+
+# Required — Google is the only sign-in method (see src/lib/auth/index.ts,
+# which throws on startup if either is missing). Create credentials at
+# https://console.cloud.google.com/apis/credentials with the redirect URI
+#   <origin>/api/auth/callback/google
+GOOGLE_CLIENT_ID=replace-with-your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=replace-with-your-google-oauth-client-secret
+
+# Server-owned PicX key used for authenticated, credit-metered generation and uploads.
+PICX_API_KEY=replace-with-a-picx-key

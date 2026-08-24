@@ -7,12 +7,20 @@
     "@astrojs/rss": "4.0.14",
     "@mastra/core": "1.61.0",
     "astro": "5.16.9",
+    "better-auth": "1.7.1",
+    "drizzle-orm": "0.45.2",
     "picx-ai": "0.2.1",
     "typescript": "5.9.3",
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@types/node": "22.15.0",
+    "drizzle-kit": "0.31.10",
+    "eslint": "10.9.0",
+    "eslint-plugin-astro": "3.1.0",
+    "globals": "17.11.0",
+    "typescript-eslint": "8.67.0",
     "wrangler": "4.88.0"
   },
   "engines": {
@@ -23,10 +31,17 @@
     "astro": "astro",
     "brand:assets": "node scripts/generate-brand-assets.mjs",
     "build": "astro build",
+    "lint": "eslint .",
     "cf-typegen": "wrangler types",
     "check": "astro build && tsc && wrangler deploy --dry-run",
-    "deploy": "wrangler deploy",
-    "dev": "astro dev",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:remote": "wrangler d1 migrations apply doodleai --remote",
+    "db:migrate:staging": "wrangler d1 migrations apply doodleai-staging --remote --env staging",
+    "db:studio": "drizzle-kit studio",
+    "deploy": "pnpm run db:migrate:remote && wrangler deploy",
+    "deploy:staging": "pnpm run db:migrate:staging && wrangler deploy --env staging",
+    "dev": "node scripts/dev.mjs",
+    "dev:local": "astro dev",
     "preview": "astro build && wrangler dev"
   },
   "type": "module"

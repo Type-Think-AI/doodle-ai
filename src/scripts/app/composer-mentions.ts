@@ -310,7 +310,7 @@ export function serializeComposer(el: HTMLElement): SerializedComposer {
     else if (type === "ref") refImageId = id;
   });
 
-  return { text: text.replace(/ /g, " ").trim(), characterId, skillId, refImageId };
+  return { text: text.replace(/\u00a0/g, " ").trim(), characterId, skillId, refImageId };
 }
 
 export function clearComposer(el: HTMLElement): void {

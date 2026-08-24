@@ -181,7 +181,6 @@ export const SAMPLE_PRESETS: AvatarAttrs[] = [
   { hairStyle: "long-wavy", hairColor: "#FFB54A", skinTone: "#8A5A3C", expression: "smile", mouth: "smile-closed", accessories: ["freckles"], earringStyle: "hoop" },
 ];
 
-export const STORAGE_KEY = "doodleme_api_key";
 export const STYLE_THEME_STORAGE_KEY = "doodleai-style-theme";
 export const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 

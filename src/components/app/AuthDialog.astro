@@ -1,0 +1,230 @@
+---
+// A compact visual-first sign-in dialog mounted once in AppShellLayout.astro.
+import { buildAvatarSVG } from '../../lib/doodle-avatar';
+import type { AvatarAttrs } from '../../lib/doodle-constants';
+
+const heroTheme = { id: 'auth-hero', label: 'Auth', bg: '#FFE8A3', accent: '#3D2900', styleHint: '' };
+const heroAvatar: AvatarAttrs = {
+	hairStyle: 'long-wavy',
+	hairColor: '#FFB54A',
+	skinTone: '#C88A5E',
+	expression: 'smirk',
+	mouth: 'smirk-mouth',
+	accessories: ['glasses', 'earrings', 'freckles'],
+	earringStyle: 'hoop',
+};
+const heroSvg = buildAvatarSVG(heroAvatar, heroTheme);
+---
+
+<dialog id="authDialog" class="auth-dialog" aria-labelledby="authDialogTitle" aria-describedby="authDialogDescription">
+	<button type="button" class="auth-dialog-close" id="authDialogClose" aria-label="Close sign-in dialog">
+		<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+	</button>
+
+	<div class="auth-dialog-image">
+		<div class="auth-dialog-art" set:html={heroSvg} />
+		<div class="auth-dialog-art-meta">
+			<span class="auth-dialog-art-tag">SAMPLE AVATAR</span>
+			<div class="auth-dialog-art-name">
+				<strong>Nova</strong>
+				<span>hand-drawn character</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="auth-dialog-panel">
+		<div class="auth-dialog-mark" aria-hidden="true">
+			<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M2.5 15c1.5-6.5 3-9.5 4.8-9.5S9 10 11 10s2-6 4.3-6 2.6 6.8 4.2 6.8 1.5-2.3 3-2.3" stroke="#3D2900" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+		</div>
+		<div class="auth-dialog-kicker">Doodle AI</div>
+		<h2 id="authDialogTitle">Make something<br /><em>worth keeping.</em></h2>
+		<p class="auth-dialog-sub" id="authDialogDescription">Sign in to create, save, and revisit your doodles across devices.</p>
+		<p class="auth-dialog-note"><span aria-hidden="true">✦</span> Starter credits included</p>
+
+		<button type="button" class="auth-oauth" id="authDialogGoogle">
+			<svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8a10.1 10.1 0 0 1-4.4 6.6v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.1Z"/><path fill="#34A853" d="M24 46c6 0 11-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7A22 22 0 0 0 24 46Z"/><path fill="#FBBC05" d="M11.8 28.2a13.2 13.2 0 0 1 0-8.4v-5.7H4.5a22 22 0 0 0 0 19.8l7.3-5.7Z"/><path fill="#EA4335" d="M24 9.5c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 2.9 30 1 24 1A22 22 0 0 0 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9Z"/></svg>
+			Continue with Google
+		</button>
+
+		<p class="auth-dialog-error" id="authDialogError" hidden></p>
+
+		<button type="button" class="auth-dialog-skip" id="authDialogSkip">Keep browsing <span aria-hidden="true">→</span></button>
+	</div>
+</dialog>
+
+<script src="../../scripts/app/auth-dialog.ts"></script>
+
+<style>
+	.auth-dialog {
+		padding: 0;
+		border: 1px solid var(--border2);
+		border-radius: 26px;
+		overflow: hidden;
+		width: min(780px, calc(100vw - 32px));
+		max-width: 780px;
+		background: var(--surface);
+		color: var(--text);
+		box-shadow: 0 28px 90px rgba(0, 0, 0, 0.52);
+	}
+	.auth-dialog::backdrop { background: rgba(6, 6, 6, 0.72); backdrop-filter: blur(5px); }
+	.auth-dialog[open] {
+		display: grid;
+		grid-template-columns: minmax(300px, 0.9fr) minmax(350px, 1.1fr);
+		margin: auto;
+	}
+	.auth-dialog-close {
+		position: absolute;
+		top: 14px;
+		right: 14px;
+		width: 36px;
+		height: 36px;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		border-radius: 999px;
+		background: rgba(20, 20, 20, 0.68);
+		color: #fff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		z-index: 3;
+		transition: background-color 160ms ease-out, transform 160ms ease-out;
+	}
+	.auth-dialog-close:hover { background: rgba(20, 20, 20, 0.9); }
+	.auth-dialog-close:active { transform: scale(0.96); }
+	.auth-dialog-close:focus-visible,
+	.auth-oauth:focus-visible,
+	.auth-dialog-skip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+	.auth-dialog-image {
+		position: relative;
+		min-height: 410px;
+		padding: 28px 26px 88px;
+		display: grid;
+		place-items: center;
+		overflow: hidden;
+		isolation: isolate;
+		background: #FFE8A3;
+	}
+	.auth-dialog-image::before,
+	.auth-dialog-image::after {
+		content: '';
+		position: absolute;
+		border: 1px solid rgba(61, 41, 0, 0.14);
+		border-radius: 50%;
+		z-index: -1;
+	}
+	.auth-dialog-image::before { width: 360px; height: 360px; transform: rotate(-13deg); }
+	.auth-dialog-image::after { width: 270px; height: 270px; transform: rotate(17deg); }
+	.auth-dialog-art {
+		width: min(100%, 305px);
+		position: relative;
+		z-index: 1;
+		filter: drop-shadow(0 20px 16px rgba(61, 41, 0, 0.16));
+		transform: rotate(-2deg);
+		transition: transform 220ms ease-out;
+	}
+	.auth-dialog:hover .auth-dialog-art { transform: rotate(0deg) translateY(-3px); }
+	.auth-dialog-art :global(svg) { display: block; width: 100%; height: auto; border-radius: 22px; }
+	.auth-dialog-art-meta { position: absolute; left: 26px; bottom: 24px; color: #3D2900; }
+	.auth-dialog-art-tag,
+	.auth-dialog-kicker {
+		display: block;
+		font-size: 0.63rem;
+		font-weight: 800;
+		letter-spacing: 0.13em;
+		line-height: 1.2;
+		text-transform: uppercase;
+	}
+	.auth-dialog-art-tag { opacity: 0.56; }
+	.auth-dialog-art-name { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+	.auth-dialog-art-name strong { font-size: 1.18rem; letter-spacing: -0.04em; }
+	.auth-dialog-art-name span { font-size: 0.71rem; font-weight: 600; opacity: 0.66; }
+
+	.auth-dialog-panel {
+		min-width: 0;
+		padding: 40px 38px 34px;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		background: var(--surface);
+	}
+	.auth-dialog-mark {
+		width: 42px;
+		height: 42px;
+		border-radius: 13px;
+		background: var(--accent);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 20px;
+		box-shadow: 0 8px 22px rgba(250, 183, 0, 0.16);
+	}
+	.auth-dialog-kicker { color: var(--accent); margin-bottom: 8px; }
+	.auth-dialog-panel h2 { font-size: clamp(1.95rem, 3.2vw, 2.55rem); font-weight: 700; letter-spacing: -0.055em; line-height: 0.99; color: var(--text); }
+	.auth-dialog-panel h2 em { font-style: normal; color: var(--accent); }
+	.auth-dialog-sub { max-width: 340px; font-size: 0.91rem; line-height: 1.5; color: var(--text-dim); margin: 14px 0 13px; }
+	.auth-dialog-note { display: flex; align-items: center; gap: 7px; margin: 0 0 19px; color: var(--text-dimmer); font-size: 0.76rem; font-weight: 600; }
+	.auth-dialog-note span { color: var(--accent); font-size: 0.9rem; }
+
+	.auth-oauth {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		width: 100%;
+		min-height: 52px;
+		border: 1px solid var(--border3);
+		border-radius: 13px;
+		background: var(--text);
+		color: var(--bg);
+		font-family: inherit;
+		font-size: 0.9rem;
+		font-weight: 700;
+		cursor: pointer;
+		transition: background-color 160ms ease-out, transform 160ms ease-out;
+	}
+	.auth-oauth:hover { background: #fff; }
+	.auth-oauth:active { transform: scale(0.985); }
+	.auth-dialog-error { font-size: 0.78rem; line-height: 1.5; color: #ff7b72; margin: 11px 0 0; }
+	.auth-dialog-skip {
+		align-self: flex-start;
+		margin-top: 14px;
+		border: 0;
+		background: none;
+		padding: 0;
+		font-family: inherit;
+		font-size: 0.76rem;
+		font-weight: 600;
+		color: var(--text-dimmer);
+		cursor: pointer;
+		text-align: left;
+		transition: color 150ms ease-out;
+	}
+	.auth-dialog-skip span { display: inline-block; transform: translateX(4px); transition: transform 150ms ease-out; }
+	.auth-dialog-skip:hover { color: var(--text); }
+	.auth-dialog-skip:hover span { transform: translateX(8px); }
+
+	@media (max-width: 720px) {
+		.auth-dialog { width: min(540px, calc(100vw - 24px)); border-radius: 22px; }
+		.auth-dialog[open] { display: flex; flex-direction: column; max-height: calc(100dvh - 24px); overflow-y: auto; }
+		.auth-dialog-image { min-height: 224px; padding: 17px 18px 62px; flex: 0 0 auto; }
+		.auth-dialog-art { width: min(100%, 208px); }
+		.auth-dialog-art-meta { left: 18px; bottom: 16px; }
+		.auth-dialog-panel { padding: 23px 23px 25px; }
+		.auth-dialog-mark { width: 38px; height: 38px; border-radius: 12px; margin-bottom: 16px; }
+		.auth-dialog-panel h2 { font-size: clamp(1.95rem, 9vw, 2.35rem); }
+		.auth-dialog-sub { font-size: 0.87rem; margin: 12px 0 10px; }
+		.auth-dialog-note { margin-bottom: 16px; }
+	}
+	@media (max-width: 420px) {
+		.auth-dialog-image { min-height: 208px; }
+		.auth-dialog-panel { padding-inline: 20px; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.auth-dialog-art,
+		.auth-dialog-close,
+		.auth-oauth,
+		.auth-dialog-skip,
+		.auth-dialog-skip span { transition: none; }
+	}
+</style>

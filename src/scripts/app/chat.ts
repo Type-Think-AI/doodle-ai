@@ -4,7 +4,7 @@
    produced — inline, source-photo-next-to-result, with Remix/Save/Download
    actions. */
 
-import { MAX_IMAGE_BYTES, STORAGE_KEY, STYLE_THEME_STORAGE_KEY } from "../../lib/doodle-constants";
+import { MAX_IMAGE_BYTES, STYLE_THEME_STORAGE_KEY } from "../../lib/doodle-constants";
 import { getSkill } from "../../lib/skills";
 import { getCharacter } from "./character-store";
 import { loadMoodboard, addToMoodboard } from "./moodboard";
@@ -12,7 +12,7 @@ import {
   appendMessage,
   clearThreadSkill,
   getThreadSkill,
-  getUserId,
+  hydrateThread,
   loadThread,
   setThreadSkill,
   type ChatMessage,
@@ -21,6 +21,7 @@ import { initLightbox, openLightbox } from "./lightbox";
 import { initMentions, serializeComposer, clearComposer } from "./composer-mentions";
 import { setImageSrc, guardBfcacheRestore } from "./dom-utils";
 import { initMediaPicker } from "./media-picker";
+import { getSession } from "./auth-client";
 
 const REFINE_PLACEHOLDER = "Ask for a change — thicker outline, warmer paper…";
 
@@ -33,13 +34,6 @@ function threadIdFromPath(): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function hasKey(): boolean {
-  try {
-    return Boolean(localStorage.getItem(STORAGE_KEY)?.trim());
-  } catch {
-    return false;
-  }
-}
 
 function getStyleId(): string {
   try {
@@ -55,7 +49,6 @@ function initChat(): void {
 
   const thread = $("chatThread");
   const empty = $("chatEmpty");
-  const keyBanner = $("chatKeyBanner");
   const skillChip = $("chatSkillChip");
   const skillChipLabel = $("chatSkillChipLabel");
   const skillChipClear = $("chatSkillChipClear");
@@ -285,9 +278,9 @@ function initChat(): void {
       setStatus("Images must be 20 MB or smaller.", true);
       return;
     }
-    if (!hasKey()) {
-      setStatus("Add your PicX API key in Settings to attach a photo.", true);
-      keyBanner!.hidden = false;
+    if (!(await getSession())) {
+      setStatus("Sign in to upload a photo.", true);
+      window.dispatchEvent(new Event("doodleai:open-auth"));
       return;
     }
 
@@ -299,13 +292,15 @@ function initChat(): void {
     syncSendState();
 
     try {
-      const apiKey = localStorage.getItem(STORAGE_KEY) || "";
       const form = new FormData();
       form.append("file", file);
-      form.append("apiKey", apiKey);
       const res = await fetch("/api/upload", { method: "POST", body: form });
-      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-      if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
+      const data = (await res.json().catch(() => ({}))) as {
+        url?: string;
+        error?: string | { message?: string };
+      };
+      const errorMessage = typeof data.error === "string" ? data.error : data.error?.message;
+      if (!res.ok || !data.url) throw new Error(errorMessage || "Upload failed");
       attachedUrl = data.url;
       attachMeta!.textContent = "Ready";
       setStatus("");
@@ -345,14 +340,15 @@ function initChat(): void {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: toApiMessages(history),
-          apiKey: localStorage.getItem(STORAGE_KEY) || "",
           styleId: getStyleId(),
-          userId: getUserId(),
         }),
       });
       if (!res.ok || !res.body) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error || `Chat request failed: ${res.status}`);
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string | { message?: string };
+        };
+        const errorMessage = typeof data.error === "string" ? data.error : data.error?.message;
+        throw new Error(errorMessage || `Chat request failed: ${res.status}`);
       }
 
       // The server streams newline-delimited JSON events (see /api/chat.ts) —
@@ -415,9 +411,9 @@ function initChat(): void {
       setStatus("Type a message or attach a photo first.", true);
       return;
     }
-    if (!hasKey()) {
-      keyBanner!.hidden = false;
-      setStatus("Add your PicX API key in Settings to generate doodles.", true);
+    if (!(await getSession())) {
+      setStatus("Sign in to start creating.", true);
+      window.dispatchEvent(new Event("doodleai:open-auth"));
       return;
     }
 
@@ -492,25 +488,52 @@ function initChat(): void {
   });
 
   /* ---- Initial paint ---- */
-  keyBanner!.hidden = hasKey();
   syncSkillChip();
   guardBfcacheRestore();
 
-  const existing = loadThread(threadId);
-  let precedingUserMessage: ChatMessage | null = null;
-  existing.forEach((msg) => {
-    renderMessage(msg, precedingUserMessage);
-    if (msg.role === "user") precedingUserMessage = msg;
-  });
-  if (hasResult) input.dataset.placeholder = REFINE_PLACEHOLDER;
-
-  // Arriving here from Home with a first message already saved but no
-  // reply yet (Home creates the thread + appends the user turn, then
-  // navigates here) — pick up that pending turn automatically, ChatGPT-style.
-  const last = existing[existing.length - 1];
-  if (last && last.role === "user") {
-    void requestAssistantReply(existing);
+  function paintHistory(messages: ChatMessage[]): void {
+    thread!.querySelectorAll(".chat-msg").forEach((el) => el.remove());
+    hasResult = false;
+    lastUserMessage = null;
+    let precedingUserMessage: ChatMessage | null = null;
+    messages.forEach((msg) => {
+      renderMessage(msg, precedingUserMessage);
+      if (msg.role === "user") precedingUserMessage = msg;
+    });
+    empty!.hidden = messages.length > 0;
+    if (hasResult) input!.dataset.placeholder = REFINE_PLACEHOLDER;
   }
+
+  /**
+   * Continue a turn that was started elsewhere: Home creates the thread and
+   * appends the user message, then navigates here, so a history ending on a
+   * user turn means a reply is owed.
+   */
+  function resumePendingTurn(messages: ChatMessage[]): void {
+    if (sending) return;
+    const last = messages[messages.length - 1];
+    if (last && last.role === "user") void requestAssistantReply(messages);
+  }
+
+  // Paint from the local mirror first so the thread is on screen immediately,
+  // then repaint once the server's copy has landed — which is what makes a
+  // thread opened on a second device show its real history. Signed out,
+  // hydrateThread resolves to the same local array and the repaint is a
+  // no-op re-render.
+  const local = loadThread(threadId);
+  paintHistory(local);
+  resumePendingTurn(local);
+
+  void hydrateThread(threadId).then((messages) => {
+    // A reply already in flight owns the thread element (the thinking bubble
+    // is one of the `.chat-msg` nodes a repaint would remove).
+    if (sending) return;
+    if (messages.length === local.length && local.length > 0) return;
+    pinnedSkillId = getThreadSkill(threadId);
+    syncSkillChip();
+    paintHistory(messages);
+    resumePendingTurn(messages);
+  });
 }
 
 if (document.readyState === "loading") {

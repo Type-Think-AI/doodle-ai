@@ -38,8 +38,8 @@ export async function GET(context: APIContext) {
     { path: "/skills/", changefreq: "weekly", priority: "0.9" },
     { path: "/blog/", lastmod: newestPost, changefreq: "weekly", priority: "0.8" },
     { path: "/about/", changefreq: "monthly", priority: "0.6" },
-    { path: "/terms/", changefreq: "yearly", priority: "0.3" },
-    { path: "/privacy/", changefreq: "yearly", priority: "0.3" },
+    { path: "/terms-of-service/", changefreq: "yearly", priority: "0.3" },
+    { path: "/privacy-policy/", changefreq: "yearly", priority: "0.3" },
     ...SKILLS.filter((s) => s.runnable).map((skill) => ({
       path: `/skills/${skill.id}/`,
       changefreq: "monthly" as const,

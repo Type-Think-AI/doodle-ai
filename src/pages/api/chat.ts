@@ -2,6 +2,9 @@ import type { APIContext } from "astro";
 import { RequestContext } from "@mastra/core/request-context";
 import { mastra } from "../../mastra";
 import { bridgeCloudflareEnv } from "../../lib/env-bridge";
+import { getDb } from "../../db/client";
+import { requireAuth } from "../../lib/auth/guards";
+import { getBalance } from "../../lib/credits";
 
 export const prerender = false;
 
@@ -12,42 +15,34 @@ interface ChatMessage {
 
 type StreamEvent =
   | { type: "text"; text: string }
+  | { type: "status"; phase: "drawing" }
   | { type: "image"; url: string }
+  | { type: "credits"; balance: number }
   | { type: "done" }
   | { type: "error"; message: string };
 
 /**
  * POST /api/chat
  *
- * Accepts JSON: { messages: {role, content}[], apiKey?: string }
- * Streams newline-delimited JSON events as the agent generates its reply:
- *   {"type":"text","text":"..."}   — one per text-delta chunk, append to build up the reply
- *   {"type":"image","url":"..."}   — once per doodle the generateDoodle tool produced
- *   {"type":"done"}                — stream finished successfully
- *   {"type":"error","message":".."} — stream failed; message is safe to show as-is
- *
- * Runs the full conversation through the real doodleAgent (skills + the
- * generateDoodle tool — see src/mastra/) via Agent.stream() rather than
- * .generate(), so the UI can render the reply as it's produced instead of
- * waiting for the whole thing. The PicX key is threaded through per-request
- * via RequestContext rather than stored server-side, matching every other
- * endpoint in this app (BYOK, nothing persisted server-side). There's no
- * non-agent fallback here (unlike /api/agent) — chat has no meaning without
- * the agent, so a failure just emits an {type:"error"} event the UI shows
- * as a system message.
+ * Accepts JSON: { messages: {role, content}[], styleId?: string }
+ * Streams newline-delimited JSON events as the authenticated agent generates
+ * its reply. Image generation always uses the server-owned PicX key and the
+ * signed-in user's credit balance; no client credential is accepted.
  */
 export async function POST(context: APIContext) {
+  const auth = await requireAuth(context);
+  if (auth instanceof Response) return auth;
+  const authedUser = auth;
+
   let messages: ChatMessage[];
-  let apiKey: string | undefined;
   let styleId: string | undefined;
   try {
     const body = await context.request.json().catch(() => ({}));
-    const parsed = body as { messages?: unknown; apiKey?: string; styleId?: string };
+    const parsed = body as { messages?: unknown; styleId?: string };
     if (!Array.isArray(parsed.messages) || parsed.messages.length === 0) {
       return json({ error: "messages is required" }, 400);
     }
     messages = parsed.messages as ChatMessage[];
-    apiKey = parsed.apiKey;
     styleId = parsed.styleId;
   } catch {
     return json({ error: "Invalid chat request" }, 400);
@@ -55,15 +50,32 @@ export async function POST(context: APIContext) {
 
   bridgeCloudflareEnv(context, ["OPENROUTER_API_KEY"]);
   const agent = mastra.getAgent("doodleAgent");
-  const requestContext = new RequestContext<{ apiKey?: string; styleId?: string }>([
-    ["apiKey", apiKey],
+  const runtimeEnv = (context.locals as { runtime?: { env?: Env } })?.runtime?.env;
+
+  const requestContext = new RequestContext<{
+    platformPicxKey?: string;
+    styleId?: string;
+    userId: string;
+    db: ReturnType<typeof getDb>;
+  }>([
+    ["platformPicxKey", runtimeEnv?.PICX_API_KEY],
     ["styleId", styleId],
+    ["userId", authedUser.id],
+    ["db", getDb(context)],
   ]);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const emit = (event: StreamEvent): void => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+      // Enqueue defensively: the client aborts this request when the user
+      // hits Stop, and enqueueing onto the torn-down stream throws.
+      const emit = (event: StreamEvent): void => {
+        try {
+          controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+        } catch {
+          /* client disconnected — nothing left to stream to */
+        }
+      };
       try {
         // Cast: `messages` is a plain {role, content} array (validated above),
         // which is a valid CoreMessage shape at runtime — TS's MessageListInput
@@ -80,11 +92,24 @@ export async function POST(context: APIContext) {
           if (chunk.type === "text-delta") {
             const text = (chunk.payload as { text?: string })?.text;
             if (text) emit({ type: "text", text });
+          } else if (chunk.type === "tool-call") {
+            const payload = chunk.payload as { toolName?: string };
+            if (isDoodleTool(payload.toolName)) emit({ type: "status", phase: "drawing" });
           } else if (chunk.type === "tool-result") {
             const payload = chunk.payload as { toolName?: string; result?: unknown };
-            if (payload.toolName !== "generateDoodle" && payload.toolName !== "generate-doodle") continue;
+            if (!isDoodleTool(payload.toolName)) continue;
             const value = payload.result as { status?: string; url?: string } | undefined;
-            if (value?.status === "ok" && value.url) emit({ type: "image", url: value.url });
+            if (value?.status === "ok" && value.url) {
+              emit({ type: "image", url: value.url });
+              // The tool already resolved its own db handle from this same
+              // RequestContext, so re-reading the balance here is a cheap,
+              // consistent way to tell the client what the spend just did —
+              // no separate round trip through /api/v1/me needed.
+              if (authedUser) {
+                const db = getDb(context);
+                emit({ type: "credits", balance: await getBalance(db, authedUser.id) });
+              }
+            }
           } else if (chunk.type === "error") {
             const payload = chunk.payload as { error?: unknown };
             throw payload.error instanceof Error ? payload.error : new Error("Agent stream error");
@@ -101,7 +126,14 @@ export async function POST(context: APIContext) {
             : "The assistant couldn't respond just now. Try again in a moment.";
         emit({ type: "error", message });
       } finally {
-        controller.close();
+        // The client aborts this request when the user hits Stop, which
+        // errors any further enqueue/close on an already-torn-down stream —
+        // that's an expected end, not a failure worth surfacing.
+        try {
+          controller.close();
+        } catch {
+          /* stream already closed by the client disconnecting */
+        }
       }
     },
   });
@@ -109,6 +141,10 @@ export async function POST(context: APIContext) {
   return new Response(stream, {
     headers: { "Content-Type": "application/x-ndjson", "Cache-Control": "no-cache" },
   });
+}
+
+function isDoodleTool(name: string | undefined): boolean {
+  return name === "generateDoodle" || name === "generate-doodle";
 }
 
 function json(data: unknown, status = 200): Response {

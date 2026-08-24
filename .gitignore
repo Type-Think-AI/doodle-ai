@@ -142,6 +142,9 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+# scripts/dev.mjs's build-then-swap staging directories
+dist.tmp
+dist.old
 
 # Gatsby files
 .cache/

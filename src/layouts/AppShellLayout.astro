@@ -2,6 +2,7 @@
 import AppLayout from './AppLayout.astro';
 import Sidebar from '../components/app/Sidebar.astro';
 import MobileNav from '../components/app/MobileNav.astro';
+import AuthDialog from '../components/app/AuthDialog.astro';
 import '../styles/app-shell.css';
 
 interface Props {
@@ -24,4 +25,5 @@ const { title, description, active } = Astro.props;
   </div>
 
   <MobileNav active={active} />
+  <AuthDialog />
 </AppLayout>

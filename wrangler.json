@@ -10,8 +10,44 @@
     "directory": "./dist",
     "binding": "ASSETS"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "doodleai",
+      "database_id": "543c9d04-42eb-4b21-8aab-9f8216a907d5",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SESSIONS",
+      "id": "b5f4b60f18864ef9aafc0f8b18f7a46c"
+    }
+  ],
   "observability": {
     "enabled": true
   },
-  "upload_source_maps": true
+  "upload_source_maps": true,
+  "env": {
+    "staging": {
+      "name": "doodleai-agent-staging",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "doodleai-staging",
+          "database_id": "fd61652b-83b1-41ba-afef-17c18d5a9a59",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "SESSIONS",
+          "id": "56a2808c8d0640789b98d567f0221701"
+        }
+      ],
+      "observability": {
+        "enabled": true
+      }
+    }
+  }
 }

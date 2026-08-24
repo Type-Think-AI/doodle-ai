@@ -28,7 +28,7 @@ The goal is to add capabilities as skills and configuration instead of creating 
 |---|---|
 | Framework | Astro 5 + TypeScript |
 | Runtime target | Cloudflare Worker `doodleai-agent` |
-| Image generation | PicX API |
+| Image generation | PicX API via server-owned key and account credits |
 | Agent framework | Mastra |
 | Agent model | OpenRouter `stealth/ox-alpha` for local preview testing |
 | Styling | Doodle AI CSS and Astro markup |
@@ -60,7 +60,7 @@ Official references used for this setup:
 cd /Users/yash/picx/doodlebooth-agent
 pnpm install
 cp .dev.vars.example .dev.vars
-# Add your local OPENROUTER_API_KEY to .dev.vars
+# Add local OPENROUTER_API_KEY, PICX_API_KEY, and Google/Better Auth values to .dev.vars
 pnpm dev
 ```
 
@@ -78,10 +78,11 @@ For a submission or release, run the first two checks locally and use the Wrangl
 
 ## Environment
 
-`.dev.vars` is local-only and ignored by git. Never commit a real API key.
+`.dev.vars` is local-only and ignored by git. Never commit real credentials.
 
 ```text
 OPENROUTER_API_KEY=replace-with-your-openrouter-key
+PICX_API_KEY=replace-with-a-picx-key
 ```
 
 A safe template is available at `/Users/yash/picx/doodlebooth-agent/.dev.vars.example`.
@@ -109,11 +110,10 @@ The app is chat-first: `/` is a prompt-box landing page, `/c/[id]` is a real con
 │   │   ├── c/[id].astro                   # Chat thread (prerender=false)
 │   │   ├── skills/{index,[id]}.astro      # Skills marketplace + detail ("Install & run" pins a skill to a new chat)
 │   │   ├── moodboards.astro               # Locally-saved generated doodles
-│   │   ├── settings.astro                 # PicX key, theme, default visual style
+│   │   ├── settings.astro                 # Account-credit explanation, theme, default visual style
 │   │   └── api/
 │   │       ├── chat.ts                    # Chat turn -> doodleAgent.generate()
 │   │       ├── agent.ts                   # Mode-recommendation endpoint (local-rule fallback)
-│   │       ├── generate.ts                # PicX generation/edit endpoint
 │   │       └── upload.ts                  # PicX managed asset upload endpoint
 │   ├── scripts/app/                       # Per-page client controllers (chat.ts, home.ts, sidebar.ts, ...)
 │   ├── components/app/                    # Sidebar, MobileNav, PromptComposer, SkillCard, Lightbox
@@ -195,12 +195,12 @@ For local judging or review:
 
 1. Use Node and pnpm versions compatible with the lockfile.
 2. Run `pnpm install` in `/Users/yash/picx/doodlebooth-agent`.
-3. Copy `/Users/yash/picx/doodlebooth-agent/.dev.vars.example` to `.dev.vars` and add a valid local `OPENROUTER_API_KEY`.
+3. Copy `/Users/yash/picx/doodlebooth-agent/.dev.vars.example` to `.dev.vars` and configure the local auth, OpenRouter, and server-owned PicX values.
 4. Run `pnpm dev` and open [http://localhost:4321](http://localhost:4321).
-5. Try the prompt landing page, a conversation at `/c/[id]`, the skills marketplace, settings, and a generation flow if valid PicX credentials are configured.
+5. Try the prompt landing page, the sign-in prompt, a conversation at `/c/[id]`, the skills marketplace, settings, and a generation flow with a signed-in account.
 6. Run `pnpm exec tsc --noEmit`, `pnpm build`, and `pnpm exec wrangler deploy --dry-run` for non-interactive verification.
 
-This application is BYOK/accountless by design. No real credentials belong in the repository, and no live test credentials are published here.
+This application uses Google sign-in for creation and a server-owned PicX connection metered through account credits. No real credentials belong in the repository, and no live test credentials are published here.
 
 ## Next scope
 
@@ -210,7 +210,7 @@ Deliberately not built yet, called out so it isn't assumed done:
 - **"Fork as skill"** — persisting a specific run's exact prompt/settings as a new reusable custom skill. No data model for user-defined skills exists yet.
 - **Server-side conversation memory** — `@mastra/memory` + a Cloudflare-compatible storage adapter (D1 or KV), once the bundling situation above is worth revisiting for this.
 - **Voice input** — no speech-to-text exists; the composer intentionally has no mic button rather than a fake one.
-- **User/creator-authored skills** — the marketplace is a fixed, developer-defined catalog: skills ship as `SKILL.md` packages in the repo (see "Skills" above) and are bundled at build time. That format is already the standard one a user-authored skill would arrive in, so the remaining gap is not authoring but ownership — letting any user publish their own skill, with a real author profile, needs actual accounts — this app is currently accountless/BYOK on purpose (see `privacy.astro`), so this would be a real scope change, not an incremental one: it needs auth, per-user skill storage, and moderation, not just a UI. Flagging it as a deliberate non-goal until that tradeoff is explicitly chosen.
+- **User/creator-authored skills** — the marketplace is a fixed, developer-defined catalog: skills ship as `SKILL.md` packages in the repo (see "Skills" above) and are bundled at build time. That format is already the standard one a user-authored skill would arrive in, so the remaining gap is not authoring but ownership — letting any user publish their own skill, with a real author profile, needs actual accounts — this app now has accounts for creation but does not yet support user-owned skills, so this would be a real scope change, not an incremental one: it needs per-user skill storage and moderation, not just a UI. Flagging it as a deliberate non-goal until that tradeoff is explicitly chosen.
 
 ## Original version boundary
 

@@ -63,7 +63,9 @@ const jsonLd = {
 				if (localStorage.getItem(THEME_STORAGE_KEY) === "light") {
 					document.documentElement.setAttribute("data-theme", "light");
 				}
-			} catch {}
+			} catch {
+				// localStorage may be unavailable before the page has loaded.
+			}
 		</script>
 
 		<!-- Icons -->
@@ -113,7 +115,7 @@ const jsonLd = {
 			DataFast analytics (default script — uses cookies for visitor identification).
 			Added here so every page, current and future, is covered from one place.
 			Notes:
-			 - Cookie usage is disclosed in /privacy. If this is ever swapped for
+			 - Cookie usage is disclosed in /privacy-policy. If this is ever swapped for
 			   script.cookieless.js, the DataFast dashboard toggle must match the URL.
 			 - DataFast disables itself on localhost, so this only reports in production.
 		-->

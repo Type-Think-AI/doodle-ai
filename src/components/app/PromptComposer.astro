@@ -9,10 +9,6 @@ const { id, variant = "compact", placeholder = "Describe a doodle or attach a ph
 ---
 
 <div class={`composer composer-${variant}`}>
-  <p class="composer-key-banner" id={`${id}KeyBanner`} hidden>
-    Add your PicX API key in <a href="/settings">Settings</a> to generate doodles.
-  </p>
-
   <div class="composer-skill-chip" id={`${id}SkillChip`} hidden>
     <svg class="composer-skill-chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="6.5" width="16" height="12" rx="4.5" stroke="currentColor" stroke-width="1.7"></rect><circle cx="9.5" cy="12.5" r="1.25" fill="currentColor"></circle><circle cx="14.5" cy="12.5" r="1.25" fill="currentColor"></circle></svg>
     <span id={`${id}SkillChipLabel`}></span>
@@ -90,9 +86,6 @@ const { id, variant = "compact", placeholder = "Describe a doodle or attach a ph
      page's own controller (home.ts / chat.ts / composer-mentions.ts) only
      needs the ids to match; Astro's scoped-CSS attribute would otherwise
      be duplicated per inclusion for no benefit. */
-  .composer-key-banner { font-size: 12.5px; color: var(--text-dim); margin: 0 0 8px; }
-  .composer-key-banner a { color: var(--blue); text-decoration: underline; }
-
   .composer-skill-chip {
     display: inline-flex;
     align-items: center;

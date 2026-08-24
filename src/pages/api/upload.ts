@@ -1,38 +1,37 @@
 import type { APIContext } from "astro";
 import { PicX, PicXError } from "picx-ai";
+import { requireAuth } from "../../lib/auth/guards";
 
 export const prerender = false;
 
 /**
  * POST /api/upload
  *
- * Accepts multipart/form-data with:
- *   - file: the image File
- *   - apiKey: the user's PicX API key
- *
- * Forwards to the PicX managed-assets API (POST /v1/assets)
- * and returns the CDN-backed public URL.
+ * Accepts multipart/form-data with a single `file` field. Uploads are only
+ * available to signed-in users and always use the server-owned PicX key.
  */
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 export async function POST(context: APIContext) {
+  const auth = await requireAuth(context);
+  if (auth instanceof Response) return auth;
+
+  const picxKey = (context.locals as { runtime?: { env?: Env } })?.runtime?.env?.PICX_API_KEY;
+  if (!picxKey?.trim()) {
+    return json({ error: "Image uploads are not configured right now" }, 503);
+  }
+
   try {
     const formData = await context.request.formData();
     const file = formData.get("file");
-    const apiKey = formData.get("apiKey");
 
     if (
       !file ||
       typeof file === "string" ||
       typeof (file as File).type !== "string" ||
-      typeof (file as File).arrayBuffer !== "function" ||
-      typeof apiKey !== "string" ||
-      !apiKey.trim()
+      typeof (file as File).arrayBuffer !== "function"
     ) {
-      return json(
-        { error: "An image file and PicX API key are required" },
-        400
-      );
+      return json({ error: "An image file is required" }, 400);
     }
 
     const image = file as File;
@@ -49,9 +48,7 @@ export async function POST(context: APIContext) {
       return json({ error: "Images must be 20 MB or smaller" }, 400);
     }
 
-    // Use the published PicX SDK so Doodle AI stays aligned with the public
-    // managed-assets contract and its multipart handling.
-    const asset = await new PicX(apiKey).assets.create({
+    const asset = await new PicX(picxKey).assets.create({
       file: image,
       filename: image.name || "photo.jpg",
     });
@@ -64,8 +61,8 @@ export async function POST(context: APIContext) {
       return json({ error: err.message }, status);
     }
 
-    const message = err instanceof Error ? err.message : "Upload failed";
-    return json({ error: `Server error: ${message}` }, 500);
+    console.error("POST /api/upload failed:", err);
+    return json({ error: "Upload failed. Please try again." }, 500);
   }
 }
 

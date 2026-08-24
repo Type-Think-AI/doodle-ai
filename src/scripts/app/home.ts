@@ -10,11 +10,13 @@
    detail page's "Use this skill" link) — pre-pinned the same way, still
    without creating a thread until send. */
 
-import { MAX_IMAGE_BYTES, STORAGE_KEY } from "../../lib/doodle-constants";
+import { MAX_IMAGE_BYTES } from "../../lib/doodle-constants";
 import { getCharacter } from "./character-store";
 import { getSkill } from "../../lib/skills";
 import { loadMoodboard } from "./moodboard";
 import { appendMessage, createThread, setThreadSkill, type ChatMessage } from "./chat-store";
+import { whenSynced } from "./api-client";
+import { getSession } from "./auth-client";
 import { initMentions, serializeComposer } from "./composer-mentions";
 import { initMediaPicker } from "./media-picker";
 import { setImageSrc, guardBfcacheRestore } from "./dom-utils";
@@ -23,16 +25,8 @@ function $<T extends HTMLElement = HTMLElement>(id: string): T | null {
   return document.getElementById(id) as T | null;
 }
 
-function hasKey(): boolean {
-  try {
-    return Boolean(localStorage.getItem(STORAGE_KEY)?.trim());
-  } catch {
-    return false;
-  }
-}
 
 function initHome(): void {
-  const keyBanner = $("homeKeyBanner");
   const skillChip = $("homeSkillChip");
   const skillChipLabel = $("homeSkillChipLabel");
   const skillChipClear = $("homeSkillChipClear");
@@ -51,7 +45,7 @@ function initHome(): void {
   let attachedUrl: string | null = null;
   let attachedPreviewUrl: string | null = null;
   let uploading = false;
-  let sending = false;
+  const sending = false;
   let pendingSkillId: string | undefined;
 
   function setStatus(msg: string, err = false): void {
@@ -100,9 +94,9 @@ function initHome(): void {
       setStatus("Images must be 20 MB or smaller.", true);
       return;
     }
-    if (!hasKey()) {
-      setStatus("Add your PicX API key in Settings to attach a photo.", true);
-      keyBanner!.hidden = false;
+    if (!(await getSession())) {
+      setStatus("Sign in to upload a photo.", true);
+      window.dispatchEvent(new Event("doodleai:open-auth"));
       return;
     }
 
@@ -114,13 +108,15 @@ function initHome(): void {
     syncSendState();
 
     try {
-      const apiKey = localStorage.getItem(STORAGE_KEY) || "";
       const form = new FormData();
       form.append("file", file);
-      form.append("apiKey", apiKey);
       const res = await fetch("/api/upload", { method: "POST", body: form });
-      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-      if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
+      const data = (await res.json().catch(() => ({}))) as {
+        url?: string;
+        error?: string | { message?: string };
+      };
+      const errorMessage = typeof data.error === "string" ? data.error : data.error?.message;
+      if (!res.ok || !data.url) throw new Error(errorMessage || "Upload failed");
       attachedUrl = data.url;
       attachMeta!.textContent = "Ready";
       setStatus("");
@@ -133,7 +129,14 @@ function initHome(): void {
     }
   }
 
-  function send(): void {
+  /**
+   * Async only so the thread is created under the right identity: signed in,
+   * `createThread` needs the session resolved before it picks its storage
+   * scope and POSTs. The await is a no-op once the page has synced, which it
+   * has long before anyone finishes typing.
+   */
+  async function send(): Promise<void> {
+    await whenSynced();
     const { text, characterId, skillId, refImageId } = serializeComposer(input!);
     if (characterId) attachCharacterPhoto(characterId);
     if (skillId) {
@@ -146,9 +149,9 @@ function initHome(): void {
       setStatus("Type a message or attach a photo first.", true);
       return;
     }
-    if (!hasKey()) {
-      keyBanner!.hidden = false;
-      setStatus("Add your PicX API key in Settings to generate doodles.", true);
+    if (!(await getSession())) {
+      setStatus("Sign in to start creating.", true);
+      window.dispatchEvent(new Event("doodleai:open-auth"));
       return;
     }
 
@@ -198,11 +201,11 @@ function initHome(): void {
   });
   attachRemove?.addEventListener("click", clearAttachment);
 
-  sendBtn.addEventListener("click", send);
+  sendBtn.addEventListener("click", () => void send());
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      send();
+      void send();
     }
   });
 
@@ -211,7 +214,6 @@ function initHome(): void {
   });
 
   /* ---- Initial paint ---- */
-  keyBanner!.hidden = hasKey();
   guardBfcacheRestore();
 
   // Arriving here from a skill's detail page ("Use this skill") pre-pins

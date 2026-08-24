@@ -1,20 +1,15 @@
 /* /characters page: grid + add-character modal (upload -> name -> save). */
 
-import { MAX_IMAGE_BYTES, STORAGE_KEY } from "../../lib/doodle-constants";
+import { MAX_IMAGE_BYTES } from "../../lib/doodle-constants";
 import { createCharacter, deleteCharacter, listCharacters, type Character } from "./character-store";
+import { whenSynced } from "./api-client";
 import { setImageSrc, guardBfcacheRestore } from "./dom-utils";
+import { getSession } from "./auth-client";
 
 function $<T extends HTMLElement = HTMLElement>(id: string): T | null {
   return document.getElementById(id) as T | null;
 }
 
-function hasKey(): boolean {
-  try {
-    return Boolean(localStorage.getItem(STORAGE_KEY)?.trim());
-  } catch {
-    return false;
-  }
-}
 
 function initCharactersPage(): void {
   const grid = $("charsGrid");
@@ -91,8 +86,9 @@ function initCharactersPage(): void {
       if (statusEl) statusEl.textContent = "Images must be 20 MB or smaller.";
       return;
     }
-    if (!hasKey()) {
-      if (statusEl) statusEl.textContent = "Add your PicX API key in Settings first.";
+    if (!(await getSession())) {
+      if (statusEl) statusEl.textContent = "Sign in to save a character.";
+      window.dispatchEvent(new Event("doodleai:open-auth"));
       return;
     }
 
@@ -103,13 +99,15 @@ function initCharactersPage(): void {
     syncSaveState();
 
     try {
-      const apiKey = localStorage.getItem(STORAGE_KEY) || "";
       const form = new FormData();
       form.append("file", file);
-      form.append("apiKey", apiKey);
       const res = await fetch("/api/upload", { method: "POST", body: form });
-      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-      if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
+      const data = (await res.json().catch(() => ({}))) as {
+        url?: string;
+        error?: string | { message?: string };
+      };
+      const errorMessage = typeof data.error === "string" ? data.error : data.error?.message;
+      if (!res.ok || !data.url) throw new Error(errorMessage || "Upload failed");
       pendingUrl = data.url;
       if (statusEl) statusEl.textContent = "";
     } catch (err) {
@@ -137,6 +135,8 @@ function initCharactersPage(): void {
   });
 
   render();
+  // Characters saved on another device arrive with the sync — repaint then.
+  void whenSynced().then(render);
   guardBfcacheRestore();
 }
 

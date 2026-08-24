@@ -1,0 +1,145 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/app.css';
+import '../styles/page.css';
+
+const updated = 'August 2026';
+const supportEmail = 'yash@typethink.ai';
+---
+
+<AppLayout
+	title="Privacy Policy — doodleai.art"
+	description="How doodleai.art handles accounts, chats, images, browser storage, analytics, and the services that help run Doodle AI."
+>
+	<Navbar />
+
+	<main class="page">
+		<div class="page-hero">
+			<div class="eyebrow">Legal</div>
+			<h1>Privacy <span class="grad">Policy</span></h1>
+			<p class="lede">
+				Doodle AI keeps browsing open, but you sign in when you want to create, save, and sync doodles.
+				Generation runs through account credits and a server-owned PicX connection.
+			</p>
+		</div>
+
+		<div class="prose">
+			<p><strong>Last updated:</strong> {updated}</p>
+
+			<h2>The short version</h2>
+			<div class="facts">
+				<div class="fact"><div class="k">Accounts</div><div class="v">Google sign-in for creation</div></div>
+				<div class="fact"><div class="k">Selling data</div><div class="v">Never</div></div>
+				<div class="fact"><div class="k">Ad pixels</div><div class="v">None</div></div>
+				<div class="fact"><div class="k">Cookies</div><div class="v">Analytics only</div></div>
+				<div class="fact"><div class="k">Generation</div><div class="v">Platform credits</div></div>
+			</div>
+
+			<h2>What we collect</h2>
+			<p>
+				You can browse and create without an account. If you choose Google sign-in, Doodle AI receives the
+				basic profile information Google shares for authentication, such as your name, email address, and
+				profile image. We also create authentication and session records so you can stay signed in securely.
+			</p>
+			<p>
+				When you are signed in, we store the Doodle AI content needed to sync your workspace: chat thread
+				metadata and messages, generated-image references, saved moodboard items, saved characters, and
+				generation metadata such as the selected skill, prompt, status, and credit usage. This content is
+				scoped to your account.
+			</p>
+
+			<h2>What stays in your browser</h2>
+			<ul class="steps">
+				<li><b>Signed out:</b> chats and interface preferences may remain in your browser's local storage, but image generation and uploads require a signed-in account.</li>
+				<li><b>Signed in:</b> your browser keeps a local mirror so the interface is responsive, while supported chats, moodboards, characters, and generation data are synchronized to your account for access on your other devices.</li>
+				<li><b>Credentials:</b> Provider credentials stay on the server and are not sent to your browser.</li>
+			</ul>
+
+			<h2>How your content is processed</h2>
+			<p>
+				When you send a chat message, the message and relevant conversation context are sent to the language
+				model service that powers the Doodle AI agent. When you attach a photo or request an image, the
+				photo, reference assets, prompt, and generation settings are sent to PicX through Doodle AI's
+				server-owned connection. PicX hosts the resulting media and returns URLs that Doodle AI can display
+				or save. Each generation is charged against the signed-in account's credit balance.
+			</p>
+			<p>
+				Do not upload anything you do not have the right to use. The privacy practices of PicX and the model
+				provider also apply to the information you send to those services.
+			</p>
+
+			<h2>Who helps run Doodle AI</h2>
+			<ul class="steps">
+				<li><b>Cloudflare</b> — hosts the site, API, D1 database, and session storage.</li>
+				<li><b>Google</b> — provides optional Google OAuth sign-in. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</li>
+				<li><b>PicX</b> — processes image-generation requests, manages uploaded assets, and hosts generated media through Doodle AI's platform account.</li>
+				<li><b>OpenRouter</b> — routes chat requests to the language model used by the Doodle AI agent.</li>
+				<li><b>DataFast</b> — provides website analytics about visits, referrals, pages, and general device, browser, and country-level information.</li>
+			</ul>
+
+			<h2>Analytics and cookies</h2>
+			<p>
+				We use <a href="https://datafa.st" target="_blank" rel="noopener noreferrer">DataFast</a> to
+				understand how people find and use the site. DataFast sets cookies to recognise a returning visitor
+				and avoid counting the same visitor repeatedly. This is the only cookie-based tracking we operate.
+			</p>
+			<p>
+				We do not run advertising pixels, participate in an ad network, or sell analytics data. You can
+				block or clear analytics cookies in your browser settings; the site should continue to work without
+				them. See <a href="https://datafa.st/privacy-policy" target="_blank" rel="noopener noreferrer">DataFast's privacy policy</a>
+				for its processing details.
+			</p>
+
+			<h2>Server logs and security</h2>
+			<p>
+				Our hosting and security providers may process standard request information such as IP address,
+				user agent, timestamps, and request details to deliver the site, maintain security, and investigate
+				abuse. We do not use server logs to build advertising profiles. No internet service can guarantee
+				absolute security, but we use access controls and account scoping to protect stored data.
+			</p>
+
+			<h2>Retention and deletion</h2>
+			<div class="callout">
+				<p>
+					Signed-out browser data can be removed by clearing site data for doodleai.art. Signed-in users can
+					remove individual chats, moodboard items, and characters in the app. To request deletion of your
+					Doodle AI account and associated server-side content, email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+					from the account email address. Data held by PicX, Google, OpenRouter, Cloudflare, or DataFast is
+					subject to that provider's own retention and deletion practices.
+				</p>
+			</div>
+
+			<h2>Children</h2>
+			<p>
+				Doodle AI is not directed at children. If you believe a child has provided personal information to
+				us, please contact us so we can review and remove it where appropriate.
+			</p>
+
+			<h2>Changes to this policy</h2>
+			<p>
+				If our data practices change, we will update this page and the date at the top. Your continued use
+				of Doodle AI after an update means you acknowledge the revised policy.
+			</p>
+
+			<h2>Contact</h2>
+			<p>
+				Privacy questions or deletion requests:
+				<a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+			</p>
+		</div>
+
+		<div class="page-cta">
+			<a href="/">Back to the app</a>
+		</div>
+	</main>
+
+	<Footer />
+
+	<script>
+		import { initThemeToggle } from '../lib/theme';
+		const themeToggle = document.getElementById('themeToggle');
+		if (themeToggle) initThemeToggle(themeToggle);
+	</script>
+</AppLayout>

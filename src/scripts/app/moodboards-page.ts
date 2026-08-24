@@ -1,6 +1,7 @@
 /* /moodboards page: renders the saved-locally grid, wires remove + lightbox. */
 
 import { loadMoodboard, removeFromMoodboard, type MoodboardItem } from "./moodboard";
+import { whenSynced } from "./api-client";
 import { initLightbox, openLightbox } from "./lightbox";
 import { setImageSrc, guardBfcacheRestore } from "./dom-utils";
 
@@ -55,6 +56,9 @@ function initMoodboardsPage(): void {
   }
 
   render();
+  // Signed in, the board only becomes complete once the server's copy is in
+  // the local mirror — paint what's here, then repaint.
+  void whenSynced().then(render);
   guardBfcacheRestore();
 }
 
