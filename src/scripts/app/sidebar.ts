@@ -162,6 +162,51 @@ async function renderAuthSlot(): Promise<void> {
   });
 
   userBox.hidden = false;
+
+  // Only signed-in users get a balance slot at all — /api/v1/me 401s
+  // otherwise, and the sign-in state above has already returned by then.
+  void renderCreditsSlot();
+}
+
+/**
+ * Fetches the starting balance from /api/v1/me (the single authoritative
+ * source per docs/mobile-strategy.md) and wires the slot to stay current
+ * afterwards. Generation-time updates don't refetch — chat.ts already reads
+ * the post-spend balance off the same /api/chat stream and rebroadcasts it
+ * as a `doodleai:credits` window event, so this listener is the only other
+ * place that needs to know.
+ */
+async function renderCreditsSlot(): Promise<void> {
+  const wrap = document.getElementById("sidebarCredits");
+  const balanceEl = document.getElementById("sidebarCreditsBalance");
+  if (!wrap || !balanceEl) return;
+
+  window.addEventListener("doodleai:credits", (event) => {
+    const balance = (event as CustomEvent<{ balance: number }>).detail?.balance;
+    if (typeof balance === "number") setCreditsBalance(wrap, balanceEl, balance);
+  });
+
+  try {
+    const res = await fetch("/api/v1/me", { credentials: "include" });
+    if (!res.ok) return;
+    const payload = (await res.json()) as { credits?: { balance?: unknown } };
+    const balance = payload.credits?.balance;
+    if (typeof balance === "number") setCreditsBalance(wrap, balanceEl, balance);
+  } catch {
+    // Balance just stays hidden — not worth a visible error for a secondary
+    // readout the user can always get from /settings?tab=billing.
+  }
+}
+
+function setCreditsBalance(wrap: HTMLElement, balanceEl: HTMLElement, balance: number): void {
+  balanceEl.textContent = `${balance} credit${balance === 1 ? "" : "s"}`;
+  wrap.dataset.empty = String(balance <= 0);
+  // The out-of-credits hint is a plain sentence, not a button — there's no
+  // purchase flow yet (Stripe is out of scope for this phase), and a "Buy
+  // credits" control that goes nowhere would be worse than no control.
+  const hint = document.getElementById("sidebarCreditsHint");
+  if (hint) hint.hidden = balance > 0;
+  wrap.hidden = false;
 }
 
 if (document.readyState === "loading") {

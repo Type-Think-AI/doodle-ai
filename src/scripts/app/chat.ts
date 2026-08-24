@@ -218,6 +218,8 @@ function initChat(): void {
     wrap: HTMLElement;
     /** Call with the accumulated text so far; swaps the spinner for live text on first call. */
     setText: (text: string) => void;
+    /** The agent's tool call started generating an image — swap the spinner label while there's no text yet. */
+    setDrawing: () => void;
   }
 
   function renderThinking(): StreamingBubble {
@@ -247,6 +249,14 @@ function initChat(): void {
         }
         bubble.textContent = text;
         thread!.scrollTop = thread!.scrollHeight;
+      },
+      setDrawing() {
+        // Once real text has started streaming the spinner bubble is gone
+        // (setText already swapped it out), so there's nothing left to
+        // relabel — the "drawing" phase only matters during the silent gap
+        // before the model's first token.
+        if (streaming) return;
+        label.textContent = "Drawing…";
       },
     };
   }
@@ -365,12 +375,26 @@ function initChat(): void {
         buffer = lines.pop() || "";
         for (const line of lines) {
           if (!line.trim()) continue;
-          const event = JSON.parse(line) as { type: string; text?: string; url?: string; message?: string };
+          const event = JSON.parse(line) as {
+            type: string;
+            text?: string;
+            url?: string;
+            message?: string;
+            phase?: string;
+            balance?: number;
+          };
           if (event.type === "text" && event.text) {
             text += event.text;
             thinking.setText(text);
+          } else if (event.type === "status" && event.phase === "drawing") {
+            thinking.setDrawing();
           } else if (event.type === "image" && event.url) {
             images.push(event.url);
+          } else if (event.type === "credits" && typeof event.balance === "number") {
+            // The sidebar owns the visible balance readout but lives outside
+            // this page's controller, so broadcast rather than reach across
+            // components directly — same pattern as doodleai:open-auth.
+            window.dispatchEvent(new CustomEvent("doodleai:credits", { detail: { balance: event.balance } }));
           } else if (event.type === "error") {
             streamError = event.message || "Chat request failed";
           }

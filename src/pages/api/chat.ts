@@ -57,11 +57,16 @@ export async function POST(context: APIContext) {
     styleId?: string;
     userId: string;
     db: ReturnType<typeof getDb>;
+    sessions?: KVNamespace;
   }>([
     ["platformPicxKey", runtimeEnv?.PICX_API_KEY],
     ["styleId", styleId],
     ["userId", authedUser.id],
     ["db", getDb(context)],
+    // Same SESSIONS KV binding Better Auth uses as secondaryStorage — passed
+    // through so generate-doodle.ts can rate-limit generations per user
+    // without a second KV namespace.
+    ["sessions", runtimeEnv?.SESSIONS],
   ]);
 
   const encoder = new TextEncoder();

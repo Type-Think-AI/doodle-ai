@@ -6,6 +6,7 @@ import type { APIContext } from "astro";
 import * as schema from "../../db/schema";
 import { grant } from "../credits";
 import { SIGNUP_GRANT_CREDITS } from "../credits/costs";
+import { kvIncrement } from "../kv-counter";
 
 /**
  * Better Auth, configured for Cloudflare Workers.
@@ -97,15 +98,11 @@ export function createAuth(context: APIContext) {
         await env.SESSIONS.delete(`auth:${key}`);
         return value;
       },
-      // Same caveat: KV has no atomic increment, so this is read-modify-write
-      // and can under-count two concurrent increments. Only used by
-      // secondary-storage-backed rate limiting, which is not enabled here.
-      increment: async (key, ttl) => {
-        const current = await env.SESSIONS.get(`auth:${key}`);
-        const next = (current ? Number.parseInt(current, 10) : 0) + 1;
-        await env.SESSIONS.put(`auth:${key}`, String(next), { expirationTtl: ttl });
-        return next;
-      },
+      // Backs `rateLimit.storage: "secondary-storage"` below — every signup
+      // rate-limit hit is one KV read-modify-write via the shared
+      // kvIncrement() helper (see src/lib/kv-counter.ts for the concurrency
+      // caveat).
+      increment: async (key, ttl) => await kvIncrement(env.SESSIONS, `auth:${key}`, ttl),
       set: async (key, value, ttl) =>
         await env.SESSIONS.put(`auth:${key}`, value, ttl ? { expirationTtl: ttl } : undefined),
       delete: async (key) => await env.SESSIONS.delete(`auth:${key}`),
@@ -122,10 +119,51 @@ export function createAuth(context: APIContext) {
 
     plugins: [bearer()],
 
+    // Phase 4: per-IP signup rate limiting, to stop scripted bot signups
+    // from farming the `signup_grant` credits in the databaseHook above —
+    // free credits per account is exactly the kind of thing bots go after.
+    //
+    //  - `storage: "secondary-storage"` reuses the KV binding already wired
+    //    up as `secondaryStorage` below, rather than adding a second KV
+    //    namespace or routing counters through D1. D1 is fine for the credit
+    //    ledger (low write volume, needs durability) but wrong for a rate
+    //    limiter — every hit is a write, and KV is exactly the "many cheap
+    //    counters, eventual consistency is fine" store this calls for.
+    //  - `enabled: true` unconditionally: Better Auth's own default is
+    //    "production only", gated on `NODE_ENV`, which Workers doesn't set
+    //    the way that check expects — leaving the default would silently
+    //    disable rate limiting in the deployed Worker, not just locally.
+    //  - The global `window`/`max` covers every `/api/auth/*` route as a
+    //    backstop; `customRules` below tightens specifically the two routes
+    //    that actually create an account through Google sign-in:
+    //    `/sign-in/social` (the client-initiated request that kicks off the
+    //    OAuth redirect) and `/callback/:id` (where Better Auth creates the
+    //    user row after Google's redirect back). 5-8 attempts/hour per IP is
+    //    far above what a real person retrying a flaky OAuth flow needs, but
+    //    low enough to blunt a script hammering either endpoint.
+    rateLimit: {
+      enabled: true,
+      window: 60,
+      max: 100,
+      storage: "secondary-storage",
+      customRules: {
+        "/sign-in/social": { window: 60 * 60, max: 5 },
+        "/callback/:id": { window: 60 * 60, max: 8 },
+      },
+    },
+
     advanced: {
       // The Worker always serves over HTTPS in production; `astro dev` over
       // http://localhost is exempted by Better Auth's own dev handling.
       useSecureCookies: true,
+      ipAddress: {
+        // Better Auth's default IP source is `x-forwarded-for` alone, which
+        // is spoofable and not what Cloudflare actually guarantees. Prefer
+        // `cf-connecting-ip` — Cloudflare sets it at the edge and strips any
+        // client-supplied value — and keep `x-forwarded-for` as a fallback
+        // for local `astro dev` where no Cloudflare edge is in front of us.
+        ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],
+      },
     },
   });
 }

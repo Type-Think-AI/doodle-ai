@@ -5,10 +5,15 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "main": "./dist/_worker.js/index.js",
+  "main": "./src-worker/entry.ts",
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS"
+  },
+  "triggers": {
+    "crons": [
+      "0 * * * *"
+    ]
   },
   "d1_databases": [
     {

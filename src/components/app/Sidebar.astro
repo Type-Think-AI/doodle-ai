@@ -88,6 +88,15 @@ const navItems = [
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
+      <!-- Balance readout, separate from #sidebarAuthUser so it can be
+           updated live (chat.ts's "credits" NDJSON event) without touching
+           the profile card's own click/keydown wiring. Starts hidden like
+           the two states above it — sidebar.ts reveals it only once a
+           balance has actually been fetched, and only for signed-in users. -->
+      <div class="sidebar-credits" id="sidebarCredits" hidden>
+        <span class="sidebar-credits-balance" id="sidebarCreditsBalance">— credits</span>
+        <span class="sidebar-credits-hint" id="sidebarCreditsHint" hidden>Out of credits — more ways to get them are coming soon.</span>
+      </div>
     </div>
   </div>
 
@@ -349,6 +358,31 @@ const navItems = [
   .sidebar.collapsed .sidebar-auth-signin,
   .sidebar.collapsed .sidebar-auth-user { justify-content: center; }
   .sidebar.collapsed .sidebar-auth-signout { display: none; }
+
+  /* Same :not([hidden]) lesson as the sign-in/signed-in pair above — an
+     unconditional `display: flex` here would render even while sidebar.ts
+     has the [hidden] attribute set on this element. */
+  .sidebar-credits:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 7px 10px 2px;
+    font-size: 12px;
+  }
+  .sidebar-credits-balance { color: var(--text-dim); }
+  /* Zero balance gets the accent treatment so it reads as a state change,
+     not just another line of muted text. */
+  .sidebar-credits[data-empty="true"] .sidebar-credits-balance {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .sidebar-credits-hint {
+    color: var(--text-dimmer);
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .sidebar-credits-hint:not([hidden]) { display: block; }
+  .sidebar.collapsed .sidebar-credits { display: none; }
 
   .sidebar-resize-handle {
     position: absolute;

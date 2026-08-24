@@ -1,6 +1,6 @@
 # Doodle AI — SaaS Migration Roadmap
 
-> **Status:** Phase 6 platform-credit migration implemented in this working tree. Stripe checkout and subscription flows remain Phase 5 work.
+> **Status:** Phases 1–4 and 6 implemented in this working tree. Phase 5 (Stripe checkout and subscription flows) and the mobile app are out of scope for now — deliberately skipped, not scheduled.
 > **Prerequisites:** [tech-stack.md](./tech-stack.md) · [architecture.md](./architecture.md)
 
 ## Principle
@@ -60,21 +60,20 @@
 
 ---
 
-## Phase 4 — Credits *(the friction goes away)*
+## Phase 4 — Credits *(the friction goes away)* ✅
 
-*Signed-in users generate without ever entering an API key.*
+*Signed-in users generate without ever entering an API key.* Implemented in this working tree.
 
-- `wrangler secret put PICX_API_KEY`.
-- `src/mastra/tools/generate-doodle.ts` reads the server-owned platform key from request context. Missing configuration is a server error; exhausted balances return `insufficient_credits`.
-- Implement the credit ledger: `src/lib/credits/` with `grant()`, `spend()`, `refund()`, `getBalance()` — every one idempotency-keyed, per [architecture.md](./architecture.md#3-the-credit-ledger).
-- Wire the reserve → generate → refund-on-failure path into `/api/v1/chat` and `/api/v1/upload`.
-- Per-skill credit costs in `src/lib/doodle-constants.ts`, resolved **server-side** from the skill id.
-- Signup grant on account creation.
-- Rate limiting: per-IP signup, per-user generations/minute.
-- Hourly Cron Trigger for the reconciliation job (stuck-`pending` refunds, balance-vs-ledger assertion, negative-balance alert).
-- UI: balance in the sidebar, a `credits` event on the NDJSON stream to update it live, and an out-of-credits state.
+- `PICX_API_KEY` is a server-owned secret. `src/mastra/tools/generate-doodle.ts` reads it from request context. Missing configuration is a server error; exhausted balances return `insufficient-credits`.
+- Credit ledger: `src/lib/credits/` with `grant()`, `spend()`, `refund()`, `getBalance()` — every one idempotency-keyed, per [architecture.md](./architecture.md#3-the-credit-ledger).
+- The reserve → generate → refund-on-failure path is wired into `/api/chat` (which fronts both generation and upload).
+- Per-skill credit costs in `src/lib/credits/costs.ts`, resolved **server-side** from the skill id.
+- Signup grant on account creation, via a Better Auth `databaseHooks.user.create.after` hook.
+- Rate limiting: per-IP signup (Better Auth's native `rateLimit`, KV-backed) and per-user generations/minute (`src/lib/kv-counter.ts`'s `kvIncrement()`, checked in `generate-doodle.ts` before any ledger write — a rate-limited request never spends a credit or writes a `generation` row).
+- Hourly Cron Trigger for the reconciliation job: `src-worker/entry.ts` wraps Astro's build output with a `scheduled()` handler (the Cloudflare adapter has no native support for one) and `wrangler.json` declares `triggers.crons: ["0 * * * *"]`.
+- UI: balance in the sidebar (`GET /api/v1/me`'s `credits.balance`), a `credits` event on the NDJSON stream updating it live via a `doodleai:credits` window event, and an out-of-credits visual state — honest about there being no purchase flow yet, since Phase 5 is skipped.
 
-**Exit criteria:** a brand-new account signs up and generates a doodle with no API key. Balance decrements correctly. A forced PicX failure refunds. Twenty concurrent requests on a 1-credit balance produce exactly one generation. Reconciliation job runs clean.
+**Exit criteria:** a brand-new account signs up and generates a doodle with no API key. Balance decrements correctly. A forced PicX failure refunds. Twenty concurrent requests on a 1-credit balance produce exactly one generation. Reconciliation job runs clean. All verified live against the shared staging D1/KV (see `pnpm dev`'s workflow) — not just compiled.
 
 **Rollback:** disable generation while preserving ledger data; restoring a client credential path is intentionally not part of the rollback plan.
 
@@ -116,9 +115,9 @@
 
 ## Sequencing notes
 
-**Phases 1–2 can be built in parallel with Phase 3 design.** Phase 4 depends hard on 1, 2 and 3. Phase 5 depends on 4. Phase 6 should lag 5 by weeks, not days.
+**Phases 1–2 can be built in parallel with Phase 3 design.** Phase 4 depends hard on 1, 2 and 3. Phase 5 depends on 4. Phase 6 should lag 5 by weeks, not days — in practice, Phase 5 was skipped entirely and Phase 6 shipped directly after Phase 4, which the original sequencing advice didn't anticipate; revisit that guidance if Phase 5 is picked back up later.
 
-**The mobile app can start after Phase 4** — the API surface is complete and credit-metered by then. Payments on mobile have their own constraints; see [mobile-strategy.md](./mobile-strategy.md).
+**The mobile app can start after Phase 4** — the API surface is complete and credit-metered by then. Payments on mobile have their own constraints; see [mobile-strategy.md](./mobile-strategy.md). Not started, and out of scope for now.
 
 **Run `pnpm check` after every dependency addition.** The `vite.ssr.external` list in `astro.config.mjs` exists because `@mastra/core` statically imports Node-only tooling that Cloudflare's bundler can't resolve. Drizzle, Better Auth and Stripe are all Workers-compatible, but their transitive dependencies are where a build break will come from, and it will show up at bundle time rather than in editor types.
 

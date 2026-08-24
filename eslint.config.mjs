@@ -11,6 +11,7 @@ export default tseslint.config(
       ".astro/**",
       "coverage/**",
       ".design-import/**",
+      ".wrangler/**",
       "worker-configuration.d.ts",
     ],
   },

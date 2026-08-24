@@ -17,6 +17,7 @@ import {
 } from "../../lib/doodle-constants";
 import { refund, spend } from "../../lib/credits";
 import { creditCostForSkill } from "../../lib/credits/costs";
+import { kvIncrement } from "../../lib/kv-counter";
 import type { Db } from "../../db/client";
 import { generation } from "../../db/schema/product";
 
@@ -47,6 +48,7 @@ const outputSchema = z.union([
   z.object({ status: z.literal("ok"), url: z.string() }),
   z.object({ status: z.literal("needs-photo"), message: z.string() }),
   z.object({ status: z.literal("insufficient-credits"), message: z.string(), balance: z.number(), required: z.number() }),
+  z.object({ status: z.literal("rate-limited"), message: z.string() }),
   z.object({ status: z.literal("error"), message: z.string() }),
 ]);
 
@@ -56,6 +58,39 @@ interface RequestContextValues {
   styleId?: string;
   userId?: string;
   db?: Db;
+  /**
+   * The same KV namespace Better Auth uses as `secondaryStorage` (see
+   * src/lib/auth/index.ts). Reused here rather than binding a second KV
+   * namespace — this tool only needs `increment`, which that binding
+   * already exposes directly.
+   */
+  sessions?: KVNamespace;
+}
+
+/** Generations a single signed-in user may start per minute. */
+const GENERATIONS_PER_MINUTE = 8;
+
+/**
+ * A fixed-window counter keyed on user id, backed directly by the SESSIONS
+ * KV binding (not through Better Auth — this isn't an auth-route request,
+ * so Better Auth's own `rateLimit` option never sees it).
+ *
+ * Fixed windows (as opposed to sliding) can let a burst of up to 2x the
+ * limit through right across a window boundary; that's an accepted
+ * trade-off for a single KV increment instead of tracking a timestamp list.
+ * The bucket key includes the minute number, so a stale bucket just expires
+ * on its own via the KV TTL rather than needing to be cleaned up.
+ *
+ * Returns true if the request should be allowed.
+ */
+async function checkGenerationRateLimit(sessions: KVNamespace, userId: string): Promise<boolean> {
+  const bucket = Math.floor(Date.now() / 60_000);
+  const key = `ratelimit:gen:${userId}:${bucket}`;
+  // TTL of 2 windows: long enough that the counter is still there for the
+  // full minute it's keyed to, short enough that KV doesn't accumulate a
+  // bucket per user forever.
+  const count = await kvIncrement(sessions, key, 120);
+  return count <= GENERATIONS_PER_MINUTE;
 }
 
 /**
@@ -77,12 +112,31 @@ export const generateDoodleTool = createTool({
     const platformKey = requestContext?.get("platformPicxKey");
     const userId = requestContext?.get("userId");
     const db = requestContext?.get("db");
+    const sessions = requestContext?.get("sessions");
 
     if (!platformKey || !platformKey.trim()) {
       return { status: "error" as const, message: "Image generation is not configured on this server." };
     }
     if (!userId || !db) {
       return { status: "error" as const, message: "Sign in to generate a doodle." };
+    }
+
+    // Per-user generation rate limit, checked before anything else that
+    // touches the ledger or writes a row — a rate-limited request must be a
+    // pure no-op against both. Keyed on user id (not IP): a shared
+    // phone/NAT'd network shouldn't share one bucket, and this is the same
+    // reason /api/v1/me-style per-user checks exist elsewhere. This is a
+    // separate counter from Better Auth's own `rateLimit` option (that one
+    // only ever sees /api/auth/* requests) but reuses the same KV binding
+    // and the same kvIncrement() helper.
+    if (sessions) {
+      const allowed = await checkGenerationRateLimit(sessions, userId);
+      if (!allowed) {
+        return {
+          status: "rate-limited" as const,
+          message: "You're generating a bit fast — wait a moment and try again.",
+        };
+      }
     }
 
     const requiresPhoto = input.skill !== "surprise";
