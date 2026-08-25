@@ -167,6 +167,7 @@ closeUrl.searchParams.delete('user');
 			const res = await fetch('/api/admin/credits/grant', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'same-origin',
 				body: JSON.stringify({
 					userId: grantForm.dataset.userId,
 					amount,
@@ -244,6 +245,7 @@ closeUrl.searchParams.delete('user');
 			const res = await fetch(`/api/admin/users/${encodeURIComponent(roleEditor.dataset.userId ?? '')}/role`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'same-origin',
 				body: JSON.stringify({ role: roleSelect.value }),
 			});
 			const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;

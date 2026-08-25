@@ -182,8 +182,8 @@ const { rows, canMutate } = Astro.props;
 	async function openCredits(userId: string, name: string, email: string, balance: number) {
 		if (!overlay || !cdName || !cdEmail || !cdBalance || !cdAmount || !cdReason || !cdMsg || !cdHistory) return;
 		activeUserId = userId;
-		cdName.textContent = name;
-		cdEmail.textContent = email;
+		cdName.textContent = name || 'Unknown';
+		cdEmail.textContent = email || '—';
 		cdBalance.textContent = balance.toLocaleString('en-US');
 		cdAmount.value = '';
 		cdReason.value = '';
@@ -194,13 +194,20 @@ const { rows, canMutate } = Astro.props;
 		updateSubmitLabel();
 		overlay.hidden = false;
 
-		// Fetch live data
+		// Fetch live data (credentials needed to send admin session cookie)
 		cdHistory.innerHTML = '<p class="cd-loading">Loading…</p>';
 		try {
-			const res = await fetch(`/api/admin/users/${encodeURIComponent(userId)}/credits`);
-			if (!res.ok) throw new Error('Failed');
-			const data = (await res.json()) as { balance: number; ledger: { id: string; delta: number; reason: string; refId: string | null; balanceAfter: number; createdAt: number }[] };
+			const res = await fetch(`/api/admin/users/${encodeURIComponent(userId)}/credits`, {
+				credentials: 'same-origin',
+			});
+			if (!res.ok) {
+				const errBody = await res.text().catch(() => '');
+				throw new Error(`${res.status}: ${errBody.slice(0, 100)}`);
+			}
+			const data = (await res.json()) as { balance: number; name?: string; email?: string; ledger: { id: string; delta: number; reason: string; refId: string | null; balanceAfter: number; createdAt: number }[] };
 			cdBalance.textContent = data.balance.toLocaleString('en-US');
+			if (data.name) cdName.textContent = data.name;
+			if (data.email) cdEmail.textContent = data.email;
 
 			if (data.ledger.length === 0) {
 				cdHistory.innerHTML = '<p class="cd-empty">No credit history yet.</p>';
@@ -214,8 +221,9 @@ const { rows, canMutate } = Astro.props;
 					</div>
 				`).join('');
 			}
-		} catch {
-			cdHistory.innerHTML = '<p class="cd-empty">Could not load history.</p>';
+		} catch (err) {
+			cdHistory.innerHTML = `<p class="cd-empty">Could not load history.</p>`;
+			console.error('[admin] credit history fetch failed:', err);
 		}
 
 		cdAmount.focus();
@@ -258,6 +266,7 @@ const { rows, canMutate } = Astro.props;
 			const res = await fetch('/api/admin/credits/grant', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'same-origin',
 				body: JSON.stringify({
 					userId: activeUserId,
 					amount: val,
