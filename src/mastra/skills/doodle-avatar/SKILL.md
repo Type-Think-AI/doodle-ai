@@ -15,6 +15,7 @@ metadata:
   requiresPhoto: true
   aspectRatio: '1:1'
   sampleIndex: 0
+  thumbnailUrl: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
   order: 0
 ---
 
