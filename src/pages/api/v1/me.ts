@@ -5,18 +5,9 @@ import { getDb } from "../../../db/client";
 import { getBalance } from "../../../lib/credits";
 import { creditBalanceOrg } from "../../../db/schema/billing";
 import { member, organization } from "../../../db/schema/auth";
+import type { OrgDto } from "../../../lib/api/dto";
 
 export const prerender = false;
-
-export interface MeOrgDto {
-  id: string;
-  name: string;
-  slug: string;
-  role: string;
-  isPersonal: boolean;
-  balance: number;
-  memberCount: number;
-}
 
 /**
  * GET /api/v1/me — the caller's profile plus their active team.
@@ -57,7 +48,7 @@ export async function GET(context: APIContext): Promise<Response> {
   // lists top out at 25 (organizationLimit/membershipLimit in
   // src/lib/auth/index.ts), so this fans out to at most a handful of cheap
   // indexed reads rather than a real N+1 concern.
-  const orgs: MeOrgDto[] = await Promise.all(
+  const orgs: OrgDto[] = await Promise.all(
     memberships.map(async (m) => {
       const [balRows, countRows] = await Promise.all([
         db.select({ balance: creditBalanceOrg.balance }).from(creditBalanceOrg).where(eq(creditBalanceOrg.organizationId, m.id)),
@@ -67,7 +58,12 @@ export async function GET(context: APIContext): Promise<Response> {
         id: m.id,
         name: m.name,
         slug: m.slug,
-        role: m.role,
+        // Every member row's role is written by our own code from the five
+        // roles in src/lib/auth/org-access.ts — never Better Auth's default
+        // "member" literal — so this cast documents an invariant rather
+        // than papering over one. requireOrg() throws loudly if it ever
+        // finds a role outside that set.
+        role: m.role as OrgDto["role"],
         isPersonal: m.isPersonal,
         balance: balRows[0]?.balance ?? 0,
         memberCount: countRows[0]?.count ?? 1,
