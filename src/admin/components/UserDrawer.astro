@@ -30,23 +30,61 @@ closeUrl.searchParams.delete('user');
 	<div class="stats" aria-label="User statistics">
 		<div><strong>{thousands(detail.doodles)}</strong><span>Doodles</span></div>
 		<div><strong>{thousands(detail.projects)}</strong><span>Projects</span></div>
-		<div><strong>{thousands(detail.credits)}</strong><span>Credits</span></div>
+		<div><strong id="drawer-credit-display">{thousands(detail.credits)}</strong><span>Credits</span></div>
 		<div><strong>{thousands(detail.threads)}</strong><span>Threads</span></div>
 		<div><strong>{thousands(detail.feedbackCount)}</strong><span>Feedback</span></div>
 		<div><strong>{detail.plan}</strong><span>Plan</span></div>
 		<div><strong>{detail.topSkill || '—'}</strong><span>Top skill</span></div>
 	</div>
 
+	<!-- CREDIT GRANT SECTION -->
+	{canMutate && (
+		<section class="section credit-section">
+			<div class="section-heading">
+				<h3>Grant credits</h3>
+				<span>Balance: {thousands(detail.credits)}</span>
+			</div>
+			<div class="credit-grant-form" data-credit-grant data-user-id={detail.id} data-user-email={detail.email}>
+				<div class="grant-row">
+					<input type="number" data-credit-amount min="1" max="100000" step="1" placeholder="Amount" aria-label="Credit amount" />
+					<input type="text" data-credit-reason maxlength="100" placeholder="Reason (e.g. testing, compensation)" aria-label="Reason" />
+				</div>
+				<button type="button" data-credit-submit class="grant-btn">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+					Grant credits
+				</button>
+				<p class="grant-msg" data-credit-msg role="status" hidden></p>
+			</div>
+		</section>
+	)}
+
+	<!-- ROLE CHANGE SECTION WITH KEYWORD CONFIRMATION -->
 	<section class="section role-section">
 		<div class="section-heading"><h3>Platform role</h3></div>
 		{canMutate && !isSelf ? (
-			<div class="role-editor" data-role-editor data-user-id={detail.id}>
-				<select data-role-select aria-label="Platform role">
-					<option value="user" selected={detail.platformRole === 'user'}>User</option>
-					<option value="support" selected={detail.platformRole === 'support'}>Support</option>
-					<option value="admin" selected={detail.platformRole === 'admin'}>Admin</option>
-				</select>
-				<button type="button" data-role-save>Save</button>
+			<div class="role-editor" data-role-editor data-user-id={detail.id} data-current-role={detail.platformRole}>
+				<div class="role-select-row">
+					<select data-role-select aria-label="Platform role">
+						<option value="user" selected={detail.platformRole === 'user'}>User</option>
+						<option value="support" selected={detail.platformRole === 'support'}>Support</option>
+						<option value="admin" selected={detail.platformRole === 'admin'}>Admin</option>
+					</select>
+					<button type="button" data-role-change-btn class="role-change-btn">Change role</button>
+				</div>
+				<!-- Confirmation dialog (hidden until Change role is clicked) -->
+				<div class="role-confirm-dialog" data-role-confirm hidden>
+					<p class="confirm-warning">
+						You are changing <strong>{detail.name}</strong> from <strong>{detail.platformRole}</strong> to <strong data-role-target></strong>. This is a privileged action.
+					</p>
+					<label class="confirm-label">
+						Type <code>CONFIRM</code> to proceed:
+						<input type="text" data-role-keyword placeholder="Type CONFIRM" autocomplete="off" spellcheck="false" />
+					</label>
+					<div class="confirm-actions">
+						<button type="button" data-role-cancel class="confirm-cancel-btn">Cancel</button>
+						<button type="button" data-role-execute class="confirm-execute-btn" disabled>Confirm change</button>
+					</div>
+				</div>
 				<p class="role-error" data-role-error role="alert" hidden></p>
 			</div>
 		) : (
@@ -107,33 +145,117 @@ closeUrl.searchParams.delete('user');
 </aside>
 
 <script>
-	const editor = document.querySelector<HTMLElement>('[data-role-editor]');
-	const save = editor?.querySelector<HTMLButtonElement>('[data-role-save]');
-	const select = editor?.querySelector<HTMLSelectElement>('[data-role-select]');
-	const error = editor?.querySelector<HTMLElement>('[data-role-error]');
+	// --- Credit Grant ---
+	const grantForm = document.querySelector<HTMLElement>('[data-credit-grant]');
+	const grantAmount = grantForm?.querySelector<HTMLInputElement>('[data-credit-amount]');
+	const grantReason = grantForm?.querySelector<HTMLInputElement>('[data-credit-reason]');
+	const grantSubmit = grantForm?.querySelector<HTMLButtonElement>('[data-credit-submit]');
+	const grantMsg = grantForm?.querySelector<HTMLElement>('[data-credit-msg]');
 
-	save?.addEventListener('click', async () => {
-		if (!editor || !select || !save || !error) return;
-		save.disabled = true;
-		error.hidden = true;
+	grantSubmit?.addEventListener('click', async () => {
+		if (!grantForm || !grantAmount || !grantReason || !grantSubmit || !grantMsg) return;
+		const amount = Number.parseInt(grantAmount.value, 10);
+		if (!Number.isFinite(amount) || amount < 1) {
+			grantMsg.textContent = 'Enter a valid amount (minimum 1).';
+			grantMsg.className = 'grant-msg error';
+			grantMsg.hidden = false;
+			return;
+		}
+		grantSubmit.disabled = true;
+		grantMsg.hidden = true;
 		try {
-			const response = await fetch(`/api/admin/users/${encodeURIComponent(editor.dataset.userId ?? '')}/role`, {
+			const res = await fetch('/api/admin/credits/grant', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					userId: grantForm.dataset.userId,
+					amount,
+					note: grantReason.value.trim() || undefined,
+				}),
+			});
+			const body = (await res.json().catch(() => null)) as { ok?: boolean; balance?: number; error?: { message?: string } } | null;
+			if (!res.ok) {
+				grantMsg.textContent = body?.error?.message ?? 'Failed to grant credits.';
+				grantMsg.className = 'grant-msg error';
+				grantMsg.hidden = false;
+				return;
+			}
+			grantMsg.textContent = `✓ Granted ${amount} credits. New balance: ${body?.balance ?? '—'}`;
+			grantMsg.className = 'grant-msg success';
+			grantMsg.hidden = false;
+			grantAmount.value = '';
+			grantReason.value = '';
+			// Update the displayed balance
+			const display = document.getElementById('drawer-credit-display');
+			if (display && body?.balance != null) display.textContent = body.balance.toLocaleString('en-US');
+		} catch {
+			grantMsg.textContent = 'Network error. Try again.';
+			grantMsg.className = 'grant-msg error';
+			grantMsg.hidden = false;
+		} finally {
+			grantSubmit.disabled = false;
+		}
+	});
+
+	// --- Role Change with Keyword Confirmation ---
+	const roleEditor = document.querySelector<HTMLElement>('[data-role-editor]');
+	const roleSelect = roleEditor?.querySelector<HTMLSelectElement>('[data-role-select]');
+	const roleChangeBtn = roleEditor?.querySelector<HTMLButtonElement>('[data-role-change-btn]');
+	const roleConfirmDialog = roleEditor?.querySelector<HTMLElement>('[data-role-confirm]');
+	const roleKeyword = roleEditor?.querySelector<HTMLInputElement>('[data-role-keyword]');
+	const roleCancelBtn = roleEditor?.querySelector<HTMLButtonElement>('[data-role-cancel]');
+	const roleExecuteBtn = roleEditor?.querySelector<HTMLButtonElement>('[data-role-execute]');
+	const roleTargetLabel = roleEditor?.querySelector<HTMLElement>('[data-role-target]');
+	const roleError = roleEditor?.querySelector<HTMLElement>('[data-role-error]');
+	const currentRole = roleEditor?.dataset.currentRole ?? '';
+
+	roleChangeBtn?.addEventListener('click', () => {
+		if (!roleSelect || !roleConfirmDialog || !roleTargetLabel || !roleKeyword) return;
+		const newRole = roleSelect.value;
+		if (newRole === currentRole) {
+			if (roleError) { roleError.textContent = 'Role is already ' + currentRole + '.'; roleError.hidden = false; }
+			return;
+		}
+		roleTargetLabel.textContent = newRole;
+		roleKeyword.value = '';
+		if (roleExecuteBtn) roleExecuteBtn.disabled = true;
+		if (roleError) roleError.hidden = true;
+		roleConfirmDialog.hidden = false;
+		roleKeyword.focus();
+	});
+
+	roleKeyword?.addEventListener('input', () => {
+		if (!roleExecuteBtn || !roleKeyword) return;
+		roleExecuteBtn.disabled = roleKeyword.value.trim() !== 'CONFIRM';
+	});
+
+	roleCancelBtn?.addEventListener('click', () => {
+		if (roleConfirmDialog) roleConfirmDialog.hidden = true;
+		if (roleKeyword) roleKeyword.value = '';
+		if (roleExecuteBtn) roleExecuteBtn.disabled = true;
+	});
+
+	roleExecuteBtn?.addEventListener('click', async () => {
+		if (!roleEditor || !roleSelect || !roleExecuteBtn || !roleConfirmDialog || !roleKeyword) return;
+		if (roleKeyword.value.trim() !== 'CONFIRM') return;
+		roleExecuteBtn.disabled = true;
+		if (roleError) roleError.hidden = true;
+		try {
+			const res = await fetch(`/api/admin/users/${encodeURIComponent(roleEditor.dataset.userId ?? '')}/role`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ role: select.value }),
+				body: JSON.stringify({ role: roleSelect.value }),
 			});
-			const body = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
-			if (!response.ok) {
-				error.textContent = body?.error?.message ?? 'Could not update this role.';
-				error.hidden = false;
+			const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+			if (!res.ok) {
+				if (roleError) { roleError.textContent = body?.error?.message ?? 'Could not update role.'; roleError.hidden = false; }
+				roleConfirmDialog.hidden = true;
 				return;
 			}
 			window.location.reload();
 		} catch {
-			error.textContent = 'Could not update this role. Check your connection and try again.';
-			error.hidden = false;
-		} finally {
-			save.disabled = false;
+			if (roleError) { roleError.textContent = 'Network error. Try again.'; roleError.hidden = false; }
+			roleConfirmDialog.hidden = true;
 		}
 	});
 </script>
@@ -190,9 +312,7 @@ closeUrl.searchParams.delete('user');
 		color: var(--text-dimmer);
 		text-decoration: none;
 	}
-	.close:hover {
-		color: var(--text);
-	}
+	.close:hover { color: var(--text); }
 	.stats {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
@@ -200,204 +320,172 @@ closeUrl.searchParams.delete('user');
 		padding: 18px 0;
 		border-bottom: 1px solid var(--border);
 	}
-	.stats div {
-		min-width: 0;
-	}
-	.stats strong,
-	.stats span {
-		display: block;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.stats strong {
-		font-size: 14px;
+	.stats div { min-width: 0; }
+	.stats strong, .stats span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.stats strong { font-size: 14px; color: var(--text); }
+	.stats span { margin-top: 3px; font-size: 10px; color: var(--text-dimmer); }
+	.section { padding: 18px 0; border-bottom: 1px solid var(--border); }
+	.section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+	.section-heading h3 { margin: 0; font-size: 12px; letter-spacing: 0.02em; color: var(--text); }
+	.section-heading > span { font-size: 11px; color: var(--text-dimmer); }
+
+	/* --- Credit Grant --- */
+	.credit-grant-form { display: flex; flex-direction: column; gap: 10px; }
+	.grant-row { display: flex; gap: 8px; }
+	.grant-row input {
+		flex: 1;
+		height: 36px;
+		padding: 0 10px;
+		border: 1px solid var(--border2);
+		border-radius: 8px;
+		background: var(--surface2);
 		color: var(--text);
+		font: inherit;
+		font-size: 13px;
 	}
-	.stats span {
-		margin-top: 3px;
-		font-size: 10px;
-		color: var(--text-dimmer);
-	}
-	.section {
-		padding: 18px 0;
-		border-bottom: 1px solid var(--border);
-	}
-	.section-heading {
-		display: flex;
+	.grant-row input[type="number"] { max-width: 100px; }
+	.grant-row input::placeholder { color: var(--text-dimmer); }
+	.grant-btn {
+		display: inline-flex;
 		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 10px;
-	}
-	.section-heading h3 {
-		margin: 0;
+		gap: 6px;
+		height: 36px;
+		padding: 0 14px;
+		border: none;
+		border-radius: 8px;
+		background: var(--accent);
+		color: #1a1a1a;
+		font: inherit;
 		font-size: 12px;
-		letter-spacing: 0.02em;
-		color: var(--text);
+		font-weight: 600;
+		cursor: pointer;
+		width: fit-content;
 	}
-	.section-heading > span {
-		font-size: 11px;
-		color: var(--text-dimmer);
-	}
-	.role-editor {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		flex-wrap: wrap;
-	}
-	.role-editor select,
-	.role-editor button {
-		height: 32px;
+	.grant-btn:disabled { opacity: 0.5; cursor: wait; }
+	.grant-msg { margin: 0; font-size: 11px; }
+	.grant-msg.success { color: var(--green); }
+	.grant-msg.error { color: var(--red); }
+
+	/* --- Role Editor with Confirmation --- */
+	.role-select-row { display: flex; align-items: center; gap: 8px; }
+	.role-select-row select, .role-change-btn {
+		height: 34px;
 		border: 1px solid var(--border2);
 		border-radius: 8px;
 		font: inherit;
 		font-size: 12px;
 	}
-	.role-editor select {
+	.role-select-row select {
 		flex: 1;
 		min-width: 120px;
 		padding: 0 8px;
 		background: var(--surface2);
 		color: var(--text);
 	}
-	.role-editor button {
+	.role-change-btn {
 		padding: 0 13px;
-		background: var(--accent);
-		color: #1a1a1a;
+		background: var(--surface2);
+		color: var(--text-dim);
 		cursor: pointer;
+		border: 1px solid var(--border2);
 	}
-	.role-editor button:disabled {
-		cursor: wait;
-		opacity: 0.6;
+	.role-change-btn:hover { color: var(--text); border-color: var(--border3); }
+	.role-confirm-dialog {
+		margin-top: 12px;
+		padding: 14px;
+		border: 1px solid var(--border2);
+		border-radius: 10px;
+		background: var(--bg);
 	}
-	.role-error {
-		flex-basis: 100%;
-		margin: 2px 0 0;
-		font-size: 11px;
-		color: var(--red);
-	}
-	.role-readonly {
-		display: flex;
-		align-items: baseline;
-		gap: 9px;
-		flex-wrap: wrap;
-	}
-	.role-readonly strong {
+	.confirm-warning {
+		margin: 0 0 12px;
 		font-size: 12px;
-		color: var(--text);
+		color: var(--text-dim);
+		line-height: 1.5;
 	}
-	.role-readonly span,
-	.empty,
-	.list-row span {
+	.confirm-warning strong { color: var(--text); }
+	.confirm-label {
+		display: block;
 		font-size: 11px;
 		color: var(--text-dimmer);
+		margin-bottom: 6px;
 	}
-	.empty {
-		margin: 0;
-	}
-	.list {
-		display: flex;
-		flex-direction: column;
-		gap: 1px;
-	}
-	.list-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 10px;
-		min-width: 0;
-		padding: 8px 0;
-	}
-	.list-row > div {
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
-	}
-	.list-row strong {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		font-size: 12px;
-		color: var(--text);
-	}
-	.list-row span {
-		margin-top: 3px;
-	}
-	.row-value {
-		flex: 0 0 auto;
-		margin-top: 0 !important;
-		color: var(--text-dim) !important;
-	}
-	.generation-row {
-		justify-content: flex-start;
-	}
-	.generation-row img,
-	.thumb-placeholder {
-		width: 48px;
-		height: 48px;
-		flex: 0 0 48px;
-		border-radius: 8px;
-		object-fit: cover;
+	.confirm-label code {
 		background: var(--surface2);
+		border: 1px solid var(--border2);
+		padding: 1px 5px;
+		border-radius: 4px;
+		font-size: 11px;
+		color: var(--accent);
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 	}
-	.positive {
-		color: var(--green) !important;
+	.confirm-label input {
+		display: block;
+		width: 100%;
+		margin-top: 6px;
+		height: 36px;
+		padding: 0 10px;
+		border: 1px solid var(--border2);
+		border-radius: 8px;
+		background: var(--surface2);
+		color: var(--text);
+		font: inherit;
+		font-size: 13px;
+		letter-spacing: 0.04em;
 	}
-	.negative {
-		color: var(--red) !important;
+	.confirm-label input::placeholder { color: var(--text-dimmer); }
+	.confirm-actions { display: flex; gap: 8px; margin-top: 12px; }
+	.confirm-cancel-btn, .confirm-execute-btn {
+		height: 34px;
+		padding: 0 14px;
+		border-radius: 8px;
+		font: inherit;
+		font-size: 12px;
+		cursor: pointer;
+		border: 1px solid var(--border2);
 	}
+	.confirm-cancel-btn {
+		background: transparent;
+		color: var(--text-dim);
+	}
+	.confirm-execute-btn {
+		background: var(--red);
+		color: #fff;
+		border-color: var(--red);
+		font-weight: 600;
+	}
+	.confirm-execute-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+	.role-error { margin: 8px 0 0; font-size: 11px; color: var(--red); }
+	.role-readonly { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+	.role-readonly strong { font-size: 12px; color: var(--text); }
+	.role-readonly span, .empty, .list-row span { font-size: 11px; color: var(--text-dimmer); }
+	.empty { margin: 0; }
+	.list { display: flex; flex-direction: column; gap: 1px; }
+	.list-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; padding: 8px 0; }
+	.list-row > div { display: flex; flex-direction: column; min-width: 0; }
+	.list-row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text); }
+	.list-row span { margin-top: 3px; }
+	.row-value { flex: 0 0 auto; margin-top: 0 !important; color: var(--text-dim) !important; }
+	.generation-row { justify-content: flex-start; }
+	.generation-row img, .thumb-placeholder { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 8px; object-fit: cover; background: var(--surface2); }
+	.positive { color: var(--green) !important; }
+	.negative { color: var(--red) !important; }
+
 	@media (max-width: 500px) {
-		.drawer {
-			width: 100vw;
-			padding: 20px 16px;
-			border-left: none;
-			border-radius: 0;
-		}
-		.drawer-header {
-			padding-bottom: 16px;
-		}
-		.identity {
-			gap: 10px;
-		}
-		.identity h2 {
-			font-size: 16px;
-		}
-		.close {
-			min-width: 44px;
-			min-height: 44px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 28px;
-		}
-		.stats {
-			grid-template-columns: repeat(3, 1fr);
-			gap: 8px;
-			padding: 14px 0;
-		}
-		.stats strong {
-			font-size: 13px;
-		}
-		.role-editor select,
-		.role-editor button {
-			height: 40px;
-			font-size: 14px;
-		}
-		.role-editor button {
-			padding: 0 18px;
-		}
-		.section {
-			padding: 14px 0;
-		}
-		.list-row {
-			padding: 10px 0;
-			min-height: 44px;
-		}
-		.generation-row img,
-		.thumb-placeholder {
-			width: 44px;
-			height: 44px;
-			flex: 0 0 44px;
-		}
+		.drawer { width: 100vw; padding: 20px 16px; border-left: none; border-radius: 0; }
+		.drawer-header { padding-bottom: 16px; }
+		.identity { gap: 10px; }
+		.identity h2 { font-size: 16px; }
+		.close { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+		.stats { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 14px 0; }
+		.stats strong { font-size: 13px; }
+		.grant-row { flex-direction: column; }
+		.grant-row input[type="number"] { max-width: none; }
+		.role-select-row { flex-wrap: wrap; }
+		.role-select-row select, .role-change-btn { height: 40px; font-size: 14px; }
+		.confirm-actions { flex-wrap: wrap; }
+		.section { padding: 14px 0; }
+		.list-row { padding: 10px 0; min-height: 44px; }
+		.generation-row img, .thumb-placeholder { width: 44px; height: 44px; flex: 0 0 44px; }
 	}
 </style>

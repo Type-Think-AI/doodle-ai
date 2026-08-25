@@ -8,7 +8,7 @@ interface Props {
 	canMutate: boolean;
 }
 
-const { rows } = Astro.props;
+const { rows, canMutate } = Astro.props;
 ---
 
 <div class="users-table">
@@ -36,7 +36,23 @@ const { rows } = Astro.props;
 					)}
 				</span>
 				<span class="doodles-cell">{thousands(row.doodles)}</span>
-				<span class:list={['credits-cell', { 'credit-low': row.credits < 50 }]}>{thousands(row.credits)}</span>
+				<span class:list={['credits-cell', { 'credit-low': row.credits < 50 }]}>
+					{thousands(row.credits)}
+					{canMutate && (
+						<button
+							type="button"
+							class="grant-icon"
+							data-inline-grant
+							data-user-id={row.id}
+							data-user-name={row.name}
+							data-user-email={row.email}
+							aria-label={`Grant credits to ${row.name}`}
+							title={`Grant credits to ${row.name}`}
+						>
+							<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+						</button>
+					)}
+				</span>
 				<span class="date-cell">{formatDate(row.createdAt)}</span>
 				<span class="date-cell">{relativeTime(row.lastSeen)}</span>
 				<a class="chevron-cell" href={`?user=${encodeURIComponent(row.id)}`} aria-label={`Open ${row.name}`}>
@@ -49,6 +65,104 @@ const { rows } = Astro.props;
 	)}
 </div>
 
+<!-- Inline grant dialog (positioned absolutely near the clicked button) -->
+{canMutate && (
+	<div class="inline-grant-overlay" id="inlineGrantOverlay" hidden>
+		<div class="inline-grant-dialog" id="inlineGrantDialog">
+			<div class="igd-head">
+				<strong>Grant credits</strong>
+				<span id="igdTarget"></span>
+			</div>
+			<div class="igd-fields">
+				<input type="number" id="igdAmount" min="1" max="100000" step="1" placeholder="Amount" aria-label="Credit amount" />
+				<input type="text" id="igdReason" maxlength="100" placeholder="Reason" aria-label="Reason" />
+			</div>
+			<div class="igd-actions">
+				<button type="button" id="igdCancel">Cancel</button>
+				<button type="button" id="igdSubmit" class="igd-submit">Grant</button>
+			</div>
+			<p class="igd-msg" id="igdMsg" hidden></p>
+		</div>
+	</div>
+)}
+
+<script>
+	const overlay = document.getElementById('inlineGrantOverlay');
+	const dialog = document.getElementById('inlineGrantDialog');
+	const target = document.getElementById('igdTarget');
+	const amount = document.getElementById('igdAmount') as HTMLInputElement | null;
+	const reason = document.getElementById('igdReason') as HTMLInputElement | null;
+	const cancel = document.getElementById('igdCancel');
+	const submit = document.getElementById('igdSubmit');
+	const msg = document.getElementById('igdMsg');
+
+	let activeUserId = '';
+
+	function openGrant(userId: string, name: string, email: string) {
+		if (!overlay || !dialog || !target || !amount || !reason || !msg) return;
+		activeUserId = userId;
+		target.textContent = `${name} (${email})`;
+		amount.value = '';
+		reason.value = '';
+		msg.hidden = true;
+		overlay.hidden = false;
+		amount.focus();
+	}
+
+	function closeGrant() {
+		if (overlay) overlay.hidden = true;
+		activeUserId = '';
+	}
+
+	// Listen on all grant-icon buttons
+	document.querySelectorAll<HTMLButtonElement>('[data-inline-grant]').forEach((btn) => {
+		btn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			openGrant(btn.dataset.userId ?? '', btn.dataset.userName ?? '', btn.dataset.userEmail ?? '');
+		});
+	});
+
+	cancel?.addEventListener('click', closeGrant);
+	overlay?.addEventListener('click', (e) => { if (e.target === overlay) closeGrant(); });
+
+	submit?.addEventListener('click', async () => {
+		if (!amount || !reason || !msg || !submit) return;
+		const val = Number.parseInt(amount.value, 10);
+		if (!Number.isFinite(val) || val < 1) {
+			msg.textContent = 'Enter a valid amount.';
+			msg.className = 'igd-msg error';
+			msg.hidden = false;
+			return;
+		}
+		submit.disabled = true;
+		msg.hidden = true;
+		try {
+			const res = await fetch('/api/admin/credits/grant', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ userId: activeUserId, amount: val, note: reason.value.trim() || undefined }),
+			});
+			const body = (await res.json().catch(() => null)) as { ok?: boolean; balance?: number; error?: { message?: string } } | null;
+			if (!res.ok) {
+				msg.textContent = body?.error?.message ?? 'Failed.';
+				msg.className = 'igd-msg error';
+				msg.hidden = false;
+				return;
+			}
+			msg.textContent = `✓ Granted ${val} credits. Balance: ${body?.balance ?? '—'}`;
+			msg.className = 'igd-msg success';
+			msg.hidden = false;
+			setTimeout(() => { closeGrant(); window.location.reload(); }, 1200);
+		} catch {
+			msg.textContent = 'Network error.';
+			msg.className = 'igd-msg error';
+			msg.hidden = false;
+		} finally {
+			submit.disabled = false;
+		}
+	});
+</script>
+
 <style>
 	.users-table {
 		border: 1px solid var(--border);
@@ -59,7 +173,7 @@ const { rows } = Astro.props;
 	.table-head,
 	.table-row {
 		display: grid;
-		grid-template-columns: 2.1fr 0.8fr 0.8fr 0.75fr 0.85fr 1fr 1fr 48px;
+		grid-template-columns: 2.1fr 0.8fr 0.8fr 0.75fr 0.95fr 1fr 1fr 48px;
 	}
 	.table-head {
 		padding: 11px 16px;
@@ -73,98 +187,102 @@ const { rows } = Astro.props;
 		padding: 11px 16px;
 		border-top: 1px solid var(--border);
 	}
-	.table-row:hover {
-		background: var(--hover);
-	}
-	.table-empty {
-		padding: 40px 20px;
-		text-align: center;
-		font-size: 13px;
+	.table-row:hover { background: var(--hover); }
+	.table-empty { padding: 40px 20px; text-align: center; font-size: 13px; color: var(--text-dimmer); }
+	.user-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+	.user-meta { display: flex; flex-direction: column; min-width: 0; }
+	.user-name { font-size: 13px; color: var(--text); }
+	.user-email { font-size: 11px; color: var(--text-dimmer); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.plan-pill, .role-pill { font-size: 11px; width: fit-content; padding: 3px 9px; border-radius: 999px; }
+	.plan-pro { background: var(--accent-softer); color: var(--accent); }
+	.plan-free { background: var(--surface2); color: var(--text-dimmer); border: 1px solid var(--border2); }
+	.role-cell { min-width: 0; }
+	.role-support { background: var(--blue-faint); color: var(--blue); }
+	.role-admin { background: var(--red-faint); color: var(--red); }
+	.doodles-cell { font-size: 13px; color: var(--text); }
+	.credits-cell { font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 5px; }
+	.credit-low { color: var(--red); }
+	.grant-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		border-radius: 5px;
+		border: 1px solid var(--border2);
+		background: transparent;
 		color: var(--text-dimmer);
+		cursor: pointer;
+		padding: 0;
+		flex: 0 0 20px;
 	}
-	.user-cell {
+	.grant-icon:hover { color: var(--accent); border-color: var(--accent); }
+	.date-cell { font-size: 12px; color: var(--text-dim); }
+	.chevron-cell { display: flex; justify-content: flex-end; color: var(--text-dimmer); text-decoration: none; }
+	.chevron-cell:hover { color: var(--text); }
+
+	/* Inline grant overlay */
+	.inline-grant-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 50;
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		min-width: 0;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.5);
 	}
-	.user-meta {
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
+	.inline-grant-dialog {
+		width: min(380px, calc(100vw - 32px));
+		padding: 20px;
+		border-radius: 14px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 	}
-	.user-name {
-		font-size: 13px;
-		color: var(--text);
-	}
-	.user-email {
-		font-size: 11px;
-		color: var(--text-dimmer);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.plan-pill,
-	.role-pill {
-		font-size: 11px;
-		width: fit-content;
-		padding: 3px 9px;
-		border-radius: 999px;
-	}
-	.plan-pro {
-		background: var(--accent-softer);
-		color: var(--accent);
-	}
-	.plan-free {
-		background: var(--surface2);
-		color: var(--text-dimmer);
+	.igd-head { margin-bottom: 14px; }
+	.igd-head strong { display: block; font-size: 15px; color: var(--text); }
+	.igd-head span { font-size: 12px; color: var(--text-dimmer); }
+	.igd-fields { display: flex; gap: 8px; margin-bottom: 14px; }
+	.igd-fields input {
+		flex: 1;
+		height: 38px;
+		padding: 0 10px;
 		border: 1px solid var(--border2);
-	}
-	.role-cell {
-		min-width: 0;
-	}
-	.role-support {
-		background: var(--blue-faint);
-		color: var(--blue);
-	}
-	.role-admin {
-		background: var(--red-faint);
-		color: var(--red);
-	}
-	.doodles-cell,
-	.credits-cell {
-		font-size: 13px;
+		border-radius: 8px;
+		background: var(--surface2);
 		color: var(--text);
+		font: inherit;
+		font-size: 13px;
 	}
-	.credit-low {
-		color: var(--red);
-	}
-	.date-cell {
+	.igd-fields input[type="number"] { max-width: 100px; }
+	.igd-fields input::placeholder { color: var(--text-dimmer); }
+	.igd-actions { display: flex; gap: 8px; justify-content: flex-end; }
+	.igd-actions button {
+		height: 36px;
+		padding: 0 14px;
+		border-radius: 8px;
+		font: inherit;
 		font-size: 12px;
+		cursor: pointer;
+		border: 1px solid var(--border2);
+		background: transparent;
 		color: var(--text-dim);
 	}
-	.chevron-cell {
-		display: flex;
-		justify-content: flex-end;
-		color: var(--text-dimmer);
-		text-decoration: none;
-	}
-	.chevron-cell:hover {
-		color: var(--text);
-	}
+	.igd-submit { background: var(--accent) !important; color: #1a1a1a !important; border-color: var(--accent) !important; font-weight: 600; }
+	.igd-submit:disabled { opacity: 0.5; cursor: wait; }
+	.igd-msg { margin: 10px 0 0; font-size: 11px; }
+	.igd-msg.success { color: var(--green); }
+	.igd-msg.error { color: var(--red); }
+
 	@media (max-width: 1050px) {
-		.table-head {
-			display: none;
-		}
+		.table-head { display: none; }
 		.table-row {
 			grid-template-columns: 1fr 0.8fr 0.8fr 0.75fr 48px;
 			gap: 8px;
 			padding: 13px 16px;
 			min-height: 52px;
 		}
-		.table-row .date-cell {
-			display: none;
-		}
+		.table-row .date-cell { display: none; }
 	}
 	@media (max-width: 650px) {
 		.table-row {
@@ -175,20 +293,11 @@ const { rows } = Astro.props;
 		}
 		.table-row .role-cell,
 		.table-row .doodles-cell,
-		.table-row .credits-cell {
-			display: none;
-		}
-		.chevron-cell {
-			min-width: 44px;
-			min-height: 44px;
-			align-items: center;
-			justify-content: center;
-		}
-		.user-name {
-			font-size: 14px;
-		}
-		.user-email {
-			font-size: 12px;
-		}
+		.table-row .credits-cell { display: none; }
+		.chevron-cell { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+		.user-name { font-size: 14px; }
+		.user-email { font-size: 12px; }
+		.igd-fields { flex-direction: column; }
+		.igd-fields input[type="number"] { max-width: none; }
 	}
 </style>
