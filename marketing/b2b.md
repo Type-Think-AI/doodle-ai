@@ -220,19 +220,25 @@ For teams that need a result before they are ready to adopt software.
 
 ## 6. Functions to add for B2B production
 
+### Already implemented in the B2B foundation
+
+The codebase already has a working Better Auth organization layer with personal organizations, up to 5 organizations, up to 25 members, owner/producer/artist/reviewer/client roles, active-organization sessions, membership checks, organization-scoped threads/messages, shared references, shared moodboards, and pooled organization credits. `GET /api/v1/me` exposes the active organization, organizations, role, balance, and member count.
+
+This is a backend/API foundation and shared-data behavior, not a finished enterprise UI. A complete team switcher or polished studio workspace was not verified in the audited page tree. The project, asset, share-link, batch, and review schemas and access-control statements exist, but their dedicated end-to-end public routes were not verified.
+
 ### P0 — Required before selling a repeatable studio workflow
 
-1. **Workspace and team membership** — invite members; roles for owner, producer, artist, reviewer, and client.
-2. **Projects/jobs** — a project has a brief, deadline, client name, status, and asset count.
-3. **Shared credit pool** — team balance, per-project spend, usage history, and hard limits.
-4. **Reference library** — upload approved character, brand, palette, logo, and visual references.
+1. **Expose workspace and team membership** — the organization/role foundation exists; finish the user-facing team switcher and invite flow before selling it as a polished workspace.
+2. **Expose projects/jobs** — the project schema exists with brief/status fields, but a dedicated end-to-end project route and UI still need verification.
+3. **Productize the shared credit pool** — organization-owned balances, per-member attribution, limits, and rate caps exist in the backend; add visible spend history and project allocation.
+4. **Productize the reference library** — organization-scoped saved character references are available through the API; add explicit brand/style reference organization and permissions.
 5. **Character/style brief** — structured fields for identity, palette, line style, negative constraints, and approved references.
 6. **Prompt recipes** — save a repeatable instruction set with skill, aspect ratio, reference set, and output intent.
-7. **Batch generation** — run a controlled set of prompts against one reference package; queue and retry jobs.
+7. **Expose batch generation** — batch job/item schemas and permission statements exist, but no dedicated end-to-end batch route/UI was verified.
 8. **Variants** — generate multiple candidates from one brief and label them clearly; the current product returns one tool result in the normal flow, so this is a real feature gap.
 9. **Asset metadata** — record prompt, skill, source references, model/provider, timestamp, credit cost, and project.
 10. **Versioning** — preserve source, candidate, selected, revised, and final states without overwriting work.
-11. **Review status** — draft, internal review, client review, approved, rejected, archived.
+11. **Expose review status** — asset review states and permissions exist in the foundation; no verified public review board was found.
 12. **Comments and feedback** — attach feedback to an asset or version; frame-level comments can wait until video exists.
 13. **Export package** — download selected assets, metadata, prompt records, and a simple contact sheet.
 14. **Commercial-use statement** — show the current terms at the point of export; do not invent a license before legal terms are written.
@@ -240,7 +246,7 @@ For teams that need a result before they are ready to adopt software.
 
 ### P1 — Required for agency and larger studio expansion
 
-1. **Client review portal** — branded, read-only links with approve/request-changes actions.
+1. **Finish the client review portal** — share-link and review foundations exist, but no verified public review route was found.
 2. **Approval gates** — prevent downstream batch generation until a character/style reference is approved.
 3. **Brand kits** — logos, colors, typography notes, forbidden treatments, and safe-area rules.
 4. **Aspect-ratio and size presets** — square, portrait, landscape, social, presentation, and print-oriented presets where output quality is verified.
@@ -279,9 +285,9 @@ For teams that need a result before they are ready to adopt software.
 | Sticker pack | Runnable | Community, event, artist, and campaign sticker concepts. |
 | Mood captions | Runnable | Social/reaction concepts; verify text quality before client delivery. |
 | Gift image | Runnable | Occasion and personalized-campaign concepts. |
-| Shared team workspace | Not implemented | Must be added before multi-seat recurring sales. |
-| Batch/variant generation | Not implemented as a B2B workflow | P0 feature; do not promise fixed asset counts until it exists. |
-| Client review portal | Not implemented | P1 feature; use manual exports for pilot validation. |
+| Organization/team foundation | Current backend/API; partial UI | Personal orgs, roles, active org, shared data, and pooled credits exist; polished team UI is not verified. |
+| Batch/variant generation | Partial foundation | Schemas and permission statements exist; no verified dedicated end-to-end route/UI. |
+| Client review portal | Partial foundation | Share/review schemas exist; no verified public review route/UI. Use manual exports for pilots. |
 | Video generation/timeline | Not implemented | P2; sell pre-production, not finished film. |
 | Stripe checkout/subscriptions | Planned, not implemented | B2B pilot invoices or manual payment may be used only as a separate commercial process. |
 | Commercial license/provenance | Policy/technical work required | Write terms and provenance behavior before promising either. |
@@ -297,8 +303,8 @@ For teams that need a result before they are ready to adopt software.
 5. **Case studies** — publish the brief, turnaround time, number of candidates, selected output, and human-review steps. Lead with saved production time and approval speed.
 6. **AI filmmaker and animation communities** — participate in relevant Discords, Reddit communities, film/animation groups, and meetups with useful workflow demonstrations; do not mass-post sales links.
 7. **X proof posts** — the same prompt-plus-result format in [social.md](./social.md) is how producers currently collect visual methods. An official doodleai.art account with real concept-sprint stills is a B2B awareness channel; it is not a replacement for founder-led outbound.
-7. **Industry events and festivals** — target animation, motion design, advertising, creator-economy, and AI-film events where buyers already discuss production workflows.
-8. **High-intent SEO pages** — create `/for-animation-studios/`, `/for-ai-filmmakers/`, `/for-creative-agencies/`, `/ai-storyboard-concepts/`, and `/character-style-sheet/` only when each page contains real examples and a usable workflow.
+8. **Industry events and festivals** — target animation, motion design, advertising, creator-economy, and AI-film events where buyers already discuss production workflows.
+9. **High-intent SEO pages** — create `/for-animation-studios/`, `/for-ai-filmmakers/`, `/for-creative-agencies/`, `/ai-storyboard-concepts/`, and `/character-style-sheet/` only when each page contains real examples and a usable workflow.
 
 ### Secondary channels
 
@@ -368,17 +374,17 @@ For teams that need a result before they are ready to adopt software.
 
 ### Days 31–60 — ship the minimum production layer
 
-- Add project/job records and workspace ownership.
+- Expose project/job records and workspace ownership through user-facing routes and UI; the underlying schema and organization foundation already exist.
 - Add reference library and prompt recipes.
 - Add generation metadata and export package.
-- Add batch/variant queue with hard credit limits.
-- Add review states and a simple client-facing share link.
+- Expose the batch/variant queue with hard credit limits; the schema and permission foundation already exist.
+- Expose review states and a simple client-facing share link; the schema and access-control foundation already exist.
 - Publish one case study based on an actual pilot.
 
 ### Days 61–90 — package and expand
 
 - Launch fixed-scope Concept Sprint and Campaign Visual Pack offers.
-- Add team seats, shared credit pools, usage dashboard, and invoice-ready billing path.
+- Finish team-seat management and shared-credit UX, then add usage dashboards and an invoice-ready billing path.
 - Add commercial-use terms and retention/deletion controls.
 - Test agency referrals and one live workshop.
 - Decide whether the strongest demand is studios, agencies, brand teams, or AI filmmakers before building video features.
@@ -405,7 +411,7 @@ Sell the outcome as:
 
 > “From brief and reference to a reviewable visual direction in one focused sprint.”
 
-Use paid pilots to discover which production function has the strongest willingness to pay. Build team workspaces, references, batch/variants, review, metadata, export, and rights controls before investing in video generation. If studios repeatedly ask for shot continuity and animatics, then add a provider-neutral video layer on top of the proven project model.
+Use paid pilots to discover which production function has the strongest willingness to pay. Finish exposing the existing organization/shared-data foundation, then add project, batch, review, metadata, export, and rights controls before investing in video generation. If studios repeatedly ask for shot continuity and animatics, then add a provider-neutral video layer on top of the proven project model.
 
 ## 13. Sources
 

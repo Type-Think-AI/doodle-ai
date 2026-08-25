@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
-import { getCollection } from "astro:content";
 import { SKILLS } from "../lib/skills";
+import { CATEGORY_PRIORITY, getArticleLinks } from "../lib/content/articles";
 
 export const prerender = false;
 
@@ -12,6 +12,9 @@ export const prerender = false;
  * Only indexable pages appear here; private API routes are excluded
  * because they are not public content, and listing them in a sitemap
  * sends search engines contradictory signals.
+ *
+ * Editorial articles are read from the `articles` collection, so a new keyword
+ * hub appears here the moment its markdown file lands — no manual edit.
  */
 
 interface Entry {
@@ -24,11 +27,16 @@ interface Entry {
 export async function GET(context: APIContext) {
   const site = context.site ?? new URL("https://doodleai.art");
 
-  const posts = await getCollection("blog");
+  const articles = await getArticleLinks();
 
-  // Newest post date doubles as the blog index's lastmod.
-  const newestPost = posts
-    .map((p) => p.data.updatedDate ?? p.data.pubDate)
+  // Newest article date doubles as the /learn/ directory's lastmod.
+  const newestArticle = articles
+    .map((a) => a.updatedDate ?? a.pubDate)
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+
+  const studioArticles = articles.filter((a) => a.path.startsWith("for-studios/"));
+  const newestStudioArticle = studioArticles
+    .map((a) => a.updatedDate ?? a.pubDate)
     .sort((a, b) => b.getTime() - a.getTime())[0];
 
   const entries: Entry[] = [
@@ -36,7 +44,7 @@ export async function GET(context: APIContext) {
     // localStorage state) — no unique public content to index. /skills is
     // the app's real public content (the marketplace + each skill's page).
     { path: "/skills/", changefreq: "weekly", priority: "0.9" },
-    { path: "/blog/", lastmod: newestPost, changefreq: "weekly", priority: "0.8" },
+    { path: "/learn/", lastmod: newestArticle, changefreq: "weekly", priority: "0.8" },
     { path: "/about/", changefreq: "monthly", priority: "0.6" },
     { path: "/terms-of-service/", changefreq: "yearly", priority: "0.3" },
     { path: "/privacy-policy/", changefreq: "yearly", priority: "0.3" },
@@ -45,11 +53,23 @@ export async function GET(context: APIContext) {
       changefreq: "monthly" as const,
       priority: "0.7",
     })),
-    ...posts.map((post) => ({
-      path: `/blog/${post.id}/`,
-      lastmod: post.data.updatedDate ?? post.data.pubDate,
+    // The B2B namespace index only exists while it has children.
+    ...(studioArticles.length > 0
+      ? [
+          {
+            path: "/for-studios/",
+            lastmod: newestStudioArticle,
+            changefreq: "monthly" as const,
+            priority: "0.6",
+          },
+        ]
+      : []),
+    // Keyword-first article URLs, priority by editorial format.
+    ...articles.map((article) => ({
+      path: article.url,
+      lastmod: article.updatedDate ?? article.pubDate,
       changefreq: "monthly" as const,
-      priority: "0.7",
+      priority: CATEGORY_PRIORITY[article.category],
     })),
   ];
 

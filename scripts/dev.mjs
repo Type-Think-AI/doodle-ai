@@ -55,6 +55,16 @@ let rebuildQueued = false;
  * never a directory mid-write. `dist` is never briefly missing either, since
  * the old one is renamed out of the way only once the new one is ready to
  * rename in.
+ *
+ * (A symlink-indirection variant of this was tried and reverted: it closes
+ * the tiny old→new gap in theory, but wrangler's esbuild watcher resolves
+ * the symlink to its concrete `.dist-real/<timestamp>` target and keeps
+ * watching *that* path directly — so deleting the previous build dir during
+ * cleanup pulled the rug out from under an active watch and hard-crashed
+ * esbuild's Go watcher goroutine. The rename-swap below is what's actually
+ * safe against this watcher; the residual race is rare enough in practice
+ * — only hit by unusually rapid back-to-back rebuilds — to be worth keeping
+ * over a fix that crashes the dev server outright.)
  */
 async function build() {
   if (building) {

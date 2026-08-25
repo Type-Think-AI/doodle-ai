@@ -1,0 +1,87 @@
+---
+/**
+ * /for-studios/ — B2B namespace index.
+ *
+ * `for-studios` is registered in CONTENT_NAMESPACES: this static page owns the
+ * bare path, and the collection owns the children
+ * (`/for-studios/ai-filmmaker-stills/`). An article that tried to resolve to the
+ * bare `/for-studios/` path fails the build instead of silently losing to this page.
+ */
+import AppLayout from "../../layouts/AppLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import RelatedArticles from "../../components/article/RelatedArticles.astro";
+import { getHubChildren } from "../../lib/content/articles";
+import "../../styles/app.css";
+import "../../styles/page.css";
+
+const articles = await getHubChildren("for-studios");
+---
+
+<AppLayout
+	title="For studios and filmmakers — doodleai.art"
+	description="Stills-first production workflows for boutique animation studios, AI filmmakers, and virtual-production leads using Doodle AI's current image skills."
+>
+	<Navbar />
+
+	<main class="page">
+		<div class="page-hero">
+			<div class="eyebrow">For studios</div>
+			<h1>Concept work before you <span class="grad">commit</span> to production</h1>
+			<p class="lede">
+				Doodle AI generates still images. These workflows cover what that is genuinely useful
+				for in a production pipeline — character direction, pose exploration, concept boards —
+				and where the handoff to your storyboard, edit, and video tools has to happen.
+			</p>
+		</div>
+
+		<RelatedArticles heading="Workflow briefs" items={articles} />
+
+		<section class="bounds">
+			<h2>What is and is not available today</h2>
+			<p>
+				Threads, saved references, moodboards, generation records, and pooled credits are
+				scoped to an organization, with owner, producer, artist, reviewer, and client roles.
+				That is a working backend and shared-data layer.
+			</p>
+			<p>
+				Projects, assets, share links, batch jobs, and review states exist as schema and
+				access-control foundations without verified end-to-end interfaces. Video generation,
+				timeline and animatic editing, shot-list automation, C2PA provenance, commercial
+				licensing, checkout, subscriptions, physical fulfillment, and guaranteed character
+				continuity are not live. Plan a sitting around stills, and keep motion in the tools
+				that already do it.
+			</p>
+		</section>
+	</main>
+
+	<Footer />
+
+	<script>
+		import { initThemeToggle } from "../../lib/theme";
+		const themeToggle = document.getElementById("themeToggle");
+		if (themeToggle) initThemeToggle(themeToggle);
+	</script>
+</AppLayout>
+
+<style>
+	.bounds {
+		margin: 34px 0 0;
+		padding-top: 22px;
+		border-top: 1px solid var(--border);
+	}
+	.bounds h2 {
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-dimmer);
+		margin: 0 0 12px;
+	}
+	.bounds p {
+		font-size: 0.92rem;
+		line-height: 1.7;
+		color: var(--text-dim);
+		margin: 0 0 12px;
+	}
+</style>

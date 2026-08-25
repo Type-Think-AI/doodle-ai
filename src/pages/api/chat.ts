@@ -94,7 +94,25 @@ export async function POST(context: APIContext) {
         // Cast: `messages` is a plain {role, content} array (validated above),
         // which is a valid CoreMessage shape at runtime — TS's MessageListInput
         // union just doesn't distribute discriminated-union narrowing over it.
-        const agentStream = await agent.stream(messages as never, { requestContext });
+        //
+        // Retry: workerd's outbound fetch occasionally fails at the transport
+        // layer with `TypeError: fetch failed` and an empty cause `{}` — a
+        // transient network hiccup that resolves on retry. Two retries with
+        // exponential backoff keep the UX smooth without masking real failures.
+        const agentStream = await (async () => {
+          const MAX_RETRIES = 2;
+          for (let attempt = 0; ; attempt++) {
+            try {
+              return await agent.stream(messages as never, { requestContext });
+            } catch (err) {
+              const isTransientFetch =
+                err instanceof TypeError && /fetch failed/i.test(err.message);
+              if (!isTransientFetch || attempt >= MAX_RETRIES) throw err;
+              // Exponential backoff: 300ms, 600ms
+              await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+            }
+          }
+        })();
         // `fullStream` is a ReadableStream<ChunkType>; read it directly rather
         // than `for await`-ing the MastraModelOutput object itself, since its
         // TS type doesn't declare Symbol.asyncIterator even though some docs
@@ -150,7 +168,9 @@ export async function POST(context: APIContext) {
         const message =
           err instanceof Error && /api key/i.test(err.message)
             ? "The assistant isn't configured yet on this server. Try again later."
-            : "The assistant couldn't respond just now. Try again in a moment.";
+            : err instanceof TypeError && /fetch failed/i.test(err.message)
+              ? "Couldn't reach the AI service. Check your connection and try again."
+              : "The assistant couldn't respond just now. Try again in a moment.";
         emit({ type: "error", message });
       } finally {
         // The client aborts this request when the user hits Stop, which

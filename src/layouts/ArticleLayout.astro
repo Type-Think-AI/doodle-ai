@@ -1,0 +1,343 @@
+---
+/**
+ * Single layout for every editorial article, whatever its keyword URL.
+ *
+ * Wide screens (≥1100px): two-column — prose on the left, sticky TOC sidebar
+ * on the right. Narrow: single-column, TOC hidden, full-width prose.
+ */
+import type { CollectionEntry } from "astro:content";
+import AppLayout from "./AppLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import FormattedDate from "../components/FormattedDate.astro";
+import ArticleSchema from "../components/article/ArticleSchema.astro";
+import Breadcrumbs from "../components/article/Breadcrumbs.astro";
+import RelatedArticles from "../components/article/RelatedArticles.astro";
+import TableOfContents from "../components/article/TableOfContents.astro";
+import {
+	CATEGORY_LABEL,
+	getBreadcrumbs,
+	getHubChildren,
+	getRelatedArticles,
+} from "../lib/content/articles";
+import "../styles/app.css";
+import "../styles/page.css";
+
+interface Props {
+	path: string;
+	data: CollectionEntry<"articles">["data"];
+	headings: { depth: number; slug: string; text: string }[];
+}
+
+const { path, data, headings } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, category, faq } = data;
+
+const breadcrumbs = await getBreadcrumbs(path, title);
+const children = await getHubChildren(path);
+const related = await getRelatedArticles(path, 3);
+---
+
+<AppLayout
+	title={`${title} — doodleai.art`}
+	description={description}
+	image={heroImage}
+	ogType="article"
+>
+	<ArticleSchema
+		title={title}
+		description={description}
+		path={path}
+		pubDate={pubDate}
+		updatedDate={updatedDate}
+		heroImage={heroImage}
+		breadcrumbs={breadcrumbs}
+		faq={faq}
+		slot="head"
+	/>
+
+	<Navbar />
+
+	<div class="article-page">
+		<main class="article-shell">
+			<TableOfContents headings={headings} />
+
+			<article class="article-body">
+				{
+					heroImage && (
+						<div class="post-hero">
+							<img src={heroImage} alt="" />
+						</div>
+					)
+				}
+
+				<header class="article-header">
+					<Breadcrumbs items={breadcrumbs} />
+					<div class="meta-row">
+						<span class="cat">{CATEGORY_LABEL[category]}</span>
+						<span class="dot" aria-hidden="true">·</span>
+						<FormattedDate date={pubDate} />
+						{updatedDate && <span> · updated <FormattedDate date={updatedDate} /></span>}
+					</div>
+					<h1>{title}</h1>
+				</header>
+
+				<div class="prose">
+					<slot />
+				</div>
+
+				<footer class="article-footer">
+					<RelatedArticles heading="In this section" items={children} />
+					<RelatedArticles heading="Related reading" items={related} />
+				</footer>
+			</article>
+		</main>
+	</div>
+
+	<Footer />
+
+	<script>
+		import { initThemeToggle } from "../lib/theme";
+		const themeToggle = document.getElementById("themeToggle");
+		if (themeToggle) initThemeToggle(themeToggle);
+	</script>
+</AppLayout>
+
+<style>
+	/* ─── Page wrapper ─── */
+	.article-page {
+		padding: 0 var(--shell-pad) 80px;
+	}
+
+	/* ─── Two-column layout: TOC on left, article on right ─── */
+	.article-shell {
+		display: flex;
+		gap: 48px;
+		max-width: 1080px;
+		margin: 0 auto;
+	}
+
+	.article-body {
+		flex: 1;
+		min-width: 0;
+		max-width: 700px;
+		padding-top: 12px;
+	}
+
+	@media (max-width: 1099px) {
+		.article-shell {
+			max-width: 700px;
+			justify-content: center;
+		}
+	}
+
+	/* ─── Hero ─── */
+	.post-hero {
+		width: 100%;
+		border-radius: 14px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+		margin: 0 0 32px;
+		aspect-ratio: 16 / 9;
+	}
+	.post-hero img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	/* ─── Header ─── */
+	.article-header {
+		margin-bottom: 40px;
+	}
+	.meta-row {
+		font-size: 0.78rem;
+		color: var(--text-dimmer);
+		margin: 8px 0 16px;
+	}
+	.cat {
+		color: var(--accent);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		font-size: 0.72rem;
+	}
+	.dot {
+		color: var(--border);
+		margin: 0 4px;
+	}
+	h1 {
+		font-size: 2.1rem;
+		font-weight: 800;
+		letter-spacing: -0.025em;
+		line-height: 1.18;
+		color: var(--text);
+		margin: 0;
+	}
+
+	/* ─── Prose ─── */
+	.prose {
+		font-size: 1.02rem;
+		line-height: 1.9;
+		color: var(--text-dim);
+	}
+	.prose :global(p) {
+		margin: 0 0 26px;
+	}
+	.prose :global(h2) {
+		font-size: 1.35rem;
+		font-weight: 800;
+		margin: 56px 0 18px;
+		padding-top: 24px;
+		border-top: 1px solid var(--border);
+		color: var(--text);
+		letter-spacing: -0.01em;
+	}
+	.prose :global(h2:first-child) {
+		border-top: none;
+		padding-top: 0;
+		margin-top: 0;
+	}
+	.prose :global(h3) {
+		font-size: 1.08rem;
+		font-weight: 700;
+		margin: 40px 0 12px;
+		color: var(--text);
+	}
+	.prose :global(h4) {
+		font-size: 0.95rem;
+		font-weight: 700;
+		margin: 32px 0 10px;
+		color: var(--text);
+	}
+	.prose :global(ul),
+	.prose :global(ol) {
+		color: var(--text-dim);
+		font-size: 0.96rem;
+		line-height: 1.8;
+		padding-left: 1.5em;
+		margin: 0 0 26px;
+	}
+	.prose :global(li) {
+		margin-bottom: 10px;
+	}
+	.prose :global(li::marker) {
+		color: var(--text-dimmer);
+	}
+	.prose :global(blockquote) {
+		border-left: 3px solid var(--accent);
+		padding: 4px 0 4px 20px;
+		margin: 28px 0;
+		color: var(--text-dim);
+		font-style: italic;
+		background: var(--card-hover);
+		border-radius: 0 10px 10px 0;
+	}
+	.prose :global(blockquote p) {
+		margin-bottom: 12px;
+	}
+	.prose :global(blockquote p:last-child) {
+		margin-bottom: 0;
+	}
+	.prose :global(img) {
+		max-width: 100%;
+		border-radius: 12px;
+		margin: 28px 0;
+		border: 1px solid var(--border);
+	}
+	.prose :global(code) {
+		background: var(--card-hover);
+		padding: 2px 7px;
+		border-radius: 6px;
+		font-size: 0.84em;
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	}
+	.prose :global(pre) {
+		background: var(--card-hover);
+		padding: 20px;
+		border-radius: 12px;
+		overflow-x: auto;
+		margin: 28px 0;
+		border: 1px solid var(--border);
+		font-size: 0.86rem;
+		line-height: 1.6;
+	}
+	.prose :global(pre code) {
+		background: none;
+		padding: 0;
+		font-size: inherit;
+	}
+	.prose :global(hr) {
+		border: none;
+		border-top: 1px solid var(--border);
+		margin: 48px 0;
+	}
+	.prose :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 28px 0;
+		font-size: 0.88rem;
+		display: block;
+		overflow-x: auto;
+	}
+	.prose :global(th),
+	.prose :global(td) {
+		border: 1px solid var(--border);
+		padding: 11px 14px;
+		text-align: left;
+	}
+	.prose :global(th) {
+		color: var(--text);
+		font-weight: 700;
+		background: var(--card-hover);
+		font-size: 0.82rem;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+	}
+	.prose :global(strong) {
+		color: var(--text);
+		font-weight: 700;
+	}
+	.prose :global(a) {
+		color: var(--accent);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		text-decoration-thickness: 1px;
+		transition: text-decoration-thickness 0.15s ease;
+	}
+	.prose :global(a:hover) {
+		text-decoration-thickness: 2px;
+	}
+
+	/* ─── Footer ─── */
+	.article-footer {
+		margin-top: 56px;
+	}
+
+	/* ─── Mobile ─── */
+	@media (max-width: 640px) {
+		.article-page {
+			padding-bottom: 48px;
+		}
+		h1 {
+			font-size: 1.55rem;
+			line-height: 1.25;
+		}
+		.article-header {
+			margin-bottom: 28px;
+		}
+		.prose :global(h2) {
+			font-size: 1.18rem;
+			margin: 40px 0 14px;
+			padding-top: 18px;
+		}
+		.prose :global(h3) {
+			font-size: 1rem;
+			margin: 32px 0 10px;
+		}
+		.prose {
+			font-size: 0.96rem;
+			line-height: 1.8;
+		}
+	}
+</style>

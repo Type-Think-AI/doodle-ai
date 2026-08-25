@@ -6,7 +6,7 @@
 **Product:** Conversational creative studio for turning photos and ideas into hand-drawn doodle avatars, collages, sticker sheets, gifts, and other visual creations
 **Purpose:** Define who Doodle AI should serve first, why they would use it, how to reach them, and which revenue opportunities are worth validating.
 
-> This document separates **current product facts** from **commercial hypotheses**. Doodle AI currently uses account-scoped server credits and signup grants. Stripe checkout, paid credit packs, and subscriptions are planned in the roadmap but are not implemented yet.
+> This document separates **current product facts** from **commercial hypotheses**. Doodle AI currently uses organization-pooled server credits and signup grants. The organization/team backend foundation exists; Stripe checkout, paid credit packs, and subscriptions are planned in the roadmap but are not implemented yet.
 
 ## 1. Executive summary
 
@@ -45,10 +45,12 @@ These facts are grounded in the current repository and should be treated as the 
 - Doodle AI is an Astro and Mastra chat-first creative application.
 - Users can browse without an account, but sign-in is required for upload, generation, saving, and synced account work.
 - Generation uses a server-owned PicX connection; users do not enter provider API credentials. Live public copy must not tell people to paste a PicX key into Settings.
-- Generation is metered through an account credit ledger. New accounts receive **5 signup credits**. Every runnable skill costs **1 credit**. Credits are reserved before generation and refunded when a generation fails.
+- Generation is metered through an organization-pooled credit ledger. New accounts receive **5 signup credits** into their personal organization. Every runnable skill costs **1 credit**. Credits are reserved before generation and refunded when a generation fails.
+- The Better Auth organization layer supports personal organizations, up to 5 organizations, up to 25 members, owner/producer/artist/reviewer/client roles, active-organization sessions, and membership/permission rechecks.
 - Runnable skills: normal doodle avatar, collage, full-body collage, surprise, stickers (die-cut *sheet*), mood captions, and gift.
 - Not runnable, still shown as coming soon: Emotional Modes, Seasonal Pack.
-- Signed-in users can save characters, @-mention them in chat, and save results to moodboards. Those surfaces are account-scoped, not public marketing pages.
+- Organization-scoped API data includes threads/messages, saved characters as shared references, moodboards, generation records, and pooled credits. `GET /api/v1/me` returns the active organization, organizations, role, balance, and member count.
+- A polished team switcher and end-to-end project, asset, share-link, batch, or review UI were not verified in the audited page tree; their schema/access-control foundations should be described as partial, not as finished enterprise features.
 - The Agent Skills catalog is the product's extensibility model.
 - Signed-in work can be synchronized across devices through the server-backed account path, while signed-out work retains a local experience.
 - Stripe payment checkout and subscription flows are planned, not live.
@@ -120,7 +122,7 @@ An ideal customer is not simply someone who likes AI images. The best customer h
 ### Segment B — Pet parent
 
 **Priority:** Primary secondary
-**Best product:** Pet cartoon, pet avatar, gift, sticker pack
+**Best product:** Pet cartoon, pet avatar, gift, die-cut sticker sheet
 **Use case:** Pet profile picture, memorial/celebration image, phone wallpaper, gift, social post
 
 #### Profile
@@ -134,7 +136,7 @@ An ideal customer is not simply someone who likes AI images. The best customer h
 
 - “Make my pet into a cute character.”
 - “Create a gift for someone who loves their dog.”
-- “Turn several pet expressions into stickers.”
+- “Turn several pet expressions into a sticker sheet.”
 - “Make a memorial or celebration image that feels respectful.”
 
 #### Buying triggers
@@ -271,7 +273,7 @@ An ideal customer is not simply someone who likes AI images. The best customer h
 - Launching a channel, newsletter, product, or community.
 - Rebranding.
 - Preparing a content batch.
-- Creating Discord/WhatsApp/community stickers.
+- Creating Discord/community sticker *sheets* or mascots. WhatsApp/iMessage sticker export is now a ChatGPT Images job, not a current Doodle AI job.
 - Need for a mascot or recurring character.
 
 #### Barriers

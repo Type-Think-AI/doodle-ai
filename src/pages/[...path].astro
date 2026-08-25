@@ -1,0 +1,46 @@
+---
+/**
+ * The one dynamic route that serves every editorial article.
+ *
+ * URLs are keyword-first and live at the site root — `/photo-to-cartoon/`,
+ * `/ai-cartoon-generator/prompts/`, `/for-studios/ai-filmmaker-stills/` — because
+ * search and answer engines are this product's only marketing channel and an
+ * exact-match path is the strongest signal available.
+ *
+ * Astro resolves static pages before this catch-all, so `/skills/` and friends
+ * are never shadowed. `assertContentPaths` additionally fails the build if an
+ * article ever *tries* to claim a reserved segment, which would otherwise be a
+ * silent production-only 404.
+ */
+import { getCollection, render } from "astro:content";
+import ArticleLayout from "../layouts/ArticleLayout.astro";
+import { assertContentPaths, idToPath } from "../lib/content/reserved-routes";
+
+export async function getStaticPaths() {
+	const entries = await getCollection("articles");
+
+	const resolved = entries.map((entry) => ({
+		entry,
+		path: idToPath(entry.id),
+		// The glob loader exposes the source path; `id` already has `/index`
+		// stripped, so reconstructing from it would misname folder index files
+		// in build errors.
+		file: entry.filePath ?? `src/content/articles/${entry.id}.md`,
+	}));
+
+	// Throws on a reserved-segment collision or duplicate URL.
+	assertContentPaths(resolved.map(({ path, file }) => ({ path, file })));
+
+	return resolved.map(({ entry, path }) => ({
+		params: { path },
+		props: { entry, path },
+	}));
+}
+
+const { entry, path } = Astro.props;
+const { Content, headings } = await render(entry);
+---
+
+<ArticleLayout path={path} data={entry.data} headings={headings}>
+	<Content />
+</ArticleLayout>

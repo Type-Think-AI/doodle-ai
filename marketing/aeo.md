@@ -21,7 +21,7 @@
 
 ### Highest-impact AEO move
 
-Create one authoritative, evidence-rich page for **AI cartoon generation from a photo**, then connect it to focused pages for avatars, profile pictures, pets, couples, sketches, stickers, and gifts. Every page should answer the user’s definition, workflow, inputs, outputs, privacy, cost/credits, and limitations in plain language.
+Expand the already-live **`/skills/normal/`** page into an evidence-rich answer for photo-to-doodle, then connect it to the other runnable skill pages and, only if needed, new hubs for profile pictures, pets, couples, sketches, sticker sheets, and gifts. Every page should answer the user’s definition, workflow, inputs, outputs, privacy, cost/credits, and limitations in plain language. Always name **doodleai.art** so models do not confuse it with doodleai.fun or LazyAvatar.
 
 ### Current measurement limitation
 

@@ -4,6 +4,11 @@ interface Props {
 	description?: string;
 	image?: string;
 	noindex?: boolean;
+	/**
+	 * Open Graph type. Editorial pages pass "article" so the keyword-URL content
+	 * is not announced as a generic website node.
+	 */
+	ogType?: 'website' | 'article';
 }
 
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
@@ -15,6 +20,7 @@ const {
 	description = SITE_DESCRIPTION,
 	image = '/icon-512.png',
 	noindex = false,
+	ogType = 'website',
 } = Astro.props;
 
 const site = Astro.site ?? new URL('https://doodleai.art');
@@ -83,7 +89,7 @@ const jsonLd = {
 		{noindex && <meta name="robots" content="noindex, nofollow" />}
 
 		<!-- Open Graph -->
-		<meta property="og:type" content="website" />
+		<meta property="og:type" content={ogType} />
 		<meta property="og:site_name" content="doodleai.art" />
 		<meta property="og:url" content={canonical} />
 		<meta property="og:title" content={title} />
@@ -102,6 +108,14 @@ const jsonLd = {
 
 		<!-- Structured data -->
 		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+		<!--
+			Per-page <head> additions. Editorial articles use this to emit their
+			Article / BreadcrumbList / FAQPage JSON-LD. The canonical, OG, and
+			Twitter tags above already cover every route, so pages must not
+			re-declare them here.
+		-->
+		<slot name="head" />
 
 		<!--
 			DataFast analytics (default script — uses cookies for visitor identification).

@@ -1,0 +1,179 @@
+---
+/**
+ * Sticky sidebar table of contents, auto-generated from article headings.
+ *
+ * Built at build time from the rendered HTML headings passed as props.
+ * Client-side script highlights the current section on scroll.
+ */
+interface Heading {
+	depth: number;
+	slug: string;
+	text: string;
+}
+
+interface Props {
+	headings: Heading[];
+}
+
+const { headings } = Astro.props;
+// Only show H2 and H3 in the TOC to keep it scannable
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{
+	toc.length > 2 && (
+		<aside class="toc-sidebar" aria-label="Table of contents">
+			<div class="toc-inner">
+				<p class="toc-label">On this page</p>
+				<nav>
+					<ul>
+						{toc.map((h) => (
+							<li class:list={[{ "is-h3": h.depth === 3 }]}>
+								<a href={`#${h.slug}`}>
+									<span class="indicator" />
+									<span class="text">{h.text}</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			</div>
+		</aside>
+	)
+}
+
+<script>
+	function initTOC() {
+		const links = document.querySelectorAll<HTMLAnchorElement>(".toc-sidebar a");
+		if (!links.length) return;
+
+		const headings = Array.from(links)
+			.map((link) => {
+				const id = link.getAttribute("href")?.slice(1) ?? "";
+				return document.getElementById(id);
+			})
+			.filter(Boolean) as HTMLElement[];
+
+		let active: HTMLAnchorElement | null = null;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						const idx = headings.indexOf(entry.target as HTMLElement);
+						if (idx >= 0) {
+							active?.classList.remove("active");
+							active = links[idx];
+							active.classList.add("active");
+						}
+						break;
+					}
+				}
+			},
+			{ rootMargin: "-80px 0px -70% 0px", threshold: 0 },
+		);
+
+		headings.forEach((h) => observer.observe(h));
+	}
+
+	document.addEventListener("astro:page-load", initTOC);
+	initTOC();
+</script>
+
+<style>
+	.toc-sidebar {
+		display: none;
+	}
+
+	@media (min-width: 1100px) {
+		.toc-sidebar {
+			display: block;
+			position: sticky;
+			top: 100px;
+			align-self: start;
+			width: 240px;
+			flex-shrink: 0;
+			max-height: calc(100vh - 140px);
+			overflow-y: auto;
+		}
+	}
+
+	.toc-inner {
+		padding: 16px 0 16px 20px;
+		border-left: 1px solid var(--border);
+	}
+
+	.toc-label {
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--text-dimmer);
+		margin: 0 0 16px;
+		padding: 0;
+	}
+
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	li {
+		margin: 0;
+	}
+
+	li.is-h3 {
+		padding-left: 16px;
+	}
+
+	a {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 7px 12px 7px 0;
+		font-size: 0.8rem;
+		line-height: 1.4;
+		color: var(--text-dimmer);
+		text-decoration: none;
+		border-radius: 6px;
+		transition:
+			color 0.15s ease,
+			background 0.15s ease;
+	}
+
+	a:hover {
+		color: var(--text);
+		background: var(--card-hover);
+	}
+
+	.indicator {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--border);
+		flex-shrink: 0;
+		transition: background 0.15s ease, transform 0.15s ease;
+	}
+
+	.text {
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+
+	a:global(.active) {
+		color: var(--accent);
+		font-weight: 600;
+	}
+
+	a:global(.active) .indicator {
+		background: var(--accent);
+		transform: scale(1.4);
+	}
+</style>

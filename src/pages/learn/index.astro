@@ -1,0 +1,148 @@
+---
+/**
+ * /learn/ — the human-facing directory for all editorial content.
+ *
+ * The articles themselves live at keyword-first root URLs; this page exists so
+ * there is one crawlable hub that links to every one of them (internal link
+ * distribution + a nav destination), without the articles being nested under it.
+ */
+import AppLayout from "../../layouts/AppLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import FormattedDate from "../../components/FormattedDate.astro";
+import { getArticlesByCategory } from "../../lib/content/articles";
+import "../../styles/app.css";
+import "../../styles/page.css";
+
+const groups = await getArticlesByCategory();
+const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+---
+
+<AppLayout
+	title="Learn — doodleai.art"
+	description="Guides, explainers, prompt libraries, and studio workflows for turning photos into hand-drawn doodles with Doodle AI."
+>
+	<Navbar />
+
+	<main class="page">
+		<div class="page-hero">
+			<div class="eyebrow">Learn</div>
+			<h1>How to make <span class="grad">doodles</span> that work</h1>
+			<p class="lede">
+				{total} in-depth pieces on turning a photo into a hand-drawn still — what each skill
+				actually produces, what it does not, and how to decide before you spend a credit.
+			</p>
+		</div>
+
+		{
+			groups.map((group) => (
+				<section class="group">
+					<header>
+						<h2>{group.label}</h2>
+						<p>{group.blurb}</p>
+					</header>
+					<ul>
+						{group.items.map((item) => (
+							<li>
+								<a href={item.url}>
+									<h3>{item.title}</h3>
+									<p class="desc">{item.description}</p>
+									<p class="meta">
+										<FormattedDate date={item.updatedDate ?? item.pubDate} />
+										<span class="path">{item.url}</span>
+									</p>
+								</a>
+							</li>
+						))}
+					</ul>
+				</section>
+			))
+		}
+	</main>
+
+	<Footer />
+
+	<script>
+		import { initThemeToggle } from "../../lib/theme";
+		const themeToggle = document.getElementById("themeToggle");
+		if (themeToggle) initThemeToggle(themeToggle);
+	</script>
+</AppLayout>
+
+<style>
+	.group {
+		margin: 34px 0 0;
+	}
+	.group header {
+		padding-bottom: 12px;
+		border-bottom: 1px solid var(--border);
+		margin-bottom: 16px;
+	}
+	.group h2 {
+		font-size: 1.15rem;
+		font-weight: 800;
+		letter-spacing: -0.01em;
+		color: var(--text);
+		margin: 0;
+	}
+	.group header p {
+		font-size: 0.88rem;
+		color: var(--text-dimmer);
+		margin: 4px 0 0;
+	}
+	.group ul {
+		list-style: none;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 14px;
+		padding: 0;
+		margin: 0;
+	}
+	.group a {
+		display: block;
+		height: 100%;
+		padding: 16px 18px;
+		border: 1px solid var(--border);
+		border-radius: 14px;
+		text-decoration: none;
+		transition:
+			border-color 0.2s ease,
+			background 0.2s ease;
+	}
+	.group a:hover {
+		border-color: var(--accent);
+		background: var(--card-hover);
+	}
+	.group h3 {
+		font-size: 1rem;
+		font-weight: 700;
+		line-height: 1.35;
+		color: var(--text);
+		margin: 0 0 6px;
+	}
+	.desc {
+		font-size: 0.85rem;
+		line-height: 1.55;
+		color: var(--text-dim);
+		margin: 0 0 10px;
+	}
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+		font-size: 0.74rem;
+		color: var(--text-dimmer);
+		margin: 0;
+	}
+	.path {
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+		font-size: 0.72rem;
+		color: var(--text-dimmer);
+	}
+	@media (max-width: 620px) {
+		.group ul {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

@@ -6,6 +6,8 @@ This directory contains the customer, search, answer-engine, and social-distribu
 
 | Document | Purpose |
 |---|---|
+| [Editorial to-do](./to-do.md) | Grok-generated article roadmap, topic backlog, image policy, writing workflow, publishing checklist, and topics to avoid. |
+| [App/content compatibility audit](./content-app-audit.md) | Grok-generated audit of current, partial-foundation, and not-live capabilities so articles do not overclaim product behavior. |
 | [SEO research](./seo.md) | Live DataForSEO keyword volumes, competition, SERP formats, regional comparisons, content architecture, and a 90-day SEO plan. |
 | [AEO and LLM visibility](./aeo.md) | Google AI Overview findings, People Also Ask questions, structured-content guidance, Grok measurement prompts, and LLM citation strategy. |
 | [Ideal Customer Profile and revenue opportunities](./icp.md) | Priority customer segments, jobs-to-be-done, buying triggers, acquisition channels, revenue hypotheses, pricing experiments, and validation metrics. |

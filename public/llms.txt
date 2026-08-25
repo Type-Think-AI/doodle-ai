@@ -35,11 +35,25 @@ Emotional Modes and Seasonal Pack are listed as coming soon and are not runnable
 - API routes, account settings, characters, moodboards, and private chats should not be treated as public documentation.
 - Doodle AI is not doodleai.fun, InstaDoodle, LazyAvatar, or cartoonize.ai.
 
+## Editorial content
+Long-form guides live at keyword-first root URLs, not under a /blog/ prefix.
+- [How to turn a photo into a cartoon](https://doodleai.art/photo-to-cartoon/) — the four-step process on the Doodle Avatar skill.
+- [Cartoon profile pictures from a photo](https://doodleai.art/cartoon-profile-picture/) — square PFPs, crop guidance, identity limits.
+- [What an AI cartoon generator actually does](https://doodleai.art/ai-cartoon-generator/) — photo-to-cartoon vs text-to-image vs animation vs video.
+- [Hand-drawn doodle prompt library](https://doodleai.art/ai-cartoon-generator/prompts/) — prompt patterns mapped to the runnable skills.
+- [How to make a cartoon pet portrait](https://doodleai.art/cartoon-pet-portrait/) — dog, cat, and other pet photos as digital keepsakes.
+- [Photo to sticker: sheets vs print vs chat apps](https://doodleai.art/photo-to-sticker/) — what the die-cut sheet image is and is not.
+- [Personalized digital doodle gifts](https://doodleai.art/doodle-gift/) — digital occasion images; nothing is printed or shipped.
+- [Mood-caption collages from one photo](https://doodleai.art/mood-caption-collage/) — the 3:2 captioned grid and its lettering limits.
+- [For studios and filmmakers](https://doodleai.art/for-studios/) — stills-first production workflows.
+- [Animation concept sprint](https://doodleai.art/for-studios/animation-concept-sprint/) — brief to reviewable concept board.
+- [AI filmmaker pre-production stills](https://doodleai.art/for-studios/ai-filmmaker-stills/) — character and pose work before choosing a video approach.
+
 ## Public pages
 - [Skills](https://doodleai.art/skills/)
 - [Doodle Avatar](https://doodleai.art/skills/normal/)
 - [About](https://doodleai.art/about/)
-- [Blog](https://doodleai.art/blog/)
+- [Learn](https://doodleai.art/learn/)
 - [Privacy](https://doodleai.art/privacy-policy/)
 - [Terms](https://doodleai.art/terms-of-service/)
 - [Sitemap](https://doodleai.art/sitemap.xml)

@@ -1,0 +1,96 @@
+---
+/**
+ * Structured data for one article.
+ *
+ * WHAT IS EMITTED
+ *   - `Article` on every page (headline, dates, author, publisher, canonical).
+ *   - `BreadcrumbList` on every page, so the keyword hub shows in the SERP trail.
+ *   - `FAQPage` only when frontmatter declares a `faq` array.
+ *
+ * The `<link rel="canonical">` tag is NOT emitted here — AppLayout.astro already
+ * derives it from `Astro.url.pathname` for every route. `@id`/`url` below point
+ * at that same canonical so the two never disagree.
+ *
+ * WHAT IS DELIBERATELY NOT EMITTED
+ *   `HowTo` is not generated from H2 headings. Google requires structured data to
+ *   describe content that is actually visible on the page, and synthesising a
+ *   `step` array out of arbitrary headings would be markup the page does not
+ *   back up. If a guide is ever rewritten into genuinely discrete, visible steps,
+ *   add HowTo to that page explicitly rather than inferring it here.
+ */
+import { SITE_TITLE } from "../../consts";
+
+interface Crumb {
+	name: string;
+	url?: string;
+}
+
+interface Props {
+	title: string;
+	description: string;
+	path: string;
+	pubDate: Date;
+	updatedDate?: Date;
+	heroImage?: string;
+	breadcrumbs: Crumb[];
+	faq?: { question: string; answer: string }[];
+}
+
+const { title, description, path, pubDate, updatedDate, heroImage, breadcrumbs, faq } =
+	Astro.props;
+
+const site = Astro.site ?? new URL("https://doodleai.art");
+const canonical = new URL(`/${path}/`, site).href;
+const absolute = (value: string) => new URL(value, site).href;
+
+const articleSchema: Record<string, unknown> = {
+	"@context": "https://schema.org",
+	"@type": "Article",
+	headline: title.slice(0, 110),
+	description,
+	datePublished: pubDate.toISOString(),
+	dateModified: (updatedDate ?? pubDate).toISOString(),
+	inLanguage: "en",
+	author: { "@type": "Organization", name: SITE_TITLE, url: site.href },
+	publisher: {
+		"@type": "Organization",
+		name: SITE_TITLE,
+		url: site.href,
+		logo: { "@type": "ImageObject", url: absolute("/favicon.svg") },
+	},
+	mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+	url: canonical,
+};
+
+if (heroImage) {
+	articleSchema.image = heroImage.startsWith("http") ? heroImage : absolute(heroImage);
+}
+
+const breadcrumbSchema = {
+	"@context": "https://schema.org",
+	"@type": "BreadcrumbList",
+	itemListElement: breadcrumbs.map((crumb, index) => ({
+		"@type": "ListItem",
+		position: index + 1,
+		name: crumb.name,
+		...(crumb.url ? { item: absolute(crumb.url) } : {}),
+	})),
+};
+
+const faqSchema =
+	faq && faq.length > 0
+		? {
+				"@context": "https://schema.org",
+				"@type": "FAQPage",
+				mainEntity: faq.map((item) => ({
+					"@type": "Question",
+					name: item.question,
+					acceptedAnswer: { "@type": "Answer", text: item.answer },
+				})),
+			}
+		: null;
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+<script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+{faqSchema && <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />}
