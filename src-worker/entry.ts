@@ -19,6 +19,7 @@
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../src/db/schema";
 import { reconcile } from "../src/lib/credits/reconcile";
+import { sweepBatches } from "../src/lib/batch/sweep";
 import astroWorker from "../dist/_worker.js/index.js";
 
 type ExportedHandler = {
@@ -42,6 +43,16 @@ export default {
           // clearly is the honest interim: don't pretend to page anyone.
           console.error("Reconciliation found negative balances:", report.negativeBalances);
         }
+      }),
+    );
+    // Same hourly tick, same best-effort logging discipline — see
+    // src/lib/batch/sweep.ts for what this repairs and why it's a separate
+    // pass from reconcile() rather than folded into it (batch_item/batch_job
+    // have their own stuck-state shape, distinct from the ledger/balance
+    // drift reconcile() targets).
+    ctx.waitUntil(
+      sweepBatches(db).then((report) => {
+        console.log("Hourly batch sweep:", JSON.stringify(report));
       }),
     );
   },
