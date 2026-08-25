@@ -61,10 +61,12 @@ cd /Users/yash/picx/doodlebooth-agent
 pnpm install
 cp .dev.vars.example .dev.vars
 # Add local OPENROUTER_API_KEY, OPENROUTER_MODEL, PICX_API_KEY, and Google/Better Auth values to .dev.vars
-pnpm dev
+pnpm dev:local
 ```
 
-Local app: [http://localhost:4321](http://localhost:4321)
+Local app: [http://localhost:4321](http://localhost:4321) (local D1/KV, no Cloudflare account needed).
+
+Maintainers with Cloudflare access can use `pnpm dev` instead (remote staging D1/KV, requires `cloudflared` installed because staging is behind Zero Trust).
 
 Run the local checks:
 

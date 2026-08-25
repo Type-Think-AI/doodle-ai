@@ -19,10 +19,25 @@ cd doodle-ai
 pnpm install
 cp .dev.vars.example .dev.vars
 # Fill in your keys in .dev.vars
-pnpm dev
+pnpm dev:local
 ```
 
 Open [http://localhost:4321](http://localhost:4321).
+
+This runs Astro's dev server backed by a **local** D1 database and KV store
+(no Cloudflare account needed). Migrations are applied automatically on
+startup. The local Secrets Store is seeded from `.dev.vars`.
+
+### Two dev modes
+
+| Command | What it does | Who needs it |
+|---|---|---|
+| `pnpm dev:local` | Fully local (miniflare D1/KV) | **Contributors** — no Cloudflare credentials |
+| `pnpm dev` | `wrangler dev --remote --env staging` against the shared staging DB | **Maintainers** with Cloudflare account access |
+
+`pnpm dev` requires `cloudflared` installed and authenticated (because the
+staging domain is behind Cloudflare Access). Contributors should use
+`pnpm dev:local` — it gives you a working app with your own local database.
 
 ### Environment Variables
 
@@ -36,16 +51,6 @@ Open [http://localhost:4321](http://localhost:4321).
 | `PICX_API_KEY` | Yes* | Image generation via PicX (free at ai.picxstudio.com) |
 
 *Without a PicX key, chat works but image generation returns an error.
-
-### Cloudflare Workers (optional)
-
-`pnpm dev` runs Astro's dev server — no Cloudflare account needed. If you want to test the full Worker:
-
-1. Create a free Cloudflare account
-2. Create a D1 database: `wrangler d1 create doodleai`
-3. Create a KV namespace: `wrangler kv namespace create SESSIONS`
-4. Fill the IDs into `wrangler.json`
-5. Run `wrangler dev`
 
 ## Code Style
 
