@@ -1,0 +1,85 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/app.css';
+import '../styles/page.css';
+---
+
+<AppLayout title="Page not found -- doodleai.art" noindex={true}>
+  <Navbar />
+  <main class="not-found">
+    <div class="not-found-content">
+      <span class="not-found-code">404</span>
+      <h1>This page does not exist</h1>
+      <p>The URL may have changed or the content was removed.</p>
+      <div class="not-found-actions">
+        <a href="/skills/" class="not-found-link">Browse skills</a>
+        <a href="/learn/" class="not-found-link">Read guides</a>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</AppLayout>
+
+<script>
+  import { initThemeToggle } from '../lib/theme';
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) initThemeToggle(themeToggle);
+</script>
+
+<style>
+  .not-found {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+  }
+
+  .not-found-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .not-found-code {
+    font-size: 4rem;
+    font-weight: 800;
+    color: var(--text-dimmer);
+    line-height: 1;
+  }
+
+  h1 {
+    color: var(--text);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  p {
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  .not-found-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .not-found-link {
+    border-radius: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+  }
+
+  .not-found-link:hover {
+    background: var(--card-hover);
+  }
+</style>

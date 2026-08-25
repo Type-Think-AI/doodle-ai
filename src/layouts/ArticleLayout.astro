@@ -40,7 +40,7 @@ const related = await getRelatedArticles(path, 3);
 <AppLayout
 	title={`${title} — doodleai.art`}
 	description={description}
-	image={heroImage}
+	image={heroImage || 'https://cdn.picxstudio.com/api/edited/image_c05e213c-b1d7-42b5-8398-22db6a339de5.png'}
 	ogType="article"
 >
 	<ArticleSchema

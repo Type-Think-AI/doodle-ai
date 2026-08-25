@@ -33,7 +33,7 @@ const supportEmail = 'yash@typethink.ai';
 				<div class="fact"><div class="k">Accounts</div><div class="v">Google sign-in for creation</div></div>
 				<div class="fact"><div class="k">Selling data</div><div class="v">Never</div></div>
 				<div class="fact"><div class="k">Ad pixels</div><div class="v">None</div></div>
-				<div class="fact"><div class="k">Cookies</div><div class="v">Analytics only</div></div>
+				<div class="fact"><div class="k">Cookies</div><div class="v">Analytics (DataFast + GA4)</div></div>
 				<div class="fact"><div class="k">Generation</div><div class="v">Platform credits</div></div>
 			</div>
 
@@ -77,19 +77,23 @@ const supportEmail = 'yash@typethink.ai';
 				<li><b>PicX</b> — processes image-generation requests, manages uploaded assets, and hosts generated media through Doodle AI's platform account.</li>
 				<li><b>OpenRouter</b> — routes chat requests to the language model used by the Doodle AI agent.</li>
 				<li><b>DataFast</b> — provides website analytics about visits, referrals, pages, and general device, browser, and country-level information.</li>
+				<li><b>Mixpanel</b> — provides product event analytics (sign-up, generation, skill usage) and user profiles. See <a href="https://mixpanel.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Mixpanel's privacy policy</a>.</li>
+				<li><b>Google Analytics</b> — provides traffic analysis, session measurement, and audience insights. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</li>
 			</ul>
 
 			<h2>Analytics and cookies</h2>
 			<p>
-				We use <a href="https://datafa.st" target="_blank" rel="noopener noreferrer">DataFast</a> to
-				understand how people find and use the site. DataFast sets cookies to recognise a returning visitor
-				and avoid counting the same visitor repeatedly. This is the only cookie-based tracking we operate.
+				We use three analytics services to understand how people find and use the site:
 			</p>
+			<ul>
+				<li><b><a href="https://datafa.st" target="_blank" rel="noopener noreferrer">DataFast</a></b> — pageview analytics (visits, referrals, device and country info). Uses cookies to recognise returning visitors.</li>
+				<li><b><a href="https://mixpanel.com" target="_blank" rel="noopener noreferrer">Mixpanel</a></b> — product event tracking (sign-up, generation, skill selection) and anonymous user profiles linked by internal ID. Uses localStorage, not cookies.</li>
+				<li><b><a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer">Google Analytics 4</a></b> — traffic sources, sessions, engagement, and audience demographics. Uses cookies (<code>_ga</code>, <code>_ga_*</code>).</li>
+			</ul>
 			<p>
 				We do not run advertising pixels, participate in an ad network, or sell analytics data. You can
 				block or clear analytics cookies in your browser settings; the site should continue to work without
-				them. See <a href="https://datafa.st/privacy-policy" target="_blank" rel="noopener noreferrer">DataFast's privacy policy</a>
-				for its processing details.
+				them. See each provider's privacy policy linked above for their processing details.
 			</p>
 
 			<h2>Server logs and security</h2>

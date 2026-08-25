@@ -1,6 +1,14 @@
 # Local-only secrets for Doodle AI. Copy to .dev.vars and fill real values.
 # In production these are set with `wrangler secret put <NAME>`.
 
+# ──────────────────────────────────────────────────────────────────────────
+# Cloudflare IDs (fill these in wrangler.json or pass as env vars)
+# ──────────────────────────────────────────────────────────────────────────
+# CLOUDFLARE_ACCOUNT_ID=your-cf-account-id
+# D1_DATABASE_ID=your-d1-database-uuid
+# KV_NAMESPACE_ID=your-kv-namespace-id
+# ──────────────────────────────────────────────────────────────────────────
+
 OPENROUTER_API_KEY=replace-with-your-openrouter-key
 # OpenRouter provider/model ID. The `openrouter/` gateway prefix is added by the app.
 OPENROUTER_MODEL=google/gemini-3.7-flash

@@ -5,6 +5,15 @@ pubDate: 2026-08-25
 updatedDate: 2026-08-25
 category: "explainer"
 cluster: "cartoon"
+faq:
+  - question: "What is an AI cartoon generator?"
+    answer: "An AI cartoon generator is a tool that uses machine learning to transform photos or text prompts into cartoon-style illustrations. Doodle AI specifically creates hand-drawn doodle-style stills from photos using a conversational chat interface."
+  - question: "Does Doodle AI generate video or animation?"
+    answer: "No. Doodle AI generates still images only -- square avatars, 3:2 collages, sticker sheets, and gift images. Video, animation, and timeline editing are not available."
+  - question: "Is Doodle AI free to use?"
+    answer: "New accounts receive 5 free credits on signup. Each generation costs 1 credit. Failed generations are refunded. Paid credit packs are planned but not yet live."
+  - question: "What photo formats does Doodle AI accept?"
+    answer: "Upload JPEG or PNG photos up to 20MB. A clear, face-forward photo with good lighting works best for the avatar and collage skills."
 ---
 
 **Direct answer:** An AI cartoon generator is not one product. Some restyle a photo into a still, some invent a scene from text, some turn a script into animated video, and some generate motion clips. [Doodle AI](https://doodleai.art) at **doodleai.art** is a chat-first still-image studio: a browser turn, a Mastra agent, a skill, then server-owned PicX. It does not make video.

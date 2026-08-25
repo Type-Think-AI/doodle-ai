@@ -23,6 +23,7 @@ import { initMentions, serializeComposer, clearComposer } from "./composer-menti
 import { setImageSrc, guardBfcacheRestore } from "./dom-utils";
 import { initMediaPicker } from "./media-picker";
 import { getSession } from "./auth-client";
+import { trackDoodleGenerated } from "./mixpanel";
 
 const REFINE_PLACEHOLDER = "Ask for a change — thicker outline, warmer paper…";
 
@@ -476,6 +477,13 @@ function initChat(): void {
             thinking.setDrawing();
           } else if (event.type === "image" && event.url) {
             images.push(event.url);
+            // Track the Value Moment — a doodle was successfully generated.
+            trackDoodleGenerated({
+              skill_id: event.skillId ?? pinnedSkillId,
+              skill_name: event.skillId ? getSkill(event.skillId)?.name : pinnedSkillId ? getSkill(pinnedSkillId)?.name : undefined,
+              has_photo: !!attachedUrl,
+              has_reference: history.some((m) => m.role === "user" && !!m.refImageUrl),
+            });
             // First doodle in the thread sets the sidebar thumbnail and
             // upgrades the title from "New chat" to the skill's display
             // name — setThreadThumbnail() itself is a no-op past the first

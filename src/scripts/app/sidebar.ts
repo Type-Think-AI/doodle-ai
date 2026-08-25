@@ -4,6 +4,7 @@
 
 import { getSession, signOut } from "./auth-client";
 import { listThreads, loadThread } from "./chat-store";
+import { identifyUser, resetIdentity, trackSignUp } from "./mixpanel";
 
 const SIDEBAR_COLLAPSED_KEY = "doodleai-sidebar-collapsed";
 const SIDEBAR_WIDTH_KEY = "doodleai-sidebar-width";
@@ -183,6 +184,17 @@ async function renderAuthSlot(): Promise<void> {
     return;
   }
 
+  // Link Mixpanel identity to authenticated user.
+  identifyUser({ id: user.id, email: user.email, name: user.name });
+
+  // Track sign_up_completed exactly once per device — on the first session
+  // after OAuth redirect. localStorage flag prevents double-fire on reloads.
+  const signupKey = `doodleai-mp-signup-${user.id}`;
+  if (!localStorage.getItem(signupKey)) {
+    trackSignUp("google");
+    localStorage.setItem(signupKey, "1");
+  }
+
   const avatar = document.getElementById("sidebarAuthAvatar");
   const nameEl = document.getElementById("sidebarAuthName");
   const emailEl = document.getElementById("sidebarAuthEmail");
@@ -212,6 +224,7 @@ async function renderAuthSlot(): Promise<void> {
 
   signOutBtn?.addEventListener("click", async (event) => {
     event.stopPropagation();
+    resetIdentity();
     await signOut();
     // Reload rather than re-render: other surfaces on the page (and the
     // stores, from Phase 3 on) read session state at load time.
