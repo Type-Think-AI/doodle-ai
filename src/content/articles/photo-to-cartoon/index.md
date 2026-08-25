@@ -3,6 +3,7 @@ title: "How to Turn a Photo into a Cartoon with Doodle AI"
 description: "A practical process for turning a selfie or portrait into a playful square doodle at doodleai.art: photo prep, sign-in, the Normal avatar skill, prompt wording, credits, privacy, and current limits."
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
+heroImage: "https://cdn.picxstudio.com/api/generated/image_fe46119c-7ab0-449b-95dd-399c090c12ac.png"
 category: "guide"
 cluster: "cartoon"
 ---

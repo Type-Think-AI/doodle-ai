@@ -3,6 +3,7 @@ title: "AI Cartoon Generator Prompts: A Practical Hand-Drawn Doodle Prompt Libra
 description: "A doodleai.art prompt library mapped to live skills. Learn what your chat text actually steers, what the skill already controls, and how to recover from over-detailing, a missing photo, and identity drift."
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
+heroImage: "https://cdn.picxstudio.com/api/generated/image_938ebbf9-badd-46c3-966d-cdf1d9f8d4fd.png"
 category: "prompts"
 cluster: "cartoon"
 ---

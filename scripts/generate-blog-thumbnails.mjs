@@ -22,10 +22,31 @@
  * `aspect_ratio: "landscape_16_9"`) are rejected at the edge as an opaque
  * Cloudflare 403 / "error code: 1010", which looks like a WAF block but is not.
  *
+ * MODEL AND SIZE — measured 2026-08-25, not assumed
+ * GET /v1/models reports openai/gpt-image-2 at { 1K: 53, 2K: 53, 4K: 105 }
+ * credits. Measured output for all three, 16:9:
+ *
+ *   size  credits  actual pixels
+ *   1K     53      1088 x 608
+ *   2K     53      1088 x 608
+ *   4K    105      1088 x 608   <- billed double, identical output
+ *
+ * gpt-image-2 is hard-capped at 1088 x 608 on this endpoint regardless of
+ * `size`, and the stored CDN origin really is that size (not a resized
+ * derivative — verified via content-length and ?w= probes). So 2K is the
+ * correct default: it is the highest tier that costs the same as 1K, and 4K is
+ * a pure 2x waste on this model. For reference, google/nano-banana-2-lite at 4K
+ * returned 1376 x 768 for 20 credits, so the cap is model-specific rather than
+ * platform-wide. There is no public upscale endpoint (/v1/images/upscale 404s).
+ *
+ * 1088 x 608 is still ~1.5x the 700px rendered width of the article hero, so it
+ * is genuinely sufficient here; oversized heroes would work against the LCP of
+ * these pages.
+ *
  * COST
- * openai/gpt-image-2 at 1K/16:9 bills ~53 PicX credits per image. This spends
- * real credits on the account that owns PICX_API_KEY, so generation is opt-in
- * per slug and never regenerates an existing thumbnail without --force.
+ * ~53 PicX credits per image at the default 2K. This spends real credits on the
+ * account that owns PICX_API_KEY, so generation is opt-in per slug and never
+ * regenerates an existing thumbnail without --force.
  *
  * USAGE
  *   node scripts/generate-blog-thumbnails.mjs                    # status only
@@ -33,6 +54,8 @@
  *   node scripts/generate-blog-thumbnails.mjs --slug photo-to-cartoon --dry-run
  *   node scripts/generate-blog-thumbnails.mjs --all               # only missing
  *   node scripts/generate-blog-thumbnails.mjs --all --force       # replace all
+ *   node scripts/generate-blog-thumbnails.mjs --all --size 4K     # override (not advised)
+ *   node scripts/generate-blog-thumbnails.mjs --all --model google/nano-banana-2-lite
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -44,7 +67,8 @@ const articlesDir = join(root, "src", "content", "articles");
 
 const API_URL = "https://api.picxstudio.com/v1/images/generate";
 const MODEL = "openai/gpt-image-2";
-const SIZE = "1K";
+/** Highest tier that still costs the same as 1K on gpt-image-2 — see header note. */
+const SIZE = "2K";
 const ASPECT_RATIO = "16:9";
 
 /**
@@ -154,11 +178,11 @@ function setHeroImage(frontmatter, url) {
   return `${frontmatter}${line}\n`;
 }
 
-async function generate(apiKey, prompt) {
+async function generate(apiKey, prompt, { model, size }) {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: MODEL, prompt, size: SIZE, aspect_ratio: ASPECT_RATIO }),
+    body: JSON.stringify({ model, prompt, size, aspect_ratio: ASPECT_RATIO }),
   });
   const text = await res.text();
   let data = {};
@@ -175,16 +199,18 @@ async function generate(apiKey, prompt) {
 }
 
 function parseArgs(argv) {
-  const args = { slugs: [], all: false, force: false, dryRun: false };
+  const args = { slugs: [], all: false, force: false, dryRun: false, model: MODEL, size: SIZE };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--all") args.all = true;
     else if (arg === "--force") args.force = true;
     else if (arg === "--dry-run") args.dryRun = true;
-    else if (arg === "--slug") {
+    else if (arg === "--slug" || arg === "--model" || arg === "--size") {
       const value = argv[i + 1];
-      if (!value) throw new Error("--slug needs a value");
-      args.slugs.push(value);
+      if (!value) throw new Error(`${arg} needs a value`);
+      if (arg === "--slug") args.slugs.push(value);
+      else if (arg === "--model") args.model = value;
+      else args.size = value;
       i += 1;
     } else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -268,10 +294,15 @@ async function main() {
   let credits = 0;
   let failures = 0;
 
+  console.log(`model ${args.model} @ ${args.size} ${ASPECT_RATIO}\n`);
+
   for (const t of queue) {
     process.stdout.write(`gen   ${t.key} ... `);
     try {
-      const data = await generate(apiKey, buildPrompt(SUBJECTS[t.key]));
+      const data = await generate(apiKey, buildPrompt(SUBJECTS[t.key]), {
+        model: args.model,
+        size: args.size,
+      });
       const text = readFileSync(t.file, "utf8");
       const { frontmatter, rest } = splitFrontmatter(text, t.key);
       writeFileSync(t.file, `---\n${setHeroImage(frontmatter, data.url)}${rest}`);

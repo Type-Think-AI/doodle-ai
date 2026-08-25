@@ -3,6 +3,7 @@ title: "How to Make a Cartoon Profile Picture from a Photo"
 description: "Turn a selfie into a square cartoon PFP at doodleai.art for Instagram, Discord, Reddit, or similar apps. Crop and readability notes, consent, prompt moods, and why one still is not a matching set."
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
+heroImage: "https://cdn.picxstudio.com/api/generated/image_644d87bd-eb9c-42e8-8e2e-3ab019a3b8a7.png"
 category: "guide"
 cluster: "cartoon"
 ---

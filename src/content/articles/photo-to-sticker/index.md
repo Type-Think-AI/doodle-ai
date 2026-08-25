@@ -3,7 +3,7 @@ title: "Photo to Sticker: Die-Cut Sheets Versus Print Shops and Chat Apps"
 description: "The search photo to sticker mixes a doodleai.art die-cut sheet, a print-on-demand vinyl order, and a transparent iMessage or WhatsApp pack. This guide separates those jobs and names what Doodle AI currently makes."
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
-heroImage: "https://cdn.picxstudio.com/api/edited/image_c05e213c-b1d7-42b5-8398-22db6a339de5.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_4ca202e9-1bc9-4124-ab06-165205f2d4f5.png"
 category: "explainer"
 cluster: "stickers"
 faq:

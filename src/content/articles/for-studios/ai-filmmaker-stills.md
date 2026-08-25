@@ -3,7 +3,7 @@ title: "A Practical Workflow for AI Filmmakers Who Need Pre-Production Stills Be
 description: "A stills-first field guide for AI filmmakers on doodleai.art: generate character directions, pose exploration, and mood-board material with current image skills, then hand the keepers to the video and storyboard tools you already use."
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
-heroImage: "https://cdn.picxstudio.com/api/edited/image_c05e213c-b1d7-42b5-8398-22db6a339de5.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_e3350deb-82fa-4292-a163-7eab618218d8.png"
 category: "studios"
 cluster: "studios"
 ---

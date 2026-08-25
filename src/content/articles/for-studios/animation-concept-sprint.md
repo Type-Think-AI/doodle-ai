@@ -3,7 +3,7 @@ title: "From Brief to Concept Board: A Practical Visual Sprint for Small Animati
 description: "A field guide for boutique animation studios: turn a written brief into a human-reviewed concept board using Doodle AI’s current avatar and six-panel collage skills, with a clearly labelled hypothetical sprint, review gates, and a handoff plan to real storyboard and video tools."
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
-heroImage: "https://cdn.picxstudio.com/api/edited/image_c05e213c-b1d7-42b5-8398-22db6a339de5.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_42096766-b765-4eb0-a5e9-081f6be51671.png"
 category: "studios"
 cluster: "studios"
 ---
