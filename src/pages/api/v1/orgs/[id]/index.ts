@@ -97,7 +97,7 @@ export async function DELETE(context: APIContext): Promise<Response> {
     if (!result.ok) return apiError("transfer_failed", "Couldn't move the credits out of that team.", 409);
   }
 
-  const auth = createAuth(context);
+  const auth = await createAuth(context);
   try {
     await auth.api.deleteOrganization({
       body: { organizationId: org.orgId },

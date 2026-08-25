@@ -66,7 +66,7 @@ export async function POST(context: APIContext): Promise<Response> {
     return apiError("bad_request", "Pick a role below owner.", 400);
   }
 
-  const auth = createAuth(context);
+  const auth = await createAuth(context);
   let createdId: string | null;
   try {
     const created = (await auth.api.createInvitation({

@@ -19,7 +19,7 @@ export async function POST(context: APIContext): Promise<Response> {
   const org = await requireOrgById(context, context.params.id);
   if (org instanceof Response) return org;
 
-  const auth = createAuth(context);
+  const auth = await createAuth(context);
   try {
     await auth.api.setActiveOrganization({
       body: { organizationId: org.orgId },

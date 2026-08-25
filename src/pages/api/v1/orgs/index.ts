@@ -42,7 +42,7 @@ export async function POST(context: APIContext): Promise<Response> {
   const name = optStr(body.name)?.slice(0, NAME_MAX_LEN);
   if (!name) return apiError("bad_request", "Give the team a name.", 400);
 
-  const auth = createAuth(context);
+  const auth = await createAuth(context);
   let created: { id: string } | null;
   try {
     created = (await auth.api.createOrganization({

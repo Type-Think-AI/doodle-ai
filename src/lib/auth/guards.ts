@@ -28,7 +28,7 @@ interface SessionResolved {
  */
 async function resolveSession(context: APIContext): Promise<SessionResolved | null> {
   try {
-    const auth = createAuth(context);
+    const auth = await createAuth(context);
     const session = await auth.api.getSession({ headers: context.request.headers });
     if (!session?.user) return null;
     return {

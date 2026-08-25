@@ -29,6 +29,38 @@
       "id": "b5f4b60f18864ef9aafc0f8b18f7a46c"
     }
   ],
+  "secrets_store_secrets": [
+    {
+      "binding": "OPENROUTER_API_KEY",
+      "store_id": "801d9480d51848d69033ff869398bcbe",
+      "secret_name": "OPENROUTER_API_KEY"
+    },
+    {
+      "binding": "OPENROUTER_MODEL",
+      "store_id": "801d9480d51848d69033ff869398bcbe",
+      "secret_name": "OPENROUTER_MODEL"
+    },
+    {
+      "binding": "PICX_API_KEY",
+      "store_id": "801d9480d51848d69033ff869398bcbe",
+      "secret_name": "PICX_API_KEY"
+    },
+    {
+      "binding": "GOOGLE_CLIENT_ID",
+      "store_id": "801d9480d51848d69033ff869398bcbe",
+      "secret_name": "GOOGLE_CLIENT_ID"
+    },
+    {
+      "binding": "GOOGLE_CLIENT_SECRET",
+      "store_id": "801d9480d51848d69033ff869398bcbe",
+      "secret_name": "GOOGLE_CLIENT_SECRET"
+    },
+    {
+      "binding": "BETTER_AUTH_SECRET",
+      "store_id": "801d9480d51848d69033ff869398bcbe",
+      "secret_name": "BETTER_AUTH_SECRET_PROD"
+    }
+  ],
   "observability": {
     "enabled": true
   },
@@ -54,6 +86,38 @@
         {
           "binding": "SESSIONS",
           "id": "56a2808c8d0640789b98d567f0221701"
+        }
+      ],
+      "secrets_store_secrets": [
+        {
+          "binding": "OPENROUTER_API_KEY",
+          "store_id": "801d9480d51848d69033ff869398bcbe",
+          "secret_name": "OPENROUTER_API_KEY"
+        },
+        {
+          "binding": "OPENROUTER_MODEL",
+          "store_id": "801d9480d51848d69033ff869398bcbe",
+          "secret_name": "OPENROUTER_MODEL"
+        },
+        {
+          "binding": "PICX_API_KEY",
+          "store_id": "801d9480d51848d69033ff869398bcbe",
+          "secret_name": "PICX_API_KEY"
+        },
+        {
+          "binding": "GOOGLE_CLIENT_ID",
+          "store_id": "801d9480d51848d69033ff869398bcbe",
+          "secret_name": "GOOGLE_CLIENT_ID"
+        },
+        {
+          "binding": "GOOGLE_CLIENT_SECRET",
+          "store_id": "801d9480d51848d69033ff869398bcbe",
+          "secret_name": "GOOGLE_CLIENT_SECRET"
+        },
+        {
+          "binding": "BETTER_AUTH_SECRET",
+          "store_id": "801d9480d51848d69033ff869398bcbe",
+          "secret_name": "BETTER_AUTH_SECRET_STAGING"
         }
       ],
       "observability": {

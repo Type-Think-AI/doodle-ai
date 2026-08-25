@@ -197,7 +197,7 @@ export async function POST(context: APIContext): Promise<Response> {
     }
   }
 
-  const auth = createAuth(context);
+  const auth = await createAuth(context);
   try {
     await auth.api.setActiveOrganization({
       body: { organizationId: resolved.organizationId },

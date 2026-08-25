@@ -11,4 +11,4 @@ export const prerender = false;
  * these paths and its own compatibility, and its client SDKs expect them here.
  */
 export const ALL = async (context: APIContext): Promise<Response> =>
-  createAuth(context).handler(context.request);
+  (await createAuth(context)).handler(context.request);

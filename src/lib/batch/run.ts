@@ -24,6 +24,7 @@ import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../../db/schema";
 import type { Db } from "../../db/client";
+import { readSecret } from "../secrets";
 import { asset, batchItem, batchJob, generation } from "../../db/schema/product";
 import { refund } from "../credits";
 import { creditCostForSkill } from "../credits/costs";
@@ -72,7 +73,7 @@ export async function runBatch(env: Env, jobId: string): Promise<void> {
     .where(and(eq(batchItem.batchJobId, jobId), eq(batchItem.status, "queued")))
     .orderBy(batchItem.idx);
 
-  const platformKey = env.PICX_API_KEY?.trim();
+  const platformKey = await readSecret(env.PICX_API_KEY, "PICX_API_KEY");
 
   for (let i = 0; i < queued.length; i += CONCURRENCY) {
     const chunk = queued.slice(i, i + CONCURRENCY);

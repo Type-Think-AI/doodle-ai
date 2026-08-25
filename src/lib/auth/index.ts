@@ -8,6 +8,7 @@ import * as schema from "../../db/schema";
 import { grant } from "../credits";
 import { SIGNUP_GRANT_CREDITS } from "../credits/costs";
 import { kvIncrement } from "../kv-counter";
+import { readSecrets } from "../secrets";
 import { ac, roles } from "./org-access";
 
 /**
@@ -31,8 +32,13 @@ import { ac, roles } from "./org-access";
  *    once a cookie cache entry expires, so enabling both produces sessions
  *    that silently stop resolving. Pick one; KV is the one that survives a
  *    Worker cold start.
+ *
+ * Async because the three secrets it needs may be Secrets Store bindings
+ * rather than plain strings (see src/lib/secrets.ts) — those are read with
+ * `await binding.get()`. readSecrets() resolves all three concurrently, so
+ * this costs one round trip, not three.
  */
-export function createAuth(context: APIContext) {
+export async function createAuth(context: APIContext) {
   const env = (context.locals as { runtime?: { env?: Env } })?.runtime?.env;
   if (!env?.DB || !env?.SESSIONS) {
     throw new Error(
@@ -41,17 +47,29 @@ export function createAuth(context: APIContext) {
     );
   }
 
-  const secret = env.BETTER_AUTH_SECRET;
+  const {
+    BETTER_AUTH_SECRET: secret,
+    GOOGLE_CLIENT_ID: googleId,
+    GOOGLE_CLIENT_SECRET: googleSecret,
+  } = await readSecrets({
+    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+    GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+  });
+
   if (!secret) {
-    throw new Error("BETTER_AUTH_SECRET is not set. See .dev.vars.example.");
+    throw new Error(
+      "BETTER_AUTH_SECRET is not set. Locally, see .dev.vars.example; on a deployed " +
+        "Worker it comes from either `wrangler secret put` or a Secrets Store binding " +
+        "(see docs/secrets.md).",
+    );
   }
 
-  const googleId = env.GOOGLE_CLIENT_ID;
-  const googleSecret = env.GOOGLE_CLIENT_SECRET;
   if (!googleId || !googleSecret) {
     throw new Error(
       "Google OAuth isn't configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET " +
-        "(see .dev.vars.example) — Google is the only sign-in method.",
+        "(see .dev.vars.example, or docs/secrets.md for the deployed Worker) — Google " +
+        "is the only sign-in method.",
     );
   }
   const db = drizzle(env.DB, { schema });
@@ -264,4 +282,4 @@ export function createAuth(context: APIContext) {
   });
 }
 
-export type Auth = ReturnType<typeof createAuth>;
+export type Auth = Awaited<ReturnType<typeof createAuth>>;

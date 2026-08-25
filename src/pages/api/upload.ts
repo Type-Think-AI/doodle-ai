@@ -1,6 +1,7 @@
 import type { APIContext } from "astro";
 import { PicX, PicXError } from "picx-ai";
 import { requireAuth } from "../../lib/auth/guards";
+import { readSecret } from "../../lib/secrets";
 
 export const prerender = false;
 
@@ -16,8 +17,9 @@ export async function POST(context: APIContext) {
   const auth = await requireAuth(context);
   if (auth instanceof Response) return auth;
 
-  const picxKey = (context.locals as { runtime?: { env?: Env } })?.runtime?.env?.PICX_API_KEY;
-  if (!picxKey?.trim()) {
+  const runtimeEnv = (context.locals as { runtime?: { env?: Env } })?.runtime?.env;
+  const picxKey = await readSecret(runtimeEnv?.PICX_API_KEY, "PICX_API_KEY");
+  if (!picxKey) {
     return json({ error: "Image uploads are not configured right now" }, 503);
   }
 

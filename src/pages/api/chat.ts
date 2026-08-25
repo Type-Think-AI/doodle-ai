@@ -1,6 +1,7 @@
 import type { APIContext } from "astro";
 import { RequestContext } from "@mastra/core/request-context";
 import { bridgeCloudflareEnv } from "../../lib/env-bridge";
+import { readSecret } from "../../lib/secrets";
 import { getDb } from "../../db/client";
 import { requireOrg } from "../../lib/auth/guards";
 import { getBalance } from "../../lib/credits";
@@ -49,10 +50,13 @@ export async function POST(context: APIContext) {
     return json({ error: "Invalid chat request" }, 400);
   }
 
-  bridgeCloudflareEnv(context, ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"]);
+  await bridgeCloudflareEnv(context, ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"]);
   const { mastra } = await import("../../mastra");
   const agent = mastra.getAgent("doodleAgent");
   const runtimeEnv = (context.locals as { runtime?: { env?: Env } })?.runtime?.env;
+  // Resolved here rather than inside the tool: PICX_API_KEY may be a Secrets
+  // Store binding, and RequestContext carries plain values, not thunks.
+  const platformPicxKey = await readSecret(runtimeEnv?.PICX_API_KEY, "PICX_API_KEY");
 
   const requestContext = new RequestContext<{
     platformPicxKey?: string;
@@ -63,7 +67,7 @@ export async function POST(context: APIContext) {
     db: ReturnType<typeof getDb>;
     sessions?: KVNamespace;
   }>([
-    ["platformPicxKey", runtimeEnv?.PICX_API_KEY],
+    ["platformPicxKey", platformPicxKey],
     ["styleId", styleId],
     ["userId", authedUser.id],
     ["organizationId", orgId],

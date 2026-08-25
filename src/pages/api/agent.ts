@@ -35,7 +35,7 @@ export async function POST(context: APIContext) {
     return json({ error: "A message is required" }, 400);
   }
 
-  bridgeCloudflareEnv(context, ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"]);
+  await bridgeCloudflareEnv(context, ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"]);
   try {
     const { mastra } = await import("../../mastra");
     const agent = mastra.getAgent("doodleAgent");
