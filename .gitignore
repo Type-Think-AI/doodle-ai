@@ -210,3 +210,12 @@ dist.old
 .claude/
 # Local Kiro CLI settings
 .kiro/settings/cli.json
+
+# Testing images (generated during development, not deployed)
+testing/images/
+
+# Inline image generation results (CDN URLs - regenerate with scripts/generate-inline-images.mjs)
+scripts/inline-images-results.json
+
+# Local article image downloads (use CDN URLs instead)
+public/images/articles/

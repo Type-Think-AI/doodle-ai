@@ -1,13 +1,23 @@
 ---
 /**
- * Auto-computed cross-links.
+ * Auto-computed cross-links, rendered as image-led cards to match /learn/.
  *
- * Used for two blocks:
- *   - "In this section" — children of a keyword hub (getHubChildren)
- *   - "Related reading" — same-cluster then same-hub then newest (getRelatedArticles)
+ * Used for three blocks, all from the same component:
+ *   - "Workflow briefs" on /for-studios/ (hub children)
+ *   - "In this section" on a hub article (its children)
+ *   - "Related reading" on every article (same cluster, then hub, then newest)
  *
- * Both come from frontmatter, so a new article joins the graph without editing
- * any existing article's markdown.
+ * All three come from frontmatter, so a new article joins the graph without
+ * editing any existing article's markdown.
+ *
+ * Card anatomy matches src/pages/learn/index.astro: 16:9 thumbnail, then title.
+ * The category tag is kept here (unlike /learn/, which shows a date) because
+ * these lists mix formats — knowing a link is a Prompts page vs a Guide is the
+ * useful signal when the items aren't already grouped under a heading.
+ *
+ * Images use empty alt text: the title is the link's accessible name, so
+ * describing the illustration too would make screen readers announce each card
+ * twice.
  */
 import type { ArticleLink } from "../../lib/content/articles";
 import { CATEGORY_LABEL } from "../../lib/content/articles";
@@ -28,9 +38,15 @@ const { heading, items } = Astro.props;
 				{items.map((item) => (
 					<li>
 						<a href={item.url}>
+							<div class="thumb">
+								{item.heroImage ? (
+									<img src={item.heroImage} alt="" loading="lazy" decoding="async" />
+								) : (
+									<div class="thumb-empty" aria-hidden="true" />
+								)}
+							</div>
 							<span class="tag">{CATEGORY_LABEL[item.category]}</span>
 							<span class="title">{item.title}</span>
-							<span class="desc">{item.description}</span>
 						</a>
 					</li>
 				))}
@@ -51,51 +67,84 @@ const { heading, items } = Astro.props;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--text-dimmer);
-		margin: 0 0 14px;
+		margin: 0 0 16px;
 	}
+
 	.related ul {
 		list-style: none;
+		/* auto-fill (not auto-fit) keeps empty tracks, so a single child card
+		   stays one column wide instead of stretching across the whole row. */
 		display: grid;
-		gap: 10px;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 22px 18px;
 		padding: 0;
 		margin: 0;
 	}
+
 	.related a {
-		display: grid;
-		gap: 4px;
-		padding: 12px 14px;
-		border: 1px solid var(--border);
-		border-radius: 12px;
+		display: block;
 		text-decoration: none;
-		transition:
-			border-color 0.2s ease,
-			background 0.2s ease;
 	}
-	.related a:hover {
-		border-color: var(--accent);
+
+	/* ─── Thumbnail ─── */
+	.thumb {
+		aspect-ratio: 16 / 9;
+		border-radius: 12px;
+		overflow: hidden;
+		border: 1px solid var(--border);
 		background: var(--card-hover);
+		margin-bottom: 10px;
 	}
+	.thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		transition: transform 0.35s ease;
+	}
+	.thumb-empty {
+		width: 100%;
+		height: 100%;
+	}
+	.related a:hover .thumb {
+		border-color: var(--accent);
+	}
+	.related a:hover .thumb img {
+		transform: scale(1.04);
+	}
+
+	/* ─── Text ─── */
 	.tag {
-		font-size: 0.68rem;
+		display: block;
+		font-size: 0.66rem;
 		font-weight: 700;
 		letter-spacing: 0.07em;
 		text-transform: uppercase;
 		color: var(--accent);
+		margin-bottom: 3px;
 	}
 	.title {
-		font-size: 0.95rem;
+		display: block;
+		font-size: 0.92rem;
 		font-weight: 700;
 		color: var(--text);
-		line-height: 1.35;
+		line-height: 1.4;
+		transition: color 0.15s ease;
 	}
-	.desc {
-		font-size: 0.82rem;
-		color: var(--text-dim);
-		line-height: 1.5;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
+	.related a:hover .title {
+		color: var(--accent);
+	}
+
+	.related a:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 4px;
+		border-radius: 14px;
+	}
+
+	@media (max-width: 520px) {
+		.related ul {
+			grid-template-columns: 1fr;
+			gap: 20px;
+		}
 	}
 </style>

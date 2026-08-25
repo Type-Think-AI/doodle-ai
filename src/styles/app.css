@@ -31,10 +31,6 @@
   --send-bg: #fab700;
   --send-fg: #3d2900;
 
-  /* Wordmark accent gradient (Navbar/Footer logo, page-hero heading) —
-     accent-to-blue, replaces the old Instagram-style gradient. */
-  --ig-gradient: linear-gradient(90deg, var(--accent), var(--blue));
-
   --radius: 18px;
 
   /* Shared app shell metrics — navbar, main and footer all read these

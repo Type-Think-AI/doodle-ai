@@ -105,8 +105,7 @@ const HOUSE_STYLE = [
  * Each subject describes objects and composition only — style comes from
  * HOUSE_STYLE so the whole set stays visually consistent.
  */
-const SUBJECTS = {
-  "photo-to-cartoon/index.md":
+const SUBJECTS = {  "photo-to-cartoon/index.md":
     "A vintage film camera on the left, a single curved arrow pointing right, and one simple round smiling cartoon face on the right.",
   "cartoon-profile-picture/index.md":
     "Three empty rounded-square picture frames in a row, each containing one simple cartoon doodle head with a different hairstyle, like a row of profile pictures.",
@@ -128,9 +127,56 @@ const SUBJECTS = {
     "A movie camera on a tripod on the left, and a contact sheet on the right showing six small panels each with the same simple doodle character in a different standing pose.",
 };
 
-function buildPrompt(subject) {
-  return `Wide 16:9 editorial blog header illustration. ${subject} ${HOUSE_STYLE}`;
+/**
+ * `lead` states the format up front (a 16:9 header vs a 1:1 portrait) because
+ * the model composes very differently for each; HOUSE_STYLE then keeps the
+ * rendering consistent across both.
+ */
+function buildPrompt(subject, lead = "Wide 16:9 editorial blog header illustration.") {
+  return `${lead} ${subject} ${HOUSE_STYLE}`;
 }
+
+const AVATAR_LEAD =
+  "Square 1:1 single-character avatar illustration, subject filling most of the frame.";
+
+/**
+ * Static pages that need an Open Graph image but have no article frontmatter to
+ * store it in. These are generated with the same HOUSE_STYLE so a shared link
+ * to /learn/ looks like it belongs to the same set as a shared article.
+ *
+ * Generated URLs are printed by `--pages` and wired by hand into OG_IMAGE in
+ * src/consts.ts — deliberately not auto-patched, because a bad generation
+ * silently rewriting a committed constant is worse than pasting one line.
+ */
+const PAGES = {
+  learn:
+    "An open book lying flat with three small doodle faces sketched on its pages, and a marker pen resting beside it.",
+  "for-studios":
+    "A director's chair on the left and a storyboard grid of six empty panels on the right, with a film reel resting at the base.",
+  home: "A single friendly cartoon doodle face in the centre, with a few small sparkles and a marker pen angled beside it.",
+  skills:
+    "A grid of six equal rounded tiles, each containing one different simple doodle icon: a face, a star, a heart, a paw print, a gift box, a camera.",
+};
+
+/**
+ * Square sample avatars for the sign-in dialog (src/components/app/AuthDialog.astro).
+ *
+ * These replace a hand-rolled SVG (`buildAvatarSVG`) whose glasses and hair
+ * geometry rendered misaligned over the face. Generated portraits are used
+ * instead because they are actually inspected before shipping, and because they
+ * show a prospective user roughly what the Normal skill really produces.
+ *
+ * 1:1 to match the Doodle Avatar skill's own output ratio and the square art
+ * well in the dialog.
+ */
+const AVATARS = {
+  "avatar-1":
+    "A single friendly cartoon portrait of a person with long wavy hair and round glasses, smiling warmly, head and shoulders only, centred.",
+  "avatar-2":
+    "A single friendly cartoon portrait of a person with curly hair tied in a top bun, hoop earrings and freckles, smiling, head and shoulders only, centred.",
+  "avatar-3":
+    "A single friendly cartoon portrait of a person with short cropped hair wearing a knitted beanie, cheerful open grin, head and shoulders only, centred.",
+};
 
 /** PICX_API_KEY from the environment, falling back to the ignored .dev.vars. */
 function readApiKey() {
@@ -178,11 +224,11 @@ function setHeroImage(frontmatter, url) {
   return `${frontmatter}${line}\n`;
 }
 
-async function generate(apiKey, prompt, { model, size }) {
+async function generate(apiKey, prompt, { model, size, aspectRatio = ASPECT_RATIO }) {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model, prompt, size, aspect_ratio: ASPECT_RATIO }),
+    body: JSON.stringify({ model, prompt, size, aspect_ratio: aspectRatio }),
   });
   const text = await res.text();
   let data = {};
@@ -199,12 +245,23 @@ async function generate(apiKey, prompt, { model, size }) {
 }
 
 function parseArgs(argv) {
-  const args = { slugs: [], all: false, force: false, dryRun: false, model: MODEL, size: SIZE };
+  const args = {
+    slugs: [],
+    all: false,
+    force: false,
+    dryRun: false,
+    pages: false,
+    avatars: false,
+    model: MODEL,
+    size: SIZE,
+  };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--all") args.all = true;
     else if (arg === "--force") args.force = true;
     else if (arg === "--dry-run") args.dryRun = true;
+    else if (arg === "--pages") args.pages = true;
+    else if (arg === "--avatars") args.avatars = true;
     else if (arg === "--slug" || arg === "--model" || arg === "--size") {
       const value = argv[i + 1];
       if (!value) throw new Error(`${arg} needs a value`);
@@ -226,6 +283,53 @@ function resolveSlug(slug) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+
+  // Static-page OG images and sign-in avatars. Separate path from articles:
+  // nothing to patch, the URLs are printed for wiring into src/consts.ts.
+  if (args.pages || args.avatars) {
+    const isAvatars = args.avatars;
+    const set = isAvatars ? AVATARS : PAGES;
+    const aspectRatio = isAvatars ? "1:1" : ASPECT_RATIO;
+    const lead = isAvatars ? AVATAR_LEAD : undefined;
+    const target = isAvatars ? "AUTH_AVATARS" : "OG_IMAGE";
+
+    if (args.dryRun) {
+      for (const [name, subject] of Object.entries(set)) {
+        console.log(`\n--- ${name} ---\n${buildPrompt(subject, lead)}`);
+      }
+      console.log(`\nDry run: ${Object.keys(set).length} prompt(s), no credits spent.`);
+      return;
+    }
+    const apiKey = readApiKey();
+    if (!apiKey) {
+      console.error("PICX_API_KEY not found. Add it to .dev.vars or export it.");
+      process.exitCode = 1;
+      return;
+    }
+    console.log(`model ${args.model} @ ${args.size} ${aspectRatio}\n`);
+    let pageCredits = 0;
+    const results = {};
+    for (const [name, subject] of Object.entries(set)) {
+      process.stdout.write(`gen   ${name} ... `);
+      try {
+        const data = await generate(apiKey, buildPrompt(subject, lead), {
+          model: args.model,
+          size: args.size,
+          aspectRatio,
+        });
+        results[name] = data.url;
+        pageCredits += data.credits_used ?? 0;
+        console.log(`ok (${data.credits_used ?? "?"} credits)`);
+      } catch (err) {
+        console.log(`FAILED\n      ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+    console.log(`\n~${pageCredits} credits used. Paste into ${target} in src/consts.ts:\n`);
+    for (const [name, url] of Object.entries(results)) {
+      console.log(`  ${name}: "${url}",`);
+    }
+    return;
+  }
 
   // Current heroImage state for every known article.
   const entries = Object.keys(SUBJECTS).map((key) => {

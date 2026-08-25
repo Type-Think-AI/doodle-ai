@@ -2,9 +2,10 @@
 import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import SkillCard from '../../components/app/SkillCard.astro';
 import { SKILLS } from '../../lib/skills';
+import { OG_IMAGE } from '../../consts';
 ---
 
-<AppShellLayout title="Skills — Doodle AI" active="skills">
+<AppShellLayout title="Skills — Doodle AI" image={OG_IMAGE.skills} active="skills">
 	<div class="skills-page">
 		<div class="skills-head">
 			<h1>Skills</h1>

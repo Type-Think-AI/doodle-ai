@@ -5,34 +5,37 @@
  * The articles themselves live at keyword-first root URLs; this page exists so
  * there is one crawlable hub that links to every one of them (internal link
  * distribution + a nav destination), without the articles being nested under it.
+ *
+ * Cards are deliberately image-led: thumbnail + title only. The description is
+ * omitted here because the generated doodle thumbnails carry the scanning work,
+ * and each article's own page repeats the description anyway. Card images use
+ * empty alt text — the adjacent title is the link's accessible name, so
+ * describing the illustration too would just make screen readers announce every
+ * card twice.
  */
 import AppLayout from "../../layouts/AppLayout.astro";
 import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
 import { getArticlesByCategory } from "../../lib/content/articles";
+import { OG_IMAGE } from "../../consts";
 import "../../styles/app.css";
 import "../../styles/page.css";
 
 const groups = await getArticlesByCategory();
-const total = groups.reduce((sum, group) => sum + group.items.length, 0);
 ---
 
 <AppLayout
 	title="Learn — doodleai.art"
 	description="Guides, explainers, prompt libraries, and studio workflows for turning photos into hand-drawn doodles with Doodle AI."
+	image={OG_IMAGE.learn}
 >
 	<Navbar />
 
 	<main class="page">
-		<div class="page-hero">
-			<div class="eyebrow">Learn</div>
-			<h1>How to make <span class="grad">doodles</span> that work</h1>
-			<p class="lede">
-				{total} in-depth pieces on turning a photo into a hand-drawn still — what each skill
-				actually produces, what it does not, and how to decide before you spend a credit.
-			</p>
-		</div>
+		<header class="learn-head">
+			<h1>Doodle AI guides &amp; prompts</h1>
+		</header>
 
 		{
 			groups.map((group) => (
@@ -45,11 +48,16 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
 						{group.items.map((item) => (
 							<li>
 								<a href={item.url}>
+									<div class="thumb">
+										{item.heroImage ? (
+											<img src={item.heroImage} alt="" loading="lazy" decoding="async" />
+										) : (
+											<div class="thumb-empty" aria-hidden="true" />
+										)}
+									</div>
 									<h3>{item.title}</h3>
-									<p class="desc">{item.description}</p>
 									<p class="meta">
 										<FormattedDate date={item.updatedDate ?? item.pubDate} />
-										<span class="path">{item.url}</span>
 									</p>
 								</a>
 							</li>
@@ -70,13 +78,27 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
 </AppLayout>
 
 <style>
+	/* Compact left-aligned page heading. The large centred hero + lede that used
+	   to sit here was removed on request; an <h1> is still emitted because this
+	   is the crawlable hub for every article and a heading-less hub weakens it. */
+	.learn-head {
+		padding: 16px 0 8px;
+	}
+	.learn-head h1 {
+		font-size: 1.5rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
+		color: var(--text);
+		margin: 0;
+	}
+
 	.group {
-		margin: 34px 0 0;
+		margin: 32px 0 0;
 	}
 	.group header {
 		padding-bottom: 12px;
 		border-bottom: 1px solid var(--border);
-		margin-bottom: 16px;
+		margin-bottom: 20px;
 	}
 	.group h2 {
 		font-size: 1.15rem;
@@ -90,59 +112,84 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
 		color: var(--text-dimmer);
 		margin: 4px 0 0;
 	}
+
 	.group ul {
 		list-style: none;
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 14px;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 24px 20px;
 		padding: 0;
 		margin: 0;
 	}
+
 	.group a {
 		display: block;
-		height: 100%;
-		padding: 16px 18px;
-		border: 1px solid var(--border);
-		border-radius: 14px;
 		text-decoration: none;
-		transition:
-			border-color 0.2s ease,
-			background 0.2s ease;
 	}
-	.group a:hover {
-		border-color: var(--accent);
+
+	/* ─── Thumbnail ─── */
+	.thumb {
+		aspect-ratio: 16 / 9;
+		border-radius: 12px;
+		overflow: hidden;
+		border: 1px solid var(--border);
 		background: var(--card-hover);
+		margin-bottom: 12px;
 	}
+	.thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		transition: transform 0.35s ease;
+	}
+	.thumb-empty {
+		width: 100%;
+		height: 100%;
+	}
+	.group a:hover .thumb {
+		border-color: var(--accent);
+	}
+	.group a:hover .thumb img {
+		transform: scale(1.04);
+	}
+
+	/* ─── Text ─── */
 	.group h3 {
-		font-size: 1rem;
+		font-size: 0.98rem;
 		font-weight: 700;
-		line-height: 1.35;
+		line-height: 1.4;
 		color: var(--text);
 		margin: 0 0 6px;
+		transition: color 0.15s ease;
 	}
-	.desc {
-		font-size: 0.85rem;
-		line-height: 1.55;
-		color: var(--text-dim);
-		margin: 0 0 10px;
+	.group a:hover h3 {
+		color: var(--accent);
 	}
 	.meta {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 10px;
 		font-size: 0.74rem;
 		color: var(--text-dimmer);
 		margin: 0;
 	}
-	.path {
-		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-		font-size: 0.72rem;
-		color: var(--text-dimmer);
+
+	.group a:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 4px;
+		border-radius: 14px;
+	}
+
+	@media (max-width: 1000px) {
+		.group ul {
+			grid-template-columns: repeat(2, 1fr);
+		}
 	}
 	@media (max-width: 620px) {
 		.group ul {
 			grid-template-columns: 1fr;
+			gap: 22px;
+		}
+		.group h3 {
+			font-size: 1rem;
 		}
 	}
 </style>

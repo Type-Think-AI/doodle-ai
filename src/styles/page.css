@@ -30,11 +30,11 @@
     font-size: 1.55rem;
   }
 }
+/* Wordmark / heading accent. A solid amber, not a gradient: the old
+   accent-to-blue gradient pulled a cool blue into an otherwise warm
+   amber-and-cream identity, which fought the hand-drawn doodle artwork. */
 .page-hero h1 .grad {
-  background: var(--ig-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--accent);
 }
 .page-hero .lede {
   margin: 12px auto 0;

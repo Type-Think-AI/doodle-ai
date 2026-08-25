@@ -3,11 +3,13 @@ import AppShellLayout from '../layouts/AppShellLayout.astro';
 import SkillCard from '../components/app/SkillCard.astro';
 import PromptComposer from '../components/app/PromptComposer.astro';
 import { SKILLS } from '../lib/skills';
+import { OG_IMAGE } from '../consts';
 ---
 
 <AppShellLayout
 	title="Doodle AI — AI Doodle Avatar Generator from Your Photo"
 	description="Turn your photo into a playful hand-drawn doodle avatar with Doodle AI, powered by PicX AI."
+	image={OG_IMAGE.home}
 	active="chat"
 >
 	<div class="home-page">

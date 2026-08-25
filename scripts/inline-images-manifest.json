@@ -1,0 +1,412 @@
+[
+  {
+    "article": "photo-to-cartoon",
+    "images": [
+      {
+        "id": "photo-to-cartoon-01",
+        "afterHeading": "What a photo-to-cartoon pass actually produces",
+        "prompt": "A single square doodle avatar on warm-white paper: a character with round glasses, messy bun hairstyle, and colored hoodie drawn in bold black marker outlines with flat cheerful color fills. Beside it, three faintly crossed-out icons (a 3D bust, a video frame, a pencil-sketch filter) showing what it is NOT. Hand-drawn marker-and-ink illustration style, cream background, minimal detail.",
+        "alt": "Doodle-style avatar with bold outlines next to crossed-out icons of 3D render, video, and photo filter"
+      },
+      {
+        "id": "photo-to-cartoon-02",
+        "afterHeading": "Prepare the photo before you sign in",
+        "prompt": "Split illustration on cream paper: left side shows a 'good input' doodle of a person facing forward with even window-light rays, glasses visible, clear hair silhouette, framed chest-up, with a green checkmark above. Right side shows a 'bad input' doodle of a tiny face in a crowd scene with motion-blur lines and heavy shadow covering half the face, with a red X above. Bold marker outlines, flat cheerful color, hand-drawn style.",
+        "alt": "Good versus bad photo input for cartoon conversion shown as doodle illustrations"
+      },
+      {
+        "id": "photo-to-cartoon-03",
+        "afterHeading": "Sign in, then attach the photo",
+        "prompt": "Three-panel horizontal doodle strip on cream paper: panel 1 shows a hand tapping a 'Sign in with Google' button, panel 2 shows a chat composer interface with a photo thumbnail clipped in, panel 3 shows a speech bubble saying 'Turn this into a doodle avatar.' Bold marker outlines, flat cheerful color fills, simplified UI elements, hand-drawn style.",
+        "alt": "Three-panel doodle strip showing sign-in, photo attachment, and prompt steps"
+      },
+      {
+        "id": "photo-to-cartoon-04",
+        "afterHeading": "Run Normal as a conversation, not as a filter picker",
+        "prompt": "Contrast illustration on cream paper: left side shows a short chat bubble with clear text ('Keep glasses, hair clip, hoodie. Warm background.') and a clean happy doodle avatar result below it. Right side shows an overwhelming wall of tiny scribbled text overflowing a chat bubble and a confused cluttered doodle avatar result with random props. Bold marker outlines, flat cheerful color.",
+        "alt": "Good short prompt producing a clean avatar versus overloaded prompt producing cluttered result"
+      },
+      {
+        "id": "photo-to-cartoon-05",
+        "afterHeading": "Credit accounting for a first cartoon sitting",
+        "prompt": "Five coin-shaped tokens in a row drawn as flat marker circles with '1' inside, on cream paper. Tokens 1-3 have small doodle avatar thumbnails below them. Tokens 4-5 are untouched with a dotted 'save for later' arc above them. A small refund arrow loops back from a red X to one coin. Bold marker outlines, gold/amber flat color for coins, hand-drawn style.",
+        "alt": "Five credit tokens showing spend plan with doodle results and refund arrow"
+      },
+      {
+        "id": "photo-to-cartoon-06",
+        "afterHeading": "Common failures, with recoveries that cost another credit",
+        "prompt": "A 2x3 grid of mini doodle cards on cream paper, each showing a common failure and fix: (1) empty photo frame with question mark and arrow to 'attach photo', (2) tiny face in landscape with arrow to tight headshot crop, (3) glasses missing from avatar with speech bubble 'keep glasses', (4) two faces merged into chimera with scissors cutting to one, (5) unwanted text on image with eraser, (6) empty credit jar with stop sign. Bold marker outlines, flat cheerful color.",
+        "alt": "Six doodle cards showing common photo-to-cartoon failures and fixes"
+      }
+    ]
+  },
+  {
+    "article": "cartoon-profile-picture",
+    "images": [
+      {
+        "id": "cartoon-pfp-01",
+        "afterHeading": "A cartoon PFP is a tiny public object",
+        "prompt": "A single doodle avatar shown at four progressively smaller sizes on cream paper: full square, inside a circle mask, at chat-message scale, then at comment-thread scale. Faint platform UI outlines (comment bubble, username placeholder) surround the smallest version. Bold marker outlines, flat cheerful color, hand-drawn style.",
+        "alt": "Doodle avatar shrinking from full square to tiny circular chat-size icon"
+      },
+      {
+        "id": "cartoon-pfp-02",
+        "afterHeading": "Pick a selfie that still reads after the circle",
+        "prompt": "Split-panel on cream paper: left shows a 'good' selfie setup doodle (one person, face forward, even light, glasses on, bold hair silhouette) with green checkmark. Right shows 'bad' sources (group photo, heavy filter face, sunglasses covering eyes) with red X. Bold marker outlines, flat cheerful color, hand-drawn illustration style.",
+        "alt": "Good selfie for profile picture versus bad source photos with checkmark and X"
+      },
+      {
+        "id": "cartoon-pfp-03",
+        "afterHeading": "Sign in, then ask for a square doodle, not a headshot",
+        "prompt": "A doodle chat interface on cream paper: a user message bubble with a short prompt ('Turn this into a doodle avatar, center face, bold outline, no text') and below it a generated square doodle avatar result on warm-white. Simplified chat UI chrome with bubble outlines and a small avatar thumbnail. Bold marker outlines, flat cheerful color.",
+        "alt": "Doodle chat showing a profile picture prompt and resulting square avatar"
+      },
+      {
+        "id": "cartoon-pfp-04",
+        "afterHeading": "Prompt variations are moods, not a matching pack",
+        "prompt": "Three square doodle avatars of the same character (dark curls, gold hoop earring, green crewneck) in a horizontal row, each with a different expression: calm closed-mouth, wide grin, softer quiet eyes. Hand-lettered labels below: 'weekday', 'game night', 'night-off'. Subtle dotted line between them. Bold marker outlines, flat cheerful color, cream background.",
+        "alt": "Three mood variations of one doodle avatar labelled weekday, game night, night-off"
+      },
+      {
+        "id": "cartoon-pfp-05",
+        "afterHeading": "After you have a keeper: crop, then look at it small",
+        "prompt": "A doodle avatar inside a large dashed circle crop guide on cream paper. Tiny hand-drawn arrows point to key landmarks: eyes in upper half, glasses fully inside, one hoop earring inside circle. Below, the same avatar shown at actual tiny chat-widget size to demonstrate readability. Bold marker outlines, flat cheerful color.",
+        "alt": "Doodle avatar inside circle crop guide with arrows to key landmarks"
+      },
+      {
+        "id": "cartoon-pfp-06",
+        "afterHeading": "Make one square, then crop it where you actually post",
+        "prompt": "Three-step doodle flow on cream paper: (1) a selfie photo with arrow pointing to (2) a square doodle avatar, with arrow pointing to (3) three small circular profile-picture placements inside faint app icons (camera shape for Instagram, game-controller for Discord, alien-face for Reddit). Bold marker outlines, minimal detail, flat cheerful color.",
+        "alt": "Three-step flow from selfie to square avatar to circular profile pictures on apps"
+      }
+    ]
+  },
+  {
+    "article": "ai-cartoon-generator",
+    "images": [
+      {
+        "id": "ai-cartoon-gen-01",
+        "afterHeading": "Why the phrase \"AI cartoon generator\" mixes four different jobs",
+        "prompt": "A four-quadrant doodle diagram on cream paper: top-left shows camera icon with arrow to cartoon face (photo-to-cartoon), top-right shows pencil writing with arrow to fictional owl character (text-to-image), bottom-left shows script document with arrow to film strip (script-to-animation), bottom-right shows play button with arrow to motion clip. Bold marker outlines, flat color fills in teal, mustard, coral, lavender. Hand-lettered labels.",
+        "alt": "Four-quadrant diagram showing four jobs people mean by AI cartoon generator"
+      },
+      {
+        "id": "ai-cartoon-gen-02",
+        "afterHeading": "What is the difference between a photo cartoonizer and a text-to-cartoon generator?",
+        "prompt": "Split-scene doodle on cream paper: left side shows a Polaroid photo of a person with arrow curving into a doodle version preserving their features. Right side shows a speech bubble with handwritten words ('tired raccoon, yellow raincoat, paper cup') with arrow to a fictional raccoon character. Bold vertical dashed line divides them. Marker-and-ink style, flat cheerful color.",
+        "alt": "Split doodle comparing photo cartoonizing versus text-to-cartoon generation"
+      },
+      {
+        "id": "ai-cartoon-gen-03",
+        "afterHeading": "Can AI turn my photo into a cartoon?",
+        "prompt": "A doodle of a phone held at arm's length with a selfie on screen, three arrows fan out to three different output squares on cream paper: a bold-outline doodle avatar, a six-panel close-up collage grid, and a die-cut sticker sheet. All outputs are hand-drawn stills with small 'STILL' labels. Bold marker outlines, flat cheerful color.",
+        "alt": "Phone selfie transforming into three still outputs: avatar, collage, and sticker sheet"
+      },
+      {
+        "id": "ai-cartoon-gen-04",
+        "afterHeading": "What is Doodle AI, at doodleai.art?",
+        "prompt": "A simplified doodle browser window showing a chat interface on cream paper. User speech bubble says 'doodle me!' with tiny photo thumbnail attached. Agent side shows a square doodle portrait being delivered. Below the browser, small icons represent skills: a face, a grid, a sticker sheet, a gift box, and a question mark. Bold marker outlines, flat cheerful color.",
+        "alt": "Doodle of the Doodle AI chat interface receiving a photo and returning an avatar"
+      },
+      {
+        "id": "ai-cartoon-gen-05",
+        "afterHeading": "A hypothetical Saturday: four people, four \"cartoon generator\" jobs",
+        "prompt": "Four doodle vignettes in a 2x2 grid on cream paper: top-left person at laptop pointing to a doodle selfie avatar (labelled Samira), top-right person sketching an owl (labelled Ellis), bottom-left person holding script with clapperboard (labelled Nia), bottom-right person watching a motion clip on screen (labelled Theo). Bold marker outlines, each a different flat accent color.",
+        "alt": "Four vignettes showing different people with different cartoon generator jobs"
+      },
+      {
+        "id": "ai-cartoon-gen-06",
+        "afterHeading": "Is there a free AI cartoon generator? Is Doodle AI free to try?",
+        "prompt": "An open hand offering five small coin tokens labelled '5' with sparkles on cream paper. Below, a single coin with '1' dropping into a slot labelled 'generate'. A small arrow loops back from a red X (failed generation) to the hand showing refund. Marker-and-ink style, flat mustard and coral colors for coins, bold outlines.",
+        "alt": "Five signup credits offered, one credit per generation, refund arrow for failures"
+      }
+    ]
+  },
+  {
+    "article": "ai-cartoon-generator/prompts",
+    "images": [
+      {
+        "id": "ai-prompts-01",
+        "afterHeading": "What a Doodle AI prompt can influence, and what it cannot",
+        "prompt": "Split-view doodle on cream paper: left side shows a hand writing a short chat message with green checkmark (labelled 'names skill + landmarks'). Right side shows a crossed-out wall of dense tiny text overflowing a chat bubble (labelled '80-word lore dump'). Bold marker outlines, flat cheerful color, turquoise checkmark, coral X mark.",
+        "alt": "Short effective prompt with checkmark versus over-detailed wall of text crossed out"
+      },
+      {
+        "id": "ai-prompts-02",
+        "afterHeading": "How one chat turn is split",
+        "prompt": "A playful doodle flowchart on cream paper: a stick-figure user drops a photo and chat bubble into a funnel, which routes into one of seven labelled skill doors (tiny icons: portrait frame, grid, running figure, question mark, sticker page, speech bubble grid, gift box). One door is highlighted with a glow. Bold ink outlines, flat pastel fills.",
+        "alt": "Doodle flowchart showing a chat message routing to one of seven skill doors"
+      },
+      {
+        "id": "ai-prompts-03",
+        "afterHeading": "Eight prompt patterns, mapped to live skills",
+        "prompt": "A hand-drawn 2x4 grid of tiny thumbnail cards on cream paper, each with a simplified icon for one pattern: (1) single portrait bust, (2) 3x2 face grid, (3) full-body jumping figure, (4) question-mark silhouette, (5) scattered sticker shapes, (6) speech-bubble captions, (7) greeting card with bow, (8) wrench/repair symbol. Each card has a bold number. Marker outlines, flat color fills.",
+        "alt": "Eight numbered doodle cards representing each prompt pattern"
+      },
+      {
+        "id": "ai-prompts-04",
+        "afterHeading": "Failure case: over-detailing",
+        "prompt": "A comically overstuffed chat bubble on cream paper with words spilling out, tiny crossed-out icons scattered around it (sword, camera, sticker, video clapboard, crown). Below, a confused stick-figure agent scratches its head. A single calm blue chat bubble sits off to the side as contrast. Bold marker ink, coral/red accent for the mess.",
+        "alt": "Overloaded chat prompt exploding with requests while agent looks confused"
+      },
+      {
+        "id": "ai-prompts-05",
+        "afterHeading": "Failure case: missing required photo",
+        "prompt": "An empty photo placeholder frame on cream paper (dashed outline, small mountain-and-sun icon inside) with a big friendly arrow pointing at it and speech bubble saying 'attach here'. A stick-figure holds up a phone with a selfie on screen, about to drop it in. Bold ink outlines, warm gold/mustard accent on phone.",
+        "alt": "Empty photo placeholder with arrow prompting user to attach a selfie"
+      },
+      {
+        "id": "ai-prompts-06",
+        "afterHeading": "Failure case: identity drift",
+        "prompt": "Three simplified doodle busts of the same character in a row on cream paper, each drawn slightly differently: first has glasses and braids, second loses the glasses, third changes braids to a bun. Small red circles highlight what drifted. A dotted 'same landmarks' label connects the consistent jacket color. Bold marker outlines, flat color.",
+        "alt": "Three portraits showing identity drift with glasses vanishing and hairstyle changing"
+      }
+    ]
+  },
+  {
+    "article": "cartoon-pet-portrait",
+    "images": [
+      {
+        "id": "pet-portrait-01",
+        "afterHeading": "A cartoon pet portrait is a likeness problem, not a filter",
+        "prompt": "Three-panel comparison on cream paper: left shows a painted oil-style dog portrait on a tiny canvas easel (labelled 'Commission'), center shows a phone screen with a subtle cartoon filter (labelled 'Filter'), right shows a bold-outlined doodle of the same dog in marker-and-ink style (labelled 'Doodle'). Hand-lettered tags, bold outlines, flat cheerful color.",
+        "alt": "Three approaches compared: painted commission, phone filter, and hand-drawn doodle"
+      },
+      {
+        "id": "pet-portrait-02",
+        "afterHeading": "Choose a photo the doodle can actually see",
+        "prompt": "A 2x2 grid of pet photo thumbnails on cream paper in polaroid-style frames: top-left shows well-lit cat face with both eyes visible (green checkmark), top-right shows dark silhouette of dog on couch (red X), bottom-left shows blurry mid-leap dog (red X), bottom-right shows two overlapping cats in carrier (red X). Bold doodle outlines, flat color.",
+        "alt": "Four pet photos showing one good input and three failures: dark, blurry, multi-pet"
+      },
+      {
+        "id": "pet-portrait-03",
+        "afterHeading": "Three live digital options, and how to pick among them",
+        "prompt": "One illustrated brindle dog with red collar shown three ways in a horizontal row on cream paper: left as clean square avatar (labelled 'Normal'), center as greeting card with balloons and 'Happy Birthday' (labelled 'Gift'), right as square sticker sheet with four head busts with die-cut borders (labelled 'Stickers'). Bold marker outlines, flat cheerful color.",
+        "alt": "One pet shown as three outputs: Normal avatar, Gift card, and Stickers sheet"
+      },
+      {
+        "id": "pet-portrait-04",
+        "afterHeading": "Three clearly labelled hypothetical sittings",
+        "prompt": "Three vignettes on cream paper: (1) person at kitchen table photographing a brindle dog on a mat in window light with a doodle avatar floating beside, (2) hand holding phone showing orange tabby in gift-card frame, (3) cream lop rabbit on towel near window with sticker sheet floating above. Simplified doodle style, bold outlines, labelled 'Bramble', 'Noodle', 'Button'.",
+        "alt": "Three hypothetical pet portrait sittings with dog, cat, and rabbit"
+      },
+      {
+        "id": "pet-portrait-05",
+        "afterHeading": "Dark, blurry, and multi-pet photos: expected failures",
+        "prompt": "Horizontal strip of three failure doodle results on cream paper: left shows a dark blob with cartoon eyes floating in it (labelled 'Dark'), center shows smeared dog shape with motion lines and question mark (labelled 'Blurry'), right shows two animals merged into one bizarre creature with mismatched ears (labelled 'Multi-pet'). Each has bold red X stamp. Exaggerated for humor, marker-and-ink style.",
+        "alt": "Three doodle failures: dark blob, motion blur smear, two pets merged into one"
+      },
+      {
+        "id": "pet-portrait-06",
+        "afterHeading": "Make one digital pet doodle, then stop",
+        "prompt": "A single cheerful doodle of a happy dog (floppy ears, tongue out) inside a bold circular frame on cream paper, with a small heart above and a 'download' arrow icon below. Clean, minimal, celebratory. A tiny '1' checkmark badge in the corner. Bold marker outlines, flat cheerful color, warm background.",
+        "alt": "Single finished pet doodle in circular frame with download icon"
+      }
+    ]
+  },
+  {
+    "article": "photo-to-sticker",
+    "images": [
+      {
+        "id": "sticker-01",
+        "afterHeading": "The phrase \"photo to sticker\" currently names three jobs",
+        "prompt": "Three distinct objects side by side on cream paper: left is a square sheet with four cartoon head stickers with white die-cut borders, center is a mailed envelope with vinyl sticker peeking out, right is a phone screen showing a chat with a transparent sticker floating. Each labelled with hand-lettered tag. Bold marker outlines, flat color.",
+        "alt": "Three types: digital sticker sheet, mailed vinyl, and chat-app transparent sticker"
+      },
+      {
+        "id": "sticker-02",
+        "afterHeading": "What a Doodle AI sticker sheet actually is",
+        "prompt": "Close-up of a single square sticker sheet on slightly angled cream page. Five cartoon bust portraits of same character (hair, glasses, hoodie) in different expressions: waving, winking, laughing, peace sign, thumbs up. Each in rounded white die-cut border with tiny drop shadow. Paper grain visible. Bold marker outlines, flat cheerful color.",
+        "alt": "Sticker sheet with five bust portraits of one character in die-cut borders"
+      },
+      {
+        "id": "sticker-03",
+        "afterHeading": "How the live Stickers sitting actually runs",
+        "prompt": "Five-step doodle infographic on cream paper: (1) hand tapping 'Sign in' button, (2) photo being dragged onto chat window, (3) speech bubble saying 'sticker sheet please', (4) coin marked '1' dropping into slot, (5) square sticker sheet popping out with sparkle lines. Connected by dotted arrow path. Bold marker outlines, flat cheerful color.",
+        "alt": "Five-step infographic showing sticker generation flow from sign-in to download"
+      },
+      {
+        "id": "sticker-04",
+        "afterHeading": "How to inspect a result before you keep it",
+        "prompt": "Split-view inspection on cream paper: left shows sticker sheet with green check (four separate busts, clear borders, consistent character). Right shows sheet with red X (stickers overlapping into blob, second unrelated face appearing). Cartoon magnifying glass hovers between them. Bold marker outlines, flat color.",
+        "alt": "Pass versus fail sticker sheets showing correct separation versus errors"
+      },
+      {
+        "id": "sticker-05",
+        "afterHeading": "Why the sheet is not a transparent chat sticker",
+        "prompt": "A hand holding a square sticker sheet (opaque, warm-white background with shadows) next to a phone showing a messaging thread on cream paper. Large red marker 'not-equal' symbol separates them. Phone's sticker tray shows transparent cutouts floating without backgrounds. Bold outlines, flat color.",
+        "alt": "Opaque sticker sheet with not-equal sign next to transparent chat stickers"
+      },
+      {
+        "id": "sticker-06",
+        "afterHeading": "Why the sheet is not a print-ready or shipped sticker",
+        "prompt": "A Doodle AI sticker sheet (labelled 'digital image') on left of cream paper. On right, crossed-out items: a ruler showing 300 DPI, a CMYK color wheel, scissors with dotted cut-line, and a cardboard shipping box. Each has small crossed-out circle. Bold marker outlines, flat cheerful color.",
+        "alt": "Digital sticker sheet next to crossed-out print production items"
+      }
+    ]
+  },
+  {
+    "article": "doodle-gift",
+    "images": [
+      {
+        "id": "gift-01",
+        "afterHeading": "A digital gift is a sendable still, not a box",
+        "prompt": "Split scene on cream paper: left side shows stack of physical gifts (mug, blanket, photo book) crossed out with big friendly X. Right side shows a single square doodle greeting card floating above a phone with chat bubble, checkmark beside it. Bold marker outlines, flat cheerful colors.",
+        "alt": "Physical gifts crossed out versus digital card sent on phone"
+      },
+      {
+        "id": "gift-02",
+        "afterHeading": "Permission comes before the prompt",
+        "prompt": "Two doodle hands exchanging a photograph on cream paper: one hand holds out a selfie portrait, other hand gives thumbs-up with speech bubble containing a checkmark. Small 'OK?' label floats above. Simple marker-line figures, warm flat tones.",
+        "alt": "One person handing a photo to another with thumbs-up permission"
+      },
+      {
+        "id": "gift-03",
+        "afterHeading": "Plan the occasion before you spend the credit",
+        "prompt": "Six tiny square greeting cards fanned out like playing cards on cream paper, each labelled with occasion keyword and matching icon: birthday/balloon, thank/flower, congrats/star, get-well/heart, love/hearts, default/sparkle. Front card highlighted with finger pointing. Bold outlines, flat pastel fills.",
+        "alt": "Six occasion cards fanned out with icons for birthday, thanks, congrats"
+      },
+      {
+        "id": "gift-04",
+        "afterHeading": "Run the sitting like a deadline, not like a studio",
+        "prompt": "Five-step vertical checklist on a clipboard drawn on cream paper: (1) padlock for permission, (2) calendar with star for occasion, (3) chat bubble with pencil for prompt, (4) sparkle/wand for generate, (5) download arrow into phone. Clock at top shows 11 PM with party hat. Bold marker outlines, flat color.",
+        "alt": "Checklist with five steps from permission to download, clock showing deadline"
+      },
+      {
+        "id": "gift-05",
+        "afterHeading": "Credits on a night when the party is tomorrow",
+        "prompt": "Five round coins in a row numbered 1-5 on a simple shelf, cream paper. Coin 1 dropping with motion lines toward a card image below. Small moon and party balloon float in top corner suggesting 'night before'. Bold outlines, gold/amber flat coins.",
+        "alt": "Five credit coins with first one dropping toward gift card generation"
+      },
+      {
+        "id": "gift-06",
+        "afterHeading": "Download and share only the ways that actually exist",
+        "prompt": "Square doodle birthday card (balloons, 'Happy Birthday' lettering) with big download arrow beneath pointing into a simplified phone with chat bubbles on cream paper. Beside it, crossed-out printer and crossed-out shipping box. Bold marker lines, cheerful flat color.",
+        "alt": "Birthday card downloading into chat app, printer and shipping box crossed out"
+      }
+    ]
+  },
+  {
+    "article": "mood-caption-collage",
+    "images": [
+      {
+        "id": "mood-01",
+        "afterHeading": "What a mood-caption collage actually is",
+        "prompt": "A single 3:2 landscape canvas on cream paper showing six doodle panels in a 3x2 grid: same illustrated woman in different mood poses, with one short hand-lettered word per panel ('Hope', 'Tired', 'Peace', 'Miss You', 'Maybe', 'Again'). Bold marker outlines, flat cheerful color, words in thick uneven letters below each character.",
+        "alt": "Doodle 3x2 mood-caption collage with six mood poses and hand-lettered words"
+      },
+      {
+        "id": "mood-02",
+        "afterHeading": "Three 3:2 collages, three different jobs",
+        "prompt": "Three side-by-side mini thumbnails on cream paper with marker-style labels: left is close-up collage (six face crops, no text), center is full-body collage (six full-body poses, no text), right is mood-caption collage (six panels with visible hand-lettered words). A doodle hand points to rightmost with speech bubble 'words!' Bold outlines, flat color.",
+        "alt": "Three collage types compared: close-up faces, full-body, and mood captions"
+      },
+      {
+        "id": "mood-03",
+        "afterHeading": "The mood-word pool, stated honestly",
+        "prompt": "Scattered hand-lettered mood words floating on cream paper in thick marker ink as if tossed from a hat: 'Miss You', 'Enough', 'Healing', 'Overthinking', 'Hope', 'Tired', 'Peace', 'Why?', 'Maybe', 'Again'. Some tilted, some with tiny doodle icons (coffee cup by Tired, sparkle by Hope, spiral by Overthinking). Six highlighted in dotted selection box.",
+        "alt": "Hand-lettered mood words scattered on paper with six highlighted as selection"
+      },
+      {
+        "id": "mood-04",
+        "afterHeading": "Choose a photo that can survive six panels and six words",
+        "prompt": "Split scene on cream paper: left labelled with green check shows smiling person in bright jacket, well-lit, face forward, clear hair, space around shoulders. Right labelled with red X shows dark blurry crowd scene where face is tiny and indistinct. Bold marker outlines, flat color, simple check/cross marks.",
+        "alt": "Good source photo versus bad one for mood-caption collage"
+      },
+      {
+        "id": "mood-05",
+        "afterHeading": "Human review before you publish",
+        "prompt": "Someone holding a phone at arm's length squinting at a tiny 3:2 grid on screen, drawn on cream paper. Four floating checkmarks: '6 panels?', 'words readable?', 'face uncovered?', 'same person?'. One panel has red circle where word overlaps character's face. Bold outlines, flat pastel accent on phone.",
+        "alt": "Person reviewing collage on phone with quality checklist floating around"
+      },
+      {
+        "id": "mood-06",
+        "afterHeading": "Publishing the still yourself: post, Story, or chat",
+        "prompt": "One 3:2 mood-caption collage in center of cream paper with three doodle arrows pointing to destinations: square frame labelled 'Feed' (grid fitting inside), tall vertical phone labelled 'Story' (grid with padding bars), chat bubble labelled 'Chat' (grid as sent message). Marker-style outlines, flat color, simple icons.",
+        "alt": "Collage being cropped for feed post, Story, and chat message"
+      }
+    ]
+  },
+  {
+    "article": "for-studios/animation-concept-sprint",
+    "images": [
+      {
+        "id": "studio-sprint-01",
+        "afterHeading": "Why a stills-first sprint is a production question, not a model question",
+        "prompt": "Four-person animation team around a whiteboard covered in sticky notes and question marks on cream paper. Clock on wall shows time passing. One person holds up a character sheet while others gesture, conveying 'the first picture arrived too late.' Bold ink outlines, warm amber and soot-brown palette.",
+        "alt": "Small animation team debating around whiteboard with character sheet arriving late"
+      },
+      {
+        "id": "studio-sprint-02",
+        "afterHeading": "A clearly labelled hypothetical brief",
+        "prompt": "A raccoon character (Lumen) in patched denim overalls, round wire glasses low on snout, brass lantern on leather strap, one yellow rain-slicker cuff, standing on wooden dock planks at night with single amber glow from lantern. Marker-and-ink doodle style, simplified features, warm-white background with subtle dock silhouette.",
+        "alt": "Doodle concept of Lumen the raccoon lantern-keeper on a dock"
+      },
+      {
+        "id": "studio-sprint-03",
+        "afterHeading": "How to write a brief that a collage can actually answer",
+        "prompt": "Split image on cream paper: left shows messy handwritten shot list with crossed-out scene descriptions (red X). Right shows clean card with three crisp yes/no questions and checkboxes (green checkmark). Bold outlines, soot-brown ink, red X and green check as color accents with warm amber.",
+        "alt": "Crossed-out scene list versus clear yes-or-no stills questions"
+      },
+      {
+        "id": "studio-sprint-04",
+        "afterHeading": "Human review gates, written as jobs",
+        "prompt": "Three gate posts in a row (labelled A, B, C) on cream paper, each with a different person holding a stamp: creative director at Gate A with 'HIRE' stamp, character designer at Gate B with magnifying glass checking face thumbnails, producer at Gate C giving thumbs-up to a silhouette. Bold ink outlines, flat color, warm-amber accents.",
+        "alt": "Three review gates with team members approving stills at each stage"
+      },
+      {
+        "id": "studio-sprint-05",
+        "afterHeading": "Worked example, assumptions labelled hypothetical",
+        "prompt": "Top-down view of studio desk on cream paper with three printed pages: a single avatar bust (circled green), a six-panel face grid (one panel red, five green), and a six-panel action grid (all green). A hand with marker draws green checkmark on action page. Soot-brown outlines, brass/amber lantern glow motif, flat color.",
+        "alt": "Desk with three concept pages showing avatar, collage, and action grid with review marks"
+      },
+      {
+        "id": "studio-sprint-06",
+        "afterHeading": "Limitations, then a real handoff",
+        "prompt": "A hand passing a neat folder labeled 'CONCEPT BOARD' across a dotted line to another hand holding animation tools (pencil, timeline bar, clapperboard) on cream paper. Left side: stills pinned to board. Right side: motion lines, timeline, film reel. Dotted line labelled 'HANDOFF'. Bold outlines, warm amber on stills side, cool blue-grey on tools side.",
+        "alt": "Concept board being handed off to animation production tools"
+      }
+    ]
+  },
+  {
+    "article": "for-studios/ai-filmmaker-stills",
+    "images": [
+      {
+        "id": "filmmaker-01",
+        "afterHeading": "Why stills come before the video decision",
+        "prompt": "Split view on cream paper: left shows single doodle character bust pinned to corkboard (clean, decisive). Right shows chaotic tangle of filmstrip frames with question marks and crossed-out faces. Bold arrow points from calm stills side toward happy director stick-figure giving thumbs up. Marker outlines, flat cheerful color.",
+        "alt": "Calm stills-first approach versus chaotic video-first confusion"
+      },
+      {
+        "id": "filmmaker-02",
+        "afterHeading": "A clearly labelled hypothetical filmmaker brief",
+        "prompt": "Doodle character 'Ellis Quinn' on a casting card pinned at top corner: mid-twenties grocery stocker in faded red vest over band tee, scuffed kneepads, handheld barcode scanner on coiled cord at hip, crooked fluorescent-green visor clip. Standing in fluorescent-lit aisle with mop bucket nearby. Bold marker outlines, flat colors, cream background.",
+        "alt": "Casting card of Ellis Quinn the night-shift grocery stocker"
+      },
+      {
+        "id": "filmmaker-03",
+        "afterHeading": "Map each live skill to a filmmaking job",
+        "prompt": "Horizontal row of six small card tiles on cream paper, each with simplified icon mapped to a filmmaker need: (1) bust portrait 'Cast?', (2) 2x3 face grid 'Range?', (3) 2x3 pose grid 'Blocking?', (4) word-cloud 'Tone?', (5) sticker shapes 'Teaser?', (6) greeting card 'Card?'. Connected by dotted arrows. Bold marker outlines, flat cheerful color.",
+        "alt": "Six tiles mapping Doodle AI skills to filmmaking questions"
+      },
+      {
+        "id": "filmmaker-04",
+        "afterHeading": "Human review gates, written as jobs",
+        "prompt": "A tollbooth checkpoint barrier on a road drawn on cream paper. Stack of character stills approaches from left. Stick-figure director holds 'PASS' card (green) and 'FAIL' card (red). One still waved through, another tossed into 'REDO' bin. Bold ink outlines, flat mint-green and faded-red accents.",
+        "alt": "Review gate with director passing or rejecting character stills"
+      },
+      {
+        "id": "filmmaker-05",
+        "afterHeading": "Worked example, assumptions labelled hypothetical",
+        "prompt": "Three-step horizontal timeline on cream paper with numbered circles (1, 2, 3). Step 1: single bust portrait with red X over phone-shaped scanner, green check over proper barcode scanner. Step 2: 2x3 face grid with checkmark. Step 3: 2x3 body-pose grid with checkmark. Below: tally showing '7 credits spent / 3 remaining'. Bold doodle outlines, faded-red and mint accents.",
+        "alt": "Timeline showing three generation passes with gate results and credit tally"
+      },
+      {
+        "id": "filmmaker-06",
+        "afterHeading": "What to generate, what to reject, what to hand off",
+        "prompt": "Three labeled bins drawn in bold marker on cream paper: left bin (green) 'GENERATE' holds bust portrait and collage page. Middle bin (red) 'REJECT' holds crumpled mascot with wrong prop. Right bin (blue arrow out) 'HAND OFF' shows stills placed into envelope addressed to 'Video / Board / Composite'. Bold outlines, flat cheerful color.",
+        "alt": "Three bins for generate, reject, and hand off stills to other tools"
+      }
+    ]
+  }
+]

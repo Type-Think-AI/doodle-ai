@@ -12,6 +12,7 @@ import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
 import RelatedArticles from "../../components/article/RelatedArticles.astro";
 import { getHubChildren } from "../../lib/content/articles";
+import { OG_IMAGE } from "../../consts";
 import "../../styles/app.css";
 import "../../styles/page.css";
 
@@ -21,6 +22,7 @@ const articles = await getHubChildren("for-studios");
 <AppLayout
 	title="For studios and filmmakers — doodleai.art"
 	description="Stills-first production workflows for boutique animation studios, AI filmmakers, and virtual-production leads using Doodle AI's current image skills."
+	image={OG_IMAGE.forStudios}
 >
 	<Navbar />
 

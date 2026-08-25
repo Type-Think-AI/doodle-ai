@@ -42,8 +42,8 @@
     "deploy": "pnpm run db:migrate:remote && wrangler deploy",
     "deploy:staging": "pnpm run db:migrate:staging && wrangler deploy --env staging",
     "dev": "node scripts/dev.mjs",
-    "dev:local": "node scripts/seed-local-secrets.mjs && wrangler d1 migrations apply doodleai --local && astro dev",
-    "db:migrate:local": "wrangler d1 migrations apply doodleai --local",
+    "dev:local": "wrangler d1 migrations apply doodleai --local --config wrangler.local.json && astro dev",
+    "db:migrate:local": "wrangler d1 migrations apply doodleai --local --config wrangler.local.json",
     "secrets:seed-local": "node scripts/seed-local-secrets.mjs",
     "preview": "astro build && wrangler dev"
   },
