@@ -219,3 +219,12 @@ scripts/inline-images-results.json
 
 # Local article image downloads (use CDN URLs instead)
 public/images/articles/
+
+# All testing artifacts (screenshots, recordings, test outputs)
+testing/
+
+# Stray screenshots from browser testing
+*.screenshot.png
+auth-dialog-*.png
+
+.wrangler-backup-20260825-190246
