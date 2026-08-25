@@ -17,6 +17,8 @@ export interface NavItem {
   mobile?: boolean;
   /** Inline SVG path/shape markup, viewBox 0 0 24 24. */
   icon: string;
+  /** If set, this item starts a named section group in the sidebar. */
+  section?: string;
 }
 
 export const NEW_CHAT_ITEM: NavItem = {
@@ -55,6 +57,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Projects",
     shortLabel: "Projects",
     mobile: false,
+    section: "Workspace",
     icon: '<rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 5V3.5h8V5M3.5 10h17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   {

@@ -25,10 +25,17 @@ const { active } = Astro.props;
 
   <nav class="sidebar-nav" aria-label="Main">
     {NAV_ITEMS.map((item) => (
-      <a href={item.href} class="sidebar-link" aria-current={active === item.key ? "page" : undefined} data-active={active === item.key ? "true" : "false"}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" set:html={item.icon} />
-        <span class="sidebar-label">{item.label}</span>
-      </a>
+      <>
+        {item.section && (
+          <div class="sidebar-section-label">
+            <span class="sidebar-label">{item.section}</span>
+          </div>
+        )}
+        <a href={item.href} class="sidebar-link" aria-current={active === item.key ? "page" : undefined} data-active={active === item.key ? "true" : "false"}>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" set:html={item.icon} />
+          <span class="sidebar-label">{item.label}</span>
+        </a>
+      </>
     ))}
   </nav>
 
@@ -183,6 +190,26 @@ const { active } = Astro.props;
   .sidebar.collapsed .sidebar-primary-action { justify-content: center; padding: 10px; }
 
   .sidebar-nav { display: flex; flex-direction: column; gap: 3px; }
+  .sidebar-section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px 4px;
+    font-size: 10.5px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+  }
+  .sidebar-section-label::before {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    display: none;
+  }
+  .sidebar.collapsed .sidebar-section-label span { display: none; }
+  .sidebar.collapsed .sidebar-section-label::before { display: block; }
   .sidebar-link {
     display: flex;
     align-items: center;

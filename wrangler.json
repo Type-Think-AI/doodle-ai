@@ -36,6 +36,12 @@
   "env": {
     "staging": {
       "name": "doodleai-agent-staging",
+      "routes": [
+        {
+          "pattern": "dev.doodleai.art",
+          "custom_domain": true
+        }
+      ],
       "d1_databases": [
         {
           "binding": "DB",
