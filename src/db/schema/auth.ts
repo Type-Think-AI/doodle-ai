@@ -44,9 +44,7 @@ export const user = sqliteTable("user", {
 
 export const session = sqliteTable("session", {
   id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
   token: text("token").notNull().unique(),
   expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
   ipAddress: text("ip_address"),
@@ -66,9 +64,7 @@ export const session = sqliteTable("session", {
 
 export const account = sqliteTable("account", {
   id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
   /**
@@ -127,11 +123,9 @@ export const member = sqliteTable(
   {
     id: text("id").primaryKey(),
     organizationId: text("organization_id")
-      .notNull()
-      .references(() => organization.id, { onDelete: "cascade" }),
+      .notNull(),
     userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .notNull(),
     /** owner | producer | artist | reviewer | client — see org-access.ts. */
     role: text("role").notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
@@ -153,8 +147,7 @@ export const invitation = sqliteTable(
   {
     id: text("id").primaryKey(),
     organizationId: text("organization_id")
-      .notNull()
-      .references(() => organization.id, { onDelete: "cascade" }),
+      .notNull(),
     email: text("email").notNull(),
     role: text("role"),
     /** 'pending' | 'accepted' | 'rejected' | 'canceled' */
@@ -162,8 +155,7 @@ export const invitation = sqliteTable(
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     inviterId: text("inviter_id")
-      .notNull()
-      .references(() => user.id),
+      .notNull(),
   },
   (t) => [index("invitation_organization_idx").on(t.organizationId), index("invitation_email_idx").on(t.email)],
 );
