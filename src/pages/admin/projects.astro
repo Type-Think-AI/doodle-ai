@@ -1,0 +1,14 @@
+---
+// Server-rendered, never static — see src/pages/admin/index.astro for why
+// this line is load-bearing rather than a formality.
+export const prerender = false;
+
+import AdminLayout from '../../admin/layouts/AdminLayout.astro';
+import ProjectsPage from '../../admin/pages/ProjectsPage.astro';
+
+const admin = Astro.locals.admin!;
+---
+
+<AdminLayout active="projects" admin={admin}>
+	<ProjectsPage />
+</AdminLayout>

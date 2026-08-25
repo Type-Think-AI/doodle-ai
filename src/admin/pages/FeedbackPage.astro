@@ -1,0 +1,135 @@
+---
+import { getDb } from '../../db/client';
+import { listFeedback, relativeTime, formatDate } from '../../lib/admin/queries';
+import GradientAvatar from '../components/GradientAvatar.astro';
+import StatusPill from '../components/StatusPill.astro';
+
+const db = getDb(Astro as any);
+const requestedStatus = Astro.url.searchParams.get('status') ?? 'new';
+const status = ['all', 'new', 'reviewing', 'resolved', 'wont_fix'].includes(requestedStatus)
+	? requestedStatus
+	: 'new';
+const { rows, counts } = await listFeedback(db, { status, limit: 50, offset: 0 });
+const filterChips = [
+	{ key: 'all', label: 'All' },
+	{ key: 'new', label: 'New' },
+	{ key: 'reviewing', label: 'Reviewing' },
+	{ key: 'resolved', label: 'Resolved' },
+	{ key: 'wont_fix', label: "Won't fix" },
+];
+
+function statusLabel(value: string): string {
+	return value === 'wont_fix' ? "Won't fix" : value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function statusTone(value: string): 'green' | 'red' | 'blue' | 'neutral' {
+	if (value === 'resolved') return 'green';
+	if (value === 'wont_fix') return 'red';
+	if (value === 'reviewing') return 'blue';
+	return 'neutral';
+}
+---
+
+<div class="feedback-page">
+	<div class="filters" aria-label="Feedback status filters">
+		{filterChips.map((chip) => (
+			<a class:list={['filter-chip', status === chip.key && 'active']} href={`/admin/feedback?status=${chip.key}`}>
+				{chip.label}<span>{counts[chip.key] ?? 0}</span>
+			</a>
+		))}
+	</div>
+
+	{rows.length === 0 ? (
+		<div class="empty-state">
+			<strong>No feedback with this status.</strong>
+			<span>Feedback submitted by users will appear here for triage.</span>
+		</div>
+	) : (
+		<div class="feedback-list">
+			{rows.map((row) => (
+				<article class="feedback-card">
+					<div class="feedback-meta">
+						<GradientAvatar seed={row.userEmail} size={34} />
+						<div class="identity">
+							<strong>{row.userName || row.userEmail}</strong>
+							<span>{row.userEmail}</span>
+						</div>
+						<span class="org-name">{row.orgName ?? 'No organization'}</span>
+						<time title={formatDate(row.createdAt)}>{relativeTime(row.createdAt)}</time>
+					</div>
+					<p class="feedback-text">{row.text}</p>
+					<div class="feedback-footer">
+						<div class="triage-summary">
+							<StatusPill status={statusLabel(row.status)} tone={statusTone(row.status)} />
+							{row.triagedByName && row.triagedAt ? (
+								<span>by {row.triagedByName} · {formatDate(row.triagedAt)}</span>
+							) : (
+								<span>Not triaged yet</span>
+							)}
+						</div>
+						{Astro.locals.admin?.platformRole === 'admin' && (
+							<div class="triage-actions" data-feedback-id={row.id}>
+								{row.status !== 'reviewing' && <button type="button" data-status="reviewing">Review</button>}
+								{row.status !== 'resolved' && <button type="button" data-status="resolved">Resolve</button>}
+								{row.status !== 'wont_fix' && <button type="button" data-status="wont_fix">Won't fix</button>}
+							</div>
+						)}
+					</div>
+				</article>
+			))}
+		</div>
+	)}
+</div>
+
+<script>
+	const actions = document.querySelectorAll<HTMLButtonElement>('[data-feedback-id] button');
+	actions.forEach((button) => {
+		button.addEventListener('click', async () => {
+			const group = button.closest<HTMLElement>('[data-feedback-id]');
+			const id = group?.dataset.feedbackId;
+			const nextStatus = button.dataset.status;
+			if (!id || !nextStatus) return;
+			button.disabled = true;
+			try {
+				const response = await fetch(`/api/admin/feedback/${encodeURIComponent(id)}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ status: nextStatus }),
+				});
+				const body = await response.json().catch(() => ({}));
+				if (!response.ok) throw new Error(body?.error?.message || 'Unable to update feedback.');
+				window.location.reload();
+			} catch (error) {
+				button.disabled = false;
+				window.alert(error instanceof Error ? error.message : 'Unable to update feedback.');
+			}
+		});
+	});
+</script>
+
+<style>
+	.feedback-page { display: flex; flex-direction: column; gap: 14px; }
+	.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+	.filter-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border: 1px solid var(--border2); border-radius: 999px; color: var(--text-dim); text-decoration: none; font-size: 12px; background: var(--surface2); }
+	.filter-chip:hover, .filter-chip.active { color: var(--text); border-color: var(--accent); background: var(--hover); }
+	.filter-chip span { color: var(--text-dimmer); font-size: 11px; }
+	.feedback-list { display: flex; flex-direction: column; gap: 12px; }
+	.feedback-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 16px; }
+	.feedback-meta, .feedback-footer, .triage-summary, .triage-actions { display: flex; align-items: center; }
+	.feedback-meta { gap: 10px; min-width: 0; }
+	.identity { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+	.identity strong { color: var(--text); font-size: 13px; }
+	.identity span, .org-name, .feedback-meta time, .triage-summary > span { color: var(--text-dimmer); font-size: 12px; }
+	.org-name { margin-left: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.feedback-meta time { margin-left: auto; white-space: nowrap; }
+	.feedback-text { margin: 16px 0; color: var(--text); font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+	.feedback-footer { justify-content: space-between; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+	.triage-summary { gap: 9px; flex-wrap: wrap; }
+	.triage-actions { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+	.triage-actions button { border: 1px solid var(--border2); border-radius: 7px; background: var(--surface2); color: var(--text-dim); padding: 6px 9px; font: inherit; font-size: 11px; cursor: pointer; }
+	.triage-actions button:hover { border-color: var(--accent); color: var(--text); background: var(--hover); }
+	.triage-actions button:disabled { opacity: .55; cursor: wait; }
+	.empty-state { border: 1px dashed var(--border2); border-radius: 12px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--text-dimmer); text-align: center; }
+	.empty-state strong { color: var(--text-dim); font-size: 14px; }
+	@media (max-width: 640px) { .feedback-meta { align-items: flex-start; flex-wrap: wrap; } .org-name { margin-left: 44px; width: calc(100% - 44px); } .feedback-meta time { margin-left: 0; } .feedback-footer { align-items: flex-start; flex-direction: column; } .triage-actions { justify-content: flex-start; } }
+</style>

@@ -1,0 +1,194 @@
+---
+import type { AdminUserRow } from '../../lib/admin/queries';
+import { formatDate, relativeTime, thousands } from '../../lib/admin/queries';
+import GradientAvatar from './GradientAvatar.astro';
+
+interface Props {
+	rows: AdminUserRow[];
+	canMutate: boolean;
+}
+
+const { rows } = Astro.props;
+---
+
+<div class="users-table">
+	<div class="table-head">
+		<span>USER</span><span>PLAN</span><span>ROLE</span><span>DOODLES</span><span>CREDITS</span><span>SIGNED UP</span><span>LAST SEEN</span><span></span>
+	</div>
+	{rows.length === 0 ? (
+		<div class="table-empty">No users match this filter.</div>
+	) : (
+		rows.map((row) => (
+			<div class="table-row">
+				<span class="user-cell">
+					<GradientAvatar seed={row.email} size={30} />
+					<span class="user-meta">
+						<span class="user-name">{row.name}</span>
+						<span class="user-email">{row.email}</span>
+					</span>
+				</span>
+				<span class={`plan-pill ${row.plan === 'Pro' ? 'plan-pro' : 'plan-free'}`}>{row.plan}</span>
+				<span class="role-cell">
+					{row.platformRole !== 'user' && (
+						<span class:list={['role-pill', row.platformRole === 'admin' ? 'role-admin' : 'role-support']}>
+							{row.platformRole}
+						</span>
+					)}
+				</span>
+				<span class="doodles-cell">{thousands(row.doodles)}</span>
+				<span class:list={['credits-cell', { 'credit-low': row.credits < 50 }]}>{thousands(row.credits)}</span>
+				<span class="date-cell">{formatDate(row.createdAt)}</span>
+				<span class="date-cell">{relativeTime(row.lastSeen)}</span>
+				<a class="chevron-cell" href={`?user=${encodeURIComponent(row.id)}`} aria-label={`Open ${row.name}`}>
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+						<path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+					</svg>
+				</a>
+			</div>
+		))
+	)}
+</div>
+
+<style>
+	.users-table {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		overflow: hidden;
+	}
+	.table-head,
+	.table-row {
+		display: grid;
+		grid-template-columns: 2.1fr 0.8fr 0.8fr 0.75fr 0.85fr 1fr 1fr 48px;
+	}
+	.table-head {
+		padding: 11px 16px;
+		border-bottom: 1px solid var(--border);
+		font-size: 10.5px;
+		letter-spacing: 0.06em;
+		color: var(--text-dimmer);
+	}
+	.table-row {
+		align-items: center;
+		padding: 11px 16px;
+		border-top: 1px solid var(--border);
+	}
+	.table-row:hover {
+		background: var(--hover);
+	}
+	.table-empty {
+		padding: 40px 20px;
+		text-align: center;
+		font-size: 13px;
+		color: var(--text-dimmer);
+	}
+	.user-cell {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-width: 0;
+	}
+	.user-meta {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+	.user-name {
+		font-size: 13px;
+		color: var(--text);
+	}
+	.user-email {
+		font-size: 11px;
+		color: var(--text-dimmer);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.plan-pill,
+	.role-pill {
+		font-size: 11px;
+		width: fit-content;
+		padding: 3px 9px;
+		border-radius: 999px;
+	}
+	.plan-pro {
+		background: var(--accent-softer);
+		color: var(--accent);
+	}
+	.plan-free {
+		background: var(--surface2);
+		color: var(--text-dimmer);
+		border: 1px solid var(--border2);
+	}
+	.role-cell {
+		min-width: 0;
+	}
+	.role-support {
+		background: var(--blue-faint);
+		color: var(--blue);
+	}
+	.role-admin {
+		background: var(--red-faint);
+		color: var(--red);
+	}
+	.doodles-cell,
+	.credits-cell {
+		font-size: 13px;
+		color: var(--text);
+	}
+	.credit-low {
+		color: var(--red);
+	}
+	.date-cell {
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+	.chevron-cell {
+		display: flex;
+		justify-content: flex-end;
+		color: var(--text-dimmer);
+		text-decoration: none;
+	}
+	.chevron-cell:hover {
+		color: var(--text);
+	}
+	@media (max-width: 1050px) {
+		.table-head {
+			display: none;
+		}
+		.table-row {
+			grid-template-columns: 1fr 0.8fr 0.8fr 0.75fr 48px;
+			gap: 8px;
+			padding: 13px 16px;
+			min-height: 52px;
+		}
+		.table-row .date-cell {
+			display: none;
+		}
+	}
+	@media (max-width: 650px) {
+		.table-row {
+			grid-template-columns: 1fr auto 44px;
+			gap: 10px;
+			padding: 14px 14px;
+			min-height: 56px;
+		}
+		.table-row .role-cell,
+		.table-row .doodles-cell,
+		.table-row .credits-cell {
+			display: none;
+		}
+		.chevron-cell {
+			min-width: 44px;
+			min-height: 44px;
+			align-items: center;
+			justify-content: center;
+		}
+		.user-name {
+			font-size: 14px;
+		}
+		.user-email {
+			font-size: 12px;
+		}
+	}
+</style>

@@ -32,15 +32,88 @@
  */
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const user = sqliteTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
-  image: text("image"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
-});
+export const user = sqliteTable(
+  "user",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+    image: text("image"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+    /**
+     * The caller's **platform** role — global, cross-organization, and the
+     * only thing that grants access to `/admin`.
+     *
+     * Deliberately NOT called `role`, and deliberately not stored on
+     * `member`: `member.role` is the per-organization *team* position
+     * (owner | producer | artist | reviewer | client, see
+     * src/lib/auth/org-access.ts) and answers a completely different
+     * question. The two axes never interact — a platform 'admin' can be a
+     * 'client' in someone else's org, and a team 'owner' is still a
+     * platform 'user'. Conflating them would either hand every team owner
+     * the admin console or make "admin" look like a sixth team role in the
+     * access-control statements, which it is not.
+     *
+     * 'user'    — no /admin access at all; middleware 404s them.
+     * 'support' — read-only across every admin screen. Cannot grant
+     *             credits and cannot change anyone's role.
+     * 'admin'   — full access, including credit grants and promoting or
+     *             demoting other admins. Every privileged action lands in
+     *             `admin_audit_log`.
+     *
+     * Better Auth never writes this column (it isn't part of its core user
+     * schema and no plugin we enable declares it); it is set only by
+     * migrations/0008_seed_first_admin.sql and by
+     * PATCH /api/admin/users/:id/role. `input: false` is not expressible
+     * here, so the guard against a client ever setting it is that no auth
+     * signup path reads it — see src/lib/auth/admin-guard.ts.
+     */
+    platformRole: text("platform_role").notNull().default("user"),
+  },
+  (t) => [index("user_platform_role_idx").on(t.platformRole)],
+);
+
+/**
+ * Every privileged admin action, append-only.
+ *
+ * An account that can mint credits and promote other admins has to leave a
+ * trail — without this, "who granted 5,000 credits to this org last Tuesday"
+ * is unanswerable, and `credit_ledger` alone only records that *someone*
+ * with admin rights did it. Written in the same request as the action it
+ * describes, never updated, never deleted.
+ */
+export const adminAuditLog = sqliteTable(
+  "admin_audit_log",
+  {
+    id: text("id").primaryKey(),
+    /** The admin who performed the action. Never the affected user. */
+    actorUserId: text("actor_user_id").notNull(),
+    /** Dotted action name: 'credits.grant' | 'user.role.change' | 'skill.state.change' | 'feedback.triage'. */
+    action: text("action").notNull(),
+    /** 'user' | 'organization' | 'skill' | 'generation' | 'feedback' | null for account-wide actions. */
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    /** Action-specific payload — the amount granted, the before/after role, etc. */
+    detail: text("detail", { mode: "json" }).$type<Record<string, unknown>>(),
+    ipAddress: text("ip_address"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => [
+    index("audit_actor_created_idx").on(t.actorUserId, t.createdAt),
+    index("audit_created_idx").on(t.createdAt),
+    index("audit_target_idx").on(t.targetType, t.targetId),
+  ],
+);
+
+/** The three values `user.platformRole` may hold, most privileged last. */
+export const PLATFORM_ROLES = ["user", "support", "admin"] as const;
+export type PlatformRole = (typeof PLATFORM_ROLES)[number];
+
+export function isPlatformRole(value: string): value is PlatformRole {
+  return (PLATFORM_ROLES as readonly string[]).includes(value);
+}
 
 export const session = sqliteTable("session", {
   id: text("id").primaryKey(),

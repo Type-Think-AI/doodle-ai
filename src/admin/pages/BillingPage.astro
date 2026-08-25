@@ -1,0 +1,180 @@
+---
+import { INVOICES, polyline } from '../data/dummy';
+import StatusPill from '../components/StatusPill.astro';
+
+const mrrSpark = polyline([18, 20, 19, 24, 23, 28, 27, 32, 31, 36, 35, 41, 44, 48], 300, 54, 5);
+
+function toneFor(status: string): 'green' | 'red' | 'neutral' {
+	if (status === 'Paid') return 'green';
+	if (status === 'Failed') return 'red';
+	return 'neutral';
+}
+---
+
+<div class="billing-stats">
+	<div class="panel mrr-panel">
+		<div class="mrr-top">
+			<span class="stat-label">Monthly recurring revenue</span>
+			<span class="growth-tag">Growth</span>
+		</div>
+		<span class="mrr-value">$4,920</span>
+		<svg viewBox="0 0 300 54" preserveAspectRatio="none" class="mrr-spark">
+			<polyline points={mrrSpark} fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+		</svg>
+	</div>
+
+	<div class="panel">
+		<span class="stat-label">Paying seats</span>
+		<span class="stat-value">312</span>
+		<span class="stat-delta pos">+18 this month</span>
+		<div class="divider"></div>
+		<span class="stat-label">Free → Pro conversion</span>
+		<span class="stat-value-sm">6.5%</span>
+	</div>
+
+	<div class="panel">
+		<span class="stat-label">Churn, 30 days</span>
+		<span class="stat-value">2.1%</span>
+		<span class="stat-delta neg">+0.3 vs last month</span>
+		<div class="divider"></div>
+		<span class="stat-label">Avg. revenue / user</span>
+		<span class="stat-value-sm">$15.77</span>
+	</div>
+</div>
+
+<div class="table-panel">
+	<div class="table-head">
+		<span>INVOICE</span><span>CUSTOMER</span><span>DATE</span><span>AMOUNT</span><span>STATUS</span>
+	</div>
+	{INVOICES.map((i) => (
+		<div class="table-row">
+			<span class="cell-id">{i.id}</span>
+			<span class="cell-customer">{i.customer}</span>
+			<span class="cell-date">{i.date}</span>
+			<span class="cell-amount">{i.amount}</span>
+			<StatusPill status={i.status} tone={toneFor(i.status)} />
+		</div>
+	))}
+</div>
+
+<style>
+	.billing-stats {
+		display: grid;
+		grid-template-columns: 1.4fr 1fr 1fr;
+		gap: 14px;
+		margin-bottom: 14px;
+	}
+	.panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 18px 20px;
+	}
+	.mrr-top {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.stat-label {
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+	.growth-tag {
+		font-size: 10.5px;
+		padding: 3px 8px;
+		border-radius: 999px;
+		background: var(--accent-softer);
+		color: var(--accent);
+	}
+	.mrr-value {
+		font-size: 32px;
+		font-weight: 700;
+		color: var(--text);
+		letter-spacing: -0.02em;
+		margin-top: 10px;
+		display: block;
+	}
+	.mrr-spark {
+		width: 100%;
+		height: 48px;
+		margin-top: 10px;
+	}
+	.stat-value {
+		font-size: 26px;
+		font-weight: 700;
+		color: var(--text);
+		margin-top: 8px;
+		display: block;
+	}
+	.stat-value-sm {
+		font-size: 18px;
+		font-weight: 700;
+		color: var(--text);
+		margin-top: 6px;
+		display: block;
+	}
+	.stat-delta {
+		font-size: 11.5px;
+	}
+	.stat-delta.pos {
+		color: var(--green);
+	}
+	.stat-delta.neg {
+		color: var(--red);
+	}
+	.divider {
+		height: 1px;
+		background: var(--border);
+		margin: 14px 0;
+	}
+	.table-panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		overflow: hidden;
+	}
+	.table-head {
+		display: grid;
+		grid-template-columns: 1.2fr 1.4fr 1fr 0.9fr 0.9fr;
+		padding: 11px 16px;
+		border-bottom: 1px solid var(--border);
+		font-size: 10.5px;
+		letter-spacing: 0.06em;
+		color: var(--text-dimmer);
+	}
+	.table-row {
+		display: grid;
+		grid-template-columns: 1.2fr 1.4fr 1fr 0.9fr 0.9fr;
+		align-items: center;
+		padding: 11px 16px;
+		border-top: 1px solid var(--border);
+	}
+	.cell-id {
+		font-size: 13px;
+		color: var(--text);
+	}
+	.cell-customer {
+		font-size: 12.5px;
+		color: var(--text-dim);
+	}
+	.cell-date {
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+	.cell-amount {
+		font-size: 13px;
+		color: var(--text);
+	}
+	@media (max-width: 860px) {
+		.billing-stats {
+			grid-template-columns: 1fr;
+		}
+		.table-head,
+		.table-row {
+			grid-template-columns: 1fr 1fr 1fr;
+		}
+		.cell-date {
+			display: none;
+		}
+	}
+</style>

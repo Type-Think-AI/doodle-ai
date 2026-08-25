@@ -1,0 +1,208 @@
+---
+import { ARTICLES } from '../data/dummy';
+import StatusPill from '../components/StatusPill.astro';
+
+const marketingKpis = [
+	{ label: 'Organic sessions', value: '18.6k', delta: '+14.2%', up: true },
+	{ label: 'Signups from content', value: '642', delta: '+9.8%', up: true },
+	{ label: 'Avg. SEO rank', value: '#6.2', delta: '−0.4', up: false },
+	{ label: 'Content → Pro rate', value: '4.1%', delta: '+0.6%', up: true },
+];
+
+const sources = [
+	{ name: 'Organic search', value: '18.6k', w: 100 },
+	{ name: 'Direct', value: '7.2k', w: 39 },
+	{ name: 'Social / Reddit', value: '5.4k', w: 29 },
+	{ name: 'Referral', value: '2.8k', w: 15 },
+	{ name: 'Newsletter', value: '1.1k', w: 6 },
+];
+
+function toneFor(status: string): 'green' | 'blue' | 'neutral' {
+	if (status === 'Published') return 'green';
+	if (status === 'Scheduled') return 'blue';
+	return 'neutral';
+}
+---
+
+<div class="marketing-kpis">
+	{marketingKpis.map((m) => (
+		<div class="panel">
+			<span class="stat-label">{m.label}</span>
+			<span class="stat-value">{m.value}</span>
+			<span class:list={['stat-delta', m.up ? 'pos' : 'neg']}>{m.delta}</span>
+		</div>
+	))}
+</div>
+
+<div class="marketing-content">
+	<div class="panel sources-panel">
+		<span class="panel-title">Traffic sources</span>
+		<div class="sources-list">
+			{sources.map((s) => (
+				<div class="source-row">
+					<div class="source-labels">
+						<span class="source-name">{s.name}</span>
+						<span class="source-value">{s.value}</span>
+					</div>
+					<div class="source-track">
+						<div class="source-bar" style={`width:${s.w}%;`}></div>
+					</div>
+				</div>
+			))}
+		</div>
+	</div>
+
+	<div class="table-panel">
+		<div class="table-head">
+			<span>ARTICLE</span><span>STATUS</span><span>VIEWS</span><span>RANK</span><span>SIGNUPS</span>
+		</div>
+		{ARTICLES.map((a) => (
+			<div class="table-row">
+				<span class="cell-title">{a.title}</span>
+				<StatusPill status={a.status} tone={toneFor(a.status)} />
+				<span class="cell-views">{a.views}</span>
+				<span class="cell-rank">{a.rank}</span>
+				<span class="cell-signups">{a.signups}</span>
+			</div>
+		))}
+	</div>
+</div>
+
+<style>
+	.marketing-kpis {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 14px;
+		margin-bottom: 14px;
+	}
+	.panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 18px 20px;
+	}
+	.stat-label {
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+	.stat-value {
+		font-size: 24px;
+		font-weight: 700;
+		color: var(--text);
+		margin-top: 8px;
+		display: block;
+	}
+	.stat-delta {
+		font-size: 11.5px;
+	}
+	.stat-delta.pos {
+		color: var(--green);
+	}
+	.stat-delta.neg {
+		color: var(--red);
+	}
+	.marketing-content {
+		display: grid;
+		grid-template-columns: 1fr 1.5fr;
+		gap: 14px;
+		align-items: start;
+	}
+	.panel-title {
+		font-size: 13.5px;
+		font-weight: 600;
+		color: var(--text);
+	}
+	.sources-list {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		margin-top: 16px;
+	}
+	.source-row {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.source-labels {
+		display: flex;
+		align-items: baseline;
+	}
+	.source-name {
+		font-size: 12.5px;
+		color: var(--text);
+	}
+	.source-value {
+		margin-left: auto;
+		font-size: 12.5px;
+		color: var(--text-dim);
+	}
+	.source-track {
+		height: 6px;
+		border-radius: 4px;
+		background: var(--surface2);
+		overflow: hidden;
+	}
+	.source-bar {
+		height: 100%;
+		border-radius: 4px;
+		background: var(--accent);
+	}
+	.table-panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		overflow: hidden;
+	}
+	.table-head {
+		display: grid;
+		grid-template-columns: 2.2fr 0.9fr 0.8fr 0.8fr 0.9fr;
+		padding: 11px 16px;
+		border-bottom: 1px solid var(--border);
+		font-size: 10.5px;
+		letter-spacing: 0.06em;
+		color: var(--text-dimmer);
+	}
+	.table-row {
+		display: grid;
+		grid-template-columns: 2.2fr 0.9fr 0.8fr 0.8fr 0.9fr;
+		align-items: center;
+		padding: 11px 16px;
+		border-top: 1px solid var(--border);
+	}
+	.cell-title {
+		font-size: 12.5px;
+		color: var(--text);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		padding-right: 10px;
+	}
+	.cell-views,
+	.cell-rank {
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+	.cell-rank {
+		color: var(--text);
+	}
+	.cell-signups {
+		font-size: 12px;
+		color: var(--green);
+	}
+	@media (max-width: 860px) {
+		.marketing-kpis {
+			grid-template-columns: 1fr 1fr;
+		}
+		.marketing-content {
+			grid-template-columns: 1fr;
+		}
+		.table-head,
+		.table-row {
+			grid-template-columns: 2fr 1fr 1fr;
+		}
+		.cell-rank,
+		.cell-signups {
+			display: none;
+		}
+	}
+</style>

@@ -1,0 +1,38 @@
+---
+// Deterministic hash-based gradient avatar, matching the source design's grad(seed) function.
+interface Props {
+	seed: string;
+	size?: number;
+	radius?: string;
+}
+
+const { seed, size = 30, radius = '50%' } = Astro.props;
+
+function hash(str: string): number {
+	let h = 0;
+	for (let i = 0; i < str.length; i++) {
+		h = (h * 31 + str.charCodeAt(i)) >>> 0;
+	}
+	return h;
+}
+
+function grad(seed: string): string {
+	const hu = hash(seed);
+	const a = hu % 360;
+	const b = (a + 38 + ((hu >> 8) % 56)) % 360;
+	return `linear-gradient(118deg, hsl(${a},64%,58%), hsl(${b},70%,42%))`;
+}
+
+const background = grad(seed);
+---
+
+<span
+	class="gradient-avatar"
+	style={`width:${size}px; height:${size}px; flex:0 0 ${size}px; border-radius:${radius}; background:${background};`}
+></span>
+
+<style>
+	.gradient-avatar {
+		display: inline-block;
+	}
+</style>

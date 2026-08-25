@@ -1,0 +1,252 @@
+---
+import { getDb } from '../../db/client';
+import {
+	listUsers,
+	getUserDetail,
+	type UserSegment,
+	type UserSort,
+} from '../../lib/admin/queries';
+import UsersTable from '../components/UsersTable.astro';
+import UserDrawer from '../components/UserDrawer.astro';
+
+const db = getDb(Astro as any);
+const params = Astro.url.searchParams;
+const segmentValues: UserSegment[] = ['all', 'pro', 'free', 'power', 'low_credits', 'admins'];
+const sortValues: UserSort[] = ['doodles', 'credits', 'newest'];
+const rawSegment = params.get('segment');
+const rawSort = params.get('sort');
+const segment: UserSegment = rawSegment && segmentValues.includes(rawSegment as UserSegment) ? (rawSegment as UserSegment) : 'all';
+const sort: UserSort = rawSort && sortValues.includes(rawSort as UserSort) ? (rawSort as UserSort) : 'doodles';
+const q = params.get('q')?.trim() || undefined;
+const parsedPage = Number.parseInt(params.get('page') ?? '1', 10);
+const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+const pageSize = 50;
+
+const result = await listUsers(db, { segment, sort, q, limit: pageSize, offset: (page - 1) * pageSize });
+const canMutate = Astro.locals.admin!.platformRole === 'admin';
+const selectedUser = params.get('user');
+const detail = selectedUser ? await getUserDetail(db, selectedUser) : null;
+
+const linkFor = (changes: Record<string, string | null>) => {
+	const next = new URLSearchParams(params);
+	for (const [key, value] of Object.entries(changes)) {
+		if (value === null || value === '') next.delete(key);
+		else next.set(key, value);
+	}
+	return `?${next.toString()}`;
+};
+
+const segments = [
+	{ key: 'all' as const, label: 'All', path: 'M4 6h16M7 12h10M10 18h4' },
+	{ key: 'pro' as const, label: 'Pro', path: 'M13 3 5 14h5l-1 7 8-11h-5l1-7Z' },
+	{ key: 'free' as const, label: 'Free', path: 'M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17' },
+	{ key: 'power' as const, label: 'Generated', title: 'Users with at least one successful generation', path: 'M5 12h14M12 5v14' },
+	{ key: 'low_credits' as const, label: 'Low credits', path: 'M12 4v10M12 19h.01' },
+	{ key: 'admins' as const, label: 'Admins', path: 'M12 3.5 14.5 9l6 .9-4.3 4.2 1 6-5.2-2.8-5.2 2.8 1-6L3.5 9.9l6-.9Z' },
+];
+const sortOptions = [
+	{ key: 'doodles' as const, label: 'Doodles' },
+	{ key: 'credits' as const, label: 'Credits' },
+	{ key: 'newest' as const, label: 'Newest' },
+];
+const hasNext = page * pageSize < result.total;
+const hasPrev = page > 1;
+---
+
+<div class="users-page">
+	<div class="toolbar">
+		<form class="search-form" method="get">
+			<input type="hidden" name="segment" value={segment} />
+			<input type="hidden" name="sort" value={sort} />
+			<input name="q" value={q ?? ''} placeholder="Search users" aria-label="Search users" />
+		</form>
+		<div class="filter-row">
+			{
+				segments.map((filter) => (
+					<a
+						class:list={['seg-chip', { active: segment === filter.key }]}
+						href={linkFor({ segment: filter.key, page: '1', user: null })}
+						title={filter.title}
+					>
+						<span class="seg-icon">
+							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+								<path d={filter.path} stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+							</svg>
+						</span>
+						{filter.label}
+						<span class="seg-count">{result.segmentCounts[filter.key]}</span>
+					</a>
+				))
+			}
+			<span class="sort-label">Sort</span>
+			{sortOptions.map((option) => (
+				<a class:list={['sort-chip', { active: sort === option.key }]} href={linkFor({ sort: option.key, page: '1', user: null })}>
+					{option.label}
+				</a>
+			))}
+		</div>
+	</div>
+
+	<UsersTable rows={result.rows} canMutate={canMutate} />
+
+	{(hasPrev || hasNext) && (
+		<nav class="pagination" aria-label="Users pagination">
+			{hasPrev ? <a href={linkFor({ page: String(page - 1), user: null })}>Previous</a> : <span class="disabled">Previous</span>}
+			<span>Page {page}</span>
+			{hasNext ? <a href={linkFor({ page: String(page + 1), user: null })}>Next</a> : <span class="disabled">Next</span>}
+		</nav>
+	)}
+
+	{detail && <UserDrawer detail={detail} canMutate={canMutate} />}
+</div>
+
+<style>
+	.users-page {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+	.toolbar {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.search-form {
+		display: flex;
+		justify-content: flex-end;
+	}
+	.search-form input {
+		width: min(280px, 100%);
+		height: 34px;
+		padding: 0 12px;
+		border: 1px solid var(--border2);
+		border-radius: 9px;
+		background: var(--card);
+		color: var(--text);
+		font: inherit;
+		font-size: 12px;
+	}
+	.search-form input::placeholder {
+		color: var(--text-dimmer);
+	}
+	.filter-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	.seg-chip,
+	.sort-chip {
+		text-decoration: none;
+	}
+	.seg-chip {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		height: 34px;
+		padding: 0 13px;
+		border-radius: 999px;
+		border: 1px solid var(--border2);
+		font-size: 12.5px;
+		background: transparent;
+		color: var(--text-dim);
+	}
+	.seg-chip:hover,
+	.sort-chip:hover {
+		color: var(--text);
+		border-color: var(--border3);
+	}
+	.seg-chip.active {
+		background: var(--hover);
+		color: var(--text);
+		border-color: var(--border3);
+	}
+	.seg-icon {
+		flex: 0 0 auto;
+		display: flex;
+	}
+	.seg-count {
+		font-size: 10.5px;
+		padding: 1px 6px;
+		border-radius: 999px;
+		background: var(--surface2);
+		color: var(--text-dimmer);
+	}
+	.sort-label {
+		margin-left: auto;
+		font-size: 12px;
+		color: var(--text-dimmer);
+	}
+	.sort-chip {
+		padding: 5px 11px;
+		border-radius: 999px;
+		border: 1px solid transparent;
+		font-size: 11.5px;
+		background: transparent;
+		color: var(--text-dim);
+	}
+	.sort-chip.active {
+		background: var(--hover);
+		color: var(--text);
+	}
+	.pagination {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 16px;
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+	.pagination a {
+		color: var(--text);
+		text-decoration: none;
+		padding: 8px 14px;
+		border-radius: 8px;
+		border: 1px solid var(--border2);
+	}
+	.pagination a:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+	.pagination .disabled {
+		color: var(--text-dimmer);
+	}
+	@media (max-width: 650px) {
+		.toolbar {
+			gap: 12px;
+		}
+		.search-form {
+			justify-content: stretch;
+		}
+		.search-form input {
+			width: 100%;
+			height: 42px;
+			font-size: 14px;
+			border-radius: 12px;
+		}
+		.filter-row {
+			gap: 6px;
+		}
+		.seg-chip {
+			height: 38px;
+			padding: 0 11px;
+			font-size: 12px;
+		}
+		.sort-label {
+			margin-left: 0;
+			width: 100%;
+			margin-top: 4px;
+		}
+		.sort-chip {
+			height: 34px;
+			padding: 6px 12px;
+			font-size: 12px;
+		}
+		.pagination a {
+			padding: 10px 18px;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+	}
+</style>

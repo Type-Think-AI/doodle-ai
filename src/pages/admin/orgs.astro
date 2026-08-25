@@ -1,0 +1,12 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../admin/layouts/AdminLayout.astro';
+import OrgsPage from '../../admin/pages/OrgsPage.astro';
+
+const admin = Astro.locals.admin!;
+---
+
+<AdminLayout active="orgs" admin={admin}>
+	<OrgsPage />
+</AdminLayout>

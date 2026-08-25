@@ -1,0 +1,90 @@
+---
+import { DONUT_DATA } from '../data/dummy';
+
+const C = 2 * Math.PI * 54;
+let acc = 0;
+const slices = DONUT_DATA.map((d) => {
+	const dash = `${((d.pct / 100) * C).toFixed(1)} ${C.toFixed(1)}`;
+	const offset = (-(acc / 100) * C).toFixed(1);
+	acc += d.pct;
+	return { ...d, dash, offset };
+});
+---
+
+<div class="donut-wrap">
+	<div class="donut-svg-wrap">
+		<svg width="146" height="146" viewBox="0 0 146 146">
+			{
+				slices.map((d) => (
+					<circle
+						cx="73"
+						cy="73"
+						r="54"
+						fill="none"
+						stroke={d.color}
+						stroke-width="19"
+						stroke-dasharray={d.dash}
+						stroke-dashoffset={d.offset}
+						transform="rotate(-90 73 73)"
+					/>
+				))
+			}
+			<circle cx="73" cy="73" r="43" fill="var(--card)"></circle>
+			<text x="73" y="69" text-anchor="middle" fill="var(--text)" font-size="21" font-weight="700">58.3k</text>
+			<text x="73" y="87" text-anchor="middle" fill="var(--text-dimmer)" font-size="10.5">doodles</text>
+		</svg>
+	</div>
+	<div class="donut-legend">
+		{
+			slices.map((d) => (
+				<div class="legend-row">
+					<span class="legend-dot" style={`background:${d.color};`} />
+					<span class="legend-name">{d.name}</span>
+					<span class="legend-pct">{d.pct}%</span>
+				</div>
+			))
+		}
+	</div>
+</div>
+
+<style>
+	.donut-wrap {
+		display: flex;
+		flex-direction: column;
+	}
+	.donut-svg-wrap {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 6px 0 12px;
+	}
+	.donut-legend {
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+	}
+	.legend-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+	.legend-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex: 0 0 8px;
+	}
+	.legend-name {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.legend-pct {
+		color: var(--text);
+		font-weight: 500;
+	}
+</style>

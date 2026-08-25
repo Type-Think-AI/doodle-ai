@@ -1,0 +1,37 @@
+---
+interface Props {
+	status: string;
+	tone: 'green' | 'red' | 'blue' | 'neutral';
+}
+
+const { status, tone } = Astro.props;
+---
+
+<span class:list={['status-pill', `tone-${tone}`]}>{status}</span>
+
+<style>
+	.status-pill {
+		font-size: 11px;
+		width: fit-content;
+		padding: 3px 9px;
+		border-radius: 999px;
+		display: inline-block;
+	}
+	.tone-green {
+		background: var(--green-faint);
+		color: var(--green);
+	}
+	.tone-red {
+		background: var(--red-faint);
+		color: var(--red);
+	}
+	.tone-blue {
+		background: var(--blue-faint);
+		color: var(--blue);
+	}
+	.tone-neutral {
+		background: var(--surface2);
+		color: var(--text-dimmer);
+		border: 1px solid var(--border2);
+	}
+</style>

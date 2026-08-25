@@ -1,0 +1,403 @@
+---
+import type { AdminUserDetail } from '../../lib/admin/queries';
+import { formatDate, relativeTime, thousands } from '../../lib/admin/queries';
+import GradientAvatar from './GradientAvatar.astro';
+
+interface Props {
+	detail: AdminUserDetail;
+	canMutate: boolean;
+}
+
+const { detail, canMutate } = Astro.props;
+const isSelf = detail.id === Astro.locals.admin!.user.id;
+const closeUrl = new URL(Astro.url);
+closeUrl.searchParams.delete('user');
+---
+
+<aside class="drawer" aria-label={`Details for ${detail.name}`}>
+	<div class="drawer-header">
+		<div class="identity">
+			<GradientAvatar seed={detail.email} size={42} />
+			<div>
+				<h2>{detail.name}</h2>
+				<p>{detail.email}</p>
+				<span>Signed up {formatDate(detail.createdAt)}</span>
+			</div>
+		</div>
+		<a class="close" href={closeUrl.pathname + closeUrl.search} aria-label="Close user details">×</a>
+	</div>
+
+	<div class="stats" aria-label="User statistics">
+		<div><strong>{thousands(detail.doodles)}</strong><span>Doodles</span></div>
+		<div><strong>{thousands(detail.projects)}</strong><span>Projects</span></div>
+		<div><strong>{thousands(detail.credits)}</strong><span>Credits</span></div>
+		<div><strong>{thousands(detail.threads)}</strong><span>Threads</span></div>
+		<div><strong>{thousands(detail.feedbackCount)}</strong><span>Feedback</span></div>
+		<div><strong>{detail.plan}</strong><span>Plan</span></div>
+		<div><strong>{detail.topSkill || '—'}</strong><span>Top skill</span></div>
+	</div>
+
+	<section class="section role-section">
+		<div class="section-heading"><h3>Platform role</h3></div>
+		{canMutate && !isSelf ? (
+			<div class="role-editor" data-role-editor data-user-id={detail.id}>
+				<select data-role-select aria-label="Platform role">
+					<option value="user" selected={detail.platformRole === 'user'}>User</option>
+					<option value="support" selected={detail.platformRole === 'support'}>Support</option>
+					<option value="admin" selected={detail.platformRole === 'admin'}>Admin</option>
+				</select>
+				<button type="button" data-role-save>Save</button>
+				<p class="role-error" data-role-error role="alert" hidden></p>
+			</div>
+		) : (
+			<div class="role-readonly">
+				<strong>{detail.platformRole}</strong>
+				<span>{isSelf ? 'You cannot change your own role.' : 'Only a full admin can change roles.'}</span>
+			</div>
+		)}
+	</section>
+
+	<section class="section">
+		<div class="section-heading"><h3>Teams</h3><span>{detail.orgs.length}</span></div>
+		{detail.orgs.length === 0 ? (
+			<p class="empty">No team memberships.</p>
+		) : (
+			<div class="list">
+				{detail.orgs.map((org) => (
+					<div class="list-row">
+						<div><strong>{org.name}</strong><span>{org.isPersonal ? 'Personal' : 'Team'} · {org.role}</span></div>
+						<span class="row-value">{thousands(org.balance)}</span>
+					</div>
+				))}
+			</div>
+		)}
+	</section>
+
+	<section class="section">
+		<div class="section-heading"><h3>Recent generations</h3><span>{detail.recentGenerations.length}</span></div>
+		{detail.recentGenerations.length === 0 ? (
+			<p class="empty">No generations yet.</p>
+		) : (
+			<div class="list">
+				{detail.recentGenerations.map((generation) => (
+					<div class="list-row generation-row">
+						{generation.outputUrl ? <img src={generation.outputUrl} alt="Generated doodle" width="48" height="48" loading="lazy" /> : <span class="thumb-placeholder" />}
+						<div><strong>{generation.skillId}</strong><span>{generation.status} · {formatDate(generation.createdAt)}</span></div>
+					</div>
+				))}
+			</div>
+		)}
+	</section>
+
+	<section class="section">
+		<div class="section-heading"><h3>Recent credit ledger</h3><span>{detail.recentLedger.length}</span></div>
+		{detail.recentLedger.length === 0 ? (
+			<p class="empty">No credit activity yet.</p>
+		) : (
+			<div class="list">
+				{detail.recentLedger.map((entry) => (
+					<div class="list-row ledger-row">
+						<div><strong class:list={{ positive: entry.delta > 0, negative: entry.delta < 0 }}>{entry.delta > 0 ? '+' : ''}{thousands(entry.delta)}</strong><span>{entry.reason} · {formatDate(entry.createdAt)}</span></div>
+						<span class="row-value">{thousands(entry.balanceAfter)}</span>
+					</div>
+				))}
+			</div>
+		)}
+	</section>
+</aside>
+
+<script>
+	const editor = document.querySelector<HTMLElement>('[data-role-editor]');
+	const save = editor?.querySelector<HTMLButtonElement>('[data-role-save]');
+	const select = editor?.querySelector<HTMLSelectElement>('[data-role-select]');
+	const error = editor?.querySelector<HTMLElement>('[data-role-error]');
+
+	save?.addEventListener('click', async () => {
+		if (!editor || !select || !save || !error) return;
+		save.disabled = true;
+		error.hidden = true;
+		try {
+			const response = await fetch(`/api/admin/users/${encodeURIComponent(editor.dataset.userId ?? '')}/role`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ role: select.value }),
+			});
+			const body = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
+			if (!response.ok) {
+				error.textContent = body?.error?.message ?? 'Could not update this role.';
+				error.hidden = false;
+				return;
+			}
+			window.location.reload();
+		} catch {
+			error.textContent = 'Could not update this role. Check your connection and try again.';
+			error.hidden = false;
+		} finally {
+			save.disabled = false;
+		}
+	});
+</script>
+
+<style>
+	.drawer {
+		position: fixed;
+		top: 0;
+		right: 0;
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		width: min(440px, 100vw);
+		height: 100vh;
+		overflow-y: auto;
+		padding: 24px;
+		background: var(--surface);
+		border-left: 1px solid var(--border);
+		box-shadow: -18px 0 50px rgba(0, 0, 0, 0.18);
+		font-family: inherit;
+	}
+	.drawer-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 16px;
+		padding-bottom: 20px;
+		border-bottom: 1px solid var(--border);
+	}
+	.identity {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-width: 0;
+	}
+	.identity h2 {
+		margin: 0;
+		font-size: 17px;
+		color: var(--text);
+	}
+	.identity p,
+	.identity span {
+		display: block;
+		margin: 3px 0 0;
+		font-size: 11px;
+		color: var(--text-dimmer);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.close {
+		font-size: 26px;
+		line-height: 1;
+		color: var(--text-dimmer);
+		text-decoration: none;
+	}
+	.close:hover {
+		color: var(--text);
+	}
+	.stats {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 10px;
+		padding: 18px 0;
+		border-bottom: 1px solid var(--border);
+	}
+	.stats div {
+		min-width: 0;
+	}
+	.stats strong,
+	.stats span {
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.stats strong {
+		font-size: 14px;
+		color: var(--text);
+	}
+	.stats span {
+		margin-top: 3px;
+		font-size: 10px;
+		color: var(--text-dimmer);
+	}
+	.section {
+		padding: 18px 0;
+		border-bottom: 1px solid var(--border);
+	}
+	.section-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 10px;
+	}
+	.section-heading h3 {
+		margin: 0;
+		font-size: 12px;
+		letter-spacing: 0.02em;
+		color: var(--text);
+	}
+	.section-heading > span {
+		font-size: 11px;
+		color: var(--text-dimmer);
+	}
+	.role-editor {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	.role-editor select,
+	.role-editor button {
+		height: 32px;
+		border: 1px solid var(--border2);
+		border-radius: 8px;
+		font: inherit;
+		font-size: 12px;
+	}
+	.role-editor select {
+		flex: 1;
+		min-width: 120px;
+		padding: 0 8px;
+		background: var(--surface2);
+		color: var(--text);
+	}
+	.role-editor button {
+		padding: 0 13px;
+		background: var(--accent);
+		color: #1a1a1a;
+		cursor: pointer;
+	}
+	.role-editor button:disabled {
+		cursor: wait;
+		opacity: 0.6;
+	}
+	.role-error {
+		flex-basis: 100%;
+		margin: 2px 0 0;
+		font-size: 11px;
+		color: var(--red);
+	}
+	.role-readonly {
+		display: flex;
+		align-items: baseline;
+		gap: 9px;
+		flex-wrap: wrap;
+	}
+	.role-readonly strong {
+		font-size: 12px;
+		color: var(--text);
+	}
+	.role-readonly span,
+	.empty,
+	.list-row span {
+		font-size: 11px;
+		color: var(--text-dimmer);
+	}
+	.empty {
+		margin: 0;
+	}
+	.list {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+	.list-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		min-width: 0;
+		padding: 8px 0;
+	}
+	.list-row > div {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+	.list-row strong {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 12px;
+		color: var(--text);
+	}
+	.list-row span {
+		margin-top: 3px;
+	}
+	.row-value {
+		flex: 0 0 auto;
+		margin-top: 0 !important;
+		color: var(--text-dim) !important;
+	}
+	.generation-row {
+		justify-content: flex-start;
+	}
+	.generation-row img,
+	.thumb-placeholder {
+		width: 48px;
+		height: 48px;
+		flex: 0 0 48px;
+		border-radius: 8px;
+		object-fit: cover;
+		background: var(--surface2);
+	}
+	.positive {
+		color: var(--green) !important;
+	}
+	.negative {
+		color: var(--red) !important;
+	}
+	@media (max-width: 500px) {
+		.drawer {
+			width: 100vw;
+			padding: 20px 16px;
+			border-left: none;
+			border-radius: 0;
+		}
+		.drawer-header {
+			padding-bottom: 16px;
+		}
+		.identity {
+			gap: 10px;
+		}
+		.identity h2 {
+			font-size: 16px;
+		}
+		.close {
+			min-width: 44px;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 28px;
+		}
+		.stats {
+			grid-template-columns: repeat(3, 1fr);
+			gap: 8px;
+			padding: 14px 0;
+		}
+		.stats strong {
+			font-size: 13px;
+		}
+		.role-editor select,
+		.role-editor button {
+			height: 40px;
+			font-size: 14px;
+		}
+		.role-editor button {
+			padding: 0 18px;
+		}
+		.section {
+			padding: 14px 0;
+		}
+		.list-row {
+			padding: 10px 0;
+			min-height: 44px;
+		}
+		.generation-row img,
+		.thumb-placeholder {
+			width: 44px;
+			height: 44px;
+			flex: 0 0 44px;
+		}
+	}
+</style>

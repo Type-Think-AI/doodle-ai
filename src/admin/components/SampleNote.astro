@@ -1,0 +1,133 @@
+---
+/*
+ * The page-level companion to SampleBadge: one strip at the top of a screen
+ * naming every block on it that is still placeholder, and what each one needs
+ * in order to become real.
+ *
+ * Rendering nothing when `items` is empty is intentional — a fully-real page
+ * should look fully real, with no residual "some data may be sample" hedge
+ * to train people into ignoring the badge.
+ */
+interface SampleItem {
+	/** The block's visible heading, so it can be found on the page. */
+	block: string;
+	/** What has to exist first. */
+	needs: string;
+}
+
+interface Props {
+	items: SampleItem[];
+}
+
+const { items } = Astro.props;
+---
+
+{
+	items.length > 0 && (
+		<div class="sample-note" role="note">
+			<div class="sample-note-head">
+				<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path d="M12 8.5v5M12 16.6v.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+					<circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.7" />
+				</svg>
+				<strong>
+					{items.length} block{items.length === 1 ? '' : 's'} on this page {items.length === 1 ? 'is' : 'are'} sample
+					data
+				</strong>
+				<button type="button" class="sample-note-close" data-sample-dismiss aria-label="Dismiss">
+					<svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+						<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+					</svg>
+				</button>
+			</div>
+			<ul class="sample-note-list">
+				{items.map((item) => (
+					<li>
+						<span class="sample-note-block">{item.block}</span>
+						<span class="sample-note-needs">{item.needs}</span>
+					</li>
+				))}
+			</ul>
+		</div>
+	)
+}
+
+<style>
+	.sample-note {
+		border: 1px solid rgba(214, 158, 46, 0.3);
+		background: rgba(214, 158, 46, 0.07);
+		border-radius: 12px;
+		padding: 11px 13px;
+		margin-bottom: 16px;
+	}
+	:global([data-theme='dark']) .sample-note {
+		border-color: rgba(224, 177, 85, 0.24);
+		background: rgba(224, 177, 85, 0.06);
+	}
+	.sample-note-head {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		color: #b4801f;
+		font-size: 12.5px;
+	}
+	:global([data-theme='dark']) .sample-note-head {
+		color: #e0b155;
+	}
+	.sample-note-head strong {
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+	.sample-note-close {
+		margin-left: auto;
+		width: 22px;
+		height: 22px;
+		border-radius: 6px;
+		border: 1px solid transparent;
+		background: transparent;
+		color: inherit;
+		opacity: 0.7;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.sample-note-close:hover {
+		opacity: 1;
+		background: rgba(214, 158, 46, 0.14);
+	}
+	.sample-note-list {
+		list-style: none;
+		margin: 8px 0 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.sample-note-list li {
+		display: flex;
+		gap: 8px;
+		font-size: 12px;
+		line-height: 1.5;
+		flex-wrap: wrap;
+	}
+	.sample-note-block {
+		color: var(--text);
+		font-weight: 600;
+		min-width: 150px;
+	}
+	.sample-note-needs {
+		color: var(--text-dimmer);
+	}
+</style>
+
+<script>
+	// Session-scoped, not persistent: the strip should come back on the next
+	// visit. Permanently dismissing a "this number is fake" warning defeats
+	// the point of showing it.
+	document.querySelectorAll('[data-sample-dismiss]').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			btn.closest('.sample-note')?.remove();
+		});
+	});
+</script>

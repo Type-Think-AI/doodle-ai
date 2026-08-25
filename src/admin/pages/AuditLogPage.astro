@@ -1,0 +1,75 @@
+---
+import { getDb } from '../../db/client';
+import { listAudit, describeAudit } from '../../lib/admin/audit';
+import { relativeTime, formatDate } from '../../lib/admin/queries';
+
+const db = getDb(Astro as any);
+const rawPage = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
+const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+const limit = 50;
+const rows = await listAudit(db, limit, (page - 1) * limit);
+const hasNext = rows.length === limit;
+---
+
+<div class="audit-page">
+	{rows.length === 0 ? (
+		<div class="empty-state">
+			<strong>No admin actions recorded yet.</strong>
+			<span>The append-only audit trail will appear here after a privileged action.</span>
+		</div>
+	) : (
+			<div class="table-card">
+				<div class="table-wrap">
+					<table>
+						<thead><tr><th>WHEN</th><th>ACTOR</th><th>ACTION</th><th>DESCRIPTION</th><th>TARGET</th><th>IP</th><th></th></tr></thead>
+						<tbody>
+							{rows.map((row) => (
+								<tr>
+									<td title={formatDate(row.createdAt)}>{relativeTime(row.createdAt)}</td>
+									<td><span class="actor-name">{row.actorName ?? 'deleted user'}</span>{row.actorEmail && <span class="actor-email">{row.actorEmail}</span>}</td>
+									<td><code class="action-pill">{row.action}</code></td>
+									<td class="description">{describeAudit(row)}</td>
+									<td>{row.targetType ?? '—'}{row.targetId ? <code class="target-id">{row.targetId}</code> : ''}</td>
+									<td>{row.ipAddress ?? '—'}</td>
+									<td>{row.detail && <details><summary>Raw</summary><pre>{JSON.stringify(row.detail, null, 2)}</pre></details>}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			</div>
+	)}
+
+	{(page > 1 || hasNext) && (
+		<nav class="pagination" aria-label="Audit log pagination">
+			{page > 1 ? <a href={`/admin/audit-log?page=${page - 1}`}>Previous</a> : <span class="disabled">Previous</span>}
+			<span>Page {page}</span>
+			{hasNext ? <a href={`/admin/audit-log?page=${page + 1}`}>Next</a> : <span class="disabled">Next</span>}
+		</nav>
+	)}
+</div>
+
+<style>
+	.audit-page { display: flex; flex-direction: column; gap: 14px; }
+	.table-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; }
+	.table-wrap { overflow-x: auto; }
+	table { width: 100%; border-collapse: collapse; min-width: 1080px; font-size: 13px; }
+	th { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text-dimmer); font-size: 10px; font-weight: 600; letter-spacing: .07em; text-align: left; white-space: nowrap; }
+	td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dim); white-space: nowrap; vertical-align: top; }
+	tr:last-child td { border-bottom: 0; }
+	.actor-name, .actor-email, .target-id { display: block; }
+	.actor-name { color: var(--text); }
+	.actor-email { margin-top: 3px; color: var(--text-dimmer); font-size: 11px; }
+	.action-pill { display: inline-block; padding: 3px 7px; border: 1px solid var(--border2); border-radius: 5px; background: var(--surface2); color: var(--text-dim); font-size: 11px; }
+	.description { min-width: 260px; max-width: 380px; white-space: normal; line-height: 1.4; }
+	.target-id { margin-top: 3px; color: var(--text-dimmer); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+	details { min-width: 46px; }
+	summary { color: var(--accent); cursor: pointer; font-size: 11px; }
+	pre { position: absolute; z-index: 2; right: 16px; margin-top: 8px; padding: 10px; border: 1px solid var(--border2); border-radius: 7px; background: var(--surface2); color: var(--text-dim); font-size: 11px; text-align: left; white-space: pre-wrap; }
+	.empty-state { border: 1px dashed var(--border2); border-radius: 12px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--text-dimmer); text-align: center; }
+	.empty-state strong { color: var(--text-dim); font-size: 14px; }
+	.pagination { display: flex; align-items: center; justify-content: center; gap: 14px; color: var(--text-dimmer); font-size: 12px; }
+	.pagination a { padding: 7px 10px; border: 1px solid var(--border2); border-radius: 7px; color: var(--text-dim); text-decoration: none; background: var(--surface2); }
+	.pagination a:hover { color: var(--text); border-color: var(--accent); }
+	.pagination .disabled { opacity: .45; }
+</style>

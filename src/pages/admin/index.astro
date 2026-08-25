@@ -1,0 +1,18 @@
+---
+// Server-rendered, never static. Without this the page is prerendered into
+// dist/ at build time and served by Cloudflare's asset handler before any
+// middleware runs — which is exactly how /admin was publicly readable.
+// src/middleware.ts has already resolved and authorised `Astro.locals.admin`
+// by the time this renders; a caller who fails that check is rewritten to
+// /404 and never reaches here.
+export const prerender = false;
+
+import AdminLayout from '../../admin/layouts/AdminLayout.astro';
+import OverviewPage from '../../admin/pages/OverviewPage.astro';
+
+const admin = Astro.locals.admin!;
+---
+
+<AdminLayout active="overview" admin={admin}>
+	<OverviewPage />
+</AdminLayout>

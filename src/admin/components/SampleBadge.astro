@@ -1,0 +1,81 @@
+---
+/*
+ * Marks a UI block whose numbers are placeholders, not real data.
+ *
+ * The rule this component enforces: every number on an admin screen is
+ * either read from the database or visibly badged. An unlabelled fake
+ * number is worse than no number at all — someone eventually makes a
+ * decision on it.
+ *
+ * `reason` should say what is missing, not just that something is. "Country
+ * is never collected at signup" is actionable; "no data" is not.
+ */
+interface Props {
+	/** What would need to exist for this block to become real. */
+	reason: string;
+	/** Compact rendering for tight table headers and card corners. */
+	small?: boolean;
+}
+
+const { reason, small = false } = Astro.props;
+---
+
+<span class="sample-badge" class:list={{ small }} title={`Sample data — ${reason}`}>
+	<svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+		<path
+			d="M12 8.5v5M12 16.6v.2"
+			stroke="currentColor"
+			stroke-width="2.4"
+			stroke-linecap="round"></path>
+		<circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.7"></circle>
+	</svg>
+	<span>SAMPLE</span>
+	<span class="sr-only">{`— sample data, ${reason}`}</span>
+</span>
+
+<style>
+	.sample-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		vertical-align: middle;
+		padding: 2px 7px 2px 5px;
+		border-radius: 999px;
+		font-size: 9.5px;
+		font-weight: 700;
+		letter-spacing: 0.07em;
+		white-space: nowrap;
+		/* Amber isn't in the token set, so it's inlined here rather than
+		   inventing a global variable for one component. Deliberately not
+		   --red: this is "unverified", not "broken". */
+		color: #b4801f;
+		background: rgba(214, 158, 46, 0.13);
+		border: 1px solid rgba(214, 158, 46, 0.32);
+		cursor: help;
+	}
+	:global([data-theme='dark']) .sample-badge {
+		color: #e0b155;
+		background: rgba(224, 177, 85, 0.12);
+		border-color: rgba(224, 177, 85, 0.26);
+	}
+	.sample-badge.small {
+		padding: 1px 5px 1px 4px;
+		font-size: 8.5px;
+		gap: 3px;
+	}
+	.sample-badge svg {
+		flex: 0 0 10px;
+		opacity: 0.85;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+</style>

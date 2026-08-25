@@ -1,0 +1,128 @@
+---
+import '../../styles/app.css';
+import { THEME_STORAGE_KEY } from '../../lib/theme';
+import Sidebar from '../components/Sidebar.astro';
+import AdminHeader from '../components/AdminHeader.astro';
+import { ADMIN_PAGE_COPY } from '../data/nav';
+import type { AdminContext } from '../../lib/auth/admin-guard';
+
+interface Props {
+	active: string;
+	/**
+	 * Resolved and authorised by src/middleware.ts before this renders. Not
+	 * optional: a page reaching this layout without one means the middleware
+	 * prefix guard has a gap, and failing to compile is the right outcome.
+	 */
+	admin: AdminContext;
+	/** Real sidebar counts, resolved per page. */
+	badges?: Record<string, string>;
+}
+
+const { active, admin, badges } = Astro.props;
+const copy = ADMIN_PAGE_COPY[active] ?? ADMIN_PAGE_COPY.overview;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta name="robots" content="noindex, nofollow" />
+		<title>{copy.title} — Doodle AI Admin</title>
+		<script is:inline define:vars={{ THEME_STORAGE_KEY }}>
+			(function () {
+				try {
+					const stored = localStorage.getItem(THEME_STORAGE_KEY);
+					if (stored === 'light' || stored === 'dark') {
+						document.documentElement.setAttribute('data-theme', stored);
+					}
+				} catch {}
+			})();
+		</script>
+		<style>
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				height: 100%;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+					Helvetica, Arial, sans-serif;
+				font-weight: 500;
+				background: var(--stage);
+				color: var(--text);
+				font-size: 14px;
+				overflow: hidden;
+			}
+			::-webkit-scrollbar {
+				width: 8px;
+				height: 8px;
+			}
+			::-webkit-scrollbar-thumb {
+				background: rgba(140, 140, 150, 0.32);
+				border-radius: 8px;
+			}
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			.admin-shell {
+				display: flex;
+				height: 100vh;
+				width: 100%;
+				overflow: hidden;
+			}
+			.admin-main {
+				flex: 1;
+				min-width: 0;
+				max-width: none;
+				width: auto;
+				margin-inline: 0;
+				padding-inline: 0;
+				display: flex;
+				flex-direction: column;
+				background: var(--surface);
+				position: relative;
+			}
+			.admin-content {
+				flex: 1;
+				overflow: auto;
+				padding: 20px 28px 48px;
+			}
+			@media (max-width: 860px) {
+				body {
+					overflow: visible;
+				}
+				.admin-shell {
+					display: flex;
+					flex-direction: column;
+					height: auto;
+					min-height: 100vh;
+					min-height: 100dvh;
+					overflow: visible;
+				}
+				.admin-main {
+					flex: 1;
+					min-height: 0;
+				}
+				.admin-content {
+					padding: 16px 14px calc(56px + env(safe-area-inset-bottom, 0px) + 16px);
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="admin-shell">
+			<Sidebar active={active} admin={admin} badges={badges} />
+			<main class="admin-main">
+				<AdminHeader active={active} admin={admin} />
+				<div class="admin-content">
+					<slot />
+				</div>
+			</main>
+		</div>
+	</body>
+</html>

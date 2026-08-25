@@ -1,0 +1,181 @@
+---
+import { ADMIN_PAGE_COPY } from '../data/nav';
+import type { AdminContext } from '../../lib/auth/admin-guard';
+
+interface Props {
+	active: string;
+	admin: AdminContext;
+}
+
+const { active, admin } = Astro.props;
+const copy = ADMIN_PAGE_COPY[active] ?? ADMIN_PAGE_COPY.overview;
+
+// Only the pages that actually have a server-side CSV endpoint offer the
+// button. Rendering a disabled or no-op download control on every page was
+// the old behaviour and it taught people the icon does nothing.
+const EXPORTABLE = new Set(['users', 'projects', 'credits', 'billing', 'feedback', 'audit']);
+const canExport = EXPORTABLE.has(active);
+---
+
+<header class="admin-header">
+	<div class="header-titles">
+		<h1>{copy.title}</h1>
+		<p>{copy.subtitle}</p>
+	</div>
+	<div class="header-actions">
+		<form class="search-box" method="get" action={`/admin/${active === 'overview' ? 'users' : active}`}>
+			<svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+				<circle cx="11" cy="11" r="6.4" stroke="var(--text-dim)" stroke-width="1.7"></circle>
+				<path d="m16 16 4 4" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round"></path>
+			</svg>
+			<label class="sr-only" for="admin-search">Search</label>
+			<input
+				id="admin-search"
+				name="q"
+				type="search"
+				placeholder="Search name or email…"
+				value={Astro.url.searchParams.get('q') ?? ''}
+				autocomplete="off"
+			/>
+		</form>
+		{
+			canExport && (
+				<a class="ghost-btn" title="Export this page as CSV" href={`/api/admin/export/${active}${Astro.url.search}`}>
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+						<path
+							d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14"
+							stroke="currentColor"
+							stroke-width="1.7"
+							stroke-linecap="round"
+						/>
+					</svg>
+					<span class="sr-only">Export CSV</span>
+				</a>
+			)
+		}
+		<span class="role-tag" title={`You are signed in as ${admin.platformRole}`}>
+			{admin.platformRole === 'admin' ? 'Full access' : 'Read only'}
+		</span>
+	</div>
+</header>
+
+<style>
+	.admin-header {
+		flex: 0 0 auto;
+		padding: 22px 28px 16px;
+		border-bottom: 1px solid var(--border);
+		display: flex;
+		align-items: flex-start;
+		gap: 16px;
+		flex-wrap: wrap;
+	}
+	.header-titles {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		min-width: 0;
+	}
+	.header-titles h1 {
+		font-size: 21px;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		color: var(--text);
+		margin: 0;
+	}
+	.header-titles p {
+		font-size: 13px;
+		color: var(--text-dim);
+		margin: 0;
+	}
+	.header-actions {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		flex: 0 0 auto;
+	}
+	.search-box {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		height: 36px;
+		padding: 0 12px;
+		border-radius: 10px;
+		background: var(--surface2);
+		border: 1px solid var(--border2);
+		width: 240px;
+	}
+	.search-box input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		outline: none;
+		background: transparent;
+		color: var(--text);
+		font-size: 13px;
+	}
+	.ghost-btn {
+		width: 36px;
+		height: 36px;
+		border-radius: 10px;
+		border: 1px solid var(--border2);
+		background: transparent;
+		color: var(--text-dim);
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.ghost-btn:hover {
+		color: var(--text);
+		border-color: var(--border3);
+	}
+	.role-tag {
+		font-size: 10.5px;
+		font-weight: 600;
+		letter-spacing: 0.03em;
+		padding: 5px 9px;
+		border-radius: 999px;
+		background: var(--surface2);
+		border: 1px solid var(--border2);
+		color: var(--text-dimmer);
+		white-space: nowrap;
+		cursor: help;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+	@media (max-width: 640px) {
+		.admin-header {
+			padding: 16px 14px 14px;
+			gap: 12px;
+		}
+		.header-titles h1 {
+			font-size: 18px;
+		}
+		.header-titles p {
+			font-size: 12px;
+		}
+		.header-actions {
+			margin-left: 0;
+			width: 100%;
+			flex-wrap: wrap;
+		}
+		.search-box {
+			width: 100%;
+			flex: 1;
+			min-width: 0;
+		}
+		.role-tag {
+			display: none;
+		}
+	}
+</style>

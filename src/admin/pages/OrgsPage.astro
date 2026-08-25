@@ -1,0 +1,79 @@
+---
+import { getDb } from '../../db/client';
+import { listOrgs, thousands, formatDate } from '../../lib/admin/queries';
+
+const db = getDb(Astro as any);
+const rows = await listOrgs(db, 50, 0);
+const personal = rows.filter((row) => row.isPersonal).length;
+const shared = rows.length - personal;
+const credits = rows.reduce((sum, row) => sum + row.balance, 0);
+---
+
+<div class="orgs-page">
+	<div class="stats-grid">
+		<div class="stat-card"><span>All organizations</span><strong>{thousands(rows.length)}</strong><small>Every organization in D1</small></div>
+		<div class="stat-card"><span>Personal</span><strong>{thousands(personal)}</strong><small>User-owned workspaces</small></div>
+		<div class="stat-card"><span>Shared teams</span><strong>{thousands(shared)}</strong><small>Collaborative workspaces</small></div>
+		<div class="stat-card"><span>Credits outstanding</span><strong>{thousands(credits)}</strong><small>Across returned balances</small></div>
+	</div>
+
+	{rows.length === 0 ? (
+		<div class="empty-state">
+			<strong>No organizations yet.</strong>
+			<span>Organizations will appear here when users create or join a team.</span>
+		</div>
+	) : (
+		<div class="table-card">
+			<div class="table-wrap">
+				<table>
+					<thead><tr><th>TEAM</th><th>TYPE</th><th>MEMBERS</th><th>PROJECTS</th><th>DOODLES</th><th>CREDITS</th><th>MONTHLY CAP</th><th>CREATED</th></tr></thead>
+					<tbody>
+						{rows.map((row) => (
+							<tr>
+								<td><strong class="team-name">{row.name}</strong><code>{row.slug}</code></td>
+								<td><span class:list={['type-pill', row.isPersonal ? 'personal' : 'team']}>{row.isPersonal ? 'Personal' : 'Team'}</span></td>
+								<td>{thousands(row.members)}</td>
+								<td>{thousands(row.projects)}</td>
+								<td>{thousands(row.generations)}</td>
+								<td>{thousands(row.balance)}</td>
+								<td>{row.monthlyCreditCap === null ? 'No cap' : thousands(row.monthlyCreditCap)}</td>
+								<td>{formatDate(row.createdAt)}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	)}
+</div>
+
+<style>
+	.orgs-page { display: flex; flex-direction: column; gap: 14px; }
+	.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+	.stat-card { display: flex; flex-direction: column; gap: 5px; padding: 17px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+	.stat-card span { color: var(--text-dimmer); font-size: 12px; }
+	.stat-card strong { color: var(--text); font-size: 24px; line-height: 1.1; }
+	.stat-card small { color: var(--text-dimmer); font-size: 11px; }
+	.table-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; }
+	.table-wrap { overflow-x: auto; }
+	table { width: 100%; border-collapse: collapse; min-width: 930px; font-size: 13px; }
+	th { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text-dimmer); font-size: 10px; font-weight: 600; letter-spacing: .07em; text-align: left; white-space: nowrap; }
+	td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dim); white-space: nowrap; vertical-align: middle; }
+	tr:last-child td { border-bottom: 0; }
+	.team-name, td:first-child code { display: block; }
+	.team-name { color: var(--text); font-size: 13px; }
+	td:first-child code { margin-top: 3px; color: var(--text-dimmer); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+	.type-pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; }
+	.type-pill.personal { border: 1px solid var(--border2); background: var(--surface2); color: var(--text-dimmer); }
+	.type-pill.team { background: var(--blue-faint); color: var(--blue); }
+	.empty-state { border: 1px dashed var(--border2); border-radius: 12px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--text-dimmer); text-align: center; }
+	.empty-state strong { color: var(--text-dim); font-size: 14px; }
+	@media (max-width: 860px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+	@media (max-width: 520px) {
+		.stats-grid { grid-template-columns: 1fr; }
+		.stat-card { padding: 14px 16px; }
+		.stat-card strong { font-size: 20px; }
+		.table-card { border-radius: 10px; }
+		.table-wrap { -webkit-overflow-scrolling: touch; }
+	}
+</style>

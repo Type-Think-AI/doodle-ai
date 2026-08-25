@@ -1,0 +1,332 @@
+---
+import { getDb } from '../../db/client';
+import {
+	compact,
+	formatDate,
+	getCreditTotals,
+	getCreditsByWeek,
+	listLedger,
+	relativeTime,
+	thousands,
+} from '../../lib/admin/queries';
+import SampleBadge from '../components/SampleBadge.astro';
+
+const db = getDb(Astro);
+const requestedPage = Number.parseInt(new URL(Astro.request.url).searchParams.get('page') ?? '1', 10);
+const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+const pageSize = 50;
+const [ledger, totals, weekly] = await Promise.all([
+	listLedger(db, pageSize, (page - 1) * pageSize),
+	getCreditTotals(db),
+	getCreditsByWeek(db),
+]);
+const canGrant = Astro.locals.admin?.platformRole === 'admin';
+const chartHeight = 150;
+const chartWidth = Math.max(weekly.length * 28 + 12, 28);
+const chartMax = Math.max(1, ...weekly.flatMap((point) => [point.issued, point.used]));
+const chartBars = weekly.map((point, index) => {
+	const x = index * 28 + 6;
+	const issuedHeight = (point.issued / chartMax) * 126;
+	const usedHeight = (point.used / chartMax) * 126;
+	return {
+		...point,
+		x,
+		issuedY: chartHeight - issuedHeight - 8,
+		issuedHeight,
+		usedY: chartHeight - usedHeight - 8,
+		usedHeight,
+	};
+});
+const hasNextPage = ledger.length === pageSize;
+---
+
+<div class="credits-page">
+	<div class="stat-row" aria-label="Credit totals">
+		<div class="stat-card"><span class="stat-label">Issued</span><strong>{thousands(totals.issued)}</strong></div>
+		<div class="stat-card"><span class="stat-label">Used</span><strong>{thousands(totals.used)}</strong></div>
+		<div class="stat-card"><span class="stat-label">Outstanding</span><strong>{thousands(totals.outstanding)}</strong></div>
+		<div class="stat-card"><span class="stat-label">Utilisation</span><strong>{totals.utilisationPct}%</strong></div>
+	</div>
+
+	<div class="credits-grid">
+		{
+			canGrant ? (
+				<div class="panel grant-panel">
+					<span class="panel-title">Grant credits</span>
+					<p class="panel-subtitle">Applied instantly, logged in the append-only ledger</p>
+					<form id="credit-grant-form">
+						<label class="field-label" for="credit-user-search">User</label>
+						<div class="target-input">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+								<circle cx="11" cy="11" r="6.4" stroke="var(--text-dimmer)" stroke-width="1.7"></circle>
+								<path d="m16 16 4 4" stroke="var(--text-dimmer)" stroke-width="1.7" stroke-linecap="round"></path>
+							</svg>
+							<input id="credit-user-search" autocomplete="off" placeholder="User name or email" minlength="2" />
+						</div>
+						<div id="user-search-status" class="form-status" aria-live="polite"></div>
+						<div id="user-search-results" class="user-results" role="listbox"></div>
+						<div id="selected-user" class="selected-user" hidden></div>
+
+						<label class="field-label" for="credit-amount">Amount</label>
+						<div class="preset-row">
+							{[50, 100, 500, 1000].map((amount) => (
+								<button class="preset-btn" type="button" data-credit-preset={amount}>+{amount}</button>
+							))}
+							<div class="custom-amount">
+								<span>Custom</span>
+								<input id="credit-amount" type="number" min="1" max="100000" step="1" value="100" required />
+							</div>
+						</div>
+
+						<label class="field-label" for="credit-note">Note <span>(optional)</span></label>
+						<input class="note-input" id="credit-note" maxlength="500" placeholder="Why are you granting these credits?" />
+						<button class="grant-btn" id="grant-submit" type="submit" disabled>Pick a user to grant credits</button>
+						<div id="grant-result" class="grant-result" aria-live="polite"></div>
+					</form>
+				</div>
+			) : (
+				<div class="panel grant-panel grant-readonly">
+					<span class="panel-title">Grant credits</span>
+					<p class="panel-subtitle">Granting credits requires full admin access.</p>
+				</div>
+			)
+		}
+
+		<div class="ledger-panel">
+			<div class="ledger-header">
+				<span class="panel-title">Ledger</span>
+				<span class="ledger-count">{ledger.length} {ledger.length === 1 ? 'entry' : 'entries'}{page > 1 ? ` · page ${page}` : ''}</span>
+			</div>
+			<div class="ledger-table-head"><span>DELTA</span><span>REASON</span><span>ACTOR</span><span>ORG</span><span>BALANCE</span><span>WHEN</span></div>
+			{
+				ledger.length > 0 ? ledger.map((entry) => (
+					<div class="ledger-row">
+						<span class:list={['ledger-amount', entry.delta >= 0 ? 'pos' : 'neg']}>
+							{entry.delta >= 0 ? '+' : ''}{thousands(entry.delta)}
+						</span>
+						<span class="ledger-reason">{entry.reason}</span>
+						<span class="ledger-actor"><strong>{entry.actorName || '—'}</strong><small>{entry.actorEmail}</small></span>
+						<span class="ledger-org">{entry.orgName || '—'}</span>
+						<span class="ledger-balance">{thousands(entry.balanceAfter)}</span>
+						<span class="ledger-time" title={formatDate(entry.createdAt)}>{relativeTime(entry.createdAt)}</span>
+					</div>
+				)) : <div class="empty-state">No credit ledger entries yet.</div>
+			}
+			{(page > 1 || hasNextPage) && (
+				<nav class="pagination" aria-label="Ledger pagination">
+					{page > 1 ? <a href={`/admin/credits?page=${page - 1}`}>Previous</a> : <span></span>}
+					<span>Page {page}</span>
+					{hasNextPage ? <a href={`/admin/credits?page=${page + 1}`}>Next</a> : <span></span>}
+				</nav>
+			)}
+		</div>
+	</div>
+
+	<div class="panel chart-panel">
+		<div class="chart-header">
+			<div>
+				<span class="panel-title">Issued vs. used credits</span>
+				<p class="panel-subtitle">Weekly totals from the credit ledger</p>
+			</div>
+			<div class="chart-legend">
+				<span class="legend-item"><span class="legend-dot issued"></span>Issued</span>
+				<span class="legend-item"><span class="legend-dot used"></span>Used</span>
+			</div>
+		</div>
+		{
+			weekly.length > 0 ? (
+				<svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none" class="bar-chart" role="img" aria-label="Weekly issued and used credit totals">
+					{chartBars.map((bar) => (
+						<g>
+							<rect x={bar.x} y={bar.issuedY} width="18" height={bar.issuedHeight} rx="4" fill="var(--accent-softer)" stroke="var(--accent)" stroke-width="1" />
+							<rect x={bar.x + 5} y={bar.usedY} width="8" height={bar.usedHeight} rx="3" fill="var(--accent)" />
+							<title>{`${bar.week}: ${bar.issued} issued, ${bar.used} used`}</title>
+						</g>
+					))}
+				</svg>
+			) : <div class="empty-state chart-empty">No credit activity to chart yet.</div>
+		}
+	</div>
+</div>
+
+{canGrant && (
+	<script>
+		const searchInput = document.querySelector<HTMLInputElement>('#credit-user-search');
+		const results = document.querySelector<HTMLDivElement>('#user-search-results');
+		const searchStatus = document.querySelector<HTMLDivElement>('#user-search-status');
+		const selectedUser = document.querySelector<HTMLDivElement>('#selected-user');
+		const form = document.querySelector<HTMLFormElement>('#credit-grant-form');
+		const amountInput = document.querySelector<HTMLInputElement>('#credit-amount');
+		const noteInput = document.querySelector<HTMLInputElement>('#credit-note');
+		const submit = document.querySelector<HTMLButtonElement>('#grant-submit');
+		const grantResult = document.querySelector<HTMLDivElement>('#grant-result');
+		let target: { id: string; name: string; email: string; credits: number } | null = null;
+		let searchTimer: ReturnType<typeof setTimeout> | undefined;
+
+		function renderTarget(): void {
+			if (!selectedUser || !submit) return;
+			if (!target) {
+				selectedUser.hidden = true;
+				submit.disabled = true;
+				submit.textContent = 'Pick a user to grant credits';
+				return;
+			}
+			selectedUser.hidden = false;
+			selectedUser.textContent = `${target.name || target.email} · ${target.email} · ${target.credits.toLocaleString('en-US')} credits`;
+			submit.disabled = false;
+			submit.textContent = 'Grant credits';
+		}
+
+		function renderSearchUsers(users: { id: string; name: string; email: string; credits: number }[]): void {
+			if (!results) return;
+			results.replaceChildren();
+			users.forEach((user) => {
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'user-result';
+				button.dataset.user = JSON.stringify(user);
+				const name = document.createElement('strong');
+				name.textContent = user.name || user.email;
+				const email = document.createElement('small');
+				email.textContent = `${user.email} · ${user.credits.toLocaleString('en-US')} credits`;
+				button.append(name, email);
+				button.addEventListener('click', () => {
+					target = user;
+					if (searchInput) searchInput.value = user.email;
+					results.replaceChildren();
+					renderTarget();
+				});
+				results.append(button);
+			});
+		}
+
+		searchInput?.addEventListener('input', () => {
+			target = null;
+			renderTarget();
+			if (searchTimer) clearTimeout(searchTimer);
+			const query = searchInput.value.trim();
+			if (query.length < 2) {
+				if (results) results.replaceChildren();
+				if (searchStatus) searchStatus.textContent = 'Type at least 2 characters to search.';
+				return;
+			}
+			if (searchStatus) searchStatus.textContent = 'Searching…';
+			searchTimer = setTimeout(async () => {
+				try {
+					const response = await fetch(`/api/admin/users/search?q=${encodeURIComponent(query)}`);
+					const body = await response.json() as { id: string; name: string; email: string; credits: number }[] | { error?: { message?: string } };
+					if (!response.ok || !Array.isArray(body)) throw new Error(!Array.isArray(body) ? body.error?.message || 'Search failed.' : 'Search failed.');
+					renderSearchUsers(body);
+					if (searchStatus) searchStatus.textContent = body.length ? '' : 'No matching users.';
+				} catch (error) {
+					if (searchStatus) searchStatus.textContent = error instanceof Error ? error.message : 'Search failed.';
+				}
+			}, 250);
+		});
+
+		document.querySelectorAll<HTMLButtonElement>('[data-credit-preset]').forEach((button) => {
+			button.addEventListener('click', () => {
+				if (amountInput) amountInput.value = button.dataset.creditPreset || '';
+				document.querySelectorAll('[data-credit-preset]').forEach((item) => item.classList.remove('active'));
+				button.classList.add('active');
+			});
+		});
+
+		form?.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			if (!target || !amountInput || !submit) return;
+			const amount = Number(amountInput.value);
+			if (!Number.isInteger(amount) || amount <= 0 || amount > 100000) {
+				if (grantResult) grantResult.textContent = 'Enter a whole number between 1 and 100,000.';
+				return;
+			}
+			if (!window.confirm(`Grant ${amount.toLocaleString('en-US')} credits to ${target.email}? This append-only ledger action cannot be undone.`)) return;
+			submit.disabled = true;
+			submit.textContent = 'Granting…';
+			if (grantResult) grantResult.textContent = '';
+			try {
+				const response = await fetch('/api/admin/credits/grant', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ userId: target.id, amount, note: noteInput?.value.trim() || undefined }),
+				});
+				const body = await response.json() as { balance?: number; applied?: boolean; error?: { message?: string } };
+				if (!response.ok) throw new Error(body.error?.message || 'Credit grant failed.');
+				if (grantResult) grantResult.textContent = `${body.applied ? 'Granted' : 'Already applied'} ${amount.toLocaleString('en-US')} credits. New balance: ${body.balance?.toLocaleString('en-US') ?? '—'}.`;
+				if (noteInput) noteInput.value = '';
+				target.credits = body.balance ?? target.credits;
+			} catch (error) {
+				if (grantResult) grantResult.textContent = error instanceof Error ? error.message : 'Credit grant failed.';
+			} finally {
+				renderTarget();
+			}
+		});
+
+		renderTarget();
+	</script>
+)}
+
+<style>
+	.credits-page { display: flex; flex-direction: column; gap: 14px; }
+	.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+	.stat-card, .panel, .ledger-panel { border: 1px solid var(--border); border-radius: 16px; background: var(--card); }
+	.stat-card { padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; }
+	.stat-label, .field-label { font-size: 11.5px; color: var(--text-dimmer); }
+	.stat-card strong { font-size: 22px; color: var(--text); }
+	.credits-grid { display: grid; grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.8fr); gap: 14px; align-items: start; }
+	.panel { padding: 18px 20px; }
+	.panel-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+	.panel-subtitle { font-size: 11.5px; color: var(--text-dimmer); margin: 5px 0 16px; }
+	.grant-panel form { display: flex; flex-direction: column; gap: 8px; }
+	.field-label { margin-top: 5px; }
+	.field-label span { opacity: 0.8; }
+	.target-input, .note-input { height: 42px; padding: 0 14px; border-radius: 11px; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); }
+	.target-input { display: flex; align-items: center; gap: 8px; }
+	.target-input input, .note-input { width: 100%; border: 0; outline: none; background: transparent; color: var(--text); font-size: 13px; }
+	.target-input input { flex: 1; min-width: 0; }
+	.note-input { display: block; }
+	.form-status { min-height: 16px; font-size: 11px; color: var(--text-dimmer); }
+	.user-results { display: flex; flex-direction: column; gap: 4px; max-height: 190px; overflow: auto; }
+	.user-result { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; border: 1px solid var(--border2); border-radius: 9px; padding: 8px 10px; background: var(--surface2); color: var(--text); text-align: left; cursor: pointer; }
+	.user-result:hover { border-color: var(--accent); }
+	.user-result strong { font-size: 12px; }
+	.user-result small { color: var(--text-dimmer); font-size: 10.5px; }
+	.selected-user { padding: 8px 10px; border-radius: 9px; background: var(--green-faint); color: var(--green); font-size: 11.5px; }
+	.preset-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+	.preset-btn { height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--border2); background: transparent; color: var(--text-dim); cursor: pointer; }
+	.preset-btn:hover, .preset-btn.active { background: var(--hover); color: var(--text); border-color: var(--border3); }
+	.custom-amount { margin-left: auto; display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 10px; border-radius: 9px; background: var(--surface2); border: 1px solid var(--border2); }
+	.custom-amount span { font-size: 11px; color: var(--text-dimmer); }
+	.custom-amount input { width: 66px; border: 0; outline: none; background: transparent; color: var(--text); text-align: right; }
+	.grant-btn { width: 100%; height: 42px; margin-top: 5px; border-radius: 11px; border: 0; background: var(--accent); color: #1a1a1a; font-size: 13px; font-weight: 700; cursor: pointer; }
+	.grant-btn:disabled { background: var(--surface2); color: var(--text-dimmer); cursor: not-allowed; }
+	.grant-result { min-height: 18px; color: var(--text-dim); font-size: 11.5px; }
+	.grant-readonly { min-height: 130px; }
+	.ledger-panel { padding: 6px; overflow: hidden; }
+	.ledger-header { padding: 15px 15px 11px; display: flex; align-items: center; }
+	.ledger-count { margin-left: auto; font-size: 11.5px; color: var(--text-dimmer); }
+	.ledger-table-head, .ledger-row { display: grid; grid-template-columns: 0.65fr 1fr 1.35fr 1fr 0.8fr 0.75fr; gap: 10px; align-items: center; }
+	.ledger-table-head { padding: 0 15px 8px; font-size: 9.5px; letter-spacing: .06em; color: var(--text-dimmer); }
+	.ledger-row { padding: 10px 15px; border-top: 1px solid var(--border); min-height: 56px; }
+	.ledger-amount { font-size: 12.5px; font-weight: 700; }
+	.ledger-amount.pos { color: var(--green); }
+	.ledger-amount.neg { color: var(--red); }
+	.ledger-reason, .ledger-org, .ledger-balance, .ledger-time { font-size: 11.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.ledger-actor { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+	.ledger-actor strong { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+	.ledger-actor small { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dimmer); }
+	.empty-state { padding: 24px 15px; color: var(--text-dimmer); font-size: 12px; text-align: center; }
+	.pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px 8px; font-size: 11.5px; color: var(--text-dimmer); }
+	.pagination a { color: var(--blue); text-decoration: none; }
+	.chart-panel { display: flex; flex-direction: column; gap: 8px; }
+	.chart-header { display: flex; align-items: flex-start; }
+	.chart-legend { margin-left: auto; display: flex; gap: 14px; }
+	.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-dim); }
+	.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+	.legend-dot.issued { background: var(--accent-softer); border: 1px solid var(--accent); }
+	.legend-dot.used { background: var(--accent); }
+	.bar-chart { width: 100%; height: 160px; }
+	.chart-empty { min-height: 160px; display: flex; align-items: center; justify-content: center; }
+	@media (max-width: 1100px) { .ledger-table-head, .ledger-row { grid-template-columns: .7fr 1fr 1.3fr 1fr .8fr; } .ledger-table-head span:last-child, .ledger-time { display: none; } }
+	@media (max-width: 860px) { .stat-row { grid-template-columns: repeat(2, 1fr); } .credits-grid { grid-template-columns: 1fr; } .ledger-panel { overflow-x: auto; } .ledger-table-head, .ledger-row { min-width: 720px; } }
+</style>

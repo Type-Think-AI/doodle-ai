@@ -1,0 +1,284 @@
+---
+import { getDb } from '../../db/client';
+import { skillState } from '../../db/schema/product';
+import { compact, getSkillStats, thousands } from '../../lib/admin/queries';
+import { SKILLS as SKILL_CATALOG } from '../../lib/skills';
+import GradientAvatar from '../components/GradientAvatar.astro';
+import StatusPill from '../components/StatusPill.astro';
+
+const db = getDb(Astro as any);
+const [stats, stateRows] = await Promise.all([
+	getSkillStats(db),
+	db.select({ skillId: skillState.skillId, state: skillState.state, featured: skillState.featured, note: skillState.note }).from(skillState),
+]);
+const statById = new Map(stats.map((row) => [row.skillId, row]));
+const stateById = new Map(stateRows.map((row) => [row.skillId, row]));
+const catalogIds = new Set(SKILL_CATALOG.map((skill) => skill.id));
+const canMutate = Astro.locals.admin!.platformRole === 'admin';
+
+const skills = [
+	...SKILL_CATALOG.map((catalogSkill) => {
+		const stat = statById.get(catalogSkill.id);
+		const runtime = stateById.get(catalogSkill.id);
+		return {
+			skillId: catalogSkill.id,
+			name: catalogSkill.name,
+			runs: stat?.runs ?? 0,
+			successRate: stat?.successRate ?? 0,
+			creators: stat?.creators ?? 0,
+			creditsSpent: stat?.creditsSpent ?? 0,
+			state: runtime?.state === 'paused' || stat?.state === 'paused' ? 'paused' as const : 'live' as const,
+			featured: runtime?.featured ?? stat?.featured ?? false,
+			note: runtime?.note ?? stat?.note ?? null,
+		};
+	}),
+	...stats
+		.filter((stat) => !catalogIds.has(stat.skillId))
+		.map((stat) => ({
+			skillId: stat.skillId,
+			name: 'unknown skill',
+			runs: stat.runs,
+			successRate: stat.successRate,
+			creators: stat.creators,
+			creditsSpent: stat.creditsSpent,
+			state: stat.state,
+			featured: stat.featured,
+			note: stat.note,
+		})),
+];
+---
+
+<div class="skills-page">
+	<div id="skillActionError" class="action-error" role="alert" hidden></div>
+	{skills.length === 0 ? (
+		<div class="empty-state">No skills are available.</div>
+	) : (
+		<div class="skills-grid">
+			{skills.map((skill) => (
+				<div class="panel">
+					<div class="skill-head">
+						<GradientAvatar seed={skill.skillId} size={32} radius="9px" />
+						<div class="skill-title">
+							<span class="skill-name">{skill.name}</span>
+							<span class="skill-id">{skill.skillId}</span>
+						</div>
+						<StatusPill status={skill.state === 'paused' ? 'Paused' : 'Live'} tone={skill.state === 'paused' ? 'red' : 'green'} />
+						{skill.featured && <span class="featured-marker">Featured</span>}
+					</div>
+					<div class="skill-metrics">
+						<span class="metric">
+							<span class="metric-value">{compact(skill.runs)}</span>
+							<span class="metric-label">runs</span>
+						</span>
+						<span class="metric">
+							<span class="metric-value">{skill.runs === 0 ? '—' : `${skill.successRate}%`}</span>
+							<span class="metric-label">success</span>
+						</span>
+						<span class="metric">
+							<span class="metric-value">{thousands(skill.creators)}</span>
+							<span class="metric-label">creators</span>
+						</span>
+						<span class="metric">
+							<span class="metric-value">{thousands(skill.creditsSpent)}</span>
+							<span class="metric-label">credits</span>
+						</span>
+					</div>
+					{skill.note && <p class="skill-note">{skill.note}</p>}
+					{canMutate ? (
+						<div class="skill-actions">
+							<button
+								type="button"
+								class="action-button"
+								data-skill-action="state"
+								data-skill-id={skill.skillId}
+								data-state={skill.state}
+								data-featured={String(skill.featured)}
+							>
+								{skill.state === 'paused' ? 'Resume' : 'Pause'}
+							</button>
+							<button
+								type="button"
+								class="action-button"
+								data-skill-action="featured"
+								data-skill-id={skill.skillId}
+								data-state={skill.state}
+								data-featured={String(skill.featured)}
+							>
+								{skill.featured ? 'Unfeature' : 'Feature'}
+							</button>
+						</div>
+					) : (
+						<span class="read-only-state">Read-only state</span>
+					)}
+				</div>
+			))}
+		</div>
+	)}
+</div>
+
+<script>
+	const errorElement = document.getElementById('skillActionError');
+
+	document.querySelectorAll<HTMLButtonElement>('[data-skill-action]').forEach((button) => {
+		button.addEventListener('click', async () => {
+			const skillId = button.dataset.skillId;
+			const action = button.dataset.skillAction;
+			const state = button.dataset.state;
+			const featured = button.dataset.featured === 'true';
+			if (!skillId || (state !== 'live' && state !== 'paused') || (action !== 'state' && action !== 'featured')) return;
+
+			button.disabled = true;
+			try {
+				const response = await fetch(`/api/admin/skills/${encodeURIComponent(skillId)}/state`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						state: action === 'state' ? (state === 'paused' ? 'live' : 'paused') : state,
+						featured: action === 'featured' ? !featured : featured,
+					}),
+				});
+				const body = await response.json().catch(() => null);
+				if (!response.ok) throw new Error(body?.error?.message ?? 'Could not update skill state.');
+				window.location.reload();
+			} catch (error) {
+				button.disabled = false;
+				if (errorElement) {
+					errorElement.textContent = error instanceof Error ? error.message : 'Could not update skill state.';
+					errorElement.hidden = false;
+				}
+			}
+		});
+	});
+</script>
+
+<style>
+	.skills-page {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+	.skills-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 14px;
+	}
+	.panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 18px 20px;
+	}
+	.skill-head {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	.skill-title {
+		flex: 1;
+		min-width: 90px;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.skill-name {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.skill-id {
+		font-size: 10px;
+		color: var(--text-dimmer);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.featured-marker {
+		font-size: 10.5px;
+		padding: 3px 9px;
+		border-radius: 999px;
+		background: var(--accent-softer);
+		color: var(--accent);
+		flex: 0 0 auto;
+	}
+	.skill-metrics {
+		display: flex;
+		align-items: flex-end;
+		gap: 18px;
+		margin-top: 16px;
+		flex-wrap: wrap;
+	}
+	.metric {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.metric-value {
+		font-size: 17px;
+		font-weight: 700;
+		color: var(--text);
+	}
+	.metric-label {
+		font-size: 10.5px;
+		color: var(--text-dimmer);
+	}
+	.skill-note {
+		font-size: 11.5px;
+		line-height: 1.4;
+		color: var(--text-dim);
+		margin: 14px 0 0;
+	}
+	.skill-actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 16px;
+	}
+	.action-button {
+		border: 1px solid var(--border2);
+		border-radius: 7px;
+		background: transparent;
+		color: var(--text-dim);
+		font-size: 11px;
+		padding: 6px 10px;
+		cursor: pointer;
+	}
+	.action-button:hover:not(:disabled) {
+		background: var(--hover);
+		color: var(--text);
+	}
+	.action-button:disabled {
+		cursor: wait;
+		opacity: 0.55;
+	}
+	.read-only-state {
+		display: inline-block;
+		font-size: 10.5px;
+		color: var(--text-dimmer);
+		margin-top: 16px;
+	}
+	.empty-state {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 42px 20px;
+		text-align: center;
+		color: var(--text-dimmer);
+		font-size: 13px;
+	}
+	.action-error {
+		border: 1px solid var(--red);
+		border-radius: 10px;
+		background: var(--red-faint);
+		color: var(--red);
+		font-size: 12px;
+		padding: 10px 12px;
+	}
+	@media (max-width: 860px) {
+		.skills-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

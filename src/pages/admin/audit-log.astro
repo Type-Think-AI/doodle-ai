@@ -1,0 +1,13 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../admin/layouts/AdminLayout.astro';
+import AuditLogPage from '../../admin/pages/AuditLogPage.astro';
+
+const admin = Astro.locals.admin!;
+if (admin.platformRole !== 'admin') return Astro.rewrite('/404');
+---
+
+<AdminLayout active="audit" admin={admin}>
+	<AuditLogPage />
+</AdminLayout>
