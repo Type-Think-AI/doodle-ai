@@ -3,6 +3,7 @@ title: "How to Make a Cartoon Pet Portrait from a Photo"
 description: "Turn a dog, cat, or other pet photo into a hand-drawn doodle at doodleai.art using Normal, Gift, or Stickers. Photo-quality tips, consent, honest failure cases, and why this is a digital keepsake rather than a shipped print."
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
+heroImage: "https://cdn.picxstudio.com/api/generated/image_2bbbdae1-b5cf-46a7-a6d9-f096a7a2b63b.png"
 category: "guide"
 cluster: "pets"
 ---

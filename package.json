@@ -30,6 +30,7 @@
   "scripts": {
     "astro": "astro",
     "brand:assets": "node scripts/generate-brand-assets.mjs",
+    "blog:thumbs": "node scripts/generate-blog-thumbnails.mjs",
     "build": "astro build",
     "lint": "eslint .",
     "cf-typegen": "wrangler types",
