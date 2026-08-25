@@ -102,29 +102,35 @@ export async function createAuth(context: APIContext) {
           after: async (createdUser) => {
             const orgId = `org_${createdUser.id}`;
             const now = new Date();
-            await db.batch([
-              db
-                .insert(schema.organization)
-                .values({
-                  id: orgId,
-                  name: `${createdUser.name || createdUser.email}'s Team`,
-                  slug: `u-${createdUser.id}`,
-                  logo: createdUser.image ?? null,
-                  createdAt: now,
-                  isPersonal: true,
-                })
-                .onConflictDoNothing(),
-              db
-                .insert(schema.member)
-                .values({
-                  id: `mem_${createdUser.id}`,
-                  organizationId: orgId,
-                  userId: createdUser.id,
-                  role: "owner",
-                  createdAt: now,
-                })
-                .onConflictDoNothing(),
-            ]);
+            // Sequential rather than db.batch(): D1's batch API opens its
+            // own implicit transaction, and the `member` table has a FK to
+            // `user(id)`. Better Auth has already inserted the user row, but
+            // that insert may not have committed yet — it's inside Better
+            // Auth's own write sequence. A separate batch transaction cannot
+            // see the uncommitted user row, so the FK check on `user_id`
+            // fails with SQLITE_CONSTRAINT. Sequential awaits inherit the
+            // existing connection context where the user row IS visible.
+            await db
+              .insert(schema.organization)
+              .values({
+                id: orgId,
+                name: `${createdUser.name || createdUser.email}'s Team`,
+                slug: `u-${createdUser.id}`,
+                logo: createdUser.image ?? null,
+                createdAt: now,
+                isPersonal: true,
+              })
+              .onConflictDoNothing();
+            await db
+              .insert(schema.member)
+              .values({
+                id: `mem_${createdUser.id}`,
+                organizationId: orgId,
+                userId: createdUser.id,
+                role: "owner",
+                createdAt: now,
+              })
+              .onConflictDoNothing();
             await grant(db, {
               organizationId: orgId,
               userId: createdUser.id,
