@@ -54,6 +54,23 @@ interface Env {
    * unset the receiver refuses every delivery with 503 and the batch pipeline
    * keeps using the synchronous path, so an unconfigured deployment is degraded
    * rather than broken.
+   *
+   * NOT YET WIRED as a Secrets Store binding in wrangler.json, deliberately.
+   * Cloudflare validates the binding at deploy time and rejects the whole deploy
+   * with error 10182 if the referenced secret does not exist yet — which would
+   * break staging AND prod deploys, including the git-connected auto-deploy, for
+   * as long as the secret were missing. Create the secret first, then add the
+   * binding to both `secrets_store_secrets` blocks:
+   *
+   *   wrangler secrets-store secret create 801d9480d51848d69033ff869398bcbe \
+   *     --name PICX_WEBHOOK_SECRET --scopes workers --remote
+   *
+   *   { "binding": "PICX_WEBHOOK_SECRET",
+   *     "store_id": "801d9480d51848d69033ff869398bcbe",
+   *     "secret_name": "PICX_WEBHOOK_SECRET" }
+   *
+   * The type stays declared because the code reads it today and tolerates its
+   * absence; only the binding is deferred.
    */
   PICX_WEBHOOK_SECRET?: SecretLike;
   /**
