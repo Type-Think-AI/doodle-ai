@@ -85,16 +85,75 @@ field on `Env` in `/Users/yash/picx/doodlebooth-agent/src/env.d.ts`, typed
 
 ## Local development
 
-Secrets Store secrets created with `--remote` are **not readable from
-`astro dev`**. Local development uses `.dev.vars` (see `.dev.vars.example`),
-which lands on `env` as a plain string — the other shape `readSecret()`
-accepts. Nothing else changes.
+There are two local modes, and they behave differently:
+
+| Command | Runs as | Secrets come from |
+|---|---|---|
+| `pnpm dev` | `wrangler dev --remote --env staging` | the **real** account store — works with no setup |
+| `pnpm dev:local` | `astro dev` (Miniflare) | the **local** store, which must be seeded first |
+
+### Why `.dev.vars` alone is not enough any more
+
+A binding and a `.dev.vars` entry cannot coexist under one name. In local mode
+Miniflare honours the `secrets_store_secrets` bindings by creating its own
+*empty* store at `.wrangler/state/v3/secrets-store/` — and that empty binding
+**shadows** the `.dev.vars` value. `env.BETTER_AUTH_SECRET` becomes a binding
+whose `get()` yields nothing, so `createAuth()` throws
+"BETTER_AUTH_SECRET is not set" even though `.dev.vars` clearly has it.
+
+`pnpm dev:local` therefore runs `scripts/seed-local-secrets.mjs` first, which
+mirrors `.dev.vars` into the local store. `.dev.vars` stays the single local
+source of truth; run it manually after editing a value:
+
+```bash
+pnpm secrets:seed-local
+```
+
+It is idempotent (creates on first run, updates by `--secret-id` after), never
+passes `--remote`, and reads the binding list out of `wrangler.json` so it
+cannot drift from it.
+
+### The name that trips this up
+
+`astro dev` loads the **top-level (prod)** config, where the binding
+`BETTER_AUTH_SECRET` points at the store secret **`BETTER_AUTH_SECRET_PROD`**.
+The local store must hold the *secret_name*, not the *binding* name — seeding
+`BETTER_AUTH_SECRET` produces:
+
+```
+Secret "BETTER_AUTH_SECRET_PROD" not found
+```
+
+For the other five the two names coincide, which is why this stays hidden until
+it bites on the one secret that differs. The seed script handles the mapping;
+it is called out here because the error message points at the store rather than
+at the naming.
+
+`.wrangler/state/` is gitignored, so seeded values never leave the machine.
+
+### Verifying local auth works
+
+```bash
+pnpm dev:local
+curl -s http://localhost:4321/api/auth/get-session                 # -> null
+curl -s -X POST http://localhost:4321/api/auth/sign-in/social \
+  -H 'Content-Type: application/json' \
+  -d '{"provider":"google","callbackURL":"/"}'                     # -> {"url":"https://accounts.google.com/..."}
+```
+
+A `200` with a real `accounts.google.com` URL means all three auth secrets
+resolved. A `500` means one did not — check the dev server log, which prints
+the specific secret name and reason.
 
 ## Gotchas
 
 - A Secrets Store binding and a per-Worker secret **cannot share a name** on
   one Worker. Deploying a binding removes the same-named per-Worker secret
   (verified on staging: `wrangler secret list` returned `[]` afterwards).
+  The same collision is what breaks local dev — see "Local development".
+- In local mode the binding **wins over `.dev.vars`** even when the local store
+  is empty, so a missing seed looks identical to a missing secret. Run
+  `pnpm secrets:seed-local` before blaming `.dev.vars`.
 - `env.*` blocks in `wrangler.json` inherit nothing. Every binding must be
   repeated in each environment.
 - `readSecret()` returns `undefined` when a binding fails rather than

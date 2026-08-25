@@ -42,7 +42,8 @@
     "deploy": "pnpm run db:migrate:remote && wrangler deploy",
     "deploy:staging": "pnpm run db:migrate:staging && wrangler deploy --env staging",
     "dev": "node scripts/dev.mjs",
-    "dev:local": "astro dev",
+    "dev:local": "node scripts/seed-local-secrets.mjs && astro dev",
+    "secrets:seed-local": "node scripts/seed-local-secrets.mjs",
     "preview": "astro build && wrangler dev"
   },
   "type": "module"
