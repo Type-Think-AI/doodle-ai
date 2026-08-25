@@ -1,12 +1,14 @@
 import { betterAuth } from "better-auth";
-import { bearer } from "better-auth/plugins";
+import { bearer, organization } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { drizzle } from "drizzle-orm/d1";
+import { asc, eq } from "drizzle-orm";
 import type { APIContext } from "astro";
 import * as schema from "../../db/schema";
 import { grant } from "../credits";
 import { SIGNUP_GRANT_CREDITS } from "../credits/costs";
 import { kvIncrement } from "../kv-counter";
+import { ac, roles } from "./org-access";
 
 /**
  * Better Auth, configured for Cloudflare Workers.
@@ -63,20 +65,80 @@ export function createAuth(context: APIContext) {
       schema,
     }),
 
-    // The Phase 4 starter grant. Keyed on the user id so a hook that somehow
-    // fires twice for the same account (retried request, dedupe race) is
-    // still safe — grant()'s idempotency check makes the second call a no-op
-    // rather than a double grant.
+    // The Phase 4 starter grant, now paid into the user's personal
+    // organization rather than a user-keyed balance (B2B phase: credits are
+    // always org-owned, see src/lib/credits/index.ts). Every user gets
+    // exactly one personal org, created here with a deterministic id
+    // (`org_<userId>` / `mem_<userId>`) so this hook and the one-time
+    // backfill migration (migrations/0006_backfill_personal_orgs.sql) can
+    // never disagree about what that org's id is — whichever runs first
+    // wins, the other is a no-op via onConflictDoNothing.
+    //
+    // Keyed on the user id throughout, so a hook that somehow fires twice
+    // for the same account (retried request, dedupe race) is still safe:
+    // grant()'s idempotency check makes the second call a no-op rather than
+    // a double grant, and the inserts below are onConflictDoNothing.
     databaseHooks: {
       user: {
         create: {
           after: async (createdUser) => {
+            const orgId = `org_${createdUser.id}`;
+            const now = new Date();
+            await db.batch([
+              db
+                .insert(schema.organization)
+                .values({
+                  id: orgId,
+                  name: `${createdUser.name || createdUser.email}'s Team`,
+                  slug: `u-${createdUser.id}`,
+                  logo: createdUser.image ?? null,
+                  createdAt: now,
+                  isPersonal: true,
+                })
+                .onConflictDoNothing(),
+              db
+                .insert(schema.member)
+                .values({
+                  id: `mem_${createdUser.id}`,
+                  organizationId: orgId,
+                  userId: createdUser.id,
+                  role: "owner",
+                  createdAt: now,
+                })
+                .onConflictDoNothing(),
+            ]);
             await grant(db, {
+              organizationId: orgId,
               userId: createdUser.id,
               amount: SIGNUP_GRANT_CREDITS,
               reason: "signup_grant",
               idempotencyKey: `signup:${createdUser.id}`,
             });
+          },
+        },
+      },
+      session: {
+        create: {
+          // Resolves `session.activeOrganizationId` once, at sign-in, and
+          // persists it on the session row — which lands in both D1 (via
+          // the adapter) and KV (via `secondaryStorage` below). That is
+          // what makes the active org available from a plain `getSession()`
+          // call with zero extra per-request cost, even with cookieCache
+          // disabled (see the note on `secondaryStorage` below for why that
+          // matters). Falls back to the user's oldest membership; the
+          // signup hook above guarantees at least one exists by the time
+          // any session can be created for that user, except in the
+          // deploy-gap window documented in migrations/0006 — requireOrg()
+          // (src/lib/auth/guards.ts) self-heals that case.
+          before: async (newSession) => {
+            const rows = await db
+              .select({ organizationId: schema.member.organizationId })
+              .from(schema.member)
+              .where(eq(schema.member.userId, newSession.userId))
+              .orderBy(asc(schema.member.createdAt))
+              .limit(1);
+            if (!rows[0]) return;
+            return { data: { ...newSession, activeOrganizationId: rows[0].organizationId } };
           },
         },
       },
@@ -117,7 +179,41 @@ export function createAuth(context: APIContext) {
       updateAge: 60 * 60 * 24, // refresh the expiry at most once a day
     },
 
-    plugins: [bearer()],
+    plugins: [
+      bearer(),
+      // The B2B team layer. Vocabulary warning: the plugin's own word
+      // "team" means a sub-group *inside* an organization (`team` /
+      // `team_member` tables) — a feature we deliberately never enable
+      // (`teams` is omitted below). In this product, "team" IS the
+      // organization. See src/lib/auth/org-access.ts for the full note.
+      organization({
+        ac,
+        roles,
+        // Every user's first org (their personal one) is created by the
+        // signup hook above, not through this flag — this only gates
+        // *additional* "Create team" calls from the UI.
+        organizationLimit: 5,
+        // Producer/artist/reviewer/client roles all need a seat, plus the
+        // owner — 25 covers every ICP tier in marketing/b2b.md with room
+        // to raise it later without a migration.
+        membershipLimit: 25,
+        creatorRole: "owner",
+        invitationExpiresIn: 60 * 60 * 24 * 14, // 14 days
+        cancelPendingInvitationsOnReInvite: true,
+        // No `sendInvitationEmail` — there is no email provider in this
+        // stack (see docs/tech-stack.md's deferred Email decision) and this
+        // product is invite-link-only by design. `POST /api/v1/orgs/:id/
+        // invites` returns a copyable link instead; see src/pages/api/v1/
+        // orgs/[id]/invites.ts.
+        schema: {
+          organization: {
+            additionalFields: {
+              isPersonal: { type: "boolean", defaultValue: false, input: false },
+            },
+          },
+        },
+      }),
+    ],
 
     // Phase 4: per-IP signup rate limiting, to stop scripted bot signups
     // from farming the `signup_grant` credits in the databaseHook above —

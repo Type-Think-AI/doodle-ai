@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import { and, eq, isNull } from "drizzle-orm";
 import { getDb, withDbSession } from "../../../../db/client";
 import { thread } from "../../../../db/schema/product";
-import { apiError, apiJson, requireAuth } from "../../../../lib/auth/guards";
+import { apiError, apiJson, requireOrg } from "../../../../lib/auth/guards";
 import { optStr, readJson } from "../../../../lib/api/body";
 import { toThreadDto } from "../threads";
 
@@ -22,8 +22,8 @@ function notFound(): Response {
 }
 
 export async function GET(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context);
+  if (org instanceof Response) return org;
   const id = context.params.id;
   if (!id) return notFound();
 
@@ -31,7 +31,7 @@ export async function GET(context: APIContext): Promise<Response> {
   const rows = await db
     .select()
     .from(thread)
-    .where(and(eq(thread.id, id), eq(thread.userId, user.id)))
+    .where(and(eq(thread.id, id), eq(thread.organizationId, org.orgId)))
     .limit(1);
 
   const row = rows[0];
@@ -41,8 +41,8 @@ export async function GET(context: APIContext): Promise<Response> {
 
 /** PATCH /api/v1/threads/:id — title, pinned skill, and/or the thumbnail. */
 export async function PATCH(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context);
+  if (org instanceof Response) return org;
   const id = context.params.id;
   if (!id) return notFound();
 
@@ -62,7 +62,7 @@ export async function PATCH(context: APIContext): Promise<Response> {
   if ("skillId" in body) patch.skillId = optStr(body.skillId);
 
   const db = getDb(context);
-  const ownerAndId = and(eq(thread.id, id), eq(thread.userId, user.id));
+  const ownerAndId = and(eq(thread.id, id), eq(thread.organizationId, org.orgId));
 
   if ("thumbnailUrl" in body) {
     const thumbnailUrl = optStr(body.thumbnailUrl);
@@ -94,15 +94,15 @@ export async function PATCH(context: APIContext): Promise<Response> {
 
 /** DELETE /api/v1/threads/:id — messages cascade via the FK. */
 export async function DELETE(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context);
+  if (org instanceof Response) return org;
   const id = context.params.id;
   if (!id) return notFound();
 
   const db = getDb(context);
   const deleted = await db
     .delete(thread)
-    .where(and(eq(thread.id, id), eq(thread.userId, user.id)))
+    .where(and(eq(thread.id, id), eq(thread.organizationId, org.orgId)))
     .returning({ id: thread.id });
 
   if (deleted.length === 0) return notFound();

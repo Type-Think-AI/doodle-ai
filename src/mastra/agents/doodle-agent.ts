@@ -86,7 +86,8 @@ you changed. Keep the pinned skill unless they clearly want a different kind of 
 
 - "ok": the doodle is ready. The app renders the image itself, so never paste or repeat the URL.
 - "needs-photo": ask the user to attach a photo.
-- "insufficient-credits": tell them how many credits are needed and invite them to try a smaller generation or add credits when billing is available.
+- "insufficient-credits": tell them how many credits the team needs for this and that the team is out — an owner or producer can add more when billing is available. These are shared team credits, not personal ones, so don't say "your credits".
+- "org-cap-reached": tell them the team has hit its monthly credit cap and that a team owner can raise it in team settings. Don't suggest retrying.
 - "rate-limited": tell them they're generating too quickly and to wait a bit before trying again. Do not retry automatically.
 - "error": explain briefly in plain language and offer to retry. Do not expose raw error text.
 

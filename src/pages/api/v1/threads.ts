@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import { and, desc, eq, exists, lt, sql } from "drizzle-orm";
 import { getDb, withDbSession } from "../../../db/client";
 import { message, thread } from "../../../db/schema/product";
-import { apiJson, requireAuth } from "../../../lib/auth/guards";
+import { apiJson, requireOrg } from "../../../lib/auth/guards";
 import { intParam, newId, optStr, readJson, toDate } from "../../../lib/api/body";
 
 export const prerender = false;
@@ -33,7 +33,13 @@ export function toThreadDto(row: typeof thread.$inferSelect): ThreadDto {
 }
 
 /**
- * GET /api/v1/threads — the caller's threads, newest first.
+ * GET /api/v1/threads — the caller's team's threads, newest first.
+ *
+ * B2B note: scoped to the active organization, not the caller alone —
+ * "Recents" in the sidebar is per-team, which is what makes switching teams
+ * (src/scripts/app/api-client.ts's switchOrg()) visibly change the list. A
+ * solo user's personal org behaves exactly like the old per-user scoping,
+ * since they're that org's only member.
  *
  * Paginated by `updatedAt` rather than by offset: the list is re-sorted on
  * every append, so an offset cursor would skip and repeat rows.
@@ -45,8 +51,8 @@ export function toThreadDto(row: typeof thread.$inferSelect): ThreadDto {
  * to this list — it's just not shown here until it has content.)
  */
 export async function GET(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context);
+  if (org instanceof Response) return org;
 
   const url = new URL(context.request.url);
   const limit = intParam(url, "limit", PAGE_DEFAULT, PAGE_MAX);
@@ -59,7 +65,7 @@ export async function GET(context: APIContext): Promise<Response> {
     .from(thread)
     .where(
       and(
-        eq(thread.userId, user.id),
+        eq(thread.organizationId, org.orgId),
         beforeDate && !Number.isNaN(beforeDate.getTime()) ? lt(thread.updatedAt, beforeDate) : undefined,
         exists(db.select({ one: sql`1` }).from(message).where(eq(message.threadId, thread.id))),
       ),
@@ -74,13 +80,13 @@ export async function GET(context: APIContext): Promise<Response> {
  * POST /api/v1/threads — create a thread.
  *
  * The client may supply its own `id` so an optimistic local row and the
- * server row agree; a collision with a thread that is not the caller's is
- * resolved by minting a fresh id rather than by failing, since the client
- * has no way to know another user already holds that uuid.
+ * server row agree; a collision with a thread that is not in the caller's
+ * org is resolved by minting a fresh id rather than by failing, since the
+ * client has no way to know another team already holds that uuid.
  */
 export async function POST(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context, { generation: ["create"] });
+  if (org instanceof Response) return org;
 
   const body = (await readJson(context.request)) ?? {};
   const db = getDb(context);
@@ -90,12 +96,12 @@ export async function POST(context: APIContext): Promise<Response> {
   let id = requestedId ?? newId();
   if (requestedId) {
     const existing = await db
-      .select({ id: thread.id, userId: thread.userId })
+      .select({ id: thread.id, organizationId: thread.organizationId })
       .from(thread)
       .where(eq(thread.id, requestedId))
       .limit(1);
     const row = existing[0];
-    if (row && row.userId === user.id) {
+    if (row && row.organizationId === org.orgId) {
       // Idempotent re-create (a retried request) — return what is already there.
       const full = await db.select().from(thread).where(eq(thread.id, requestedId)).limit(1);
       return apiJson({ thread: toThreadDto(full[0]!) }, 200);
@@ -105,7 +111,9 @@ export async function POST(context: APIContext): Promise<Response> {
 
   const values = {
     id,
-    userId: user.id,
+    userId: org.user.id,
+    organizationId: org.orgId,
+    projectId: optStr(body.projectId) ?? null,
     title: (optStr(body.title) ?? "New chat").slice(0, TITLE_MAX_LEN),
     skillId: optStr(body.skillId),
     thumbnailUrl: null,

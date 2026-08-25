@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import { and, eq, inArray } from "drizzle-orm";
 import { getDb, type Db } from "../../../db/client";
 import { character, message, moodboardItem, thread } from "../../../db/schema/product";
-import { apiError, apiJson, requireAuth } from "../../../lib/auth/guards";
+import { apiError, apiJson, requireOrg } from "../../../lib/auth/guards";
 import { newId, optStr, readJson, str, strArray, toDate } from "../../../lib/api/body";
 
 export const prerender = false;
@@ -77,10 +77,20 @@ async function existingIds(db: Db, table: typeof thread | typeof character, ids:
  *
  * Nothing here trusts a client-supplied `userId` — ownership on every row is
  * the authenticated caller, full stop.
+ *
+ * B2B note: always imports into the caller's *personal* org, never whatever
+ * team happens to be active — pre-signup local doodles belong to the user
+ * who made them, not to a team they later joined (see api-client.ts's
+ * import call site, which is explicit about this). The personal org's
+ * deterministic id (`org_<userId>`) is guaranteed to exist by this point:
+ * the signup hook and requireOrg()'s self-heal both create it before a
+ * user can ever reach this route.
  */
 export async function POST(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context);
+  if (org instanceof Response) return org;
+  const user = org.user;
+  const organizationId = `org_${user.id}`;
 
   const body = await readJson(context.request);
   if (!body) return apiError("bad_request", "Expected a JSON body.", 400);
@@ -117,6 +127,7 @@ export async function POST(context: APIContext): Promise<Response> {
     threadRows.push({
       id,
       userId: user.id,
+      organizationId,
       title: (optStr(incoming.title) ?? "New chat").slice(0, TITLE_MAX_LEN),
       skillId: optStr(incoming.skillId),
       createdAt: toDate(incoming.createdAt, updatedAt.getTime()),
@@ -165,6 +176,7 @@ export async function POST(context: APIContext): Promise<Response> {
     itemRows.push({
       id: newId(),
       userId: user.id,
+      organizationId,
       url,
       generationId: null,
       createdAt: toDate(incoming.createdAt, now),
@@ -195,6 +207,7 @@ export async function POST(context: APIContext): Promise<Response> {
     characterRows.push({
       id: localId && !takenCharacterIds.has(localId) ? localId : newId(),
       userId: user.id,
+      organizationId,
       name: optStr(incoming.name) ?? "Unnamed",
       imageUrl,
       createdAt: toDate(incoming.createdAt, now),

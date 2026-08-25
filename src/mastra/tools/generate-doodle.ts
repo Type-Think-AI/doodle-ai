@@ -1,5 +1,5 @@
 import { createTool } from "@mastra/core/tools";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   buildCollagePrompt,
@@ -19,7 +19,9 @@ import { refund, spend } from "../../lib/credits";
 import { creditCostForSkill } from "../../lib/credits/costs";
 import { kvIncrement } from "../../lib/kv-counter";
 import type { Db } from "../../db/client";
-import { generation } from "../../db/schema/product";
+import { asset, generation } from "../../db/schema/product";
+import { orgLimits } from "../../db/schema/billing";
+import { creditLedger } from "../../db/schema/billing";
 
 const inputSchema = z.object({
   skill: z.enum(GENERATION_MODES).describe("Which doodle generation mode to run."),
@@ -49,6 +51,7 @@ const outputSchema = z.union([
   z.object({ status: z.literal("needs-photo"), message: z.string() }),
   z.object({ status: z.literal("insufficient-credits"), message: z.string(), balance: z.number(), required: z.number() }),
   z.object({ status: z.literal("rate-limited"), message: z.string() }),
+  z.object({ status: z.literal("org-cap-reached"), message: z.string() }),
   z.object({ status: z.literal("error"), message: z.string() }),
 ]);
 
@@ -57,6 +60,10 @@ interface RequestContextValues {
   platformPicxKey?: string;
   styleId?: string;
   userId?: string;
+  /** The acting member's team — every generation is charged to this org's pool, never the user's. */
+  organizationId?: string;
+  /** Optional project this generation belongs to; when set, a matching `asset` row is created on success. */
+  projectId?: string;
   db?: Db;
   /**
    * The same KV namespace Better Auth uses as `secondaryStorage` (see
@@ -69,11 +76,13 @@ interface RequestContextValues {
 
 /** Generations a single signed-in user may start per minute. */
 const GENERATIONS_PER_MINUTE = 8;
+/** Default org-wide generation rate, overridable per org via org_limits.generationsPerMinute. */
+const DEFAULT_ORG_GENERATIONS_PER_MINUTE = 40;
 
 /**
- * A fixed-window counter keyed on user id, backed directly by the SESSIONS
- * KV binding (not through Better Auth — this isn't an auth-route request,
- * so Better Auth's own `rateLimit` option never sees it).
+ * A fixed-window counter keyed on the given id, backed directly by the
+ * SESSIONS KV binding (not through Better Auth — this isn't an auth-route
+ * request, so Better Auth's own `rateLimit` option never sees it).
  *
  * Fixed windows (as opposed to sliding) can let a burst of up to 2x the
  * limit through right across a window boundary; that's an accepted
@@ -83,20 +92,21 @@ const GENERATIONS_PER_MINUTE = 8;
  *
  * Returns true if the request should be allowed.
  */
-async function checkGenerationRateLimit(sessions: KVNamespace, userId: string): Promise<boolean> {
+async function checkRateLimit(sessions: KVNamespace, key: string, limit: number): Promise<boolean> {
   const bucket = Math.floor(Date.now() / 60_000);
-  const key = `ratelimit:gen:${userId}:${bucket}`;
   // TTL of 2 windows: long enough that the counter is still there for the
   // full minute it's keyed to, short enough that KV doesn't accumulate a
-  // bucket per user forever.
-  const count = await kvIncrement(sessions, key, 120);
-  return count <= GENERATIONS_PER_MINUTE;
+  // bucket per user/org forever.
+  const count = await kvIncrement(sessions, `${key}:${bucket}`, 120);
+  return count <= limit;
 }
 
 /**
- * Calls PicX with the server-owned key and meters every generation against the
- * signed-in user's credit ledger. The key and user context are request-scoped
- * values, never tool inputs, so the model cannot see or supply credentials.
+ * Calls PicX with the server-owned key and meters every generation against
+ * the acting member's *team's* credit ledger — credits are org-owned, never
+ * user-owned (see src/lib/credits/index.ts). The key and org/user context
+ * are request-scoped values, never tool inputs, so the model cannot see or
+ * supply credentials.
  */
 export const generateDoodleTool = createTool({
   id: "generate-doodle",
@@ -111,6 +121,8 @@ export const generateDoodleTool = createTool({
       | undefined;
     const platformKey = requestContext?.get("platformPicxKey");
     const userId = requestContext?.get("userId");
+    const organizationId = requestContext?.get("organizationId");
+    const projectId = requestContext?.get("projectId");
     const db = requestContext?.get("db");
     const sessions = requestContext?.get("sessions");
 
@@ -120,21 +132,35 @@ export const generateDoodleTool = createTool({
     if (!userId || !db) {
       return { status: "error" as const, message: "Sign in to generate a doodle." };
     }
+    if (!organizationId) {
+      return { status: "error" as const, message: "You're not in a team yet." };
+    }
 
-    // Per-user generation rate limit, checked before anything else that
+    // Two rate limits, both must pass, both checked before anything else
     // touches the ledger or writes a row — a rate-limited request must be a
-    // pure no-op against both. Keyed on user id (not IP): a shared
-    // phone/NAT'd network shouldn't share one bucket, and this is the same
-    // reason /api/v1/me-style per-user checks exist elsewhere. This is a
-    // separate counter from Better Auth's own `rateLimit` option (that one
-    // only ever sees /api/auth/* requests) but reuses the same KV binding
-    // and the same kvIncrement() helper.
+    // pure no-op against both. The personal limit is checked first so one
+    // member's runaway script trips their own bucket before it can trip the
+    // whole team's. Neither is Better Auth's own `rateLimit` option (that
+    // one only ever sees /api/auth/* requests) but both reuse the same KV
+    // binding and the same kvIncrement() helper.
     if (sessions) {
-      const allowed = await checkGenerationRateLimit(sessions, userId);
-      if (!allowed) {
+      const personalOk = await checkRateLimit(sessions, `ratelimit:gen:${userId}`, GENERATIONS_PER_MINUTE);
+      if (!personalOk) {
         return {
           status: "rate-limited" as const,
           message: "You're generating a bit fast — wait a moment and try again.",
+        };
+      }
+      const orgLimitRows = await db
+        .select({ generationsPerMinute: orgLimits.generationsPerMinute })
+        .from(orgLimits)
+        .where(eq(orgLimits.organizationId, organizationId));
+      const orgLimit = orgLimitRows[0]?.generationsPerMinute ?? DEFAULT_ORG_GENERATIONS_PER_MINUTE;
+      const orgOk = await checkRateLimit(sessions, `ratelimit:gen:org:${organizationId}`, orgLimit);
+      if (!orgOk) {
+        return {
+          status: "rate-limited" as const,
+          message: "Your team is generating a lot right now — wait a moment and try again.",
         };
       }
     }
@@ -181,46 +207,83 @@ export const generateDoodleTool = createTool({
         aspectRatio = "1:1";
     }
 
+    const cost = creditCostForSkill(input.skill);
+
+    // Hard monthly credit cap, if the org's owner set one (org_limits.
+    // monthlyCreditCap). Must run in the same request, immediately before
+    // spend(), and must never be cached — this is the exact same
+    // read-then-write shape as spend() itself, and safe for the exact same
+    // reason (see the concurrency note in src/lib/credits/index.ts): D1's
+    // single writer means the count below is still current when the spend
+    // a few lines down lands.
+    const capRows = await db
+      .select({ monthlyCreditCap: orgLimits.monthlyCreditCap })
+      .from(orgLimits)
+      .where(eq(orgLimits.organizationId, organizationId));
+    const cap = capRows[0]?.monthlyCreditCap;
+    if (cap != null) {
+      const monthStart = new Date();
+      monthStart.setUTCDate(1);
+      monthStart.setUTCHours(0, 0, 0, 0);
+      const spentRows = await db
+        .select({ spent: sql<number>`coalesce(sum(-${creditLedger.delta}), 0)` })
+        .from(creditLedger)
+        .where(
+          and(
+            eq(creditLedger.organizationId, organizationId),
+            eq(creditLedger.reason, "generation"),
+            gte(creditLedger.createdAt, monthStart),
+          ),
+        );
+      const spentThisMonth = spentRows[0]?.spent ?? 0;
+      if (spentThisMonth + cost > cap) {
+        return {
+          status: "org-cap-reached" as const,
+          message: `Your team's monthly credit cap (${cap}) has been reached. Ask a team owner to raise it.`,
+        };
+      }
+    }
+
     // Debit before generating — the concurrency argument for why this is
     // safe on D1 (and what changes if we ever move off it) lives in
     // src/lib/credits/index.ts. `generationId` doubles as both the ledger's
     // idempotency key and the generation row's primary key, so a spend and
     // its eventual refund are always traceable to the same attempt.
     const generationId = crypto.randomUUID();
-    if (userId && db) {
-      const cost = creditCostForSkill(input.skill);
-      const spendResult = await spend(db, {
-        userId,
-        amount: cost,
-        reason: "generation",
-        refId: generationId,
-        idempotencyKey: `gen:${generationId}`,
-      });
-      if (!spendResult.ok) {
-        return {
-          status: "insufficient-credits" as const,
-          message: `You need ${spendResult.required} credit${spendResult.required === 1 ? "" : "s"} for this — you have ${spendResult.balance}.`,
-          balance: spendResult.balance,
-          required: spendResult.required,
-        };
-      }
-      // Written *after* the debit succeeds, so a row only ever exists for a
-      // generation credits were actually spent on — the reconciliation job
-      // (src/lib/credits/reconcile.ts) refunds anything left `pending` too
-      // long, which is only correct if every pending row really was charged.
-      await db.insert(generation).values({
-        id: generationId,
-        userId,
-        skillId: input.skill,
-        styleId: styleId ?? null,
-        prompt,
-        sourceAssetUrl: input.imageUrl ?? null,
-        refAssetUrl: input.refImageUrl ?? null,
-        creditsCharged: cost,
-        status: "pending",
-        createdAt: new Date(),
-      });
+    const spendResult = await spend(db, {
+      organizationId,
+      userId,
+      amount: cost,
+      reason: "generation",
+      refId: generationId,
+      idempotencyKey: `gen:${generationId}`,
+    });
+    if (!spendResult.ok) {
+      return {
+        status: "insufficient-credits" as const,
+        message: `Your team needs ${spendResult.required} credit${spendResult.required === 1 ? "" : "s"} for this — it has ${spendResult.balance}.`,
+        balance: spendResult.balance,
+        required: spendResult.required,
+      };
     }
+    // Written *after* the debit succeeds, so a row only ever exists for a
+    // generation credits were actually spent on — the reconciliation job
+    // (src/lib/credits/reconcile.ts) refunds anything left `pending` too
+    // long, which is only correct if every pending row really was charged.
+    await db.insert(generation).values({
+      id: generationId,
+      userId,
+      organizationId,
+      projectId: projectId ?? null,
+      skillId: input.skill,
+      styleId: styleId ?? null,
+      prompt,
+      sourceAssetUrl: input.imageUrl ?? null,
+      refAssetUrl: input.refImageUrl ?? null,
+      creditsCharged: cost,
+      status: "pending",
+      createdAt: new Date(),
+    });
 
     try {
       const url =
@@ -246,19 +309,39 @@ export const generateDoodleTool = createTool({
       const data = (await res.json().catch(() => ({}))) as { url?: string; detail?: string; message?: string };
       if (!res.ok || !data.url) {
         const message = data.detail || data.message || `PicX API error: ${res.status}`;
-        if (userId && db) await refundGeneration(db, generationId, userId, message);
+        await refundGeneration(db, generationId, organizationId, userId, message);
         return { status: "error" as const, message };
       }
-      if (userId && db) {
-        await db
-          .update(generation)
-          .set({ status: "ok", outputUrl: data.url, completedAt: new Date() })
-          .where(eq(generation.id, generationId));
+
+      await db
+        .update(generation)
+        .set({ status: "ok", outputUrl: data.url, completedAt: new Date() })
+        .where(eq(generation.id, generationId));
+      // When this generation belongs to a project, it's also a project
+      // deliverable — file it as a draft asset. Not batched with the update
+      // above (mixed insert/update batches fight Drizzle's D1 batch typing
+      // without real benefit here): this is a non-credit write, so a crash
+      // between the two statements leaves an approved generation without an
+      // asset row rather than corrupting the ledger — recoverable by
+      // re-adding it to the project manually, not a correctness bug.
+      if (projectId) {
+        await db.insert(asset).values({
+          id: crypto.randomUUID(),
+          organizationId,
+          projectId,
+          url: data.url,
+          kind: "generation",
+          generationId,
+          reviewState: "draft",
+          createdBy: userId,
+          createdAt: new Date(),
+        });
       }
+
       return { status: "ok" as const, url: data.url };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Generation failed";
-      if (userId && db) await refundGeneration(db, generationId, userId, message);
+      await refundGeneration(db, generationId, organizationId, userId, message);
       return { status: "error" as const, message };
     }
   },
@@ -271,11 +354,23 @@ export const generateDoodleTool = createTool({
  * reconciliation job (src/lib/credits/reconcile.ts) relies on being safe to
  * call again for the same row.
  */
-async function refundGeneration(db: Db, generationId: string, userId: string, errorMessage: string): Promise<void> {
+async function refundGeneration(
+  db: Db,
+  generationId: string,
+  organizationId: string,
+  userId: string,
+  errorMessage: string,
+): Promise<void> {
   const row = await db.select({ creditsCharged: generation.creditsCharged }).from(generation).where(eq(generation.id, generationId));
   const creditsCharged = row[0]?.creditsCharged;
   if (creditsCharged) {
-    await refund(db, { userId, amount: creditsCharged, refId: generationId, idempotencyKey: `refund:${generationId}` });
+    await refund(db, {
+      organizationId,
+      userId,
+      amount: creditsCharged,
+      refId: generationId,
+      idempotencyKey: `refund:${generationId}`,
+    });
   }
   await db
     .update(generation)

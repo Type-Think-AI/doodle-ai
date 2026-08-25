@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import { RequestContext } from "@mastra/core/request-context";
 import { bridgeCloudflareEnv } from "../../lib/env-bridge";
 import { getDb } from "../../db/client";
-import { requireAuth } from "../../lib/auth/guards";
+import { requireOrg } from "../../lib/auth/guards";
 import { getBalance } from "../../lib/credits";
 
 export const prerender = false;
@@ -16,7 +16,7 @@ type StreamEvent =
   | { type: "text"; text: string }
   | { type: "status"; phase: "drawing" }
   | { type: "image"; url: string; skillId?: string }
-  | { type: "credits"; balance: number }
+  | { type: "credits"; balance: number; orgId?: string }
   | { type: "done" }
   | { type: "error"; message: string };
 
@@ -29,20 +29,22 @@ type StreamEvent =
  * signed-in user's credit balance; no client credential is accepted.
  */
 export async function POST(context: APIContext) {
-  const auth = await requireAuth(context);
-  if (auth instanceof Response) return auth;
-  const authedUser = auth;
+  const org = await requireOrg(context, { generation: ["create"] });
+  if (org instanceof Response) return org;
+  const { user: authedUser, orgId } = org;
 
   let messages: ChatMessage[];
   let styleId: string | undefined;
+  let projectId: string | undefined;
   try {
     const body = await context.request.json().catch(() => ({}));
-    const parsed = body as { messages?: unknown; styleId?: string };
+    const parsed = body as { messages?: unknown; styleId?: string; projectId?: string };
     if (!Array.isArray(parsed.messages) || parsed.messages.length === 0) {
       return json({ error: "messages is required" }, 400);
     }
     messages = parsed.messages as ChatMessage[];
     styleId = parsed.styleId;
+    projectId = parsed.projectId;
   } catch {
     return json({ error: "Invalid chat request" }, 400);
   }
@@ -56,16 +58,20 @@ export async function POST(context: APIContext) {
     platformPicxKey?: string;
     styleId?: string;
     userId: string;
+    organizationId: string;
+    projectId?: string;
     db: ReturnType<typeof getDb>;
     sessions?: KVNamespace;
   }>([
     ["platformPicxKey", runtimeEnv?.PICX_API_KEY],
     ["styleId", styleId],
     ["userId", authedUser.id],
+    ["organizationId", orgId],
+    ["projectId", projectId],
     ["db", getDb(context)],
     // Same SESSIONS KV binding Better Auth uses as secondaryStorage — passed
-    // through so generate-doodle.ts can rate-limit generations per user
-    // without a second KV namespace.
+    // through so generate-doodle.ts can rate-limit generations per user and
+    // per org without a second KV namespace.
     ["sessions", runtimeEnv?.SESSIONS],
   ]);
 
@@ -126,9 +132,9 @@ export async function POST(context: APIContext) {
               // RequestContext, so re-reading the balance here is a cheap,
               // consistent way to tell the client what the spend just did —
               // no separate round trip through /api/v1/me needed.
-              if (authedUser) {
+              {
                 const db = getDb(context);
-                emit({ type: "credits", balance: await getBalance(db, authedUser.id) });
+                emit({ type: "credits", balance: await getBalance(db, orgId), orgId });
               }
             }
           } else if (chunk.type === "error") {

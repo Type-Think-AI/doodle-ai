@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb, withDbSession } from "../../../db/client";
 import { moodboardItem } from "../../../db/schema/product";
-import { apiError, apiJson, requireAuth } from "../../../lib/auth/guards";
+import { apiError, apiJson, requireOrg } from "../../../lib/auth/guards";
 import { intParam, newId, optStr, readJson, str, toDate } from "../../../lib/api/body";
 
 export const prerender = false;
@@ -25,17 +25,23 @@ function toDto(row: typeof moodboardItem.$inferSelect): MoodboardItemDto {
   return { id: row.id, url: row.url, createdAt: row.createdAt.getTime() };
 }
 
-/** GET /api/v1/moodboard — newest first, matching the client's unshift order. */
+/**
+ * GET /api/v1/moodboard — newest first, matching the client's unshift order.
+ *
+ * B2B note: this is the team's shared scratch inspiration board —
+ * org-scoped, every member sees every item any member saved (see the
+ * taxonomy note in src/db/schema/product.ts).
+ */
 export async function GET(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context, { asset: ["read"] });
+  if (org instanceof Response) return org;
 
   const limit = intParam(new URL(context.request.url), "limit", PAGE_DEFAULT, PAGE_MAX);
   const { db, commit } = withDbSession(context);
   const rows = await db
     .select()
     .from(moodboardItem)
-    .where(eq(moodboardItem.userId, user.id))
+    .where(eq(moodboardItem.organizationId, org.orgId))
     .orderBy(desc(moodboardItem.createdAt))
     .limit(limit);
 
@@ -45,14 +51,14 @@ export async function GET(context: APIContext): Promise<Response> {
 /**
  * POST /api/v1/moodboard — save a doodle.
  *
- * De-duplicates on `url` per user, mirroring `addToMoodboard`: the chat page
+ * De-duplicates on `url` per org, mirroring `addToMoodboard`: the chat page
  * re-renders a thread's whole history on load and auto-saves every generated
  * image, so without this a revisited thread refills the board with its own
  * doodles.
  */
 export async function POST(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context, { asset: ["create"] });
+  if (org instanceof Response) return org;
 
   const body = await readJson(context.request);
   const url = body ? str(body.url) : null;
@@ -62,14 +68,15 @@ export async function POST(context: APIContext): Promise<Response> {
   const existing = await db
     .select()
     .from(moodboardItem)
-    .where(and(eq(moodboardItem.userId, user.id), eq(moodboardItem.url, url)))
+    .where(and(eq(moodboardItem.organizationId, org.orgId), eq(moodboardItem.url, url)))
     .limit(1);
   const already = existing[0];
   if (already) return apiJson({ item: toDto(already) });
 
   const values = {
     id: optStr(body?.id) ?? newId(),
-    userId: user.id,
+    userId: org.user.id,
+    organizationId: org.orgId,
     url,
     generationId: null,
     createdAt: toDate(body?.createdAt, Date.now()),
@@ -79,10 +86,10 @@ export async function POST(context: APIContext): Promise<Response> {
   return apiJson({ item: toDto(values) }, 201);
 }
 
-/** DELETE /api/v1/moodboard?id=… — scoped to the caller's own items. */
+/** DELETE /api/v1/moodboard?id=… — scoped to the caller's team. */
 export async function DELETE(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context, { asset: ["delete"] });
+  if (org instanceof Response) return org;
 
   const url = new URL(context.request.url);
   const id = url.searchParams.get("id") ?? (await readJson(context.request).then((b) => (b ? str(b.id) : null)));
@@ -91,7 +98,7 @@ export async function DELETE(context: APIContext): Promise<Response> {
   const db = getDb(context);
   const deleted = await db
     .delete(moodboardItem)
-    .where(and(eq(moodboardItem.id, id), eq(moodboardItem.userId, user.id)))
+    .where(and(eq(moodboardItem.id, id), eq(moodboardItem.organizationId, org.orgId)))
     .returning({ id: moodboardItem.id });
 
   if (deleted.length === 0) return apiError("not_found", "That moodboard item doesn't exist.", 404);

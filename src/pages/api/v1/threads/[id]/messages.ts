@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import { and, asc, eq, gt } from "drizzle-orm";
 import { getDb, withDbSession, type Db } from "../../../../../db/client";
 import { message, thread } from "../../../../../db/schema/product";
-import { apiError, apiJson, requireAuth } from "../../../../../lib/auth/guards";
+import { apiError, apiJson, requireOrg } from "../../../../../lib/auth/guards";
 import { intParam, newId, optStr, readJson, str, strArray, toDate } from "../../../../../lib/api/body";
 
 export const prerender = false;
@@ -38,18 +38,18 @@ function toMessageDto(row: typeof message.$inferSelect): MessageDto {
 }
 
 /**
- * Resolve a thread the caller actually owns.
+ * Resolve a thread the caller's team actually owns.
  *
  * Every message read and write funnels through here, so there is exactly one
  * place where thread ownership is decided rather than one per handler. The
- * `userId` predicate means a thread belonging to another user is simply not
- * found — see the 404-not-403 note in ../[id].ts.
+ * `organizationId` predicate means a thread belonging to another team is
+ * simply not found — see the 404-not-403 note in ../[id].ts.
  */
-async function ownedThread(db: Db, threadId: string, userId: string): Promise<boolean> {
+async function ownedThread(db: Db, threadId: string, organizationId: string): Promise<boolean> {
   const rows = await db
     .select({ id: thread.id })
     .from(thread)
-    .where(and(eq(thread.id, threadId), eq(thread.userId, userId)))
+    .where(and(eq(thread.id, threadId), eq(thread.organizationId, organizationId)))
     .limit(1);
   return rows.length > 0;
 }
@@ -66,13 +66,13 @@ function notFound(): Response {
  * but the cursor is here so a long thread does not have to change the API.
  */
 export async function GET(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context);
+  if (org instanceof Response) return org;
   const threadId = context.params.id;
   if (!threadId) return notFound();
 
   const { db, commit } = withDbSession(context);
-  if (!(await ownedThread(db, threadId, user.id))) return commit(notFound());
+  if (!(await ownedThread(db, threadId, org.orgId))) return commit(notFound());
 
   const url = new URL(context.request.url);
   const limit = intParam(url, "limit", PAGE_DEFAULT, PAGE_MAX);
@@ -101,8 +101,8 @@ export async function GET(context: APIContext): Promise<Response> {
  * so a second device sees the same title without replaying the messages.
  */
 export async function POST(context: APIContext): Promise<Response> {
-  const user = await requireAuth(context);
-  if (user instanceof Response) return user;
+  const org = await requireOrg(context, { generation: ["create"] });
+  if (org instanceof Response) return org;
   const threadId = context.params.id;
   if (!threadId) return notFound();
 
@@ -115,7 +115,7 @@ export async function POST(context: APIContext): Promise<Response> {
   if (content === null) return apiError("bad_request", "`content` must be a string.", 400);
 
   const db = getDb(context);
-  if (!(await ownedThread(db, threadId, user.id))) return notFound();
+  if (!(await ownedThread(db, threadId, org.orgId))) return notFound();
 
   const now = Date.now();
   const values = {
@@ -139,7 +139,7 @@ export async function POST(context: APIContext): Promise<Response> {
   await db
     .update(thread)
     .set({ updatedAt: new Date(now) })
-    .where(and(eq(thread.id, threadId), eq(thread.userId, user.id)));
+    .where(and(eq(thread.id, threadId), eq(thread.organizationId, org.orgId)));
 
   return apiJson({ message: toMessageDto({ ...values, images: values.images ?? null }) }, 201);
 }
