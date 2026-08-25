@@ -31,6 +31,8 @@ The four people named later — Samira, Ellis, Nia, and Theo — are **hypotheti
 
 “Cartoon” is a look. “Generator” is a verb with no object. Put them together and search engines, assistants, and product pages all fill in a different object:
 
+![Four-quadrant diagram showing four jobs people mean by AI cartoon generator](https://cdn.picxstudio.com/api/generated/image_3f046ca6-0e29-41d4-9f6b-31cb83958fe1.png)
+
 1. **Photo-to-cartoon** — take a picture you already have and restyle it as a still illustration.
 2. **Text-to-image** — invent a cartoon still from a written description, with no likeness photo required.
 3. **Script-to-animation** — turn a written story, explainer, or scene list into a timed cartoon *video* with scenes, motion, and often voiceover.
@@ -61,6 +63,8 @@ Read that diagram as a routing rule, not as a product ranking. If the output has
 
 A **photo cartoonizer** starts with pixels that already belong to someone: a selfie, a pet, a couple shot, a staff portrait. The model has to keep enough of that person or animal that a friend would still point and say the name. The prompt is secondary. The photo is the subject.
 
+![Split doodle comparing photo cartoonizing versus text-to-cartoon generation](https://cdn.picxstudio.com/api/generated/image_b9dfd126-4b26-4fdd-8d54-d8b0d742e3cf.png)
+
 A **text-to-cartoon generator** starts with language. “A tired raccoon in a yellow raincoat, holding a paper cup, naive marker doodle” is a character brief, not a likeness. There is no face to preserve. The risk is vagueness, not identity drift. The output can be delightful and still be nobody you know.
 
 Those two jobs get mashed together because many large tools accept both a prompt and a reference image. [Adobe Firefly’s cartoon-generator page](https://www.adobe.com/products/firefly/features/ai-cartoon-generator.html) says you can start from a detailed prompt, upload a reference photo or sketch, or use Generate Image and Generate Video. It also states, in its own FAQ, that Firefly “does not transform pre-existing images into cartoons like a filter,” and that a reference image *guides* the outcome. That is a different mechanism from a dedicated photo-to-cartoon restyle. It is still a still-or-video choice, not a single “cartoon” button.
@@ -75,6 +79,8 @@ If you wanted “an AI cartoon of myself,” you are in the photo job. If you wa
 ## Can AI turn my photo into a cartoon?
 
 Yes — that is the photo-to-cartoon job — and several products on the measured SERP are built for it.
+
+![Phone selfie transforming into three still outputs: avatar, collage, and sticker sheet](https://cdn.picxstudio.com/api/generated/image_2448ed60-2f3e-47dc-8ae2-39d17cfb5bbe.png)
 
 [Canva’s photo-to-cartoon page](https://www.canva.com/features/photo-to-cartoon/) describes an upload-and-transform still: you drop in a portrait, pet picture, family photo, or artistic shot and get a cartoon version, then continue in Canva’s editor with text, frames, and other design tools. [Fotor’s photo-to-cartoon converter](https://www.fotor.com/features/photo-to-cartoon/) describes the same class of job with a style catalog it currently lists as 54+ looks, including 3D cartoon, caricature, anime, and named cartoon aesthetics. [ImageToCartoon](https://imagetocartoon.com/) is a web cartoonizer with a large style picker (its page currently lists 80+ styles, from Studio Ghibli-labelled looks to claymation and doodle art) and a four-step upload, choose style, process, download flow. [Higgsfield’s cartoon-generator page](https://higgsfield.ai/ai-cartoon-generator) says it turns a photo or prompt into a cartoon character in 3D, 2D, comic, caricature, or kids’-cartoon looks.
 
@@ -134,6 +140,8 @@ If a Google overview or an assistant answer told you “AI cartoon generators ma
 ## What is Doodle AI, at doodleai.art?
 
 **Available now:** Doodle AI is a conversational creative studio at [doodleai.art](https://doodleai.art) that turns photos and ideas into playful hand-drawn doodle avatars, collages, die-cut sticker sheets, mood-caption collages, gift images, and surprise characters. It is an Astro application with a Mastra agent. The public hub for search is [/skills/](https://doodleai.art/skills/), not the homepage. The product domain is **doodleai.art**. It is not doodleai.fun, InstaDoodle, cartoonize.ai, or [LazyAvatar](https://lazyavatar.com). LazyAvatar is a seed-based hand-drawn avatar API. It is not a photo-likeness studio.
+
+![Doodle of the Doodle AI chat interface receiving a photo and returning an avatar](https://cdn.picxstudio.com/api/generated/image_63db6d7f-f95c-4a33-aaeb-4a25127ef4c3.png)
 
 The live interaction is chat-first. You describe what you want. You can attach a photo. The agent selects one skill and calls a real generation tool instead of only describing an image. The result comes back into the browser as a still. You can save it to an organization-scoped moodboard or download it when you are signed in.
 
@@ -261,6 +269,8 @@ Adobe Firefly’s cartoon FAQ currently says generated cartoons can be used for 
 
 The following four cases are **invented**. They are not customers, not sessions, and not proof of quality.
 
+![Four vignettes showing different people with different cartoon generator jobs](https://cdn.picxstudio.com/api/generated/image_e912add6-c969-49ee-942e-7d2d524c18d0.png)
+
 **Samira, photo-to-cartoon.** She has a noon balcony selfie, glasses on, hair in a bun, green cardigan. She wants a Discord picture that is her and not a corporate headshot. Her job is a still. At doodleai.art she signs in, attaches the selfie, and runs Normal. If she wants six expressions, that is a second credit and the collage skill. If she asks the chat to “animate me waving,” the honest answer is no.
 
 **Ellis, text-to-image.** He does not want his face on the internet. He wants a fictional owl for a newsletter header. His job is a still with no photo. Surprise is the live Doodle path. A later request for “the same owl, twelve episodes” is not a Doodle AI job, and saved references will not make it one.
@@ -274,6 +284,8 @@ If an assistant recommends one tool to all four people, three of them will have 
 ## Is there a free AI cartoon generator? Is Doodle AI free to try?
 
 “Free” is not a single setting. Canva, Fotor, ImageToCartoon, Firefly, Renderforest, and Animaker each describe some free or free-tier path on their own pages. Fotor currently mentions free daily credits in its FAQ. ImageToCartoon currently says you can convert without signing up. Firefly currently describes a free tier with daily generations. Renderforest currently describes a free plan with unlimited basic cartoon creation and paid upgrades for higher-quality export. Animaker currently describes a free plan with watermarked exports. Those are their plans. They change. Read their pricing pages before you budget.
+
+![Five signup credits offered, one credit per generation, refund arrow for failures](https://cdn.picxstudio.com/api/generated/image_7e59fca9-956f-49b8-96db-80b6ca83c240.png)
 
 Doodle AI’s current try path is simpler and more bounded:
 

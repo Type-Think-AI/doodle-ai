@@ -18,6 +18,8 @@ The method below uses only three currently runnable Doodle AI image skills: a si
 
 Small studios do not lose weeks because they cannot draw. They lose weeks because the first pictures arrive too late to argue about. A client says “warm, not cute.” A director says “lantern, not mascot.” A producer needs to know whether the lead reads in silhouette before anyone opens a timeline. Those are visual questions. If the first pictures only appear after a storyboard pass, the argument happens on expensive frames.
 
+![Small animation team debating around whiteboard with character sheet arriving late](https://cdn.picxstudio.com/api/generated/image_018a1690-2088-47bd-99fb-8d265ab0a741.png)
+
 That pressure is not imaginary, and it is not unique to animation. [Wyzowl reports that 91% of businesses use video as a marketing tool](https://wyzowl.com/video-marketing-statistics/). When almost every buyer already treats video as a default communication format, a four-person studio is asked for motion work even when the real request is still “show us who this character is.” A concept board is how you answer that request without pretending you have already shot the film.
 
 Creators have already moved generative tools into that early gap. [Adobe’s 2025 creators survey, covering more than 16,000 creators, reports that 86% use creative generative AI, 88% say it helps them work faster, and 87% say it improves quality](https://news.adobe.com/news/2025/10/adobe-max-2025-creators-survey). Those figures describe an industry habit: people use generative systems to get to a discussable picture sooner. They do not describe Doodle AI. They do not measure this sprint. They do not prove that any one generation will be usable. They only explain why a producer can put still generation in the first day of a job without looking eccentric.
@@ -60,6 +62,8 @@ The hero image on this article, and the inline figure below, are the same file: 
 
 The following brief is fictional. Harbor & Wick Animation is not a real studio. The Harbor lantern museum is not a real client. Lumen is not a real series. No hours, win rates, or client reactions were measured. The brief exists so the rest of the article can be specific.
 
+![Doodle concept of Lumen the raccoon lantern-keeper on a dock](https://cdn.picxstudio.com/api/generated/image_6c1df554-4150-47ac-bab8-888eeb6b24ec.png)
+
 **Hypothetical studio:** Harbor & Wick Animation, a four-person boutique. One creative director, one producer, one character designer who also composites, one generalist who will later board and animate in tools that are not Doodle AI.
 
 **Hypothetical job:** a 75-second 2D character piece for a traveling exhibit about night-shift workers at a small harbor. The exhibit wants one lead character visitors can recognize from a poster, a looping screen, and a printed activity card. The motion piece will be produced later in the studio’s usual board-and-animate stack. This sprint is only meant to produce a concept board the museum stakeholders can mark up.
@@ -79,6 +83,8 @@ The following brief is fictional. Harbor & Wick Animation is not a real studio. 
 ## How to write a brief that a collage can actually answer
 
 Most written briefs are scene lists. A six-panel collage is not a scene list. If you paste “open on the harbor, cut to the ladder, then the ship, then the close-up of the flame” into a stills skill, you will get a muddy page that pretends to be coverage. Rewrite the brief as questions a still can fail.
+
+![Crossed-out scene list versus clear yes-or-no stills questions](https://cdn.picxstudio.com/api/generated/image_7b71d108-6b17-45b7-8496-21a9c87ada28.png)
 
 For the avatar, the only question is: would we hire this face and this costume to play Lumen? Not “is it pretty.” Not “could this be a poster.” Hire / don’t hire.
 
@@ -153,6 +159,8 @@ That board is the deliverable of the sprint. It is not the film.
 
 Gates fail when they become taste. Give each person a job.
 
+![Three review gates with team members approving stills at each stage](https://cdn.picxstudio.com/api/generated/image_2aa09fd1-e0bb-4e3e-bf48-bb659df06f50.png)
+
 | Gate | Owner | Pass only if | Fail and regenerate if | Do not ask this here |
 | --- | --- | --- | --- | --- |
 | A. Avatar | Creative director | The still could be hired as Lumen | Mascot face, missing cuff, generic lantern, wrong tone | Will this animate well? |
@@ -217,6 +225,8 @@ Hypothetical budget for Harbor & Wick: 2 + 2 + 2 + 2 = 8 planned credits, with t
 
 Assume, hypothetically, that Harbor & Wick sits down on a Tuesday afternoon. Assume the written lock is already on paper. Assume they are signed in. Assume they will not run video tools during the sitting. Assume no still is “good enough because we are tired.”
 
+![Desk with three concept pages showing avatar, collage, and action grid with review marks](https://cdn.picxstudio.com/api/generated/image_5a423d6f-fbb0-4420-a146-05c6c523cbb7.png)
+
 **Hypothetical pass 1, avatar.** The first still makes Lumen look like a children’s-menu raccoon. The glasses are correct. The lantern is a round cartoon bulb. Gate A fails on tone and on the lantern. They spend the second avatar credit with the same lock plus one extra clause: “brass lantern with a visible bail and glass chimney, not a glowing orb.” The second still is hireable. Gate A passes. Two credits.
 
 **Hypothetical pass 2, close-up collage.** The page is handsome and mostly wrong. Panels 1, 2, and 5 match the locked snout. Panels 3, 4, and 6 grow a narrower muzzle and lose the unmatched cuff. Gate B fails because the page is not one performer. They regenerate with an added clause: “keep the same wide snout and the same ear notches in every panel; if a hand is in frame the yellow cuff must be on the right wrist.” The second page is uneven but all six heads are Lumen, and the six states read. Gate B passes. Two credits.
@@ -244,6 +254,8 @@ Do not use it as a substitute for continuity tools. If the close-up snout and th
 ## Limitations, then a real handoff
 
 The limitation list is the product list in negative. No video. No timeline. No animatics. No finished batch or variants workflow. No polished project/review/share workspace. No SSO. No C2PA. No guaranteed character continuity. No checkout flow, subscription, or physical stickers in the mail. The sticker skill makes a sticker sheet image. It does not ship a pack. The organization layer, shared references, moodboards, threads, and pooled credits are real backend/API capabilities; projects, assets, share links, batch jobs, and review states remain partial foundations rather than verified end-to-end product surfaces.
+
+![Concept board being handed off to animation production tools](https://cdn.picxstudio.com/api/generated/image_3c186f64-f2b4-4f82-b703-0e4bc4e6499f.png)
 
 Handoff is therefore mandatory, not a nice extra. After Gate D, the studio should move the approved stills into the tools that actually finish animation.
 

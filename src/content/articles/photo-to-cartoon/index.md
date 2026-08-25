@@ -36,6 +36,8 @@ Do not read any other sample on this site as a substitute for that pair. A die-c
 
 Normal redraws **one uploaded photo** into **one square illustrated avatar**. The skill page states the output is 1:1 and that a photo is required. House style is a naive marker-and-ink doodle: bold outlines, simplified features, flat cheerful color, slightly exaggerated proportions, and a clean white or warm-white background. The generation instruction tells the model to keep hairstyle, face shape, expression, skin tone, clothing, and accessories recognizable, then translate them into illustration. It is not a photographic filter. It is not a 3D bust. It is not a pencil-sketch app.
 
+![Doodle-style avatar with bold outlines next to crossed-out icons of 3D render, video, and photo filter](https://cdn.picxstudio.com/api/generated/image_ee1713f4-57e1-4ecb-a3e6-5fa1a277850b.png)
+
 That distinction matters because the broader “cartoonize photo” category is crowded with other jobs. [Canva’s photo-to-cartoon feature](https://www.canva.com/features/photo-to-cartoon/), [Fotor’s photo-to-cartoon tool](https://www.fotor.com/features/photo-to-cartoon/), [ImageToCartoon](https://imagetocartoon.com/), and [Adobe Firefly’s cartoon generator](https://www.adobe.com/products/firefly/features/ai-cartoon-generator.html) all sit on the same search surface. They are not Doodle AI, and this article does not rank them. Doodle AI’s current signature is a conversational hand-drawn doodle at doodleai.art, not a style catalog of anime, clay, comic, or photoreal sketch looks.
 
 Two nearby products are easy to mix up and should stay separate:
@@ -58,6 +60,8 @@ The generation request currently uses PicX with a 1:1 aspect ratio and a 1K size
 ## Prepare the photo before you sign in
 
 Most disappointing cartoons start as disappointing source photos. The model can only keep what it can see. Normal is instructed to preserve hairstyle silhouette and color, face shape, expression, skin tone, glasses, and distinctive accessories. If those landmarks are hidden, crushed by shadow, or split across several people, the doodle has to guess.
+
+![Good versus bad photo input for cartoon conversion shown as doodle illustrations](https://cdn.picxstudio.com/api/generated/image_defd5bb2-eb8a-41e8-bcb1-b18c8b9bc07d.png)
 
 Use this as a kitchen-table check, not as a studio lighting guide.
 
@@ -88,6 +92,8 @@ If you do not want to upload a likeness at all, do not use Normal. Use [Surprise
 ## Sign in, then attach the photo
 
 You can browse the skill catalog without an account. You cannot upload, generate, save, or sync account work until you sign in. Creation currently uses Google sign-in. [About](https://doodleai.art/about/) states that sign-in unlocks creation, syncing, and starter credits. [Terms](https://doodleai.art/terms-of-service/) repeat that browsing is open and Google sign-in is required to upload, generate, save, and synchronize supported chats, moodboards, characters, and generation history.
+
+![Three-panel doodle strip showing sign-in, photo attachment, and prompt steps](https://cdn.picxstudio.com/api/generated/image_d8ceec01-0c06-416c-ac16-296c4c5d1d55.png)
 
 On signup, Doodle AI creates a **personal organization** for you. Credits live on that organization, not as a private wallet that follows you independently of it. Configuration allows up to 5 organizations and up to 25 members, with owner, producer, artist, reviewer, and client roles in the Better Auth organization layer. Sessions carry an active organization. Membership and permissions are rechecked. That is a working backend and API foundation plus shared data behavior. It is not a polished team switcher or a finished studio workspace. Do not wait for a “team review portal” before making a personal cartoon. For this how-to, you are one person in your personal organization.
 
@@ -126,6 +132,8 @@ That is the whole current path. There is no separate `/photo-to-cartoon/` produc
 ## Run Normal as a conversation, not as a filter picker
 
 Doodle AI is not a row of style thumbnails you tap. You attach a photo and talk. For a first cartoon, keep the request small enough that the photo can still do the work.
+
+![Good short prompt producing a clean avatar versus overloaded prompt producing cluttered result](https://cdn.picxstudio.com/api/generated/image_0e98deb4-4017-466c-ab83-5a8e14890442.png)
 
 **A first prompt you can paste**
 
@@ -166,6 +174,8 @@ That is one more credit if it runs. It is not a free undo. It is also not a batc
 ## Credit accounting for a first cartoon sitting
 
 New accounts receive **5 signup credits** into the personal organization. Every runnable skill costs **1 credit**. The ledger **reserves** that credit before PicX is called. If generation fails, the credit is **refunded**. If you are rate-limited, the request is a no-op against the ledger: nothing is reserved. If the organization balance is too low, generation does not start. Credits are pooled on the organization. Organization limits and rate caps exist; this article does not invent extra numeric thresholds beyond the published organization caps of 5 organizations and 25 members.
+
+![Five credit tokens showing spend plan with doodle results and refund arrow](https://cdn.picxstudio.com/api/generated/image_51109468-c1b7-40ca-b6ac-24d346c179cb.png)
 
 Stripe checkout, paid credit packs, and subscriptions are **not live**. Do not plan this sitting as if you can buy more credits in the product today. Five attempts is the current starter grant. Spend them as if they are sitting tickets, because they are.
 
@@ -236,6 +246,8 @@ If you want to show the result to a friend, download the file and send it throug
 ## Common failures, with recoveries that cost another credit
 
 These are process failures, not measured error rates. Doodle AI does not publish a success percentage here, and this article will not invent one.
+
+![Six doodle cards showing common photo-to-cartoon failures and fixes](https://cdn.picxstudio.com/api/generated/image_aea650db-54ef-4f05-bf9d-3fd6a0d55b44.png)
 
 **No photo attached.** Normal cannot run. Attach a picture, or switch to Surprise if you refuse to upload a likeness.
 

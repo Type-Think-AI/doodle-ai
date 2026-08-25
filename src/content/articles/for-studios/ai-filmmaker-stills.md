@@ -18,6 +18,8 @@ The method uses only the image skills that currently run in Doodle AI: a single 
 
 Most AI-film sessions start in the wrong place. Someone pastes a scene into a video tool, watches a clip that almost works, then spends the next afternoon arguing about a face that never settled. The clip is expensive in attention even when the invoice is small. The argument is happening on motion, which is the wrong surface for a character question.
 
+![Calm stills-first approach versus chaotic video-first confusion](https://cdn.picxstudio.com/api/generated/image_f9b4812c-b8bc-4188-a109-c3cbbf64696e.png)
+
 Stills are cheaper to reject. A bust, a six-panel face page, and a six-panel full-body page can answer “who is this person,” “what range can they play,” and “how do they occupy a frame.” Those answers are what a director needs before choosing live-action plates with illustrated overlays, a generated-motion tool, or a traditional board-and-animate stack. If you skip the stills, you are choosing a video approach while the lead is still a paragraph.
 
 The pressure to skip is real, and it is not unique to independent AI film. [Wyzowl’s 2026 video marketing statistics, based on a late-2025 survey of 266 respondents, report that 91% of businesses use video as a marketing tool](https://wyzowl.com/video-marketing-statistics/). That figure is directional context, not a Doodle AI metric. It explains why a two-person unit is asked for motion before anyone has seen a character: the people who fund or share the work already treat video as a default. Pre-production stills are how you answer that demand without pretending the film is already shot.
@@ -64,6 +66,8 @@ The hero image on this page is a current PicX-generated die-cut sticker sheet. R
 
 The following brief is fictional. Low Shelf Pictures is not a real company. *Quiet Inventory* is not a real film. Ellis Quinn is not a real person. No hours, festival results, or client reactions were measured. The brief exists so the rest of the article can be specific instead of speaking in “your character” forever.
 
+![Casting card of Ellis Quinn the night-shift grocery stocker](https://cdn.picxstudio.com/api/generated/image_6db20d60-7d48-4e2e-a77c-5e8ce4780611.png)
+
 **Hypothetical unit:** Low Shelf Pictures, a two-person AI-film setup. One director who also writes prompts. One virtual-production lead who will later composite, board, or supervise motion in tools that are not Doodle AI.
 
 **Hypothetical job:** a 4-minute illustrated short called *Quiet Inventory*. After closing, a grocery night-shift stocker walks a fluorescent aisle and talks to a handheld barcode scanner as if it were a coworker. The later motion path is undecided. The unit might shoot live-action aisle plates and composite an illustrated lead. It might take locked stills into an external video tool. It might board and animate in a traditional 2D stack. This sitting is not allowed to pick that path. It is only allowed to produce stills that make the path choosable.
@@ -103,6 +107,8 @@ A director can do this rewrite on paper before anyone signs in. It is the cheape
 ## Map each live skill to a filmmaking job
 
 Use the skill that answers the question you actually have. Do not run all seven because they exist.
+
+![Six tiles mapping Doodle AI skills to filmmaking questions](https://cdn.picxstudio.com/api/generated/image_2ab37fcf-1fd2-4c4a-b4d4-eea1507554eb.png)
 
 | Filmmaking question | Live skill | What a useful result looks like | What you still will not have |
 | --- | --- | --- | --- |
@@ -260,6 +266,8 @@ flowchart TD
 
 Gates fail when they become taste. Give each person a job. In a two-person unit, one person still should not own every gate.
 
+![Review gate with director passing or rejecting character stills](https://cdn.picxstudio.com/api/generated/image_c48cd56e-af6f-41da-ba66-29aea8afbf1f.png)
+
 | Gate | Owner | Pass only if | Fail and regenerate if | Do not ask this here |
 | --- | --- | --- | --- | --- |
 | 1. First character still | Director | The still could be cast as Ellis | Mascot face, missing visor clip, generic gadget, wrong tone | Will this animate well? |
@@ -294,6 +302,8 @@ Organization-pooled credits mean a second member of the active organization spen
 
 Assume, hypothetically, that Low Shelf Pictures sits down on a Thursday night. Assume the written lock is already on paper. Assume they are signed in. Assume they have no consented stand-in photo at the start. Assume they will not open a video tool during the sitting. Assume no still is “good enough because we are tired.”
 
+![Timeline showing three generation passes with gate results and credit tally](https://cdn.picxstudio.com/api/generated/image_4a5aac02-4b62-4708-9954-e84e00ff1646.png)
+
 **Hypothetical pass 1, Surprise.** The first still makes Ellis look like a cheerful brand mascot. The visor clip is correct. The scanner is a rounded cartoon phone. Gate 1 fails on tone and on the scanner. They spend the second Surprise credit with the same lock plus one extra clause: “industrial handheld barcode scanner with a visible coiled cord and trigger grip, not a smartphone.” The second still is castable. Gate 1 passes. Two credits.
 
 They still cannot run close-up collage or full-body without a photo. In this hypothetical they now use a consented photo of the director in a red vest, taken after Gate 1, as the photo input. The Surprise still stays pinned as a human style reminder. That is a workaround, not a reference-locking feature.
@@ -311,6 +321,8 @@ Under those hypothetical assumptions, the sitting produces a mood board. It does
 ## What to generate, what to reject, what to hand off
 
 This is the whole method, restated as a cull.
+
+![Three bins for generate, reject, and hand off stills to other tools](https://cdn.picxstudio.com/api/generated/image_7d2aaf03-419d-428f-a765-d1855be7e09a.png)
 
 **Generate** when the unanswered question is character, costume, tone, or blocking. Generate a Surprise still when you have no photo and need an invented lead. Generate an avatar when you have a consented likeness. Generate a close-up collage when you need performance range. Generate a full-body collage when you need verbs and silhouette. Generate mood captions when you need a temperature page and can live with randomized words. Generate stickers when you need isolated reaction objects. Generate a gift still when you actually need a card.
 

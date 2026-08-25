@@ -50,6 +50,8 @@ Do not read human-avatar samples on other posts as pet proof. A selfie doodle is
 
 A painted pet portrait, a print-on-demand canvas, and a phone cartoon filter all sit on the same search surface. They are different jobs.
 
+![Three approaches compared: painted commission, phone filter, and hand-drawn doodle](https://cdn.picxstudio.com/api/generated/image_a5efeafa-fd3c-4d79-ba57-97cc1d18a91d.png)
+
 A **commissioned portrait** starts with an illustrator, a brief, revisions, and usually a physical or high-resolution file you paid someone to author. A **print shop** starts with a file you already like and a shipping address. A **phone filter** restyles pixels in place and often keeps photographic fur texture. Doodle AI’s current job is narrower: one uploaded photo becomes one hand-drawn doodle still, in a naive marker-and-ink house style, through a chat turn on doodleai.art.
 
 [Canva’s photo-to-cartoon page](https://www.canva.com/features/photo-to-cartoon/) explicitly lists pet pictures among the images you can convert, then continue editing in Canva. That is Canva’s product copy, not a Doodle AI test. This article does not rank Canva, [Fotor](https://www.fotor.com/features/photo-to-cartoon/), [ImageToCartoon](https://imagetocartoon.com/), or [Adobe Firefly’s cartoon generator](https://www.adobe.com/products/firefly/features/ai-cartoon-generator.html). It only uses what those sites say about their own inputs. Doodle AI’s current signature is a conversational doodle at **doodleai.art**, not a style mall of anime, oil, watercolor, or photoreal fur.
@@ -94,6 +96,8 @@ ChatGPT Images launched transparent iMessage and WhatsApp stickers, announced on
 ## Choose a photo the doodle can actually see
 
 Most disappointing pet cartoons start as photos the model cannot parse. A doodle can only keep landmarks that are visible. Dark fur against a dark couch, a leap frozen as smear, two animals sharing one blob of pixels — those frames ask the model to invent. Invention is how a brindle mutt becomes a generic brown dog.
+
+![Four pet photos showing one good input and three failures: dark, blurry, multi-pet](https://cdn.picxstudio.com/api/generated/image_41492abd-351a-472b-b618-e228cd569c48.png)
 
 Photographers who actually shoot dogs and cats repeat the same lighting advice. The [American Kennel Club’s guide to photographing dogs](https://www.akc.org/expert-advice/lifestyle/taking-photos-of-your-dog/) recommends shade or golden hour rather than harsh overhead sun, and getting down to the dog’s eye level. A second [AKC piece on photographing dogs](https://www.akc.org/expert-advice/dog-breeding/say-cheese-take-best-photos-dogs/) says indoor window light helps, warns against backlighting unless you want a silhouette, and notes that a phone’s portrait mode should focus on the dog, not the blanket. Cornell’s [CatWatch “Ask Elizabeth” photography column](https://www.catwatchnewsletter.com/behavior/socialization/ask-elizabeth-11-07/) tells cat people to prefer natural window light, turn the flash off when they can, and get down to the cat’s level, because a direct flash often produces eyeshine and washed-out color. Those are photography tips from named sources. They are not Doodle AI camera settings.
 
@@ -164,6 +168,8 @@ This article is not legal advice. If you need a rights answer for a paid portrai
 
 Once the photo is usable, pick the still that matches the job. All three skills below require a photo. Each generation costs **1 credit**. New accounts receive **5 signup credits**. Credits are reserved before generation and refunded when generation fails. Credits are pooled on the organization.
 
+![One pet shown as three outputs: Normal avatar, Gift card, and Stickers sheet](https://cdn.picxstudio.com/api/generated/image_02ace4b8-ad73-4970-b83f-65bee7b3c3ad.png)
+
 ```mermaid
 flowchart TD
   Job[What do you want the pet doodle to do?] --> Face{A single character of this animal}
@@ -225,6 +231,8 @@ Server-side conversation memory is not live. If you close the thread and come ba
 
 These are teaching stories. They are not case studies, not screenshots, and not measured quality.
 
+![Three hypothetical pet portrait sittings with dog, cat, and rabbit](https://cdn.picxstudio.com/api/generated/image_a0849057-f6a5-4e5c-9be4-ba14b4dd1cce.png)
+
 **Hypothetical 1 — Mina and Bramble, a dog birthday avatar.** Mina has a Saturday morning photo of Bramble, a brindle mixed-breed, sitting on a kitchen mat. Window light from the left, both eyes open, red collar with a round tag, white chest blaze visible. She signs in at doodleai.art, attaches that photo, and asks the [Normal](https://doodleai.art/skills/normal/) skill: “Doodle my dog. Keep the brindle coat, white chest blaze, and red collar. Square naive marker-and-ink avatar, clean warm-white background.” She spends 1 of her 5 signup credits. If the still keeps the blaze and collar, she has a digital character. If the still turns Bramble into a generic tan dog, she can recrop tighter to the face and spend a second credit. She does not have a mailed poster.
 
 **Hypothetical 2 — Cole and Noodle, a cat thank-you card.** Cole wants to thank a neighbor who fed Noodle, an orange tabby, for a week. The best photo is Noodle loafed on a windowsill, green collar bell visible, afternoon light on the face, no flash. Cole runs [Gift](https://doodleai.art/skills/gift/) with “thank you doodle of this cat, keep the orange tabby stripes and green collar bell.” The live occasion match is Thank You, so the card message will be “Thank You,” not Cole’s private joke about the wet food. Cole downloads the still and texts the file. That is a digital gift. It is not a stationery order.
@@ -236,6 +244,8 @@ None of these three is a Doodle AI customer. If a later owned before/after exist
 ## Dark, blurry, and multi-pet photos: expected failures
 
 Failures are not rare edge cases. They are the default when the source photo hides the animal.
+
+![Three doodle failures: dark blob, motion blur smear, two pets merged into one](https://cdn.picxstudio.com/api/generated/image_40c63083-ad83-4c1e-b16b-cdc5a47370c1.png)
 
 **Dark photos.** Black cats on charcoal sofas, black dogs at night, any face under a single warm lamp. The coat becomes a silhouette. The doodle then invents a medium-brown generic pet, or keeps a dark blob with cartoon eyes floating on it. Recovery is photographic, not rhetorical: window, open shade, or a well-lit nap. Prompting “make the black fur accurate” does not add photons.
 
@@ -408,3 +418,5 @@ No. Saved references help you organize work. They do not guarantee identical cha
 ## Make one digital pet doodle, then stop
 
 If you have a photo you are allowed to use — one animal, eyes visible, face sharp — open [Normal](https://doodleai.art/skills/normal/), [Gift](https://doodleai.art/skills/gift/), or [Stickers](https://doodleai.art/skills/stickers/) at **doodleai.art**, sign in, attach the picture, and generate one still. Browse the rest of the [skills](https://doodleai.art/skills/) only after that still is a keeper. Read [about](https://doodleai.art/about/) if you want the product in one page. Do not expect a mailed print, a chat-app sticker pack, a matching pair, a commercial license, or a memorial service. You are asking for a playful cartoon of a real pet photo. That is the current job.
+
+![Single finished pet doodle in circular frame with download icon](https://cdn.picxstudio.com/api/generated/image_f9b2a58a-358f-4970-907c-00cf96c87e4e.png)

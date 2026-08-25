@@ -28,6 +28,10 @@
 
   --blue: #3399ff;
   --blue-faint: rgba(51, 153, 255, 0.12);
+  --green: #3ecf8e;
+  --green-faint: rgba(62, 207, 142, 0.12);
+  --red: #ff6b6b;
+  --red-faint: rgba(255, 107, 107, 0.12);
   --send-bg: #fab700;
   --send-fg: #3d2900;
 
@@ -64,6 +68,10 @@
 
   --blue: #1a7fe0;
   --blue-faint: rgba(51, 153, 255, 0.1);
+  --green: #1fa971;
+  --green-faint: rgba(31, 169, 113, 0.12);
+  --red: #da453c;
+  --red-faint: rgba(218, 69, 60, 0.12);
   --send-bg: #fab700;
   --send-fg: #3d2900;
 }

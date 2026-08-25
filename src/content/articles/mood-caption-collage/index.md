@@ -42,6 +42,8 @@ Do not read a close-up collage, a full-body action sheet, or a sticker sheet as 
 
 **Available now.** Doodle AI is an Astro and Mastra chat-first still-image studio at **doodleai.art**. You can browse without an account. Sign-in is required to upload, generate, save, and sync account work. Generation uses a server-owned PicX connection. You do not paste a PicX key into Settings.
 
+![Doodle 3x2 mood-caption collage with six mood poses and hand-lettered words](https://cdn.picxstudio.com/api/generated/image_9e9b63ed-ef3a-4eac-be84-f699780b24a0.png)
+
 The public page is [doodleai.art/skills/mood-captions/](https://doodleai.art/skills/mood-captions/). Catalog copy currently reads: shareable doodle moods with hand-lettered captions. The longer description states a wide six-panel doodle collage for sharing as a reaction image or status update, with each panel pairing a mood-matched pose and a short hand-lettered caption such as Miss You, Healing, Hope, or Enough. The skill requires a photo. The output aspect ratio is **3:2**.
 
 That is **one** landscape image. It is not six separately downloadable files. It is not a carousel builder. It is not a chat sticker pack. The generation instruction asks PicX for a strict grid: exactly three columns and two rows, six panels, wider than it is tall. Each panel shows the same illustrated subject — hairstyle, face shape, and outfit translated from the photo into doodle art — in a different candid mood. Each panel also carries one short caption, drawn as bold, slightly uneven marker-style letters that match the illustration’s linework. The instruction tells the model to keep those letters large enough to read at a glance and positioned so they never overlap the character’s face. That is a generation request, not a typesetting contract.
@@ -55,6 +57,8 @@ The PicX request currently uses a 1K size setting and a 3:2 aspect ratio. That i
 ## Three 3:2 collages, three different jobs
 
 Doodle AI currently ships three landscape six-panel skills. They look related in a thumbnail. They are not interchangeable.
+
+![Three collage types compared: close-up faces, full-body, and mood captions](https://cdn.picxstudio.com/api/generated/image_263a36fe-ee2d-4bba-8a49-2293159bdba9.png)
 
 | Skill | Public page | What each panel shows | Text in the image | Use this when |
 | --- | --- | --- | --- | --- |
@@ -83,6 +87,8 @@ Read that diagram as a routing rule. A captioned grid is a social object. A cont
 ## The mood-word pool, stated honestly
 
 The generation tool does not wait for you to type six captions. Every Mood Captions run selects **six entries at random** from a short pool (`VIRAL_MOOD_WORDS` in the product’s generation config). The pool is a living list. Treat the table below as the current set as of 2026-08-25, not as a forever catalog.
+
+![Hand-lettered mood words scattered on paper with six highlighted as selection](https://cdn.picxstudio.com/api/generated/image_26c229b0-b252-462f-a3d9-4c33064aa111.png)
 
 | Word | Pose the panel is asked to match |
 | --- | --- |
@@ -136,6 +142,8 @@ If the first page is almost right except for one crushed word, the honest next m
 ## Choose a photo that can survive six panels and six words
 
 Most disappointing caption grids start as photos the model cannot read, or as photos that leave no room for type. Mood Captions has to invent six poses **and** park a word in each frame. Tight, dark, or crowded sources make both jobs harder.
+
+![Good source photo versus bad one for mood-caption collage](https://cdn.picxstudio.com/api/generated/image_b278ba02-2184-4dc6-adc0-40fc71b7797e.png)
 
 **Prefer**
 
@@ -203,6 +211,8 @@ Stripe checkout, paid credit packs, and subscriptions are **not live**. Do not w
 
 A mood-caption collage can look finished at chat size and still be the wrong object. Review it as a **page of words plus a likeness**, not as a vibe.
 
+![Person reviewing collage on phone with quality checklist floating around](https://cdn.picxstudio.com/api/generated/image_ffbe5c49-3556-45b4-8d98-55aa3caec416.png)
+
 ```mermaid
 flowchart TD
   Result[3:2 still returns] --> Grid{Exactly six panels, 3 wide by 2 tall?}
@@ -232,6 +242,8 @@ If you want a friend to see it before you post, download the file and send it th
 ## Publishing the still yourself: post, Story, or chat
 
 Mood Captions gives you one landscape still. Where it goes next is your crop, in the app you already use. Doodle AI does not currently ship Instagram, X, Discord, iMessage, or WhatsApp export presets. The sizes below are **publishing recommendations from third-party guides**, not product outputs.
+
+![Collage being cropped for feed post, Story, and chat message](https://cdn.picxstudio.com/api/generated/image_df2ad07e-2fb0-4b68-ad71-00baf180309f.png)
 
 [Buffer’s 2026 Instagram size guide](https://buffer.com/resources/instagram-image-size/) lists square feed posts at 1080 × 1080 (1:1), portrait feed posts at 1080 × 1350 (4:5) or 1080 × 1440 (3:4), landscape feed posts at 1080 × 566 (about 1.91:1), and Stories at 1080 × 1920 (9:16). Buffer’s help article on [ideal image sizes](https://support.buffer.com/article/617-ideal-image-sizes-and-formats-for-your-posts) notes that Instagram’s accepted feed aspect-ratio range is roughly 3:4 through 1.91:1, including square. A 3:2 collage (1.5:1) sits inside that wide-to-square band more comfortably than it sits inside a 9:16 Story.
 

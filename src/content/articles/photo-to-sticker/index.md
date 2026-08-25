@@ -37,6 +37,8 @@ The four people named later — Keisha, Omar, Lila, and Dev — are **hypothetic
 
 A useful first question is not “which tool is best.” It is “which object do you need in your hand, or on your screen, when you are done.”
 
+![Three types: digital sticker sheet, mailed vinyl, and chat-app transparent sticker](https://cdn.picxstudio.com/api/generated/image_dfbefa81-f38a-46f4-a08d-fce8398659db.png)
+
 | Job | What you walk away with | Typical next step | Current Doodle AI fit |
 | --- | --- | --- | --- |
 | Digital die-cut *sheet* | One square still that *looks* like several peel-off stickers on a warm-white page | Download, save to a moodboard, post the sheet as an image | **Available now** on [/skills/stickers/](https://doodleai.art/skills/stickers/) |
@@ -62,6 +64,8 @@ Read that diagram as a routing rule, not as a ranking. If the output has to peel
 
 **Available now.** Doodle AI is an Astro and Mastra chat-first still-image studio at **doodleai.art**. You can browse without an account. Sign-in is required to upload, generate, save, and sync account work. Generation uses a server-owned PicX connection. You do not paste a PicX key into Settings.
 
+![Sticker sheet with five bust portraits of one character in die-cut borders](https://cdn.picxstudio.com/api/generated/image_4ed5fadd-9896-46db-a52a-8a5b57b3457c.png)
+
 The public page for this skill is [doodleai.art/skills/stickers/](https://doodleai.art/skills/stickers/). The catalog copy currently reads: it turns a photo into a sheet of separate die-cut doodle stickers with paper grain and soft shadows. The longer description states a square sticker sheet from a photo, several distinct illustrated poses of the same character, an even white die-cut border, subtle paper grain, and soft contact shadows. The skill requires a photo. The output aspect ratio is 1:1.
 
 That is one still. It is not four separately downloadable files. It is not a ZIP of transparent PNGs. It is not a WhatsApp `.wastickers` pack. The generation instruction asks PicX for a single square image containing four or five head-and-shoulders doodles of the same illustrated subject. Each doodle is specified as a standalone object: a white die-cut outline hugging the silhouette, a faint paper-grain surface, a short drop shadow, and a plain warm-white sheet behind them. Layouts in the current prompt pool include a loose 2×2 with generous gaps, a relaxed cluster with slight corner overlap, or a single row at playful tilt angles.
@@ -77,6 +81,8 @@ The PicX request currently uses a 1K size setting and a 1:1 aspect ratio. That i
 ## How the live Stickers sitting actually runs
 
 The public hub is [/skills/](https://doodleai.art/skills/), not the homepage. The homepage is intentionally omitted from the sitemap. Start on the Stickers page, or open chat and ask for a sticker sheet.
+
+![Five-step infographic showing sticker generation flow from sign-in to download](https://cdn.picxstudio.com/api/generated/image_03ca4593-6373-44b7-accb-717b8c3c0b6b.png)
 
 1. **Sign in.** Browse is open. Upload, generation, saving, and synced account work require an account.
 2. **Attach one photo you are allowed to use.** Stickers will not invent a likeness from a text description. If no photo is attached, the agent is instructed to ask for one.
@@ -118,6 +124,8 @@ A second generation is a second credit. There is no live batch-variants control 
 
 A sticker sheet can look charming at chat size and still be the wrong object. Inspect it as a *sheet*, not as a vibe.
 
+![Pass versus fail sticker sheets showing correct separation versus errors](https://cdn.picxstudio.com/api/generated/image_9b1766c1-179c-424c-a38e-534b05661501.png)
+
 ```mermaid
 flowchart TD
   Result[Square still returns] --> Count{Four or five separate busts?}
@@ -155,6 +163,8 @@ If generation fails, the reserved credit is refunded. A completed still that you
 
 Transparent export is **not live**. That is a product fact, not a temporary copy omission.
 
+![Opaque sticker sheet with not-equal sign next to transparent chat stickers](https://cdn.picxstudio.com/api/generated/image_3e7bb931-947f-4b23-b7ef-d9370ce3c164.png)
+
 A chat sticker is a small, background-less image the messaging tray can composite onto a thread. [Photoroom’s sticker tutorial](https://docs.photoroom.com/tutorials/how-to-create-sticker-images) describes that object directly: stickers as small background-less images for reactions or profile decoration, produced by removing a background and cropping to the subject. [Photoroom’s transparent-background tool](https://www.photoroom.com/tools/transparent-background) is a cutout product. Doodle AI’s Stickers skill is the opposite composition: it *adds* a warm-white sheet, a paper-grain fill, and a drop shadow so the doodles read as objects sitting on a page. Flattening those shadows into a chat tray would not give you a pack. It would give you a picture of a pack.
 
 [WhatsApp’s help article on custom stickers and sticker packs](https://faq.whatsapp.com/1056840314992666) describes creating stickers inside WhatsApp and lists static-sticker requirements, including a maximum sticker size of 100 KB and a pack limit of up to 30 static stickers. [WhatsApp’s help article on AI stickers](https://faq.whatsapp.com/959603618629670) describes a separate in-app path: Create sticker, then Use AI, with up to four stickers generated from a text description through a Meta service. Those are WhatsApp jobs. Doodle AI does not install a pack into that tray.
@@ -166,6 +176,8 @@ If you needed a sticker that peels into a thread tonight, doodleai.art is the wr
 ## Why the sheet is not a print-ready or shipped sticker
 
 Physical fulfillment is **not live**. There is no Doodle AI checkout for vinyl. Stripe checkout and subscriptions are not implemented. There is no verified print-ready dimension set, no named die-line layer, and no CMYK export.
+
+![Digital sticker sheet next to crossed-out print production items](https://cdn.picxstudio.com/api/generated/image_16dd43cd-b77c-4c1e-a3c0-cdb0ecdde185.png)
 
 Printers are explicit about those artifacts because they cut physical material. [Jukebox Print’s die-cut upload guide](https://www.jukeboxprint.com/blog/How-to-Create-and-Upload-Files-for-Die-Cut-Stickers), updated 2026-02-07, tells designers to use 300 DPI, CMYK, and a vector cut line on its own layer named “Through Cut” or “Die Line.” Beginners can use Jukebox’s Sticker Maker, which the same article says builds a cut line after an upload. [Jukebox’s Sticker Maker page](https://www.jukeboxprint.com/sticker-maker) describes background removal, a die-cut shape, and a downloadable print-ready file with cut lines. Those are print-shop promises. They are not Doodle AI features.
 

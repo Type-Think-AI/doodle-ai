@@ -42,6 +42,8 @@ Do not read a Surprise character as a likeness of Imani’s photo. Do not read a
 
 On many cartoon sites, “the prompt” means a paragraph you hope the model will obey, plus a style thumbnail you tap. [ImageToCartoon](https://imagetocartoon.com/) currently advertises 80+ styles. [Fotor’s photo-to-cartoon page](https://www.fotor.com/features/photo-to-cartoon/) currently lists 54+ looks. Those are their catalogs. They are not Doodle AI. [Canva’s photo-to-cartoon feature](https://www.canva.com/features/photo-to-cartoon/) and [Adobe Firefly’s cartoon generator](https://www.adobe.com/products/firefly/features/ai-cartoon-generator.html) also sit on the same search surface. This article does not rank them and does not claim a bake-off.
 
+![Short effective prompt with checkmark versus over-detailed wall of text crossed out](https://cdn.picxstudio.com/api/generated/image_2f35df5a-a9b5-42f5-8650-b7b84acb229c.png)
+
 On doodleai.art, a chat turn is split across several layers. Mixing those layers is how people write a 180-word “cinematic anime protagonist” brief, spend a credit, and get a naive doodle that ignored half the lore.
 
 | Lever | Who currently controls it | What your chat text actually does |
@@ -86,6 +88,8 @@ flowchart TD
   PicX --> Out[One image back in chat]
 ```
 
+![Doodle flowchart showing a chat message routing to one of seven skill doors](https://cdn.picxstudio.com/api/generated/image_60becfb1-6e26-4242-b405-45abcb5e1b74.png)
+
 Read that as a routing diagram, not as a quality guarantee. The agent is instructed to choose **one** skill, ask for a photo when a photo skill has none, and call generation once. If the request is genuinely ambiguous, it should ask one short question instead of guessing. You do not get a batch of candidates. User-authored skills are **not live**. Server-side conversation memory is **not live**; the agent does not keep a private long-term memory of your face across Worker restarts. Signed-in threads, saved references, moodboards, and generation records are organization-scoped in the API. That is shared data behavior, not a prompt that “remembers you.”
 
 After a still returns, a follow-up such as “thicker outline” or “warmer paper” is treated as a **fresh call of the same skill** with the same photo, and it costs another credit if it runs. The house-style notes map those phrases to line weight and paper tone for the agent. They are not a free undo, not a slider, and not a proof that the second face will match the first.
@@ -93,6 +97,8 @@ After a still returns, a follow-up such as “thicker outline” or “warmer pa
 ## Eight prompt patterns, mapped to live skills
 
 Each pattern below is tagged with **exactly one** current skill, except Pattern 8, which is a follow-up on whichever photo skill you just ran. Copy the prompt. Attach the input the skill actually needs. Do not glue two skills into one paragraph.
+
+![Eight numbered doodle cards representing each prompt pattern](https://cdn.picxstudio.com/api/generated/image_ad6fb1cf-89ab-4015-a1c0-1286ef701ea0.png)
 
 | # | Pattern | Live skill | Required input | What you are actually asking for |
 | --- | --- | --- | --- | --- |
@@ -306,6 +312,8 @@ That is three skills, a second likeness, a theme change, and a continuity guaran
 
 Over-detailing is not “being specific.” Landmarks are specific. Over-detailing is stacking jobs the live skills do not accept: extra people, extra formats, extra verses, extra styles, extra motion.
 
+![Overloaded chat prompt exploding with requests while agent looks confused](https://cdn.picxstudio.com/api/generated/image_d7856472-b9e1-4bd7-9e2f-560e0d7edee9.png)
+
 Typical over-detailed prompt, still hypothetical:
 
 > Cartoonize this selfie in Studio Ghibli, Pixar, South Park, and pencil sketch, 80 styles, plus a couple matching PFPs, a sticker pack for WhatsApp, a birthday verse that says “Happy 29th Imani,” a six-second talking clip, C2PA, and a commercial license, and save it as the official character so every future run matches.
@@ -325,6 +333,8 @@ Over-detailing also shows up as costume fan fiction on a photo skill. “Add a c
 
 Six of the seven live skills **require** a photo. Surprise is the exception. The agent is instructed: if the chosen skill needs a photo and none is attached, ask for one and do not call the tool. Offer Surprise so you are not stuck.
 
+![Empty photo placeholder with arrow prompting user to attach a selfie](https://cdn.picxstudio.com/api/generated/image_4589d468-fb2d-42e1-a6d5-350516d676f5.png)
+
 If you wanted “an AI cartoon of myself” and attached nothing, you did not write a clever text-to-image prompt. You skipped the subject. The honest recoveries are:
 
 1. Attach a photo you have permission to use, then run Normal, Collage, Full-body, Stickers, Mood Captions, or Gift.
@@ -339,6 +349,8 @@ Group photos are a related miss. Normal is a single-portrait skill. A huddle of 
 ## Failure case: identity drift
 
 A good first doodle feels like a character you could reuse. The current product does not lock that character.
+
+![Three portraits showing identity drift with glasses vanishing and hairstyle changing](https://cdn.picxstudio.com/api/generated/image_5ddb1a8e-fe2e-4e5b-b2fd-95e99086bdba.png)
 
 What exists today, for signed-in work in the active organization:
 

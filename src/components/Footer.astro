@@ -1,140 +1,805 @@
 ---
 const year = new Date().getFullYear();
+
+const columns = [
+	{
+		title: "Studio",
+		links: [
+			{ label: "Characters", href: "/characters" },
+			{ label: "Moodboards", href: "/moodboards" },
+			{ label: "Projects", href: "/projects" },
+			{ label: "Skill gallery", href: "/skills" },
+		],
+	},
+	{
+		title: "Product",
+		links: [
+			{ label: "App", href: "/" },
+			{ label: "For studios", href: "/for-studios" },
+			{ label: "Learn", href: "/learn" },
+			{ label: "Team", href: "/team" },
+		],
+	},
+	{
+		title: "Company",
+		links: [
+			{ label: "About", href: "/about" },
+			{ label: "Terms", href: "/terms-of-service" },
+			{ label: "Privacy", href: "/privacy-policy" },
+			{ label: "Support", href: "mailto:yash@typethink.ai" },
+		],
+	},
+];
+
+const ticker = [
+	"Prompt to picture in seconds",
+	"◆",
+	"Characters that stay on-model",
+	"◆",
+	"Moodboards that build themselves",
+	"◆",
+	"Akku watches your canvas",
+	"◆",
+];
 ---
 
-<footer class="site-footer">
-	<div class="footer-inner">
-		<div class="footer-brand">
-			<img class="fmark" src="/icon-192.png" alt="" width="38" height="38" />
-			<span class="fname">doodleai<span class="grad">.art</span></span>
-		</div>
-
-		<nav class="footer-nav">
-			<a href="/">App</a>
-			<a href="/learn">Learn</a>
-			<a href="/about">About</a>
-			<a href="/terms-of-service">Terms</a>
-			<a href="/privacy-policy">Privacy</a>
-			<a href="mailto:yash@typethink.ai">Support</a>
-		</nav>
-
-		<div class="footer-social">
-			<a href="https://x.com/yash__patidar_" target="_blank" rel="noopener noreferrer" aria-label="Creator on X">
-				<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-					<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-				</svg>
-			</a>
-		</div>
+<footer class="db-footer">
+	<div class="db-bg" aria-hidden="true">
+		<div class="db-glow db-glow-a"></div>
+		<div class="db-glow db-glow-b"></div>
+		<div class="db-dots"></div>
 	</div>
 
-	<div class="footer-legal">
-		&copy; {year} doodleai.art · A for-fun side project
+	<div class="db-shell">
+		<div class="db-cta">
+			<div class="db-cta-copy">
+				<span class="db-badge">
+					<span class="db-dot-pulse"></span>
+					Studio is live
+				</span>
+				<h2 class="db-headline">Your next character is<br />one prompt away.</h2>
+				<div class="db-cta-actions">
+					<a href="/" class="db-btn db-btn-primary">
+						Start doodling free
+						<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M5 12h13M12 6l6 6-6 6"></path>
+						</svg>
+					</a>
+					<a href="/for-studios" class="db-btn db-btn-ghost">For studios</a>
+				</div>
+			</div>
+
+			<div class="db-tiles" aria-hidden="true">
+				<span class="db-tile" style="background:linear-gradient(148deg,var(--accent),var(--accent-soft)); transform:rotate(-3deg);"></span>
+				<span class="db-tile" style="background:linear-gradient(148deg,var(--card-hover),var(--accent-softer)); transform:rotate(3deg);"></span>
+				<span class="db-tile" style="background:linear-gradient(148deg,var(--surface2),var(--card-hover)); transform:rotate(-3deg);"></span>
+				<span class="db-tile" style="background:linear-gradient(148deg,var(--accent-soft),var(--accent)); transform:rotate(3deg);"></span>
+			</div>
+		</div>
+
+		<div class="db-strip">
+			<div class="db-marquee">
+				<div class="db-marquee-track">
+					{ticker.map((t) => (
+						<span class:list={["db-tick", { "db-tick-diamond": t === "◆" }]}>{t}</span>
+					))}
+				</div>
+				<div class="db-marquee-track" aria-hidden="true">
+					{ticker.map((t) => (
+						<span class:list={["db-tick", { "db-tick-diamond": t === "◆" }]}>{t}</span>
+					))}
+				</div>
+			</div>
+		</div>
+
+		<div class="db-top">
+			<div class="db-brand-col">
+				<div class="db-brand">
+					<span class="db-mark">
+						<svg viewBox="0 0 64 64" width="52" height="52" fill="none" aria-hidden="true">
+							<circle cx="32" cy="32" r="27" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="9 13" class="db-mark-ring"></circle>
+							<path d="M20 40c3-13 8-19 12-19s5 7 2 12-8 5-6-2 7-11 14-9" stroke="var(--text)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" class="db-mark-path"></path>
+						</svg>
+					</span>
+					<span class="db-brand-text">
+						<span class="db-brand-name">Doodle AI</span>
+						<span class="db-brand-tag">Draw a thought. Ship a world.</span>
+					</span>
+				</div>
+
+				<p class="db-blurb">An agentic studio where characters, moodboards and finished frames come out of one prompt — and stay yours.</p>
+
+				<div class="db-social">
+					<a href="https://x.com/yash__patidar_" target="_blank" rel="noopener noreferrer" class="db-social-link" aria-label="Doodle AI on X">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+							<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+						</svg>
+					</a>
+				</div>
+			</div>
+
+			<div class="db-cols">
+				{columns.map((col) => (
+					<div class="db-col">
+						<span class="db-col-title">
+							<span class="db-col-dot"></span>
+							{col.title}
+						</span>
+						<div class="db-col-links">
+							{col.links.map((l) => (
+								<a href={l.href} class="db-link">{l.label}</a>
+							))}
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+
+		<div class="db-wordmark" id="dbWordmark">
+			<div class="db-word-base" aria-hidden="true">DOODLE AI</div>
+			<div class="db-word-lit" aria-hidden="true">DOODLE AI</div>
+			<span class="db-word-hint" id="dbWordHint">move your cursor across the name</span>
+		</div>
+
+		<div class="db-legal">
+			<span class="db-copy">&copy; {year} Doodle AI Labs</span>
+			<span class="db-status">
+				<span class="db-dot-pulse db-dot-pulse-sm"></span>
+				All systems drawing
+			</span>
+		</div>
 	</div>
 </footer>
 
 <style>
-	.site-footer {
-		border-top: 1px solid var(--border);
+	.db-footer {
+		position: relative;
+		overflow: hidden;
+		background: var(--bg);
 		margin-top: 60px;
-		padding: 28px var(--shell-pad) 40px;
+		border-top: 1px solid var(--border);
 	}
-	.footer-inner {
-		width: 100%;
+
+	.db-bg {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		pointer-events: none;
+	}
+	.db-glow {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(28px);
+	}
+	.db-glow-a {
+		width: 700px;
+		height: 700px;
+		left: -200px;
+		top: -300px;
+		background: radial-gradient(circle, rgba(250, 183, 0, 0.16), transparent 62%);
+		animation: dbDrift 19s ease-in-out infinite;
+	}
+	.db-glow-b {
+		width: 620px;
+		height: 620px;
+		right: -180px;
+		bottom: -260px;
+		background: radial-gradient(circle, rgba(250, 183, 0, 0.08), transparent 62%);
+		animation: dbDrift2 24s ease-in-out infinite;
+	}
+	.db-dots {
+		position: absolute;
+		inset: 0;
+		background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+		background-size: 28px 28px;
+		mask-image: linear-gradient(180deg, transparent, #000 34%, #000 72%, transparent);
+	}
+	:root[data-theme="light"] .db-dots {
+		background-image: radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+	}
+
+	.db-shell {
+		position: relative;
 		max-width: var(--shell-max);
 		margin: 0 auto;
+		padding: 56px var(--shell-pad) 0;
+		width: 100%;
+	}
+
+	/* CTA */
+	.db-cta {
 		display: flex;
-		align-items: center;
+		align-items: flex-end;
 		justify-content: space-between;
+		gap: 40px;
+		flex-wrap: wrap;
+		padding-bottom: 34px;
+	}
+	.db-cta-copy {
+		display: flex;
+		flex-direction: column;
 		gap: 16px;
+		max-width: 560px;
+	}
+	.db-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		align-self: flex-start;
+		padding: 5px 11px 5px 8px;
+		border-radius: 999px;
+		border: 1px solid var(--border2);
+		background: var(--card);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.4px;
+		color: var(--text-dim);
+	}
+	.db-dot-pulse {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--green);
+		animation: dbPulse 2s ease-in-out infinite;
+	}
+	.db-dot-pulse-sm {
+		width: 7px;
+		height: 7px;
+		box-shadow: 0 0 0 4px var(--green-faint);
+	}
+	.db-headline {
+		margin: 0;
+		font-size: clamp(26px, 3.4vw, 40px);
+		line-height: 1.06;
+		letter-spacing: -0.03em;
+		font-weight: 700;
+		color: var(--text);
+		text-wrap: balance;
+	}
+	.db-cta-actions {
+		display: flex;
+		gap: 10px;
 		flex-wrap: wrap;
 	}
-	.footer-brand {
-		display: flex;
+	.db-btn {
+		display: inline-flex;
 		align-items: center;
-		gap: 10px;
-		font-weight: 800;
-		font-size: 1.1rem;
-		font-family: "Arial Rounded MT Bold", "Trebuchet MS", Arial, sans-serif;
-		letter-spacing: -0.03em;
+		gap: 9px;
+		height: 46px;
+		padding: 0 20px;
+		border-radius: 13px;
+		font-size: 13.5px;
+		font-weight: 600;
+		transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s, color 0.25s;
 	}
-	.footer-brand .fmark {
-		width: 38px;
-		height: 38px;
-		border-radius: 10px;
-		display: block;
+	.db-btn-primary {
+		color: #141414;
+		background: linear-gradient(100deg, var(--accent) 0%, #ffd152 45%, var(--accent) 90%);
+		background-size: 220% 100%;
+		animation: dbSheen 5s ease-in-out infinite;
 	}
-	.footer-brand .grad {
+	.db-btn-primary:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 12px 30px rgba(250, 183, 0, 0.34);
+	}
+	.db-btn-primary svg {
+		animation: dbNudge 1.8s ease-in-out infinite;
+	}
+	.db-btn-ghost {
+		font-weight: 500;
+		color: var(--text-dim);
+		border: 1px solid var(--border2);
+	}
+	.db-btn-ghost:hover {
+		border-color: var(--accent);
 		color: var(--accent);
 	}
-	.footer-nav {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 10px 16px;
-	}
-	.footer-nav a {
-		font-size: 0.84rem;
-		color: var(--text-dim);
-		font-weight: 500;
-		transition: color 0.15s ease;
-	}
-	.footer-nav a:hover {
-		color: var(--text);
-	}
-	.footer-nav a:focus-visible,
-	.footer-social a:focus-visible {
-		outline: 2px solid var(--accent);
-		outline-offset: 3px;
-		border-radius: 6px;
-		color: var(--text);
-	}
-	.footer-social {
+
+	.db-tiles {
 		display: flex;
 		gap: 10px;
 	}
-	.footer-social a {
-		width: 34px;
-		height: 34px;
-		border-radius: 50%;
+	.db-tile {
+		width: 86px;
+		height: 106px;
+		flex: none;
+		border-radius: 16px;
+		border: 1px solid var(--border2);
+		filter: saturate(0.85);
+		transition: transform 0.4s cubic-bezier(0.2, 0.85, 0.2, 1), filter 0.4s;
+	}
+	.db-tile:hover {
+		transform: translateY(-8px) rotate(0deg) !important;
+		filter: saturate(1.25);
+	}
+
+	/* Marquee strip */
+	.db-strip {
+		position: relative;
+		overflow: hidden;
+		border-top: 1px solid var(--border);
+		border-bottom: 1px solid var(--border);
+		background: var(--surface);
+	}
+	.db-marquee {
+		display: flex;
+		width: max-content;
+		animation: dbMarquee 28s linear infinite;
+	}
+	.db-marquee-track {
+		display: flex;
+		align-items: center;
+		gap: 32px;
+		padding: 12px 16px;
+	}
+	.db-tick {
+		font-size: 11.5px;
+		letter-spacing: 0.8px;
+		text-transform: uppercase;
+		white-space: nowrap;
+		font-weight: 500;
+		color: var(--text-dim);
+	}
+	.db-tick-diamond {
+		font-weight: 700;
+		color: var(--accent);
+	}
+
+	/* Main columns */
+	.db-top {
+		display: grid;
+		grid-template-columns: minmax(260px, 1.05fr) minmax(340px, 1fr);
+		gap: 64px;
+		align-items: start;
+		padding: 52px 0 0;
+	}
+	.db-brand-col {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+	.db-brand {
+		display: flex;
+		align-items: center;
+		gap: 13px;
+	}
+	.db-mark {
+		position: relative;
+		width: 52px;
+		height: 52px;
+		flex: none;
+		animation: dbFloat 6.5s ease-in-out infinite;
+	}
+	.db-mark-ring {
+		animation: dbSpin 20s linear infinite;
+		transform-origin: 32px 32px;
+	}
+	.db-mark-path {
+		stroke-dasharray: 120;
+		stroke-dashoffset: 120;
+		animation: dbDash 2.4s cubic-bezier(0.6, 0.05, 0.3, 1) 0.35s forwards;
+	}
+	.db-brand-text {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+	}
+	.db-brand-name {
+		font-size: 19px;
+		font-weight: 700;
+		letter-spacing: -0.2px;
+		color: var(--text);
+	}
+	.db-brand-tag {
+		font-size: 12px;
+		color: var(--text-dimmer);
+	}
+	.db-blurb {
+		margin: 0;
+		max-width: 350px;
+		font-size: 13.5px;
+		line-height: 1.7;
+		color: var(--text-dim);
+		text-wrap: pretty;
+	}
+	.db-social {
+		display: flex;
+		gap: 9px;
+	}
+	.db-social-link {
+		width: 38px;
+		height: 38px;
+		border-radius: 12px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--card-hover);
+		border: 1px solid var(--border2);
 		color: var(--text-dim);
-		transition: color 0.15s ease, background 0.15s ease;
+		background: var(--card);
+		transition: all 0.32s cubic-bezier(0.2, 0.85, 0.2, 1);
 	}
-	.footer-social a:hover {
-		color: var(--text);
-		background: var(--accent-soft);
+	.db-social-link:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		transform: translateY(-3px) rotate(-7deg);
 	}
-	.footer-legal {
-		max-width: 720px;
-		margin: 20px auto 0;
-		text-align: center;
-		font-size: 0.74rem;
+
+	.db-cols {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 38px 24px;
+	}
+	.db-col {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+	.db-col-title {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		font-size: 10.5px;
+		font-weight: 600;
+		letter-spacing: 1.3px;
+		text-transform: uppercase;
 		color: var(--text-dimmer);
 	}
-	.footer-legal a {
+	.db-col-dot {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--accent);
+		animation: dbPulse 2.8s ease-in-out infinite;
+	}
+	.db-col-links {
+		display: flex;
+		flex-direction: column;
+		gap: 11px;
+		align-items: flex-start;
+	}
+	.db-link {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		font-size: 13.5px;
 		color: var(--text-dim);
-		font-weight: 600;
+		transition: color 0.25s, transform 0.25s;
 	}
-	.footer-legal a:hover {
+	.db-link::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		bottom: -3px;
+		height: 1.5px;
+		width: 100%;
+		background: currentColor;
+		transform: scaleX(0);
+		transform-origin: right;
+		transition: transform 0.4s cubic-bezier(0.2, 0.85, 0.2, 1);
+	}
+	.db-link:hover {
 		color: var(--text);
-		text-decoration: underline;
+		transform: translateX(3px);
 	}
-	@media (max-width: 520px) {
-		.footer-inner {
+	.db-link:hover::after {
+		transform: scaleX(1);
+		transform-origin: left;
+	}
+
+	/* Big wordmark with spotlight */
+	.db-wordmark {
+		position: relative;
+		margin-top: 56px;
+		cursor: crosshair;
+	}
+	.db-word-base,
+	.db-word-lit {
+		font-size: clamp(40px, 11vw, 150px);
+		font-weight: 700;
+		letter-spacing: -0.05em;
+		line-height: 0.82;
+		text-align: center;
+		user-select: none;
+		white-space: nowrap;
+	}
+	.db-word-base {
+		color: var(--border2);
+	}
+	.db-word-lit {
+		position: absolute;
+		inset: 0;
+		color: var(--accent);
+		opacity: 0;
+		transition: opacity 0.35s;
+		pointer-events: none;
+		mask-image: radial-gradient(circle 150px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0, 0, 0, 0.55) 55%, transparent 78%);
+		-webkit-mask-image: radial-gradient(circle 150px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0, 0, 0, 0.55) 55%, transparent 78%);
+	}
+	.db-wordmark.db-hot .db-word-lit {
+		opacity: 1;
+	}
+	.db-word-hint {
+		position: absolute;
+		left: 50%;
+		bottom: -2px;
+		transform: translateX(-50%);
+		font-size: 10.5px;
+		letter-spacing: 1.4px;
+		text-transform: uppercase;
+		color: var(--text-dimmer);
+		pointer-events: none;
+		white-space: nowrap;
+	}
+
+	.db-legal {
+		position: relative;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 14px 24px;
+		margin-top: 40px;
+		padding: 20px 0 26px;
+		border-top: 1px solid var(--border);
+	}
+	.db-copy {
+		font-size: 12px;
+		color: var(--text-dimmer);
+	}
+	.db-status {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+
+	@keyframes dbDrift {
+		0% { transform: translate3d(0, 0, 0) scale(1); }
+		50% { transform: translate3d(5%, -7%, 0) scale(1.14); }
+		100% { transform: translate3d(0, 0, 0) scale(1); }
+	}
+	@keyframes dbDrift2 {
+		0% { transform: translate3d(0, 0, 0) scale(1.06); }
+		50% { transform: translate3d(-7%, 6%, 0) scale(0.9); }
+		100% { transform: translate3d(0, 0, 0) scale(1.06); }
+	}
+	@keyframes dbMarquee {
+		from { transform: translateX(0); }
+		to { transform: translateX(-50%); }
+	}
+	@keyframes dbDash {
+		to { stroke-dashoffset: 0; }
+	}
+	@keyframes dbSpin {
+		to { transform: rotate(360deg); }
+	}
+	@keyframes dbFloat {
+		0% { transform: translateY(0) rotate(-3deg); }
+		50% { transform: translateY(-8px) rotate(3deg); }
+		100% { transform: translateY(0) rotate(-3deg); }
+	}
+	@keyframes dbPulse {
+		0% { opacity: 0.3; transform: scale(0.65); }
+		50% { opacity: 1; transform: scale(1); }
+		100% { opacity: 0.3; transform: scale(0.65); }
+	}
+	@keyframes dbSheen {
+		0% { background-position: -140% 0; }
+		60%, 100% { background-position: 240% 0; }
+	}
+	@keyframes dbNudge {
+		0%, 100% { transform: translateX(0); }
+		50% { transform: translateX(4px); }
+	}
+
+	/* ─── Tablet ─── */
+	@media (max-width: 1080px) {
+		.db-top {
+			grid-template-columns: 1fr;
+			gap: 48px;
+		}
+	}
+
+	/* ─── Mobile ─── */
+	@media (max-width: 720px) {
+		.db-footer {
+			margin-top: 40px;
+		}
+		.db-shell {
+			padding: 32px 20px 0;
+		}
+
+		/* CTA: stack vertically, reduce headline */
+		.db-cta {
 			flex-direction: column;
+			align-items: flex-start;
+			gap: 24px;
+			padding-bottom: 28px;
+		}
+		.db-headline {
+			font-size: 24px;
+			line-height: 1.12;
+		}
+		.db-cta-actions {
+			width: 100%;
+		}
+		.db-btn {
+			height: 44px;
+			padding: 0 16px;
+			font-size: 13px;
+			border-radius: 11px;
+		}
+		.db-btn-primary {
+			flex: 1;
+			justify-content: center;
+		}
+		.db-tiles {
+			display: none;
+		}
+
+		/* Marquee: smaller text */
+		.db-marquee-track {
+			padding: 10px 12px;
+			gap: 20px;
+		}
+		.db-tick {
+			font-size: 10px;
+			letter-spacing: 0.6px;
+		}
+
+		/* Columns: single column, accordion-style compact stacking */
+		.db-top {
+			grid-template-columns: 1fr;
+			gap: 32px;
+			padding: 36px 0 0;
+		}
+		.db-cols {
+			grid-template-columns: 1fr;
+			gap: 24px;
+		}
+		.db-col {
+			gap: 10px;
+			padding-bottom: 16px;
+			border-bottom: 1px solid var(--border);
+		}
+		.db-col:last-child {
+			border-bottom: none;
+			padding-bottom: 0;
+		}
+		.db-col-links {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 10px 16px;
+		}
+		.db-link {
+			font-size: 14px;
+			min-height: 36px;
 			align-items: center;
-			text-align: center;
 		}
-		.footer-nav a {
-			display: inline-block;
-			padding: 10px 2px;
+
+		/* Brand section: tighter spacing */
+		.db-brand-col {
+			gap: 14px;
 		}
-		.footer-social a {
+		.db-mark {
+			width: 40px;
+			height: 40px;
+		}
+		.db-mark svg {
+			width: 40px;
+			height: 40px;
+		}
+		.db-brand-name {
+			font-size: 17px;
+		}
+		.db-blurb {
+			font-size: 13px;
+			line-height: 1.6;
+		}
+		.db-social-link {
 			width: 44px;
 			height: 44px;
 		}
+
+		/* Wordmark: static on mobile, no cursor interaction */
+		.db-wordmark {
+			margin-top: 36px;
+		}
+		.db-word-base,
+		.db-word-lit {
+			font-size: clamp(36px, 13vw, 60px);
+		}
+		.db-word-hint {
+			display: none;
+		}
+		/* Show a subtle static version since touch can't track cursor */
+		.db-word-lit {
+			opacity: 0.25;
+			mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 0%, transparent 78%);
+			-webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 0%, transparent 78%);
+		}
+
+		/* Legal: stacked */
+		.db-legal {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 10px;
+			margin-top: 28px;
+			padding: 16px 0 env(safe-area-inset-bottom, 20px);
+		}
+
+		/* Background effects: reduce cost */
+		.db-glow-a {
+			width: 400px;
+			height: 400px;
+			left: -100px;
+			top: -150px;
+		}
+		.db-glow-b {
+			width: 350px;
+			height: 350px;
+			right: -100px;
+			bottom: -130px;
+		}
+		.db-dots {
+			background-size: 22px 22px;
+		}
+	}
+
+	/* ─── Small phones (iPhone SE, 375px) ─── */
+	@media (max-width: 390px) {
+		.db-headline {
+			font-size: 21px;
+		}
+		.db-cta-actions {
+			flex-direction: column;
+			gap: 8px;
+		}
+		.db-btn-ghost {
+			justify-content: center;
+		}
+		.db-col-links {
+			grid-template-columns: 1fr;
+		}
+		.db-word-base,
+		.db-word-lit {
+			font-size: 32px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.db-glow-a,
+		.db-glow-b,
+		.db-marquee,
+		.db-mark,
+		.db-mark-ring,
+		.db-mark-path,
+		.db-dot-pulse,
+		.db-col-dot,
+		.db-btn-primary,
+		.db-btn-primary svg {
+			animation: none !important;
+		}
 	}
 </style>
+
+<script>
+	const wordmark = document.getElementById("dbWordmark");
+	const hint = document.getElementById("dbWordHint");
+	if (wordmark && hint) {
+		wordmark.addEventListener("mousemove", (e) => {
+			const r = wordmark.getBoundingClientRect();
+			const mx = (((e as MouseEvent).clientX - r.left) / r.width * 100).toFixed(1);
+			const my = (((e as MouseEvent).clientY - r.top) / r.height * 100).toFixed(1);
+			wordmark.style.setProperty("--mx", `${mx}%`);
+			wordmark.style.setProperty("--my", `${my}%`);
+			wordmark.classList.add("db-hot");
+			hint.textContent = "keep moving";
+		});
+		wordmark.addEventListener("mouseleave", () => {
+			wordmark.classList.remove("db-hot");
+			hint.textContent = "move your cursor across the name";
+		});
+	}
+</script>

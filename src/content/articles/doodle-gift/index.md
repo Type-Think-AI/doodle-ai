@@ -42,6 +42,8 @@ Do not read a Normal avatar, a die-cut sticker sheet, or a Surprise character as
 
 Search “personalized photo gift” and you will find canvases, mugs, blankets, and photo books. That is a fulfillment business. Doodle AI currently sells none of that workflow. Physical fulfillment is **not live**. Stripe checkout is **not live**. Commercial licensing is **not live**. Print-ready dimensions are not verified.
 
+![Physical gifts crossed out versus digital card sent on phone](https://cdn.picxstudio.com/api/generated/image_403efae1-8165-435d-8865-02b433e31b3c.png)
+
 What the [Gift skill](https://doodleai.art/skills/gift/) actually returns is one square hand-drawn greeting image from one uploaded photo. The composition is a warm card layout, not the plain warm-white bust used by the Normal avatar skill. Occasion-matched props sit around the portrait. A short standard message is hand-lettered near the bottom. The generation request currently uses PicX with a 1:1 aspect ratio and a 1K size setting. That is a provider size parameter, not a poster spec and not a folded 5×7 card template.
 
 | Job you may have meant | Who does that today | What doodleai.art currently returns |
@@ -60,6 +62,8 @@ If the recipient expects a package on a doorstep, stop here and use a printer or
 ## Permission comes before the prompt
 
 Gift buyers often want to doodle someone else. That is the point of a present, and it is also the risk. [Terms of service](https://doodleai.art/terms-of-service/) say you keep whatever rights you already have in the photo you upload, you are responsible for having permission to upload, process, and share that content, and you must not upload someone else’s photo, artwork, trademark, or personal information without permission. This article is not legal advice. It is a practical stop: if you cannot honestly say you have permission, do not run Gift.
+
+![One person handing a photo to another with thumbs-up permission](https://cdn.picxstudio.com/api/generated/image_f4749f1c-a201-4b66-abe0-dd9fa86ebd54.png)
 
 A gift sitting sends the photo through Doodle AI’s server-owned PicX connection. Chat is routed through OpenRouter. Hosting is on Cloudflare. Those processors are named on the [privacy policy](https://doodleai.art/privacy-policy/). There is no public gallery. There is also no verified private “gift vault” that only the recipient can open. Treat the photo as something you are asking a generation provider to see.
 
@@ -84,6 +88,8 @@ Do not upload private or sensitive material unless you understand it may be sent
 ## Plan the occasion before you spend the credit
 
 Gift is not freeform card design. The generation tool inspects your description for a small set of keywords, then picks one occasion, one set of embellishments, and one fixed card message. The match is case-insensitive. Only one occasion is detected per run, from the **first** keyword rule that hits. If nothing matches, the skill falls back to a warm “Thinking of You” default.
+
+![Six occasion cards fanned out with icons for birthday, thanks, congrats](https://cdn.picxstudio.com/api/generated/image_fbca2637-7236-4565-a6c7-e909110cf472.png)
 
 | If your wording includes | Occasion the skill currently detects | Embellishments that will be asked for | Card message that will actually letter |
 | --- | --- | --- | --- |
@@ -149,6 +155,8 @@ Gift is a cheerful doodle. It is not a condolence product, not a memorial servic
 
 You can browse [doodleai.art/skills/gift/](https://doodleai.art/skills/gift/) without an account. The skill page states that a photo is required and the output is 1:1. You cannot upload or generate until you sign in. Creation currently uses Google sign-in. On signup, Doodle AI creates a **personal organization** and grants **5 signup credits** into that organization’s pool. Configuration allows up to 5 organizations and up to 25 members, with owner, producer, artist, reviewer, and client roles in the Better Auth organization layer. Sessions carry an active organization. Membership and permissions are rechecked. That is a working backend and API foundation plus shared data behavior. It is not a polished team gift studio. For this sitting you are one person making one still.
 
+![Checklist with five steps from permission to download, clock showing deadline](https://cdn.picxstudio.com/api/generated/image_4859692e-0b2f-45b8-88b6-a569a9f579b7.png)
+
 | Action | Signed out | Signed in |
 | --- | --- | --- |
 | Read `/skills/gift/` and this guide | Yes | Yes |
@@ -192,6 +200,8 @@ If no photo is attached, Gift is specified to ask for one rather than invent a f
 
 New accounts receive **5 signup credits**. Gift costs **1 credit**. The ledger **reserves** that credit before PicX is called. If generation fails — no usable hosted image URL — the credit is **refunded**. If you are rate-limited, the request is a no-op against the ledger. If the organization balance is too low, generation does not start. Credits are pooled per organization. Organization limits and rate caps exist. This article does not invent extra numeric thresholds beyond the published caps of 5 organizations and 25 members.
 
+![Five credit coins with first one dropping toward gift card generation](https://cdn.picxstudio.com/api/generated/image_64700049-fea8-4eb7-bd84-46fe146e0881.png)
+
 Stripe checkout, paid credit packs, and subscriptions are **not live**. You cannot currently buy more attempts in the app. Five sittings is the starter grant. Spend them as if the store is closed after they are gone, because for now it is.
 
 A generation you dislike is not a refund. Taste is not a ledger error. Remix, if you use it, re-sends the preceding user message and starts another assistant turn. Treat Remix as another generation, not as a free undo.
@@ -227,6 +237,8 @@ Server-side conversation memory is not live. If you close the thread and come ba
 ## Download and share only the ways that actually exist
 
 After a successful Gift generation, the image is hosted by PicX and shown in the chat. Verified actions on that result:
+
+![Birthday card downloading into chat app, printer and shipping box crossed out](https://cdn.picxstudio.com/api/generated/image_5ff1a6c8-0166-4904-9740-9bc8737f7875.png)
 
 - **Download.** The chat result includes a Download button. The app requests the image and saves it with the filename `doodleai-doodle.png`. If that fetch cannot complete, the fallback opens the image URL in a new tab so you can save it from the browser. That is the current download path. This article does not invent a PDF, a transparent PNG pack, a print ICC profile, or a 300 dpi poster file.
 - **Save to moodboard.** There is a Save to moodboard control. Generated images are also auto-saved to the moodboard so they appear there even if you never click Save. Moodboards are organization-scoped in the API. They are a place for you to find the still again, not a gift-delivery product.

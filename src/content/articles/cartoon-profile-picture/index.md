@@ -38,6 +38,8 @@ Do not read the sticker-sheet samples on other blog posts as PFP proof. A die-cu
 
 Search language mixes several jobs. `cartoon pfp` and `profile picture cartoon` usually mean a square illustrated face you can set on an account. `ai profile picture` sometimes means a photoreal corporate headshot. `ai cartoon generator` sometimes means a video clip. Doodle AI’s current product for this article is the first of those: one 1:1 hand-drawn doodle avatar from a photo, which you then crop and upload yourself.
 
+![Doodle avatar shrinking from full square to tiny circular chat-size icon](https://cdn.picxstudio.com/api/generated/image_fa8fb335-9146-4261-aa12-8e9d6c63cde4.png)
+
 That last clause matters. The [Normal doodle avatar skill](https://doodleai.art/skills/normal/) returns a square still with a clean white or warm-white background. House style is a naive marker-and-ink doodle: bold outlines, simplified features, flat cheerful color, slightly exaggerated proportions. The skill is instructed to keep hairstyle, face shape, expression, skin tone, glasses, and distinctive accessories recognizable. It is not a photographic filter. It is not a 3D bust. It is not an animated Discord avatar.
 
 The destination apps then do their own work. Most profile pictures are uploaded as squares and displayed as circles. Corners disappear. Fine interior detail disappears at chat size. Text in the image becomes unreadable, which is one reason Normal is specified to avoid captions, watermarks, and signatures.
@@ -79,6 +81,8 @@ The circle in that diagram is the app’s mask, not a Doodle AI control. If the 
 ## Pick a selfie that still reads after the circle
 
 Likeness in a PFP is not “every pore survived.” It is “a friend would still point at the tiny circle and say that is you.” The landmarks the house style tries to keep are the same ones that survive a circular crop: hair silhouette and color, face shape, expression, skin tone, glasses, and a distinctive accessory that sits *inside* the face-and-hair mass, not out on the edge of the frame.
+
+![Good selfie for profile picture versus bad source photos with checkmark and X](https://cdn.picxstudio.com/api/generated/image_f38218e4-519e-4256-ba44-83e0eb9f4ae6.png)
 
 **Prefer**
 
@@ -133,6 +137,8 @@ You do not paste a PicX key into Settings. Live copy that tells you to supply a 
 
 You can read [doodleai.art/skills/normal/](https://doodleai.art/skills/normal/) without an account. You cannot upload or generate until you sign in. On signup, Doodle AI creates a **personal organization** and grants **5 signup credits**. Credits are pooled on the organization. Every runnable skill costs **1 credit**. The ledger reserves that credit before PicX is called and refunds it when generation fails. If you are rate-limited, nothing is reserved. Stripe checkout, paid credit packs, and subscriptions are **not live**. Five attempts is the current starter grant.
 
+![Doodle chat showing a profile picture prompt and resulting square avatar](https://cdn.picxstudio.com/api/generated/image_50502b5c-170f-4c3b-bc6d-9ab9bc66d488.png)
+
 The Better Auth organization layer supports up to 5 organizations and up to 25 members, with owner, producer, artist, reviewer, and client roles. Sessions carry an active organization. Membership and permissions are rechecked. Threads, messages, saved characters, moodboards, generation records, and credits are organization-scoped. That is a working backend and API foundation plus shared data behavior. It is not a polished team switcher, and it is not required for a personal PFP. For this sitting you are one person in your personal organization.
 
 Projects, assets, share links, batch jobs, and review states exist as schema or partial access-control foundations. They are **not** verified complete public workflows. Do not wait for a share-link review or a “make 12 PFPs” queue. Generate one still. Look at it. Decide.
@@ -164,6 +170,8 @@ Saved characters are organization-scoped shared references. Signed-in users can 
 ## Prompt variations are moods, not a matching pack
 
 People search for cartoon PFPs because they want a look, not because they want a file-format lecture. Mood is the useful lever. Clothing color, expression, and outline weight change how a tiny circle feels. The trap is treating three moods as one identity system. They are three generations. Each one costs 1 credit. Each one can drift.
+
+![Three mood variations of one doodle avatar labelled weekday, game night, night-off](https://cdn.picxstudio.com/api/generated/image_6545e497-669d-4365-a1fe-775b815bfcbf.png)
 
 Use the house-style refinement words the skill actually maps: thicker outline, warmer paper, cuter / more chibi, cleaner, more colorful. Pair those with landmarks from the photo. Do not invent a style catalog of “80 PFP aesthetics.” Doodle AI’s current signature is a conversational hand-drawn doodle, not an anime, clay, comic, or photoreal-sketch menu.
 
@@ -287,6 +295,8 @@ The generation request currently uses PicX with a 1:1 aspect ratio and a 1K size
 
 After a successful Normal generation, the image is hosted by PicX and shown in the chat. You can download it. You can save it to a moodboard. You can keep going in the same thread. Signed-in chats, characters, and moodboards can sync across devices. Voice input is not live.
 
+![Doodle avatar inside circle crop guide with arrows to key landmarks](https://cdn.picxstudio.com/api/generated/image_cd1c5ce1-84da-489b-aa1f-7e5604a2c99e.png)
+
 Then leave Doodle AI. Open the destination app’s own editor.
 
 **A crop checklist that is not a product preset**
@@ -369,3 +379,5 @@ These questions showed up around `ai profile picture` in a 2026-08-24 US mobile 
 ## Make one square, then crop it where you actually post
 
 If you have a selfie you are allowed to use, open the [Normal doodle avatar skill](https://doodleai.art/skills/normal/), sign in, attach the picture, and generate one square doodle. Download the keeper and crop it in Instagram, Discord, Reddit, or the app you already live in. Browse the rest of the [skills](https://doodleai.art/skills/) later if you want a collage or a sticker sheet. Read [about](https://doodleai.art/about/) if you want the product in one page. Do not expect platform presets, a matching three-mood lock, video, checkout, prints, chat-app sticker export, or a commercial license from this sitting. You are asking for a playful cartoon PFP from a real photo. That is the current job.
+
+![Three-step flow from selfie to square avatar to circular profile pictures on apps](https://cdn.picxstudio.com/api/generated/image_c4a5cf45-35e4-4113-a0d7-d6f89fd5e98d.png)

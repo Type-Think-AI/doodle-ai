@@ -6,23 +6,65 @@
     <img class="mark" src="/icon-192.png" alt="doodleai.art" width="48" height="48" />
     <a href="/">doodleai<span>.art</span></a>
   </div>
-  <nav class="nav-links">
+
+  <!-- Desktop nav -->
+  <nav class="nav-links" aria-label="Main navigation">
+    <a href="/skills">Skills</a>
     <a href="/learn">Learn</a>
     <a href="/about">About</a>
     <button class="theme-toggle" id="themeToggle" title="Switch theme">☾</button>
   </nav>
+
+  <!-- Mobile controls -->
+  <div class="mobile-controls">
+    <button class="theme-toggle" id="themeToggleMobile" title="Switch theme">☾</button>
+    <button
+      class="hamburger"
+      id="navHamburger"
+      aria-label="Open navigation menu"
+      aria-expanded="false"
+      aria-controls="mobileNav"
+    >
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+    </button>
+  </div>
 </header>
+
+<!-- Mobile slide-down nav panel -->
+<div class="mobile-nav" id="mobileNav" aria-hidden="true" role="navigation" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <div class="mobile-nav-links">
+      <a href="/" class="mobile-nav-link">Home</a>
+      <a href="/skills" class="mobile-nav-link">Skills</a>
+      <a href="/learn" class="mobile-nav-link">Learn</a>
+      <a href="/moodboards" class="mobile-nav-link">Moodboards</a>
+      <a href="/for-studios" class="mobile-nav-link">For studios</a>
+      <a href="/about" class="mobile-nav-link">About</a>
+    </div>
+    <div class="mobile-nav-secondary">
+      <a href="/settings" class="mobile-nav-link-sm">Settings</a>
+      <a href="/terms-of-service" class="mobile-nav-link-sm">Terms</a>
+      <a href="/privacy-policy" class="mobile-nav-link-sm">Privacy</a>
+    </div>
+  </div>
+</div>
 
 <style>
   .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px var(--shell-pad);
+    padding: 16px var(--shell-pad);
     width: 100%;
     max-width: var(--shell-max);
     margin: 0 auto;
+    background: var(--bg);
   }
+
   .logo {
     display: flex;
     align-items: center;
@@ -33,8 +75,8 @@
     letter-spacing: -0.03em;
   }
   .logo .mark {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 11px;
     display: block;
     object-fit: contain;
@@ -45,6 +87,8 @@
   .logo a {
     display: inline-block;
   }
+
+  /* Desktop nav */
   .nav-links {
     display: flex;
     gap: 16px;
@@ -66,6 +110,7 @@
     border-radius: 6px;
     color: var(--text);
   }
+
   .theme-toggle {
     width: 34px;
     height: 34px;
@@ -78,40 +123,217 @@
     align-items: center;
     justify-content: center;
     font-size: 0.95rem;
+    transition: color 0.15s, background 0.15s;
   }
   .theme-toggle:hover {
     color: var(--text);
   }
-  @media (max-width: 480px) {
+
+  /* Mobile controls — hidden on desktop */
+  .mobile-controls {
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Hamburger button */
+  .hamburger {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    background: var(--card-hover);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background 0.15s;
+  }
+  .hamburger:hover {
+    background: var(--border);
+  }
+  .hamburger-bar {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--text-dim);
+    transition: transform 0.25s cubic-bezier(0.2, 0.85, 0.2, 1), opacity 0.2s;
+  }
+
+  /* Hamburger open state */
+  .hamburger[aria-expanded="true"] .hamburger-bar:first-child {
+    transform: translateY(3.5px) rotate(45deg);
+  }
+  .hamburger[aria-expanded="true"] .hamburger-bar:last-child {
+    transform: translateY(-3.5px) rotate(-45deg);
+  }
+
+  /* Mobile nav panel */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-nav.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .mobile-nav-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 80px var(--shell-pad) 40px;
+    min-height: 100%;
+  }
+
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mobile-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 14px 12px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    transition: background 0.15s, color 0.15s;
+  }
+  .mobile-nav-link:hover,
+  .mobile-nav-link:focus-visible {
+    background: var(--card-hover);
+  }
+  .mobile-nav-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .mobile-nav-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .mobile-nav-link-sm {
+    font-size: 0.82rem;
+    color: var(--text-dimmer);
+    padding: 8px 0;
+    transition: color 0.15s;
+  }
+  .mobile-nav-link-sm:hover {
+    color: var(--text-dim);
+  }
+
+  /* ─── Mobile breakpoint ─── */
+  @media (max-width: 720px) {
     .app-header {
-      padding: 14px var(--shell-pad);
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-links {
+      display: none;
+    }
+    .mobile-controls {
+      display: flex;
+    }
+    .mobile-nav {
+      display: block;
     }
     .logo {
-      font-size: 1.08rem;
+      font-size: 1.12rem;
       gap: 8px;
     }
     .logo .mark {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-    }
-    .nav-links {
-      gap: 4px;
-    }
-    .nav-links a {
-      font-size: 0.82rem;
-      display: inline-flex;
-      align-items: center;
-      padding: 14px 6px;
-      margin: -14px -6px;
-    }
-    .logo a {
-      padding: 14px 0;
-      margin: -14px 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
     }
     .theme-toggle {
       width: 44px;
       height: 44px;
     }
   }
+
+  /* ─── Small phones ─── */
+  @media (max-width: 390px) {
+    .logo {
+      font-size: 1rem;
+    }
+    .mobile-nav-inner {
+      padding: 72px 20px 32px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hamburger-bar {
+      transition: none;
+    }
+    .mobile-nav {
+      transition: none;
+    }
+  }
 </style>
+
+<script>
+  const hamburger = document.getElementById("navHamburger");
+  const mobileNav = document.getElementById("mobileNav");
+
+  if (hamburger && mobileNav) {
+    let isOpen = false;
+
+    function openNav() {
+      isOpen = true;
+      hamburger!.setAttribute("aria-expanded", "true");
+      hamburger!.setAttribute("aria-label", "Close navigation menu");
+      mobileNav!.setAttribute("aria-hidden", "false");
+      mobileNav!.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeNav() {
+      isOpen = false;
+      hamburger!.setAttribute("aria-expanded", "false");
+      hamburger!.setAttribute("aria-label", "Open navigation menu");
+      mobileNav!.setAttribute("aria-hidden", "true");
+      mobileNav!.classList.remove("is-open");
+      document.body.style.overflow = "";
+    }
+
+    hamburger.addEventListener("click", () => {
+      if (isOpen) closeNav();
+      else openNav();
+    });
+
+    // Close on Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && isOpen) {
+        closeNav();
+        hamburger!.focus();
+      }
+    });
+
+    // Close on link click (navigation)
+    mobileNav.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", closeNav);
+    });
+  }
+</script>
