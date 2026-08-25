@@ -45,6 +45,9 @@
     background-clip: text;
     color: transparent;
   }
+  .logo a {
+    display: inline-block;
+  }
   .nav-links {
     display: flex;
     gap: 16px;
@@ -96,10 +99,22 @@
       border-radius: 10px;
     }
     .nav-links {
-      gap: 12px;
+      gap: 4px;
     }
     .nav-links a {
       font-size: 0.82rem;
+      display: inline-flex;
+      align-items: center;
+      padding: 14px 6px;
+      margin: -14px -6px;
+    }
+    .logo a {
+      padding: 14px 0;
+      margin: -14px 0;
+    }
+    .theme-toggle {
+      width: 44px;
+      height: 44px;
     }
   }
 </style>

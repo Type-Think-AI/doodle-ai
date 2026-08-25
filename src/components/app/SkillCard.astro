@@ -31,11 +31,18 @@ const thumb = buildSkillThumbnail(skill);
     border-radius: 14px;
     overflow: hidden;
     aspect-ratio: 1 / 1;
+    width: 100%;
     background: var(--surface2);
     border: 1px solid var(--border);
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, transform 0.15s ease;
   }
-  .skill-card:hover .skill-card-thumb { border-color: var(--border3); }
+  /* Hover feedback only where a real hover device is present. */
+  @media (hover: hover) and (pointer: fine) {
+    .skill-card:hover .skill-card-thumb { border-color: var(--border3); }
+  }
+  /* Touch/tap feedback so the card isn't silently inert on phones. */
+  .skill-card:active .skill-card-thumb { border-color: var(--border3); transform: scale(0.98); }
+  .skill-card:focus-visible { outline: 2px solid var(--border3); outline-offset: 3px; border-radius: 14px; }
   .skill-card-thumb svg,
   .skill-card-thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .skill-card[data-runnable="false"] .skill-card-thumb svg,
@@ -49,8 +56,32 @@ const thumb = buildSkillThumbnail(skill);
     background: rgba(15, 15, 15, 0.72);
     color: #fff;
     font-size: 11px;
+    max-width: calc(100% - 16px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .skill-card-meta { display: flex; flex-direction: column; gap: 3px; }
-  .skill-card-name { font-size: 14.5px; font-weight: 500; color: var(--text); }
-  .skill-card-tagline { font-size: 12.5px; color: var(--text-dimmer); }
+  .skill-card-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .skill-card-name {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .skill-card-tagline {
+    font-size: 12.5px;
+    color: var(--text-dimmer);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (max-width: 720px) {
+    .skill-card { gap: 8px; }
+    .skill-card-name { font-size: 13.5px; }
+    .skill-card-tagline { font-size: 12px; -webkit-line-clamp: 2; }
+  }
 </style>

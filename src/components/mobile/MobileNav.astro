@@ -1,0 +1,62 @@
+---
+import { NAV_ITEMS, NEW_CHAT_ITEM, type NavKey } from "../../lib/nav-items";
+
+interface Props {
+  active: NavKey;
+}
+const { active } = Astro.props;
+
+/* Characters is deliberately left out here — 5 tabs made the bar taller
+   and more cramped than 4 on narrow phones. It's still reachable on mobile
+   via the composer's "mention a character" button; the desktop sidebar
+   (src/components/app/Sidebar.astro) keeps the full NAV_ITEMS list. */
+const items = [NEW_CHAT_ITEM, ...NAV_ITEMS.filter((item) => item.key !== "characters")];
+---
+
+<nav class="mobile-nav" id="mobileNav" aria-label="Main">
+  {items.map((item) => (
+    <a href={item.href} class="mobile-nav-link" data-active={active === item.key ? "true" : "false"}>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" set:html={item.icon} />
+      <span>{item.shortLabel}</span>
+    </a>
+  ))}
+</nav>
+
+<style>
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    align-items: center;
+    justify-content: space-around;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+  .mobile-nav-link {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 2px;
+    font-size: 10.5px;
+    color: var(--text-dimmer);
+  }
+  .mobile-nav-link span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-nav-link[data-active="true"] { color: var(--text); }
+  .mobile-nav-link[data-active="true"] svg { color: var(--accent); }
+
+  @media (max-width: 860px) {
+    .mobile-nav { display: flex; }
+  }
+</style>

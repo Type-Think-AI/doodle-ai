@@ -1,8 +1,10 @@
 ---
 import AppLayout from './AppLayout.astro';
 import Sidebar from '../components/app/Sidebar.astro';
-import MobileNav from '../components/app/MobileNav.astro';
+import MobileNav from '../components/mobile/MobileNav.astro';
 import AuthDialog from '../components/app/AuthDialog.astro';
+import FeedbackDialog from '../components/app/FeedbackDialog.astro';
+import InstallPrompt from '../components/app/InstallPrompt.astro';
 import '../styles/app-shell.css';
 
 interface Props {
@@ -25,5 +27,10 @@ const { title, description, active } = Astro.props;
   </div>
 
   <MobileNav active={active} />
+  <InstallPrompt />
   <AuthDialog />
+  <FeedbackDialog />
 </AppLayout>
+
+<script src="../scripts/app/install-prompt.ts"></script>
+<script src="../scripts/app/mobile-nav-height.ts"></script>

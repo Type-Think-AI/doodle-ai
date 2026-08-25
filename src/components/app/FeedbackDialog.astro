@@ -1,0 +1,112 @@
+---
+// A small, deliberately plain feedback dialog mounted once in AppShellLayout.astro.
+// Structure mirrors AuthDialog.astro (native <dialog>, opened via a
+// `window.dispatchEvent(new Event("doodleai:open-feedback"))` custom event),
+// but with none of AuthDialog's visual weight — this is one textarea and a
+// submit button, nothing else.
+---
+
+<dialog id="feedbackDialog" class="feedback-dialog" aria-labelledby="feedbackDialogTitle">
+	<button type="button" class="feedback-dialog-close" id="feedbackDialogClose" aria-label="Close feedback dialog">
+		<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+	</button>
+
+	<div class="feedback-dialog-body" id="feedbackDialogBody">
+		<h2 id="feedbackDialogTitle">Got feedback?</h2>
+		<p class="feedback-dialog-sub">Tell us what's working, what isn't, or what you wish existed.</p>
+
+		<textarea id="feedbackDialogText" class="feedback-dialog-textarea" placeholder="Type away..." maxlength="4000" rows="5"></textarea>
+
+		<p class="feedback-dialog-error" id="feedbackDialogError" hidden></p>
+
+		<button type="button" class="feedback-dialog-submit" id="feedbackDialogSubmit">Send feedback</button>
+	</div>
+</dialog>
+
+<script src="../../scripts/app/feedback-dialog.ts"></script>
+
+<style>
+	.feedback-dialog {
+		padding: 0;
+		border: 1px solid var(--border2);
+		border-radius: 16px;
+		width: min(420px, calc(100vw - 32px));
+		background: var(--surface2);
+		color: var(--text);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+	}
+	.feedback-dialog::backdrop { background: rgba(6, 6, 6, 0.6); backdrop-filter: blur(3px); }
+	/* Only style the [open] state — an unconditional `display` here would
+	   beat the UA's `dialog:not([open]) { display: none }` and leave the
+	   dialog visible (and, worse, laid out) before showModal() runs. */
+	.feedback-dialog[open] {
+		display: block;
+		/* app.css resets `* { margin: 0 }`, which also kills <dialog>'s native
+		   centering — re-add it here or the dialog renders top-left. */
+		margin: auto;
+	}
+
+	.feedback-dialog-close {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+		width: 30px;
+		height: 30px;
+		border: 1px solid var(--border3);
+		border-radius: 999px;
+		background: var(--surface);
+		color: var(--text-dim);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+	.feedback-dialog-close:hover { color: var(--text); }
+	.feedback-dialog-close:focus-visible,
+	.feedback-dialog-submit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+	.feedback-dialog-body { padding: 26px 24px 24px; }
+	.feedback-dialog-body h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+	.feedback-dialog-sub { margin: 6px 0 16px; font-size: 0.85rem; line-height: 1.4; color: var(--text-dim); }
+
+	.feedback-dialog-textarea {
+		width: 100%;
+		resize: vertical;
+		min-height: 110px;
+		padding: 10px 12px;
+		border: 1px solid var(--border2);
+		border-radius: 10px;
+		background: var(--bg);
+		color: var(--text);
+		font-family: inherit;
+		font-size: 0.9rem;
+		line-height: 1.5;
+	}
+	.feedback-dialog-textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+	.feedback-dialog-error { font-size: 0.78rem; line-height: 1.4; color: #ff7b72; margin: 10px 0 0; }
+
+	.feedback-dialog-submit {
+		display: block;
+		width: 100%;
+		margin-top: 14px;
+		min-height: 42px;
+		border: 1px solid var(--border3);
+		border-radius: 10px;
+		background: var(--accent);
+		color: #1a1400;
+		font-family: inherit;
+		font-size: 0.88rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.feedback-dialog-submit:hover { filter: brightness(1.05); }
+	.feedback-dialog-submit:disabled { opacity: 0.6; cursor: default; }
+
+	.feedback-dialog-thanks {
+		padding: 8px 0 4px;
+		text-align: center;
+		font-size: 0.95rem;
+		color: var(--text);
+	}
+</style>

@@ -215,10 +215,37 @@ const heroSvg = buildAvatarSVG(heroAvatar, heroTheme);
 		.auth-dialog-panel h2 { font-size: clamp(1.95rem, 9vw, 2.35rem); }
 		.auth-dialog-sub { font-size: 0.87rem; margin: 12px 0 10px; }
 		.auth-dialog-note { margin-bottom: 16px; }
+		.auth-dialog-close {
+			top: calc(12px + env(safe-area-inset-top, 0px));
+			right: calc(12px + env(safe-area-inset-right, 0px));
+			width: 44px;
+			height: 44px;
+		}
+		.auth-oauth { min-height: 52px; font-size: 1rem; }
+		.auth-dialog-skip {
+			min-height: 44px;
+			display: inline-flex;
+			align-items: center;
+		}
 	}
 	@media (max-width: 420px) {
+		.auth-dialog {
+			width: 100vw;
+			height: 100dvh;
+			max-height: 100dvh;
+			border-radius: 0;
+			border: none;
+		}
+		.auth-dialog[open] { max-height: 100dvh; }
 		.auth-dialog-image { min-height: 208px; }
-		.auth-dialog-panel { padding-inline: 20px; }
+		.auth-dialog-panel {
+			padding-inline: 20px;
+			padding-bottom: calc(25px + env(safe-area-inset-bottom, 0px));
+			flex: 1 1 auto;
+		}
+		.auth-dialog-close {
+			top: calc(14px + env(safe-area-inset-top, 0px));
+		}
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.auth-dialog-art,

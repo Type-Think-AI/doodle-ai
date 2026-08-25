@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
 import { z } from "zod";
-import { mastra } from "../../mastra";
+import { bridgeCloudflareEnv } from "../../lib/env-bridge";
 import { recommendDoodleMode } from "../../lib/doodle-mode-recommender";
 
 export const prerender = false;
@@ -35,7 +35,9 @@ export async function POST(context: APIContext) {
     return json({ error: "A message is required" }, 400);
   }
 
+  bridgeCloudflareEnv(context, ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"]);
   try {
+    const { mastra } = await import("../../mastra");
     const agent = mastra.getAgent("doodleAgent");
     const result = await agent.generate(
       `Decide which doodle generation mode best fits this request and give one brief reason:\n\n"${message}"`,

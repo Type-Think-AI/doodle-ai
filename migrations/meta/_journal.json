@@ -15,6 +15,20 @@
       "when": 1787546659995,
       "tag": "0001_account_issuer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787588334463,
+      "tag": "0002_thread_thumbnail",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1787591025611,
+      "tag": "0003_feedback",
+      "breakpoints": true
     }
   ]
 }

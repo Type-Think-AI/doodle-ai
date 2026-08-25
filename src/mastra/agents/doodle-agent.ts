@@ -28,11 +28,16 @@ import { generateDoodleTool } from "../tools/generate-doodle";
  * mid-conversation instead of only describing what it would do.
  *
  * Model: routed through OpenRouter's gateway syntax (openrouter/<provider>/
- * <model>), reading OPENROUTER_API_KEY from env. Currently pinned to
- * "stealth/ox-alpha", a free-during-preview anonymous third-party model
- * (as of Aug 2026) — free access is not guaranteed to continue, so swap the
- * model string if it starts erroring or billing.
+ * <model>), reading OPENROUTER_API_KEY and OPENROUTER_MODEL from env. The
+ * default model is Google's `google/gemini-3.7-flash`; set OPENROUTER_MODEL
+ * to another OpenRouter model ID in `.dev.vars` or Worker secrets to change it.
  */
+
+const DEFAULT_OPENROUTER_MODEL = "google/gemini-3.7-flash";
+const configuredOpenRouterModel = process.env.OPENROUTER_MODEL?.trim() || DEFAULT_OPENROUTER_MODEL;
+const openRouterModel = configuredOpenRouterModel.startsWith("openrouter/")
+  ? configuredOpenRouterModel
+  : `openrouter/${configuredOpenRouterModel}`;
 
 /** One roster line per runnable skill, e.g. `- doodle-avatar -> skill id "normal" (needs a photo): …` */
 const SKILL_ROSTER = RUNNABLE_SKILL_DEFINITIONS.map(
@@ -91,7 +96,7 @@ you changed. Keep the pinned skill unless they clearly want a different kind of 
 - Never invent skills, styles, or features that are not listed above.
 - Keep replies short and conversational — a couple of sentences, no headings, no bullet dumps.
 `.trim(),
-  model: "openrouter/stealth/ox-alpha",
+  model: openRouterModel,
   skills: DOODLE_SKILLS,
   tools: { generateDoodle: generateDoodleTool },
 });

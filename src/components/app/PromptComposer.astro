@@ -179,6 +179,32 @@ const { id, variant = "compact", placeholder = "Describe a doodle or attach a ph
   }
   .composer-compact .composer-editable { font-size: 14.5px; line-height: 21px; max-height: 140px; }
 
+  /* iOS Safari zooms the whole page on focus of any input/contenteditable
+     under 16px — the compact variant's 14.5px triggers it every time the
+     chat composer is tapped on a phone, so this restores 16px there only. */
+  @media (max-width: 860px) {
+    .composer-compact .composer-editable { font-size: 16px; line-height: 22px; }
+
+    /* The 30px toolbar icon buttons (and send button) sit well under the
+       ~44px minimum comfortable touch target (Apple HIG / Material). Bump
+       them up on phones — the math still fits a 320px-wide screen: box
+       padding (12px × 2) + 4 icon buttons (44px) + send (44px) + 4 gaps
+       (10px) = 24 + 220 + 40 = 284px, inside a 320px viewport. */
+    .composer-compact .composer-toolbar { gap: 10px; }
+    .composer-compact .composer-icon-btn { width: 44px; height: 44px; flex-basis: 44px; border-radius: 12px; }
+    .composer-compact .composer-send { width: 44px; height: 44px; flex-basis: 44px; }
+
+    /* Small `×` remove/clear buttons get a larger invisible hit area
+       without visually growing the pill they sit in. */
+    .composer-skill-chip button,
+    .composer-attach-remove { padding: 8px; margin: -6px; }
+
+    /* Camera dialog is a full-screen modal on phones, so its close/cancel/
+       capture buttons need comfortable touch targets too. */
+    .camera-dialog-close { flex-basis: 44px; width: 44px; height: 44px; }
+    .camera-dialog-actions button { min-height: 44px; }
+  }
+
   .composer-toolbar { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
   .composer-compact .composer-toolbar { margin-top: 6px; }
 

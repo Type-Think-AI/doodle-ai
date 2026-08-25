@@ -33,5 +33,8 @@ body {
 
 @media (max-width: 860px) {
   .app-shell { height: auto; overflow: visible; }
-  .app-shell-content { padding-bottom: 72px; }
+  /* --mobile-nav-h is set by mobile-nav-height.ts from the bottom nav's
+     real rendered height (varies with safe-area-inset-bottom per device);
+     72px is only the pre-JS fallback. */
+  .app-shell-content { padding-bottom: var(--mobile-nav-h, 72px); }
 }

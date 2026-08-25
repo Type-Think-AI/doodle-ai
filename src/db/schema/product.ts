@@ -22,10 +22,22 @@ export const thread = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    /** Derived from the first message; TITLE_MAX_LEN is 48 on the client today. */
+    /**
+     * Stays "New chat" until the thread's first successful generation, at
+     * which point it becomes that skill's friendly display name (e.g.
+     * "Doodle Avatar") rather than the raw first user message — the earlier
+     * behavior could put an arbitrary prompt, or a pasted JSON/URL, in front
+     * of a non-technical user as if it were a label.
+     */
     title: text("title").notNull(),
     /** A skill pinned via "Install & run" on a skill detail page. */
     skillId: text("skill_id"),
+    /**
+     * The thread's first successful generation's image URL — set once and
+     * never overwritten, so the sidebar's thumbnail for a chat stays stable
+     * rather than jumping to whatever was generated most recently in it.
+     */
+    thumbnailUrl: text("thumbnail_url"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
@@ -99,6 +111,20 @@ export const moodboardItem = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   },
   (t) => [index("moodboard_user_created_idx").on(t.userId, t.createdAt)],
+);
+
+/** Freeform feedback submitted via the feedback dialog — read manually, no admin UI yet. */
+export const feedback = sqliteTable(
+  "feedback",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    text: text("text").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => [index("feedback_user_created_idx").on(t.userId, t.createdAt)],
 );
 
 /** A named, reusable reference photo — one photo per character, as on the client. */

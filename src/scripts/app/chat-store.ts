@@ -30,7 +30,6 @@ import {
 const THREAD_INDEX_KEY = "doodleai-chats";
 const THREAD_KEY_PREFIX = "doodleai-chat-";
 const USER_ID_KEY = "doodleai-user-id";
-const TITLE_MAX_LEN = 48;
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -48,6 +47,8 @@ export interface ThreadSummary {
   updatedAt: number;
   /** A skill id pinned via "Install & run" from a skill detail page. */
   skillId?: string;
+  /** The thread's first successful generation — set once, never overwritten. */
+  thumbnailUrl?: string;
 }
 
 function newId(): string {
@@ -144,16 +145,9 @@ export function appendMessage(id: string, message: ChatMessage): ChatMessage[] {
   let created = false;
   if (entry) {
     entry.updatedAt = now;
-    if (entry.title === "New chat" && message.role === "user") {
-      entry.title = message.content.trim().slice(0, TITLE_MAX_LEN) || "New chat";
-    }
   } else {
     created = true;
-    index.push({
-      id,
-      title: message.role === "user" ? message.content.trim().slice(0, TITLE_MAX_LEN) || "New chat" : "New chat",
-      updatedAt: now,
-    });
+    index.push({ id, title: "New chat", updatedAt: now });
   }
   saveIndex(index);
 
@@ -164,12 +158,15 @@ export function appendMessage(id: string, message: ChatMessage): ChatMessage[] {
       enqueue(() =>
         apiFetch("/api/v1/threads", {
           method: "POST",
-          body: JSON.stringify({ id, title: index.find((t) => t.id === id)?.title, createdAt: now, updatedAt: now }),
+          body: JSON.stringify({ id, title: "New chat", createdAt: now, updatedAt: now }),
         }),
       );
     }
-    // The server derives the title from the first user turn itself, so only
-    // the message is sent here — see threads/[id]/messages.ts.
+    // The title stays "New chat" here deliberately — it's set once, from the
+    // skill's display name, when the first doodle finishes generating (see
+    // setThreadThumbnail below), not from the raw prompt. A raw prompt can
+    // be a pasted URL, a JSON blob, anything — not a label a non-technical
+    // user should see in their chat list.
     enqueue(() =>
       apiFetch(`/api/v1/threads/${encodeURIComponent(id)}/messages`, {
         method: "POST",
@@ -216,6 +213,24 @@ export function clearThreadSkill(id: string): void {
   }
 }
 
+/**
+ * Called once, right when a thread's first doodle finishes generating —
+ * sets the sidebar thumbnail and upgrades the title from "New chat" to the
+ * skill's friendly name. First doodle wins: if the thread already has a
+ * thumbnail, this is a no-op both locally and server-side (the PATCH handler
+ * re-checks `thumbnailUrl IS NULL` itself, so this local guard is a
+ * fast-path, not the actual safety net).
+ */
+export function setThreadThumbnail(id: string, thumbnailUrl: string, title: string): void {
+  const index = loadIndex();
+  const entry = index.find((t) => t.id === id);
+  if (!entry || entry.thumbnailUrl) return;
+  entry.thumbnailUrl = thumbnailUrl;
+  entry.title = title;
+  saveIndex(index);
+  patchThread(id, { thumbnailUrl, title });
+}
+
 export function deleteThread(id: string): void {
   saveIndex(loadIndex().filter((t) => t.id !== id));
   try {
@@ -237,6 +252,7 @@ interface ThreadDto {
   title: string;
   updatedAt: number;
   skillId?: string;
+  thumbnailUrl?: string;
 }
 
 registerHydrator(async () => {
@@ -248,6 +264,7 @@ registerHydrator(async () => {
       title: t.title,
       updatedAt: t.updatedAt,
       ...(t.skillId ? { skillId: t.skillId } : {}),
+      ...(t.thumbnailUrl ? { thumbnailUrl: t.thumbnailUrl } : {}),
     })),
   );
 });

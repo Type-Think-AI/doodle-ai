@@ -1,0 +1,1 @@
+ALTER TABLE `thread` ADD `thumbnail_url` text;

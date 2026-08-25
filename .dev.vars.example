@@ -2,6 +2,8 @@
 # In production these are set with `wrangler secret put <NAME>`.
 
 OPENROUTER_API_KEY=replace-with-your-openrouter-key
+# OpenRouter provider/model ID. The `openrouter/` gateway prefix is added by the app.
+OPENROUTER_MODEL=google/gemini-3.7-flash
 
 # Signing key for Better Auth sessions. Generate with:
 #   openssl rand -base64 32

@@ -2,6 +2,7 @@
    session-aware profile data with local demo preferences until profile writes
    are connected to the account API. */
 
+import { SETTINGS_ACCORDION_BREAKPOINT } from "../../lib/breakpoints";
 import { STYLE_THEME_STORAGE_KEY, THEMES } from "../../lib/doodle-constants";
 import { getStoredTheme, setTheme, type ThemeName } from "../../lib/theme";
 import { getSession, type AuthUser } from "./auth-client";
@@ -22,7 +23,7 @@ function getRequestedTab(): SettingsTab {
 }
 
 function isMobile(): boolean {
-  return window.matchMedia("(max-width: 760px)").matches;
+  return window.matchMedia(`(max-width: ${SETTINGS_ACCORDION_BREAKPOINT}px)`).matches;
 }
 
 function readProfilePreferences(): ProfilePreferences {

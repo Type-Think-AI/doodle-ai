@@ -3,24 +3,47 @@
    lives on the settings page's Appearance section, not here. */
 
 import { getSession, signOut } from "./auth-client";
-import { listThreads } from "./chat-store";
+import { listThreads, loadThread } from "./chat-store";
 
 const SIDEBAR_COLLAPSED_KEY = "doodleai-sidebar-collapsed";
 const SIDEBAR_WIDTH_KEY = "doodleai-sidebar-width";
 const SIDEBAR_MIN_WIDTH = 200;
 const SIDEBAR_MAX_WIDTH = 420;
 
+/** Playful placeholders for a chat with no doodle yet — on-brand, not a generic chat-bubble icon. */
+const PLACEHOLDER_EMOJI = ["🎨", "✏️", "🖍️", "🐱", "🌟", "🦄", "🎭", "🐶"];
+
+/** Deterministic per-thread pick — stays the same on every render, doesn't flicker on reload. */
+function placeholderFor(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return PLACEHOLDER_EMOJI[hash % PLACEHOLDER_EMOJI.length]!;
+}
+
 function initSidebar(): void {
   const sidebar = document.getElementById("sidebar");
   if (!sidebar) return;
 
   const collapseBtn = document.getElementById("sidebarCollapse");
+  const openBtn = document.getElementById("sidebarOpen");
   const resizeHandle = document.getElementById("sidebarResizeHandle");
   const chatsList = document.getElementById("sidebarChatsList");
+  const feedbackBtn = document.getElementById("sidebarFeedback");
+
+  // The dialog itself lives in FeedbackDialog.astro (mounted once in
+  // AppShellLayout.astro) and listens for this same event — decoupled via a
+  // custom event rather than a direct import, same pattern as
+  // doodleai:open-auth.
+  feedbackBtn?.addEventListener("click", () => window.dispatchEvent(new Event("doodleai:open-feedback")));
 
   /* ---- Chats ---- */
   if (chatsList) {
-    const threads = listThreads();
+    // A thread the user only just clicked "New chat" into and never sent
+    // anything in is clutter, not history — the server already excludes
+    // these from a synced list (GET /api/v1/threads), but this device's own
+    // freshly-created thread hasn't necessarily round-tripped yet, so the
+    // local mirror needs the same filter applied optimistically.
+    const threads = listThreads().filter((t) => loadThread(t.id).length > 0);
     const activeId = window.location.pathname.match(/\/c\/([^/]+)/)?.[1];
     if (threads.length === 0) {
       const empty = document.createElement("div");
@@ -32,8 +55,33 @@ function initSidebar(): void {
         const link = document.createElement("a");
         link.href = `/c/${t.id}`;
         link.className = "sidebar-chat-link";
-        link.textContent = t.title;
         link.dataset.active = String(t.id === activeId);
+
+        // A thumbnail once the thread has its first doodle; a playful,
+        // on-brand emoji before that (stable per thread — see
+        // placeholderFor) so a text-only conversation doesn't leave every
+        // row looking like a generic chat app.
+        const thumb = document.createElement("span");
+        thumb.className = "sidebar-chat-thumb";
+        if (t.thumbnailUrl) {
+          const img = document.createElement("img");
+          img.src = t.thumbnailUrl;
+          img.alt = "";
+          img.loading = "lazy";
+          thumb.appendChild(img);
+        } else {
+          thumb.textContent = placeholderFor(t.id);
+        }
+
+        const title = document.createElement("span");
+        title.className = "sidebar-chat-title";
+        title.textContent = t.title;
+
+        // Not link.append(thumb, title) — worker-configuration.d.ts declares
+        // its own global Element.append() (Cloudflare's HTMLRewriter API),
+        // which collides with the DOM's and breaks overload resolution here.
+        link.appendChild(thumb);
+        link.appendChild(title);
         chatsList.appendChild(link);
       });
     }
@@ -46,16 +94,29 @@ function initSidebar(): void {
   } catch {
     collapsed = false;
   }
-  sidebar.classList.toggle("collapsed", collapsed);
-  collapseBtn?.addEventListener("click", () => {
-    collapsed = !collapsed;
+
+  const setCollapsed = (nextCollapsed: boolean): void => {
+    collapsed = nextCollapsed;
     sidebar.classList.toggle("collapsed", collapsed);
+    collapseBtn?.setAttribute("aria-label", collapsed ? "Hide sidebar" : "Collapse sidebar");
+    collapseBtn?.setAttribute("aria-expanded", String(!collapsed));
+    openBtn?.setAttribute("aria-expanded", String(collapsed));
     try {
       localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
     } catch {
       /* storage unavailable — collapse state stays session-only */
     }
-  });
+  };
+
+  setCollapsed(collapsed);
+  collapseBtn?.addEventListener("click", () => setCollapsed(true));
+  openBtn?.addEventListener("click", () => setCollapsed(false));
+  // Entering whiteboard mode (chat.ts) needs the room — decoupled via a
+  // custom event rather than an export, same pattern as doodleai:open-auth.
+  // Deliberately one-directional: leaving whiteboard mode does not
+  // re-expand the sidebar, since the user may have manually collapsed it
+  // before ever opening the whiteboard.
+  window.addEventListener("doodleai:sidebar-collapse", () => setCollapsed(true));
 
   /* ---- Resize ---- */
   try {
@@ -177,13 +238,12 @@ async function renderAuthSlot(): Promise<void> {
  * place that needs to know.
  */
 async function renderCreditsSlot(): Promise<void> {
-  const wrap = document.getElementById("sidebarCredits");
   const balanceEl = document.getElementById("sidebarCreditsBalance");
-  if (!wrap || !balanceEl) return;
+  if (!balanceEl) return;
 
   window.addEventListener("doodleai:credits", (event) => {
     const balance = (event as CustomEvent<{ balance: number }>).detail?.balance;
-    if (typeof balance === "number") setCreditsBalance(wrap, balanceEl, balance);
+    if (typeof balance === "number") setCreditsBalance(balanceEl, balance);
   });
 
   try {
@@ -191,22 +251,22 @@ async function renderCreditsSlot(): Promise<void> {
     if (!res.ok) return;
     const payload = (await res.json()) as { credits?: { balance?: unknown } };
     const balance = payload.credits?.balance;
-    if (typeof balance === "number") setCreditsBalance(wrap, balanceEl, balance);
+    if (typeof balance === "number") setCreditsBalance(balanceEl, balance);
   } catch {
-    // Balance just stays hidden — not worth a visible error for a secondary
-    // readout the user can always get from /settings?tab=billing.
+    // Balance just stays showing "…" — not worth a visible error for a
+    // secondary readout the user can always get from /settings?tab=billing.
   }
 }
 
-function setCreditsBalance(wrap: HTMLElement, balanceEl: HTMLElement, balance: number): void {
+/** Lives inline in the profile row now (see Sidebar.astro), not a separate block. */
+function setCreditsBalance(balanceEl: HTMLElement, balance: number): void {
   balanceEl.textContent = `${balance} credit${balance === 1 ? "" : "s"}`;
-  wrap.dataset.empty = String(balance <= 0);
+  balanceEl.dataset.empty = String(balance <= 0);
   // The out-of-credits hint is a plain sentence, not a button — there's no
   // purchase flow yet (Stripe is out of scope for this phase), and a "Buy
   // credits" control that goes nowhere would be worse than no control.
   const hint = document.getElementById("sidebarCreditsHint");
   if (hint) hint.hidden = balance > 0;
-  wrap.hidden = false;
 }
 
 if (document.readyState === "loading") {

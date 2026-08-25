@@ -1,30 +1,45 @@
 # Doodle AI
 
-> Doodle AI is a conversational creative studio that turns ideas and photos into playful, hand-drawn doodles.
+> Doodle AI is a conversational creative studio at https://doodleai.art that turns photos and ideas into playful, hand-drawn doodle avatars, collages, sticker sheets, mood captions, and gifts.
 
 ## Product
-- Homepage: https://doodleai.art/
-- Sign in with Google to create, save, and sync doodles.
-- Choose from avatar, collage, sticker, mood-caption, gift, and surprise skills.
-- Generation uses account credits through Doodle AI's server-owned PicX connection.
+- Sign in with Google to upload, generate, save, and sync work. Browsing is open; creation requires an account.
+- New accounts receive a 5-credit signup grant. Each generation costs 1 credit. Failed generations are refunded.
+- Users do not enter a PicX API key. Generation uses Doodle AI's server-owned PicX connection.
+- Saved characters can be mentioned with @. Signed-in chats, characters, and moodboards sync across devices.
+
+## Runnable skills
+- [Doodle Avatar](https://doodleai.art/skills/normal/) — one 1:1 hand-drawn avatar from a photo.
+- [Doodle Collage](https://doodleai.art/skills/collage/) — six close-up poses in a 3x2 grid.
+- [Full-Body Action Collage](https://doodleai.art/skills/full-body/) — six full-body poses in a 3x2 grid.
+- [Surprise Me](https://doodleai.art/skills/surprise/) — a fictional doodle character, no photo required.
+- [Sticker Pack](https://doodleai.art/skills/stickers/) — a square die-cut sticker *sheet* image, not a WhatsApp/iMessage sticker pack.
+- [Mood Captions](https://doodleai.art/skills/mood-captions/) — a 3x2 collage with short hand-lettered captions.
+- [Gift Doodle](https://doodleai.art/skills/gift/) — a square greeting/gift image from a photo.
+
+Emotional Modes and Seasonal Pack are listed as coming soon and are not runnable.
 
 ## Technical flow
 1. The signed-in browser sends a chat turn to `/api/chat`.
 2. Photos are uploaded through `/api/upload` to PicX managed assets using the server-owned connection.
 3. The Mastra agent selects a skill and calls the generation tool.
 4. The tool reserves account credits, calls PicX, refunds failed attempts, and streams the result back as NDJSON events.
-5. The browser renders and can save or download the generated result.
+5. The browser renders the result. The user can save it to a moodboard or download it.
 
 ## Important boundaries
 - Doodle AI is an Astro 5 application deployed to Cloudflare Workers.
 - Better Auth sessions and Cloudflare D1/KV back the account and credit experience.
 - Provider credentials remain server-side and are never accepted from the browser.
 - User images are processed through PicX managed assets and generated media is hosted by PicX.
-- API routes are implementation endpoints and should not be indexed.
+- Stripe checkout is not implemented. There is no paid credit pack yet.
+- API routes, account settings, characters, moodboards, and private chats should not be treated as public documentation.
+- Doodle AI is not doodleai.fun, InstaDoodle, LazyAvatar, or cartoonize.ai.
 
 ## Public pages
-- [Homepage](https://doodleai.art/)
+- [Skills](https://doodleai.art/skills/)
+- [Doodle Avatar](https://doodleai.art/skills/normal/)
 - [About](https://doodleai.art/about/)
+- [Blog](https://doodleai.art/blog/)
 - [Privacy](https://doodleai.art/privacy-policy/)
 - [Terms](https://doodleai.art/terms-of-service/)
 - [Sitemap](https://doodleai.art/sitemap.xml)

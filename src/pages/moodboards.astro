@@ -70,4 +70,8 @@ import Lightbox from '../components/app/Lightbox.astro';
 		padding: 0;
 	}
 	.mood-remove:hover { background: var(--accent); color: var(--send-fg); }
+
+	@media (max-width: 720px) {
+		.mood-remove { top: 4px; right: 4px; width: 44px; height: 44px; font-size: 20px; }
+	}
 </style>

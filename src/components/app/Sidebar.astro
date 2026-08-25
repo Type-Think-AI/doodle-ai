@@ -1,35 +1,10 @@
 ---
+import { NAV_ITEMS, NEW_CHAT_ITEM, type NavKey } from "../../lib/nav-items";
+
 interface Props {
-  active: "chat" | "skills" | "moodboards" | "characters" | "settings";
+  active: NavKey;
 }
 const { active } = Astro.props;
-
-const navItems = [
-  {
-    key: "characters",
-    href: "/characters",
-    label: "Characters",
-    icon: '<circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.6"/><path d="M5 20c1.3-3.8 4.3-5.8 7-5.8s5.7 2 7 5.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-  },
-  {
-    key: "moodboards",
-    href: "/moodboards",
-    label: "Moodboards",
-    icon: '<rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 15l4.2-3.6L12 15l3-2.4 5.5 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-  },
-  {
-    key: "skills",
-    href: "/skills",
-    label: "Skills",
-    icon: '<circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="16" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 13.6 13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-  },
-  {
-    key: "settings",
-    href: "/settings",
-    label: "Settings",
-    icon: '<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z" stroke="currentColor" stroke-width="1.8"/>',
-  },
-];
 ---
 
 <aside class="sidebar" id="sidebar">
@@ -43,13 +18,13 @@ const navItems = [
     </button>
   </div>
 
-  <a href="/" class="sidebar-primary-action">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
-    <span class="sidebar-label">New chat</span>
+  <a href={NEW_CHAT_ITEM.href} class="sidebar-primary-action">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" set:html={NEW_CHAT_ITEM.icon} />
+    <span class="sidebar-label">{NEW_CHAT_ITEM.label}</span>
   </a>
 
   <nav class="sidebar-nav" aria-label="Main">
-    {navItems.map((item) => (
+    {NAV_ITEMS.map((item) => (
       <a href={item.href} class="sidebar-link" aria-current={active === item.key ? "page" : undefined} data-active={active === item.key ? "true" : "false"}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" set:html={item.icon} />
         <span class="sidebar-label">{item.label}</span>
@@ -63,13 +38,19 @@ const navItems = [
   </div>
 
   <div class="sidebar-bottom">
-    <a href="/settings?tab=billing" class="sidebar-upgrade sidebar-label">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c2.6 2.3 4.2 5.4 4.2 8.9 0 1.6-.3 3-.9 4.3l2.4 2.4-1.4 3.9-3.9-1.4-1.4 1.4-1.4-1.4-3.9 1.4-1.4-3.9 2.4-2.4c-.6-1.3-.9-2.7-.9-4.3 0-3.5 1.6-6.6 4.2-8.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="10.5" r="1.8" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span>Upgrade to Pro</span>
-    </a>
+    <button type="button" class="sidebar-link sidebar-feedback" id="sidebarFeedback" aria-label="Send feedback">
+      <!-- A megaphone, not a speech bubble — the bubble shape is already the
+           chat/thread placeholder icon elsewhere in this sidebar, and reusing
+           it here made "Feedback" easy to mistake for a chat item. -->
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10v3a1.5 1.5 0 0 0 1.5 1.5H6l1 5h2l-.7-5h1.3l7 3.5v-13l-7 3.5H4.5A1.5 1.5 0 0 0 3 10Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M20 9.5a3 3 0 0 1 0 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="sidebar-label">Feedback</span>
+    </button>
 
     <!-- Auth slot. Both states start hidden and the resolved one is revealed
-         by sidebar.ts, so a signed-in user never sees "Sign in" flash first. -->
+         by sidebar.ts, so a signed-in user never sees "Sign in" flash first.
+         No "Upgrade to Pro" here — there's no payment flow yet, and a button
+         that goes nowhere is worse than no button (same rule the out-of-
+         credits hint below follows). -->
     <div class="sidebar-auth" id="sidebarAuth">
       <button type="button" class="sidebar-auth-signin" id="sidebarSignIn" hidden>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -80,22 +61,18 @@ const navItems = [
         <span class="sidebar-auth-meta sidebar-label">
           <span class="sidebar-auth-name-row">
             <span class="sidebar-auth-name" id="sidebarAuthName"></span>
-            <span class="sidebar-auth-plan">Free</span>
+            <!-- Was a static "Free" pill; now the live balance, in the same
+                 spot — one compact line instead of a whole second block
+                 below the card. sidebar.ts fills it in and keeps it current
+                 (chat.ts's "credits" NDJSON event updates it live mid-chat). -->
+            <span class="sidebar-auth-plan" id="sidebarCreditsBalance">…</span>
           </span>
           <span class="sidebar-auth-email" id="sidebarAuthEmail"></span>
+          <span class="sidebar-credits-hint" id="sidebarCreditsHint" hidden>Out of credits — more ways to get them are coming soon.</span>
         </span>
         <button class="sidebar-auth-signout" id="sidebarSignOut" type="button" aria-label="Sign out">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-      </div>
-      <!-- Balance readout, separate from #sidebarAuthUser so it can be
-           updated live (chat.ts's "credits" NDJSON event) without touching
-           the profile card's own click/keydown wiring. Starts hidden like
-           the two states above it — sidebar.ts reveals it only once a
-           balance has actually been fetched, and only for signed-in users. -->
-      <div class="sidebar-credits" id="sidebarCredits" hidden>
-        <span class="sidebar-credits-balance" id="sidebarCreditsBalance">— credits</span>
-        <span class="sidebar-credits-hint" id="sidebarCreditsHint" hidden>Out of credits — more ways to get them are coming soon.</span>
       </div>
     </div>
   </div>
@@ -103,11 +80,14 @@ const navItems = [
   <div class="sidebar-resize-handle" id="sidebarResizeHandle" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>
 </aside>
 
+<button class="sidebar-open" id="sidebarOpen" type="button" aria-label="Show sidebar" aria-controls="sidebar" aria-expanded="false">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
 <script src="../../scripts/app/sidebar.ts"></script>
 
 <style>
-  .sidebar {
-    --sidebar-w: 258px;
+  .sidebar { --sidebar-w: 258px;
     position: relative;
     flex: 0 0 var(--sidebar-w);
     width: var(--sidebar-w);
@@ -120,10 +100,25 @@ const navItems = [
     transition: width 0.15s ease;
   }
   .sidebar.resizing { transition: none; }
-  .sidebar.collapsed {
-    --sidebar-w: 76px;
-    padding: 16px 10px 12px;
+  .sidebar.collapsed { display: none; }
+  .sidebar-open {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 30;
+    display: none;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--text-dim);
+    cursor: pointer;
   }
+  .sidebar.collapsed + .sidebar-open { display: flex; }
+  .sidebar-open:hover { background: var(--hover); color: var(--text); border-color: var(--border3); }
   .sidebar-top {
     display: flex;
     align-items: center;
@@ -227,20 +222,67 @@ const navItems = [
     overflow: auto;
     min-height: 0;
   }
-  .sidebar-chat-link {
-    display: block;
-    padding: 7px 12px;
+  /* :global() below is load-bearing, not decoration: every element in the
+     chats list (.sidebar-chat-link, its thumb/title, .sidebar-chats-empty)
+     is created client-side in sidebar.ts via document.createElement(), and
+     Astro's default scoped CSS compiles each selector to require a
+     `data-astro-cid-*` attribute directly on the matched element —
+     Astro stamps that attribute onto elements it renders server-side, but
+     has no way to stamp it onto nodes a client script creates later. Without
+     :global(), these rules silently never match and every element in the
+     list renders at browser-default sizing (an <img> with no dimensions
+     unstyled renders at its full intrinsic size, e.g. 1024×1024 for a PicX
+     output, which is how this was actually caught). */
+  :global(.sidebar-chat-link) {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 10px;
     border-radius: 10px;
     font-size: 13.5px;
     color: var(--text-dim);
+    min-width: 0;
+  }
+  :global(.sidebar-chat-link:hover) { background: var(--hover); color: var(--text); }
+  :global(.sidebar-chat-link[data-active="true"]) { background: var(--hover); color: var(--text); }
+  :global(.sidebar-chat-thumb) {
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--text-dimmer);
+    font-size: 14px;
+    line-height: 1;
+  }
+  :global(.sidebar-chat-thumb img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  :global(.sidebar-chat-title) {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .sidebar-chat-link:hover { background: var(--hover); color: var(--text); }
-  .sidebar-chat-link[data-active="true"] { background: var(--hover); color: var(--text); }
-  .sidebar-chats-empty { padding: 6px 10px; font-size: 12.5px; color: var(--text-dimmer); }
-  .sidebar.collapsed .sidebar-chats { display: none; }
+  :global(.sidebar.collapsed .sidebar-chat-title) { display: none; }
+  /* Was `display: none` on the whole .sidebar-chats block — collapsing the
+     text left a tall dead gap in the rail with nothing in it. Centering the
+     now-title-less thumbnails instead keeps recents reachable (and the rail
+     full) the same way the collapsed nav icons above already work. */
+  :global(.sidebar.collapsed .sidebar-chat-link) {
+    justify-content: center;
+    padding: 6px;
+  }
+  :global(.sidebar-chats-empty) { padding: 6px 10px; font-size: 12.5px; color: var(--text-dimmer); }
+  :global(.sidebar.collapsed .sidebar-chats-empty) { display: none; }
 
   .sidebar-bottom {
     margin-top: auto;
@@ -248,22 +290,6 @@ const navItems = [
     flex-direction: column;
     gap: 6px;
   }
-  .sidebar-upgrade {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 9px 10px;
-    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border2));
-    border-radius: 999px;
-    background: var(--accent-softer, var(--accent-soft));
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .sidebar-upgrade:hover { background: var(--accent-soft); }
-  .sidebar.collapsed .sidebar-upgrade { padding: 9px; }
-
   /* :not([hidden]) rather than a plain class selector — same lesson as
      AuthDialog.astro: an unconditional `display: flex` here is an author
      rule and beats the UA stylesheet's `[hidden] { display: none }`
@@ -337,6 +363,12 @@ const navItems = [
     font-size: 10.5px;
     font-weight: 600;
   }
+  /* Zero balance gets the accent treatment so it reads as a state change,
+     not just another quiet pill. */
+  .sidebar-auth-plan[data-empty="true"] {
+    background: var(--accent-softer, var(--accent-soft));
+    color: var(--accent);
+  }
   .sidebar-auth-email { font-size: 11px; color: var(--text-dimmer); }
   .sidebar.collapsed .sidebar-auth-plan { display: none; }
   .sidebar-auth-user-clickable { cursor: pointer; }
@@ -359,30 +391,18 @@ const navItems = [
   .sidebar.collapsed .sidebar-auth-user { justify-content: center; }
   .sidebar.collapsed .sidebar-auth-signout { display: none; }
 
-  /* Same :not([hidden]) lesson as the sign-in/signed-in pair above — an
-     unconditional `display: flex` here would render even while sidebar.ts
-     has the [hidden] attribute set on this element. */
-  .sidebar-credits:not([hidden]) {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 7px 10px 2px;
-    font-size: 12px;
-  }
-  .sidebar-credits-balance { color: var(--text-dim); }
-  /* Zero balance gets the accent treatment so it reads as a state change,
-     not just another line of muted text. */
-  .sidebar-credits[data-empty="true"] .sidebar-credits-balance {
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .sidebar-credits-hint {
+  /* Lives inside .sidebar-auth-meta now, under the email line, instead of a
+     separate block below the whole card — one compact card instead of two
+     stacked ones. Same :not([hidden]) lesson as everywhere else in this
+     file: the unconditional-display mistake defeats the JS toggle. */
+  .sidebar-credits-hint:not([hidden]) {
+    display: block;
+    margin-top: 2px;
     color: var(--text-dimmer);
-    font-size: 11px;
+    font-size: 10.5px;
     line-height: 1.35;
   }
-  .sidebar-credits-hint:not([hidden]) { display: block; }
-  .sidebar.collapsed .sidebar-credits { display: none; }
+  .sidebar.collapsed .sidebar-credits-hint { display: none; }
 
   .sidebar-resize-handle {
     position: absolute;
@@ -410,6 +430,7 @@ const navItems = [
   .sidebar.collapsed .sidebar-resize-handle { display: none; }
 
   @media (max-width: 860px) {
-    .sidebar { display: none; }
+    .sidebar,
+    .sidebar-open { display: none !important; }
   }
 </style>

@@ -43,4 +43,23 @@ import { SITE_TITLE } from '../consts';
 		text-decoration: none;
 		border-bottom-color: #e2725b;
 	}
+	h2 a {
+		display: inline-block;
+	}
+	@media (max-width: 480px) {
+		header {
+			padding: 0 0.75em;
+		}
+		h2 a {
+			padding: 14px 0;
+			margin: -14px 0;
+		}
+		nav a {
+			padding: 14px 0.5em;
+		}
+		.internal-links {
+			display: flex;
+			flex-wrap: wrap;
+		}
+	}
 </style>

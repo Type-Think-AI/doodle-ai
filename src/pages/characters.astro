@@ -74,6 +74,8 @@ import AppShellLayout from '../layouts/AppShellLayout.astro';
 		align-items: center;
 		justify-content: center;
 		background: rgba(0, 0, 0, 0.6);
+		padding: 16px;
+		box-sizing: border-box;
 	}
 	.chars-modal-backdrop.open { display: flex; }
 	.chars-modal {
@@ -90,13 +92,13 @@ import AppShellLayout from '../layouts/AppShellLayout.astro';
 	.chars-modal img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 12px; background: var(--surface2); }
 	.chars-modal-label { font-size: 12.5px; color: var(--text-dim); }
 	.chars-modal input[type='text'] {
-		height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border2);
-		background: var(--surface2); color: var(--text); font-size: 14px; font-family: inherit;
+		height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border2);
+		background: var(--surface2); color: var(--text); font-size: 16px; font-family: inherit;
 	}
 	.chars-modal-status { font-size: 12.5px; color: var(--text-dim); margin: 0; min-height: 16px; }
 	.chars-modal-actions { display: flex; gap: 10px; margin-top: 4px; }
 	.chars-modal-btn {
-		flex: 1; height: 40px; border-radius: 999px; border: 1px solid var(--border3);
+		flex: 1; height: 44px; border-radius: 999px; border: 1px solid var(--border3);
 		background: transparent; color: var(--text); font-family: inherit; font-size: 13.5px; cursor: pointer;
 	}
 	.chars-modal-btn-primary { background: var(--send-bg); color: var(--send-fg); border: 0; }
@@ -154,6 +156,14 @@ import AppShellLayout from '../layouts/AppShellLayout.astro';
 		justify-content: center;
 		cursor: pointer;
 		padding: 0;
+	}
+	/* Visible circle stays small so it doesn't swamp thumbnail-sized cards,
+	   but the actual tap target is expanded to the 44px convention via a
+	   transparent hit area extending past the visible box. */
+	.chars-card-remove::before {
+		content: '';
+		position: absolute;
+		inset: -11px;
 	}
 	.chars-card-remove:hover { background: var(--accent); color: var(--send-fg); }
 </style>

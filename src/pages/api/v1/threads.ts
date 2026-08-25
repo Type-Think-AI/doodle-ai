@@ -1,7 +1,7 @@
 import type { APIContext } from "astro";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, exists, lt, sql } from "drizzle-orm";
 import { getDb, withDbSession } from "../../../db/client";
-import { thread } from "../../../db/schema/product";
+import { message, thread } from "../../../db/schema/product";
 import { apiJson, requireAuth } from "../../../lib/auth/guards";
 import { intParam, newId, optStr, readJson, toDate } from "../../../lib/api/body";
 
@@ -18,6 +18,7 @@ export interface ThreadDto {
   updatedAt: number;
   createdAt: number;
   skillId?: string;
+  thumbnailUrl?: string;
 }
 
 export function toThreadDto(row: typeof thread.$inferSelect): ThreadDto {
@@ -27,6 +28,7 @@ export function toThreadDto(row: typeof thread.$inferSelect): ThreadDto {
     updatedAt: row.updatedAt.getTime(),
     createdAt: row.createdAt.getTime(),
     ...(row.skillId ? { skillId: row.skillId } : {}),
+    ...(row.thumbnailUrl ? { thumbnailUrl: row.thumbnailUrl } : {}),
   };
 }
 
@@ -36,6 +38,11 @@ export function toThreadDto(row: typeof thread.$inferSelect): ThreadDto {
  * Paginated by `updatedAt` rather than by offset: the list is re-sorted on
  * every append, so an offset cursor would skip and repeat rows.
  * `?before=<epoch ms>` continues from the last row of the previous page.
+ *
+ * Excludes threads with zero messages — a brand-new chat the user clicked
+ * into but never sent anything in is clutter, not history. (chat-store.ts's
+ * `createThread()` still creates the row immediately, for reasons unrelated
+ * to this list — it's just not shown here until it has content.)
  */
 export async function GET(context: APIContext): Promise<Response> {
   const user = await requireAuth(context);
@@ -51,9 +58,11 @@ export async function GET(context: APIContext): Promise<Response> {
     .select()
     .from(thread)
     .where(
-      beforeDate && !Number.isNaN(beforeDate.getTime())
-        ? and(eq(thread.userId, user.id), lt(thread.updatedAt, beforeDate))
-        : eq(thread.userId, user.id),
+      and(
+        eq(thread.userId, user.id),
+        beforeDate && !Number.isNaN(beforeDate.getTime()) ? lt(thread.updatedAt, beforeDate) : undefined,
+        exists(db.select({ one: sql`1` }).from(message).where(eq(message.threadId, thread.id))),
+      ),
     )
     .orderBy(desc(thread.updatedAt))
     .limit(limit);
@@ -99,6 +108,7 @@ export async function POST(context: APIContext): Promise<Response> {
     userId: user.id,
     title: (optStr(body.title) ?? "New chat").slice(0, TITLE_MAX_LEN),
     skillId: optStr(body.skillId),
+    thumbnailUrl: null,
     createdAt: toDate(body.createdAt, now),
     updatedAt: toDate(body.updatedAt, now),
   };

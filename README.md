@@ -30,7 +30,7 @@ The goal is to add capabilities as skills and configuration instead of creating 
 | Runtime target | Cloudflare Worker `doodleai-agent` |
 | Image generation | PicX API via server-owned key and account credits |
 | Agent framework | Mastra |
-| Agent model | OpenRouter `stealth/ox-alpha` for local preview testing |
+| Agent model | OpenRouter model configured by `OPENROUTER_MODEL` (default: `google/gemini-3.7-flash`) |
 | Styling | Doodle AI CSS and Astro markup |
 | Package manager | pnpm |
 | Deployment | Wrangler, only after local approval |
@@ -60,7 +60,7 @@ Official references used for this setup:
 cd /Users/yash/picx/doodlebooth-agent
 pnpm install
 cp .dev.vars.example .dev.vars
-# Add local OPENROUTER_API_KEY, PICX_API_KEY, and Google/Better Auth values to .dev.vars
+# Add local OPENROUTER_API_KEY, OPENROUTER_MODEL, PICX_API_KEY, and Google/Better Auth values to .dev.vars
 pnpm dev
 ```
 
@@ -82,12 +82,13 @@ For a submission or release, run the first two checks locally and use the Wrangl
 
 ```text
 OPENROUTER_API_KEY=replace-with-your-openrouter-key
+OPENROUTER_MODEL=google/gemini-3.7-flash
 PICX_API_KEY=replace-with-a-picx-key
 ```
 
 A safe template is available at `/Users/yash/picx/doodlebooth-agent/.dev.vars.example`.
 
-The provided `stealth/ox-alpha` model is a free preview model from an anonymous third-party provider. It may change, become unavailable, or stop being free. Replace the model in `src/mastra/agents/doodle-agent.ts` if needed.
+The default agent model is `google/gemini-3.7-flash`, routed through OpenRouter. Override it with `OPENROUTER_MODEL` in `.dev.vars` locally or as a Worker secret in production; use the provider/model ID only, without the `openrouter/` prefix.
 
 ## Project structure
 

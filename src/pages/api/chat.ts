@@ -1,6 +1,5 @@
 import type { APIContext } from "astro";
 import { RequestContext } from "@mastra/core/request-context";
-import { mastra } from "../../mastra";
 import { bridgeCloudflareEnv } from "../../lib/env-bridge";
 import { getDb } from "../../db/client";
 import { requireAuth } from "../../lib/auth/guards";
@@ -16,7 +15,7 @@ interface ChatMessage {
 type StreamEvent =
   | { type: "text"; text: string }
   | { type: "status"; phase: "drawing" }
-  | { type: "image"; url: string }
+  | { type: "image"; url: string; skillId?: string }
   | { type: "credits"; balance: number }
   | { type: "done" }
   | { type: "error"; message: string };
@@ -48,7 +47,8 @@ export async function POST(context: APIContext) {
     return json({ error: "Invalid chat request" }, 400);
   }
 
-  bridgeCloudflareEnv(context, ["OPENROUTER_API_KEY"]);
+  bridgeCloudflareEnv(context, ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"]);
+  const { mastra } = await import("../../mastra");
   const agent = mastra.getAgent("doodleAgent");
   const runtimeEnv = (context.locals as { runtime?: { env?: Env } })?.runtime?.env;
 
@@ -72,6 +72,9 @@ export async function POST(context: APIContext) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      // Set on the doodle tool's call, read on its result — the two chunks
+      // are adjacent in the same stream, so no cross-request state needed.
+      let lastSkillId: string | undefined;
       // Enqueue defensively: the client aborts this request when the user
       // hits Stop, and enqueueing onto the torn-down stream throws.
       const emit = (event: StreamEvent): void => {
@@ -98,14 +101,27 @@ export async function POST(context: APIContext) {
             const text = (chunk.payload as { text?: string })?.text;
             if (text) emit({ type: "text", text });
           } else if (chunk.type === "tool-call") {
-            const payload = chunk.payload as { toolName?: string };
-            if (isDoodleTool(payload.toolName)) emit({ type: "status", phase: "drawing" });
+            // `args`, not `input` — Mastra's public TypeScript types (e.g.
+            // StaticToolCall) call this field `input`, but the actual chunk
+            // fullStream emits at runtime names it `args` (see
+            // @mastra/core/dist/stream-*.js's chunk-transform switch on
+            // "tool-call": `payload: { ..., args: toolCallInput }`). Trusting
+            // the .d.ts here silently produced `undefined` forever — the
+            // sidebar thumbnail/title upgrade never fired because of this
+            // one field name, even though generation itself worked fine
+            // (generate-doodle.ts reads its own `input` parameter directly,
+            // a different object, so it was never affected).
+            const payload = chunk.payload as { toolName?: string; args?: { skill?: string } };
+            if (isDoodleTool(payload.toolName)) {
+              lastSkillId = payload.args?.skill;
+              emit({ type: "status", phase: "drawing" });
+            }
           } else if (chunk.type === "tool-result") {
             const payload = chunk.payload as { toolName?: string; result?: unknown };
             if (!isDoodleTool(payload.toolName)) continue;
             const value = payload.result as { status?: string; url?: string } | undefined;
             if (value?.status === "ok" && value.url) {
-              emit({ type: "image", url: value.url });
+              emit({ type: "image", url: value.url, skillId: lastSkillId });
               // The tool already resolved its own db handle from this same
               // RequestContext, so re-reading the balance here is a cheap,
               // consistent way to tell the client what the spend just did —

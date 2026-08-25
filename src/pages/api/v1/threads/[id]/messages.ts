@@ -7,8 +7,6 @@ import { intParam, newId, optStr, readJson, str, strArray, toDate } from "../../
 
 export const prerender = false;
 
-/** Matches TITLE_MAX_LEN in src/scripts/app/chat-store.ts. */
-const TITLE_MAX_LEN = 48;
 const PAGE_DEFAULT = 200;
 const PAGE_MAX = 500;
 
@@ -117,13 +115,7 @@ export async function POST(context: APIContext): Promise<Response> {
   if (content === null) return apiError("bad_request", "`content` must be a string.", 400);
 
   const db = getDb(context);
-  const owned = await db
-    .select({ id: thread.id, title: thread.title })
-    .from(thread)
-    .where(and(eq(thread.id, threadId), eq(thread.userId, user.id)))
-    .limit(1);
-  const parent = owned[0];
-  if (!parent) return notFound();
+  if (!(await ownedThread(db, threadId, user.id))) return notFound();
 
   const now = Date.now();
   const values = {
@@ -141,14 +133,12 @@ export async function POST(context: APIContext): Promise<Response> {
   // supplied the id, instead of raising a primary-key error.
   await db.insert(message).values(values).onConflictDoNothing({ target: message.id });
 
-  const shouldTitle = parent.title === "New chat" && role === "user";
-  const derivedTitle = content.trim().slice(0, TITLE_MAX_LEN) || "New chat";
+  // Title is deliberately not derived from raw message content — see the
+  // `thumbnailUrl`-guarded PATCH in ../[id].ts, which sets it once from the
+  // skill's display name when the thread's first doodle finishes.
   await db
     .update(thread)
-    .set({
-      updatedAt: new Date(now),
-      ...(shouldTitle ? { title: derivedTitle } : {}),
-    })
+    .set({ updatedAt: new Date(now) })
     .where(and(eq(thread.id, threadId), eq(thread.userId, user.id)));
 
   return apiJson({ message: toMessageDto({ ...values, images: values.images ?? null }) }, 201);

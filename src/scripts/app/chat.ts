@@ -15,6 +15,7 @@ import {
   hydrateThread,
   loadThread,
   setThreadSkill,
+  setThreadThumbnail,
   type ChatMessage,
 } from "./chat-store";
 import { initLightbox, openLightbox } from "./lightbox";
@@ -62,6 +63,13 @@ function initChat(): void {
   const sendBtn = $<HTMLButtonElement>("chatSend");
   const statusEl = $("chatStatus");
   const popover = $("chatMentionPopover");
+  const chatSplit = $("chatSplit");
+  const whiteboardToggle = $<HTMLButtonElement>("whiteboardToggle");
+  const whiteboardClose = $("whiteboardClose");
+  const whiteboardPanel = $("whiteboardPanel");
+  const whiteboardGrid = $("whiteboardGrid");
+  const whiteboardEmpty = $("whiteboardEmpty");
+  const whiteboardSkills = $("whiteboardSkills");
   if (!thread || !input || !sendBtn || !statusEl || !popover) return;
 
   initLightbox();
@@ -73,6 +81,7 @@ function initChat(): void {
   let pinnedSkillId: string | undefined = getThreadSkill(threadId);
   let lastUserMessage: ChatMessage | null = null;
   let hasResult = false;
+  let whiteboardOn = false;
 
   function setStatus(msg: string, err = false): void {
     statusEl!.textContent = msg;
@@ -93,6 +102,82 @@ function initChat(): void {
     clearThreadSkill(threadId!);
     syncSkillChip();
   });
+
+  /** Shared by the "/" mention picker, send()'s inline mention, and the
+      whiteboard's quick-pick row — one place that pins a skill to the thread. */
+  function pinSkill(skillId: string): void {
+    pinnedSkillId = skillId;
+    setThreadSkill(threadId!, skillId);
+    syncSkillChip();
+    syncWhiteboardSkillButtons();
+  }
+
+  function syncWhiteboardSkillButtons(): void {
+    whiteboardSkills?.querySelectorAll<HTMLButtonElement>(".whiteboard-skill-btn").forEach((btn) => {
+      btn.dataset.active = String(btn.dataset.skillId === pinnedSkillId);
+    });
+  }
+
+  /* ---- Whiteboard ---- */
+
+  /** Every image this thread has produced or received, oldest first — the
+      same data renderMessage already walks, just flattened across messages
+      instead of rendered per-bubble. Re-read fresh each call rather than
+      cached, since it's just a localStorage scan and the thread rarely has
+      more than a few dozen images. */
+  function collectThreadImages(): string[] {
+    const urls: string[] = [];
+    for (const msg of loadThread(threadId!)) {
+      if (msg.imageUrl) urls.push(msg.imageUrl);
+      if (msg.images) urls.push(...msg.images);
+    }
+    return urls;
+  }
+
+  function renderWhiteboard(): void {
+    if (!whiteboardGrid) return;
+    const urls = collectThreadImages();
+    whiteboardGrid.querySelectorAll(".whiteboard-tile").forEach((el) => el.remove());
+    if (whiteboardEmpty) whiteboardEmpty.hidden = urls.length > 0;
+    urls.forEach((url) => {
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "whiteboard-tile";
+      const img = document.createElement("img");
+      img.alt = "";
+      img.loading = "lazy";
+      setImageSrc(img, url);
+      tile.appendChild(img);
+      // Same shared lightbox the chat bubbles use — scoped to the whiteboard's
+      // own image set so prev/next paging stays within what's on screen.
+      tile.addEventListener("click", () => openLightbox(urls, url));
+      whiteboardGrid.appendChild(tile);
+    });
+  }
+
+  function setWhiteboard(on: boolean): void {
+    whiteboardOn = on;
+    chatSplit?.setAttribute("data-whiteboard", String(on));
+    whiteboardToggle?.setAttribute("aria-pressed", String(on));
+    if (whiteboardPanel) whiteboardPanel.hidden = !on;
+    if (on) {
+      window.dispatchEvent(new Event("doodleai:sidebar-collapse"));
+      renderWhiteboard();
+    }
+  }
+  whiteboardToggle?.addEventListener("click", () => setWhiteboard(!whiteboardOn));
+  whiteboardClose?.addEventListener("click", () => setWhiteboard(false));
+  whiteboardSkills?.querySelectorAll<HTMLButtonElement>(".whiteboard-skill-btn").forEach((btn) => {
+    const skillId = btn.dataset.skillId;
+    if (!skillId) return;
+    btn.addEventListener("click", () => {
+      pinSkill(skillId);
+      // A skill picked visually from the whiteboard should land the user
+      // back where they type, not leave them staring at the canvas.
+      input!.focus();
+    });
+  });
+  syncWhiteboardSkillButtons();
 
   function renderMessage(msg: ChatMessage, precedingUserMessage: ChatMessage | null): void {
     empty!.hidden = true;
@@ -382,6 +467,7 @@ function initChat(): void {
             message?: string;
             phase?: string;
             balance?: number;
+            skillId?: string;
           };
           if (event.type === "text" && event.text) {
             text += event.text;
@@ -390,6 +476,13 @@ function initChat(): void {
             thinking.setDrawing();
           } else if (event.type === "image" && event.url) {
             images.push(event.url);
+            // First doodle in the thread sets the sidebar thumbnail and
+            // upgrades the title from "New chat" to the skill's display
+            // name — setThreadThumbnail() itself is a no-op past the first
+            // call, so this doesn't need to track "is this the first image"
+            // locally.
+            const skillName = event.skillId ? getSkill(event.skillId)?.name : undefined;
+            if (threadId && skillName) setThreadThumbnail(threadId, event.url, skillName);
           } else if (event.type === "credits" && typeof event.balance === "number") {
             // The sidebar owns the visible balance readout but lives outside
             // this page's controller, so broadcast rather than reach across
@@ -403,7 +496,24 @@ function initChat(): void {
 
       thinking.wrap.remove();
       if (streamError) throw new Error(streamError);
+      saveAssistantReply();
+    } catch (err) {
+      thinking.wrap.remove();
+      setStatus(err instanceof Error ? err.message : "Chat request failed", true);
+      // A doodle the server already generated (and already charged a
+      // credit for, before the stream had any way to fail) must not
+      // vanish just because the connection dropped on the way back —
+      // save whatever text/images arrived before the error, same as the
+      // happy path above. Losing a paid-for generation is worse than
+      // showing a partial reply.
+      saveAssistantReply();
+    } finally {
+      sending = false;
+      syncSendState();
+    }
 
+    function saveAssistantReply(): void {
+      if (!text && images.length === 0) return;
       const assistantMessage: ChatMessage = {
         role: "assistant",
         content: text,
@@ -412,23 +522,14 @@ function initChat(): void {
       };
       appendMessage(threadId!, assistantMessage);
       renderMessage(assistantMessage, precedingUserMessage);
-    } catch (err) {
-      thinking.wrap.remove();
-      setStatus(err instanceof Error ? err.message : "Chat request failed", true);
-    } finally {
-      sending = false;
-      syncSendState();
+      if (whiteboardOn) renderWhiteboard();
     }
   }
 
   async function send(): Promise<void> {
     const { text, characterId, skillId, refImageId } = serializeComposer(input!);
     if (characterId) attachCharacterPhoto(characterId);
-    if (skillId) {
-      pinnedSkillId = skillId;
-      setThreadSkill(threadId!, skillId);
-      syncSkillChip();
-    }
+    if (skillId) pinSkill(skillId);
     const refImageUrl = refImageId ? loadMoodboard().find((m) => m.id === refImageId)?.url : undefined;
 
     if (!text && !attachedUrl) {
@@ -450,6 +551,7 @@ function initChat(): void {
     };
     const history = appendMessage(threadId!, userMessage);
     renderMessage(userMessage, null);
+    if (whiteboardOn) renderWhiteboard();
     clearComposer(input!);
     clearAttachment();
     setStatus("");
@@ -467,11 +569,7 @@ function initChat(): void {
 
   /* ---- Wire events ---- */
   const mentions = initMentions(input, popover, {
-    onSkillSelect: (skillId) => {
-      pinnedSkillId = skillId;
-      setThreadSkill(threadId!, skillId);
-      syncSkillChip();
-    },
+    onSkillSelect: (skillId) => pinSkill(skillId),
   });
   $("chatCharacterBtn")?.addEventListener("click", () => mentions.triggerFor("@"));
   $("chatSkillBtn")?.addEventListener("click", () => mentions.triggerFor("/"));
@@ -526,6 +624,7 @@ function initChat(): void {
     });
     empty!.hidden = messages.length > 0;
     if (hasResult) input!.dataset.placeholder = REFINE_PLACEHOLDER;
+    if (whiteboardOn) renderWhiteboard();
   }
 
   /**

@@ -18,6 +18,7 @@ interface Env {
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   OPENROUTER_API_KEY?: string;
+  OPENROUTER_MODEL?: string;
   /** Server-only PicX key used for authenticated, credit-metered generation. */
   PICX_API_KEY?: string;
 }
