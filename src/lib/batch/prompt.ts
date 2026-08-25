@@ -90,21 +90,16 @@ export interface PicxCallResult {
   error?: string;
 }
 
-/**
- * One PicX call, same endpoints and body shapes as generate-doodle.ts.
- * Never throws — a batch item's failure is data (an `error_code` on the row),
- * not an exception that should abort the sibling items running alongside it.
- */
-export async function callPicx(
-  platformKey: string,
+/** Endpoint and body for one PicX image call, shared by the sync and async paths. */
+function buildRequest(
   built: BuiltPrompt,
   images: { sourceUrl?: string | null; refUrl?: string | null },
-): Promise<PicxCallResult> {
+): { url: string; payload: Record<string, unknown> } {
   const usePhoto = built.requiresPhoto && Boolean(images.sourceUrl);
   const url = usePhoto
     ? "https://api.picxstudio.com/v1/images/edit"
     : "https://api.picxstudio.com/v1/images/generate";
-  const payload = usePhoto
+  const payload: Record<string, unknown> = usePhoto
     ? {
         model: "openai/gpt-image-2",
         instruction: built.prompt,
@@ -113,6 +108,24 @@ export async function callPicx(
         aspect_ratio: built.aspectRatio,
       }
     : { prompt: built.prompt, size: "1K", aspect_ratio: built.aspectRatio };
+  return { url, payload };
+}
+
+/**
+ * One PicX call, same endpoints and body shapes as generate-doodle.ts.
+ * Never throws — a batch item's failure is data (an `error_code` on the row),
+ * not an exception that should abort the sibling items running alongside it.
+ *
+ * This is the SYNCHRONOUS path: it waits out the whole render. Still used when
+ * no webhook secret is configured — see `submitPicxAsync` and the branch in
+ * run.ts for why that fallback exists.
+ */
+export async function callPicx(
+  platformKey: string,
+  built: BuiltPrompt,
+  images: { sourceUrl?: string | null; refUrl?: string | null },
+): Promise<PicxCallResult> {
+  const { url, payload } = buildRequest(built, images);
 
   try {
     const res = await fetch(url, {
@@ -127,5 +140,71 @@ export async function callPicx(
     return { ok: true, url: data.url };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Generation failed" };
+  }
+}
+
+export interface PicxSubmitResult {
+  ok: boolean;
+  /** PicX's generation id, from the 202 body. The webhook correlates on this. */
+  generationId?: string;
+  error?: string;
+}
+
+/**
+ * Submit a render and return as soon as PicX accepts it, without waiting for
+ * the image. PicX answers `202` and later POSTs the result to `callbackUrl`.
+ *
+ * This is what removes the eviction hazard documented at the top of run.ts: the
+ * old flow needed the isolate to survive every render inside `waitUntil`, and an
+ * evicted isolate silently stopped whatever had not finished. Submitting takes
+ * milliseconds, so the fan-out now completes long before eviction is plausible,
+ * and the results land as independent inbound requests that do not depend on any
+ * isolate still being alive.
+ *
+ * Requires `picx-ai`-era API behaviour (async images shipped 2026-08-25). An
+ * older deployment ignores the unknown `callback_url` and answers `200` with a
+ * finished image instead of `202`; that is detected here and reported as a
+ * failure rather than mistaken for a queued job, because silently treating a
+ * finished image as pending would strand the item until the sweep refunded it.
+ *
+ * Never throws, for the same reason as `callPicx`.
+ */
+export async function submitPicxAsync(
+  platformKey: string,
+  built: BuiltPrompt,
+  images: { sourceUrl?: string | null; refUrl?: string | null },
+  callbackUrl: string,
+): Promise<PicxSubmitResult> {
+  const { url, payload } = buildRequest(built, images);
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${platformKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, callback_url: callbackUrl }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      id?: string;
+      status?: string;
+      url?: string;
+      detail?: string;
+      message?: string;
+    };
+
+    if (!res.ok) {
+      return { ok: false, error: data.detail || data.message || `PicX API error: ${res.status}` };
+    }
+    if (res.status !== 202 || !data.id) {
+      // A 200 with a `url` means the deployment predates async images.
+      return {
+        ok: false,
+        error: data.url
+          ? "picx_async_unsupported"
+          : data.detail || data.message || "PicX accepted the request but returned no generation id",
+      };
+    }
+    return { ok: true, generationId: data.id };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Submit failed" };
   }
 }

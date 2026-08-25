@@ -1,8 +1,18 @@
 type Runtime = import("@astrojs/cloudflare").Runtime<Env>;
 type SecretLike = import("./lib/secrets").SecretLike;
+type AdminContext = import("./lib/auth/admin-guard").AdminContext;
 
 declare namespace App {
-  type Locals = Runtime;
+  interface Locals extends Runtime {
+    /**
+     * Set by src/middleware.ts on requests that already cleared the
+     * /admin or /api/admin platform-role check, so a route doesn't
+     * re-query a role the middleware just resolved. Undefined on every
+     * non-admin request. Never treat this as the authority — routes that
+     * need full 'admin' still call requireAdmin() themselves.
+     */
+    admin?: AdminContext;
+  }
 }
 
 interface Env {
@@ -31,4 +41,30 @@ interface Env {
   OPENROUTER_MODEL?: SecretLike;
   /** Server-only PicX key used for authenticated, credit-metered generation. */
   PICX_API_KEY?: SecretLike;
+  /**
+   * Signing secret for inbound PicX webhook deliveries (POST /api/webhooks/picx).
+   *
+   * This is the key-derived secret shown on the API key's detail view in the PicX
+   * developer console — NOT a `whsec_` from a registered webhook, because a
+   * per-request `callback_url` is signed with the derived one. It is not
+   * obtainable from any `/v1` endpoint, so it has to be copied from the console.
+   *
+   * Setting it is what switches batch generation from blocking on each render to
+   * submitting and being called back (see src/lib/batch/run.ts). While it is
+   * unset the receiver refuses every delivery with 503 and the batch pipeline
+   * keeps using the synchronous path, so an unconfigured deployment is degraded
+   * rather than broken.
+   */
+  PICX_WEBHOOK_SECRET?: SecretLike;
+  /**
+   * Recovery hatch for platform admin access. If migrations/
+   * 0008_seed_first_admin.sql matched zero rows (the account had not signed
+   * up yet when migrations ran), there is otherwise no way to create the
+   * first admin, because creating one requires already being one.
+   *
+   * Only ever *raises* a role, never lowers one, and logs a warning on every
+   * use. Unset it once the account has been promoted properly through
+   * PATCH /api/admin/users/:id/role.
+   */
+  ADMIN_BOOTSTRAP_EMAIL?: SecretLike;
 }

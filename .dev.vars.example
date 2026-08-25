@@ -31,3 +31,13 @@ GOOGLE_CLIENT_SECRET=replace-with-your-google-oauth-client-secret
 
 # Server-owned PicX key used for authenticated, credit-metered generation and uploads.
 PICX_API_KEY=replace-with-a-picx-key
+# Signing secret for inbound PicX webhook deliveries. Copy it from the API key's
+# detail view in the PicX developer console — it is the key-derived secret used to
+# sign per-request `callback_url` deliveries, and is not returned by any API.
+#
+# Optional. While unset, batch generation keeps blocking on each render (the
+# previous behaviour) and POST /api/webhooks/picx refuses every delivery with 503.
+# Local `astro dev` cannot receive real deliveries anyway: PicX rejects a callback
+# host it cannot resolve publicly, so localhost is not a usable target. Use
+# `cloudflared tunnel --url http://localhost:4321` if you need to exercise it.
+PICX_WEBHOOK_SECRET=

@@ -163,7 +163,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
   const ctx = (context.locals as { runtime?: { env?: Env; ctx?: ExecutionContext } })?.runtime;
   if (ctx?.env && ctx.ctx) {
-    ctx.ctx.waitUntil(runBatch(ctx.env, jobId));
+    ctx.ctx.waitUntil(runBatch(ctx.env, jobId, new URL(context.request.url).origin));
   }
   // No `else`: if the runtime's ExecutionContext is somehow unavailable (it
   // always is on Cloudflare, astro dev included via the platform proxy),

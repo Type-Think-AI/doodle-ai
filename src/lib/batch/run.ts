@@ -28,13 +28,17 @@ import { readSecret } from "../secrets";
 import { asset, batchItem, batchJob, generation } from "../../db/schema/product";
 import { refund } from "../credits";
 import { creditCostForSkill } from "../credits/costs";
-import { buildBatchPrompt, callPicx } from "./prompt";
+import { buildBatchPrompt, callPicx, submitPicxAsync } from "./prompt";
 
 /**
  * How many PicX calls are in flight at once. The Worker CPU limit is about
  * CPU time, not wall time, and these items are almost entirely spent waiting
  * on `fetch` — so 12 variants at concurrency 4 is ~3 rounds of network wait,
  * comfortably inside the limit while staying polite to the upstream API.
+ *
+ * On the async path each call is a submit rather than a render, so the rounds
+ * are milliseconds instead of tens of seconds; the cap stays only to avoid
+ * hammering the upstream with a burst.
  */
 const CONCURRENCY = 4;
 
@@ -50,7 +54,7 @@ export function batchItemRefundKey(jobId: string, idx: number): string {
  * same job concurrently: item claiming is atomic (see `claimItem`), and both
  * the credit refunds and the job status flip are idempotent.
  */
-export async function runBatch(env: Env, jobId: string): Promise<void> {
+export async function runBatch(env: Env, jobId: string, publicOrigin?: string): Promise<void> {
   const db: Db = drizzle(env.DB, { schema });
 
   const jobRows = await db.select().from(batchJob).where(eq(batchJob.id, jobId));
@@ -75,14 +79,36 @@ export async function runBatch(env: Env, jobId: string): Promise<void> {
 
   const platformKey = await readSecret(env.PICX_API_KEY, "PICX_API_KEY");
 
+  // Async delivery is used only when a webhook secret AND a public https origin
+  // are both available, because the receiver refuses unverified deliveries (see
+  // src/pages/api/webhooks/picx.ts) and PicX's SSRF guard rejects a callback host
+  // it cannot resolve publicly. Absent either, this falls back to the original
+  // block-on-the-render path — so provisioning the secret is what switches the
+  // batch pipeline over, and a missing secret degrades to the previous behaviour
+  // instead of failing every item.
+  //
+  // The origin comes from the submitting request rather than config, so staging
+  // and production each call themselves back without a per-environment variable.
+  // It is absent when a sweep resumes a job from cron (no request), which simply
+  // means a resumed job runs synchronously.
+  const webhookSecret = await readSecret(env.PICX_WEBHOOK_SECRET, "PICX_WEBHOOK_SECRET");
+  const origin = (publicOrigin ?? "").trim().replace(/\/$/, "");
+  const callbackUrl =
+    webhookSecret && origin.startsWith("https://") ? `${origin}/api/webhooks/picx` : undefined;
+
   for (let i = 0; i < queued.length; i += CONCURRENCY) {
     const chunk = queued.slice(i, i + CONCURRENCY);
     // Chunked rather than a rolling window: one fewer moving part, and the
     // items are near-identical in cost so a rolling window would buy little.
-    await Promise.all(chunk.map((item) => processItem(db, job, item, platformKey)));
+    await Promise.all(chunk.map((item) => processItem(db, job, item, platformKey, callbackUrl)));
   }
 
-  await finalizeJob(db, jobId);
+  // Only the synchronous path can finalize here. On the async path every item is
+  // still 'running' — the webhook completes them and calls finalizeJob itself,
+  // and the cron sweep finalizes a job whose deliveries never arrived.
+  if (!callbackUrl) {
+    await finalizeJob(db, jobId);
+  }
 }
 
 /**
@@ -109,6 +135,7 @@ async function processItem(
   job: typeof batchJob.$inferSelect,
   item: typeof batchItem.$inferSelect,
   platformKey: string | undefined,
+  callbackUrl: string | undefined,
 ): Promise<void> {
   if (!(await claimItem(db, item.id))) return;
 
@@ -128,10 +155,31 @@ async function processItem(
     return;
   }
 
-  const result = await callPicx(platformKey, built, {
-    sourceUrl: job.sourceAssetUrl,
-    refUrl: job.refAssetUrl,
-  });
+  const images = { sourceUrl: job.sourceAssetUrl, refUrl: job.refAssetUrl };
+
+  if (callbackUrl) {
+    // Async: hand the render to PicX and stop. The item stays 'running' and
+    // src/pages/api/webhooks/picx.ts completes it when the result is delivered.
+    //
+    // The prompt and PicX's generation id are recorded BEFORE the item can be
+    // completed, because the webhook needs both: the id is the only correlation
+    // key, and the prompt cannot be reconstructed later (the builders randomize).
+    // Writing them after the submit rather than before is safe — a delivery
+    // cannot arrive before its own submit returns — while writing them first
+    // would leave a generation id on the row for a call that never happened.
+    const submitted = await submitPicxAsync(platformKey, built, images, callbackUrl);
+    if (!submitted.ok || !submitted.generationId) {
+      await failItem(db, job, item, cost, submitted.error ?? "submit_failed");
+      return;
+    }
+    await db
+      .update(batchItem)
+      .set({ picxGenerationId: submitted.generationId, prompt: built.prompt })
+      .where(and(eq(batchItem.id, item.id), eq(batchItem.status, "running")));
+    return;
+  }
+
+  const result = await callPicx(platformKey, built, images);
 
   if (!result.ok || !result.url) {
     await failItem(db, job, item, cost, result.error ?? "generation_failed");

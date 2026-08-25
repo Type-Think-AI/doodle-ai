@@ -46,6 +46,11 @@
       "secret_name": "PICX_API_KEY"
     },
     {
+      "binding": "PICX_WEBHOOK_SECRET",
+      "store_id": "801d9480d51848d69033ff869398bcbe",
+      "secret_name": "PICX_WEBHOOK_SECRET"
+    },
+    {
       "binding": "GOOGLE_CLIENT_ID",
       "store_id": "801d9480d51848d69033ff869398bcbe",
       "secret_name": "GOOGLE_CLIENT_ID"
@@ -103,6 +108,11 @@
           "binding": "PICX_API_KEY",
           "store_id": "801d9480d51848d69033ff869398bcbe",
           "secret_name": "PICX_API_KEY"
+        },
+        {
+          "binding": "PICX_WEBHOOK_SECRET",
+          "store_id": "801d9480d51848d69033ff869398bcbe",
+          "secret_name": "PICX_WEBHOOK_SECRET"
         },
         {
           "binding": "GOOGLE_CLIENT_ID",

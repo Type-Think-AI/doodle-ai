@@ -155,7 +155,7 @@ export const moodboardItem = sqliteTable(
   ],
 );
 
-/** Freeform feedback submitted via the feedback dialog — read manually, no admin UI yet. */
+/** Freeform feedback submitted via the feedback dialog — triaged in /admin/feedback. */
 export const feedback = sqliteTable(
   "feedback",
   {
@@ -166,10 +166,49 @@ export const feedback = sqliteTable(
     /** Nullable forever — see the file header. Lets support triage per account. */
     organizationId: text("organization_id").references(() => organization.id, { onDelete: "set null" }),
     text: text("text").notNull(),
+    /**
+     * Triage state, driven by PATCH /api/admin/feedback/:id.
+     * 'new' | 'reviewing' | 'resolved' | 'wont_fix'
+     *
+     * Defaults to 'new' so every historical row (written before this column
+     * existed) reads as untriaged rather than NULL — which is correct: none
+     * of them have been triaged, because there was no UI to do it with.
+     */
+    status: text("status").notNull().default("new"),
+    /** Set when status last moved away from 'new'. Null while untriaged. */
+    triagedBy: text("triaged_by").references(() => user.id, { onDelete: "set null" }),
+    triagedAt: integer("triaged_at", { mode: "timestamp_ms" }),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   },
-  (t) => [index("feedback_user_created_idx").on(t.userId, t.createdAt)],
+  (t) => [
+    index("feedback_user_created_idx").on(t.userId, t.createdAt),
+    index("feedback_status_created_idx").on(t.status, t.createdAt),
+  ],
 );
+
+/**
+ * Admin-controlled presentation state for a skill.
+ *
+ * Skills themselves are authored as `SKILL.md` packages and bundled at build
+ * time (see src/lib/skill-loader.ts) — that stays the source of truth for
+ * what a skill *is*. This table holds only the parts an admin flips at
+ * runtime without a redeploy: whether it's featured, and whether it's
+ * currently accepting runs.
+ *
+ * A skill with no row here is treated as `state: 'live', featured: false`,
+ * so this table starts empty and only grows when someone actually changes
+ * something. `skillId` matches a GENERATION_MODES id.
+ */
+export const skillState = sqliteTable("skill_state", {
+  skillId: text("skill_id").primaryKey(),
+  /** 'live' | 'paused' — paused skills are hidden from the composer and refuse new runs. */
+  state: text("state").notNull().default("live"),
+  featured: integer("featured", { mode: "boolean" }).notNull().default(false),
+  /** Shown in the admin UI as the reason a skill is paused. */
+  note: text("note"),
+  updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
 
 /**
  * A named, reusable reference photo — one photo per character, as on the
@@ -343,10 +382,28 @@ export const batchItem = sqliteTable(
      */
     status: text("status").notNull().default("queued"),
     generationId: text("generation_id").references(() => generation.id, { onDelete: "set null" }),
+    /**
+     * PicX's generation id, from the 202 accepted body. Set only on the async
+     * path; this is what the webhook receiver correlates a delivery on, because
+     * the delivery payload names the work in PicX's id namespace rather than
+     * ours. See migrations/0010 for why correlation is not done on the callback
+     * URL path instead.
+     */
+    picxGenerationId: text("picx_generation_id"),
+    /**
+     * The prompt actually sent to PicX, captured at submit time on the async
+     * path. The webhook writes the `generation` row and cannot reconstruct this:
+     * the prompt builders randomize per call, so rebuilding would record text
+     * that never produced the image. See migrations/0010.
+     */
+    prompt: text("prompt"),
     outputUrl: text("output_url"),
     errorCode: text("error_code"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     completedAt: integer("completed_at", { mode: "timestamp_ms" }),
   },
-  (t) => [index("batch_item_job_idx_idx").on(t.batchJobId, t.idx)],
+  (t) => [
+    index("batch_item_job_idx_idx").on(t.batchJobId, t.idx),
+    index("batch_item_picx_generation_id_idx").on(t.picxGenerationId),
+  ],
 );
