@@ -1,0 +1,169 @@
+---
+// "Give your team a name" — opened via `doodleai:open-team-name`
+// (dispatched by AccountMenu's "Create a team" row). Structure mirrors
+// FeedbackDialog.astro: native <dialog>, one close button, one form.
+---
+
+<dialog id="teamNameDialog" class="team-dialog" aria-labelledby="teamNameDialogTitle">
+	<button type="button" class="team-dialog-close" id="teamNameDialogClose" aria-label="Close">
+		<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+	</button>
+
+	<div class="team-dialog-body" id="teamNameDialogBody">
+		<h2 id="teamNameDialogTitle">Give your team a name</h2>
+		<p class="team-dialog-sub">Anyone you invite will see this name.</p>
+
+		<input type="text" id="teamNameDialogInput" class="team-dialog-input" placeholder="Acme Studio" maxlength="60" autocomplete="off" />
+
+		<label class="team-dialog-checkbox" id="teamNameDialogTransferRow" hidden>
+			<input type="checkbox" id="teamNameDialogTransfer" checked />
+			<span id="teamNameDialogTransferLabel">Move my credits to this team</span>
+		</label>
+
+		<p class="team-dialog-error" id="teamNameDialogError" hidden></p>
+
+		<button type="button" class="team-dialog-submit" id="teamNameDialogSubmit">Create team</button>
+
+		<button type="button" class="team-dialog-link" id="teamNameDialogJoinInstead">or join an existing team</button>
+	</div>
+</dialog>
+
+<script src="../../scripts/app/team-name-dialog.ts"></script>
+
+<style is:global>
+	/* Shared by TeamNameDialog and JoinTeamDialog / InviteTeamDialog — one
+	   stylesheet for the three team dialogs rather than three near-identical
+	   copies, same reasoning as FeedbackDialog's scoped block but pulled
+	   global here since JoinTeamDialog and InviteTeamDialog reuse these
+	   classes verbatim rather than duplicating the CSS. */
+	.team-dialog {
+		padding: 0;
+		border: 1px solid var(--border2);
+		border-radius: 16px;
+		width: min(420px, calc(100vw - 32px));
+		background: var(--surface2);
+		color: var(--text);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+	}
+	.team-dialog::backdrop { background: rgba(6, 6, 6, 0.6); backdrop-filter: blur(3px); }
+	.team-dialog[open] { display: block; margin: auto; }
+
+	.team-dialog-close {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+		width: 30px;
+		height: 30px;
+		border: 1px solid var(--border3);
+		border-radius: 999px;
+		background: var(--surface);
+		color: var(--text-dim);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+	.team-dialog-close:hover { color: var(--text); }
+	.team-dialog-close:focus-visible,
+	.team-dialog-submit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+	.team-dialog-body { padding: 26px 24px 24px; }
+	.team-dialog-body h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+	.team-dialog-sub { margin: 6px 0 16px; font-size: 0.85rem; line-height: 1.4; color: var(--text-dim); }
+
+	.team-dialog-input {
+		width: 100%;
+		padding: 10px 12px;
+		border: 1px solid var(--border2);
+		border-radius: 10px;
+		background: var(--bg);
+		color: var(--text);
+		font-family: inherit;
+		font-size: 0.9rem;
+	}
+	.team-dialog-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+	.team-dialog-checkbox {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 12px;
+		font-size: 0.83rem;
+		color: var(--text-dim);
+		cursor: pointer;
+	}
+	.team-dialog-checkbox input { accent-color: var(--accent); }
+
+	.team-dialog-error { font-size: 0.78rem; line-height: 1.4; color: #ff7b72; margin: 10px 0 0; }
+
+	.team-dialog-submit {
+		display: block;
+		width: 100%;
+		margin-top: 16px;
+		min-height: 42px;
+		border: 1px solid var(--border3);
+		border-radius: 10px;
+		background: var(--accent);
+		color: #1a1400;
+		font-family: inherit;
+		font-size: 0.88rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.team-dialog-submit:hover { filter: brightness(1.05); }
+	.team-dialog-submit:disabled { opacity: 0.6; cursor: default; }
+
+	.team-dialog-link {
+		display: block;
+		width: 100%;
+		margin-top: 10px;
+		padding: 4px;
+		border: 0;
+		background: none;
+		color: var(--text-dimmer);
+		font-family: inherit;
+		font-size: 0.8rem;
+		text-align: center;
+		cursor: pointer;
+		text-decoration: underline;
+		text-decoration-color: transparent;
+	}
+	.team-dialog-link:hover { color: var(--text-dim); text-decoration-color: currentColor; }
+
+	.team-dialog-note {
+		margin-top: 10px;
+		font-size: 0.76rem;
+		line-height: 1.4;
+		color: var(--text-dimmer);
+	}
+
+	.team-dialog-copy-row {
+		display: flex;
+		gap: 8px;
+		margin-top: 12px;
+	}
+	.team-dialog-copy-row input {
+		flex: 1;
+		min-width: 0;
+		padding: 9px 11px;
+		border: 1px solid var(--border2);
+		border-radius: 9px;
+		background: var(--bg);
+		color: var(--text-dim);
+		font-family: inherit;
+		font-size: 0.82rem;
+	}
+	.team-dialog-copy-btn {
+		flex: 0 0 auto;
+		padding: 0 14px;
+		border: 1px solid var(--border3);
+		border-radius: 9px;
+		background: var(--surface);
+		color: var(--text);
+		font-family: inherit;
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.team-dialog-copy-btn:hover { background: var(--hover); }
+</style>

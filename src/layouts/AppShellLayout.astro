@@ -5,12 +5,17 @@ import MobileNav from '../components/mobile/MobileNav.astro';
 import AuthDialog from '../components/app/AuthDialog.astro';
 import FeedbackDialog from '../components/app/FeedbackDialog.astro';
 import InstallPrompt from '../components/app/InstallPrompt.astro';
+import AccountMenu from '../components/app/AccountMenu.astro';
+import TeamNameDialog from '../components/app/TeamNameDialog.astro';
+import JoinTeamDialog from '../components/app/JoinTeamDialog.astro';
+import InviteTeamDialog from '../components/app/InviteTeamDialog.astro';
+import Toast from '../components/app/Toast.astro';
 import '../styles/app-shell.css';
 
 interface Props {
   title: string;
   description?: string;
-  active: 'chat' | 'skills' | 'moodboards' | 'characters' | 'settings';
+  active: 'chat' | 'skills' | 'moodboards' | 'characters' | 'projects' | 'team' | 'settings';
 }
 const { title, description, active } = Astro.props;
 ---
@@ -30,6 +35,11 @@ const { title, description, active } = Astro.props;
   <InstallPrompt />
   <AuthDialog />
   <FeedbackDialog />
+  <AccountMenu />
+  <TeamNameDialog />
+  <JoinTeamDialog />
+  <InviteTeamDialog />
+  <Toast />
 </AppLayout>
 
 <script src="../scripts/app/install-prompt.ts"></script>

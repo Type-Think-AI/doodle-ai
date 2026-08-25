@@ -196,21 +196,17 @@ async function renderAuthSlot(): Promise<void> {
     else avatar.textContent = displayName.charAt(0).toUpperCase();
   }
 
-  const openProfile = (): void => {
-    window.location.href = "/settings?tab=general#profile";
-  };
+  // Clicking this row opens the team switcher (account-menu.ts binds its own
+  // click listener on #sidebarAuthUser) rather than navigating straight to
+  // /settings — the profile link moved into that menu ("Your profile").
   userBox.classList.add("sidebar-auth-user-clickable");
-  userBox.setAttribute("role", "link");
+  userBox.setAttribute("role", "button");
   userBox.setAttribute("tabindex", "0");
-  userBox.setAttribute("aria-label", "Open your profile settings");
-  userBox.addEventListener("click", (event) => {
-    if ((event.target as HTMLElement).closest("#sidebarSignOut")) return;
-    openProfile();
-  });
+  userBox.setAttribute("aria-label", "Open team switcher");
   userBox.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      openProfile();
+      userBox.click();
     }
   });
 
@@ -249,9 +245,19 @@ async function renderCreditsSlot(): Promise<void> {
   try {
     const res = await fetch("/api/v1/me", { credentials: "include" });
     if (!res.ok) return;
-    const payload = (await res.json()) as { credits?: { balance?: unknown } };
+    const payload = (await res.json()) as { credits?: { balance?: unknown }; org?: { name?: string; isPersonal?: boolean } };
     const balance = payload.credits?.balance;
     if (typeof balance === "number") setCreditsBalance(balanceEl, balance);
+
+    const orgEl = document.getElementById("sidebarAuthOrg");
+    // "Just you" for the personal workspace rather than its auto-generated
+    // "<name>'s Team" label — that label exists so the switcher has
+    // something to show, but on the sidebar's own compact row it would read
+    // as if the user had already created a team.
+    if (orgEl && payload.org?.name) {
+      orgEl.textContent = payload.org.isPersonal ? "Just you" : payload.org.name;
+      orgEl.hidden = false;
+    }
   } catch {
     // Balance just stays showing "…" — not worth a visible error for a
     // secondary readout the user can always get from /settings?tab=billing.

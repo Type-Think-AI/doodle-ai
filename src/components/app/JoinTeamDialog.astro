@@ -1,0 +1,23 @@
+---
+// "Add another team" — paste an invite link or bare token. Reuses the
+// .team-dialog-* classes from TeamNameDialog.astro's global stylesheet.
+---
+
+<dialog id="joinTeamDialog" class="team-dialog" aria-labelledby="joinTeamDialogTitle">
+	<button type="button" class="team-dialog-close" id="joinTeamDialogClose" aria-label="Close">
+		<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+	</button>
+
+	<div class="team-dialog-body" id="joinTeamDialogBody">
+		<h2 id="joinTeamDialogTitle">Join a team</h2>
+		<p class="team-dialog-sub">Paste the invite link a teammate sent you.</p>
+
+		<input type="text" id="joinTeamDialogInput" class="team-dialog-input" placeholder="app.doodleai.art/join/…" autocomplete="off" />
+
+		<p class="team-dialog-error" id="joinTeamDialogError" hidden></p>
+
+		<button type="button" class="team-dialog-submit" id="joinTeamDialogSubmit">Join team</button>
+	</div>
+</dialog>
+
+<script src="../../scripts/app/join-team-dialog.ts"></script>

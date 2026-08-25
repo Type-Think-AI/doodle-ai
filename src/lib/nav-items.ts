@@ -4,7 +4,7 @@
    (MobileNav had hand-copied icons and was missing the Characters tab and
    the "New chat" action entirely). */
 
-export type NavKey = "chat" | "characters" | "moodboards" | "skills" | "settings";
+export type NavKey = "chat" | "characters" | "moodboards" | "skills" | "projects" | "team" | "settings";
 
 export interface NavItem {
   key: NavKey;
@@ -13,6 +13,8 @@ export interface NavItem {
   label: string;
   /** Shorter label for the bottom tab bar, where five items share the width. */
   shortLabel: string;
+  /** Hide from the compact mobile tab bar but keep in the desktop rail. */
+  mobile?: boolean;
   /** Inline SVG path/shape markup, viewBox 0 0 24 24. */
   icon: string;
 }
@@ -46,6 +48,22 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Skills",
     shortLabel: "Skills",
     icon: '<circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="16" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 13.6 13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  },
+  {
+    key: "projects",
+    href: "/projects",
+    label: "Projects",
+    shortLabel: "Projects",
+    mobile: false,
+    icon: '<rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 5V3.5h8V5M3.5 10h17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  },
+  {
+    key: "team",
+    href: "/team",
+    label: "Team",
+    shortLabel: "Team",
+    mobile: false,
+    icon: '<circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 20c.8-3.5 3-5.4 5.5-5.4s4.7 1.9 5.5 5.4M14 15.2c2.8-.2 5 1.4 6 4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   {
     key: "settings",

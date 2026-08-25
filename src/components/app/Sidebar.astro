@@ -59,6 +59,7 @@ const { active } = Astro.props;
       <div class="sidebar-auth-user" id="sidebarAuthUser" hidden>
         <span class="sidebar-auth-avatar" id="sidebarAuthAvatar" aria-hidden="true"></span>
         <span class="sidebar-auth-meta sidebar-label">
+          <span class="sidebar-auth-org" id="sidebarAuthOrg" hidden></span>
           <span class="sidebar-auth-name-row">
             <span class="sidebar-auth-name" id="sidebarAuthName"></span>
             <!-- Was a static "Free" pill; now the live balance, in the same
@@ -341,6 +342,17 @@ const { active } = Astro.props;
     gap: 1px;
     min-width: 0;
   }
+  .sidebar-auth-org {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sidebar.collapsed .sidebar-auth-org { display: none; }
   .sidebar-auth-name-row {
     display: flex;
     align-items: center;

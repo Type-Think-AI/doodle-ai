@@ -1,0 +1,40 @@
+---
+// Mounted once in AppShellLayout.astro. Any script fires
+// `window.dispatchEvent(new CustomEvent("doodleai:toast", { detail: { text } }))`
+// to show a message — same decoupled-via-custom-event pattern as
+// doodleai:open-auth / doodleai:open-feedback, so a dialog deep in the tree
+// never needs to import this module directly.
+---
+
+<div id="toastHost" class="toast-host" aria-live="polite"></div>
+
+<script src="../../scripts/app/toast.ts"></script>
+
+<style is:global>
+  /* is:global: every .toast node is created client-side in toast.ts. */
+  .toast-host {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    pointer-events: none;
+  }
+  .toast {
+    padding: 9px 16px;
+    border: 1px solid var(--border3);
+    border-radius: 999px;
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .toast[data-visible="true"] { opacity: 1; transform: translateY(0); }
+</style>

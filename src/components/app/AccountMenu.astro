@@ -1,0 +1,140 @@
+---
+// The team switcher — opens from the sidebar's auth-user row instead of
+// navigating straight to /settings (sidebar.ts wires the click). Uses the
+// native Popover API (popover="auto") rather than a <dialog>: this needs
+// light-dismiss-on-outside-click and to sit anchored near its trigger, which
+// <dialog> doesn't give you without reimplementing outside-click detection —
+// popover="auto" does both natively (Esc + light-dismiss) for free, the same
+// reason AuthDialog/FeedbackDialog use <dialog> for their own different
+// need (a modal that blocks the page).
+//
+// Positioned from the trigger's getBoundingClientRect() in account-menu.ts
+// rather than CSS anchor positioning (anchor-name/position-anchor), which is
+// Chromium-only as of this writing and would leave Safari/Firefox users with
+// an unpositioned popover.
+---
+
+<div id="accountMenu" popover="auto" class="account-menu">
+  <div class="account-menu-section" id="accountMenuTeams">
+    <div class="account-menu-label">Teams</div>
+    <div class="account-menu-teams-list" id="accountMenuTeamsList">
+      <div class="account-menu-loading">Loading…</div>
+    </div>
+  </div>
+
+  <div class="account-menu-divider"></div>
+
+  <button type="button" class="account-menu-item" id="accountMenuCreateTeam">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <span>Create a team</span>
+  </button>
+  <button type="button" class="account-menu-item" id="accountMenuJoinTeam">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Join a team</span>
+  </button>
+
+  <div class="account-menu-divider"></div>
+
+  <a href="/team/settings" class="account-menu-item" id="accountMenuTeamSettings">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z" stroke="currentColor" stroke-width="1.7"/></svg>
+    <span>Team settings</span>
+  </a>
+  <a href="/settings?tab=general#profile" class="account-menu-item">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.6"/><path d="M5 20c1.3-3.8 4.3-5.8 7-5.8s5.7 2 7 5.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <span>Your profile</span>
+  </a>
+</div>
+
+<script src="../../scripts/app/account-menu.ts"></script>
+
+<style is:global>
+  /* is:global, not scoped: every row inside .account-menu-teams-list is
+     built client-side in account-menu.ts via document.createElement(), same
+     reason Sidebar.astro's :global(.sidebar-chat-link) block exists — a
+     scoped selector needs a data-astro-cid-* attribute Astro can only stamp
+     onto server-rendered nodes. */
+  .account-menu {
+    position: fixed;
+    width: 260px;
+    max-height: min(70vh, 460px);
+    overflow: auto;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    background: var(--surface2);
+    color: var(--text);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.4);
+    inset: unset;
+  }
+  /* popover="auto" elements are `display: none` until shown; the UA adds
+     `:popover-open { display: block }` on its own, no author override
+     needed here the way <dialog>'s [open] state needs one. */
+
+  .account-menu-label {
+    padding: 4px 8px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+  }
+  .account-menu-loading { padding: 8px; font-size: 12.5px; color: var(--text-dimmer); }
+
+  .account-menu-teams-list { display: flex; flex-direction: column; gap: 2px; }
+  .account-menu-team {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .account-menu-team:hover { background: var(--hover); }
+  .account-menu-team[data-active="true"] { background: var(--hover); }
+  .account-menu-team-avatar {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: var(--accent);
+    color: var(--send-fg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .account-menu-team-meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 0; }
+  .account-menu-team-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .account-menu-team-sub { font-size: 11px; color: var(--text-dimmer); }
+  .account-menu-team-check { flex: 0 0 auto; color: var(--accent); }
+
+  .account-menu-divider { height: 1px; margin: 6px 4px; background: var(--border2); }
+
+  .account-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 8px 8px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .account-menu-item:hover { background: var(--hover); color: var(--text); }
+  .account-menu-item svg { flex: 0 0 auto; }
+</style>

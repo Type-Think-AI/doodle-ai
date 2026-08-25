@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import AppLayout from '../../layouts/AppLayout.astro';
+const { token } = Astro.params;
+---
+
+<AppLayout title="Client review — Doodle AI" description="Shared Doodle AI client review." noindex>
+  <main class="share-page" id="sharePage" data-token={token}><header class="share-header"><a href="/" class="share-brand"><span>〰</span>Doodle AI</a><span class="share-label">Client review</span></header><section class="share-content"><div><span class="team-kicker" id="shareOrg">Shared workspace</span><h1 id="shareTitle">Loading review…</h1><p id="shareDescription">Checking the link.</p></div><div class="share-grid" id="shareGrid"></div><p class="share-error" id="shareError" hidden></p></section></main>
+</AppLayout>
+
+<script src="../../scripts/app/share-page.ts"></script>
+
+<style>
+  .share-page{min-height:100dvh;background:var(--bg);color:var(--text)}.share-header{display:flex;justify-content:space-between;align-items:center;padding:24px 32px;border-bottom:1px solid var(--border)}.share-brand{display:flex;align-items:center;gap:8px;font-weight:650}.share-brand span{color:var(--accent);font-size:25px}.share-label{color:var(--text-dimmer);font-size:11px}.share-content{max-width:1180px;margin:0 auto;padding:56px 44px 80px}.team-kicker{display:block;color:var(--accent);font-size:10px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}.share-content h1{font-size:clamp(30px,5vw,50px);letter-spacing:-.06em}.share-content p{margin-top:9px;color:var(--text-dim);font-size:13px}.share-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:38px}.share-asset{overflow:hidden;border:1px solid var(--border);border-radius:15px;background:var(--card)}.share-asset img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}.share-asset figcaption{padding:10px;color:var(--text-dim);font-size:11px}.share-error{color:#ff8b80!important}@media(max-width:760px){.share-header{padding:20px}.share-content{padding:36px 20px 60px}.share-grid{grid-template-columns:repeat(2,1fr)}}
+</style>

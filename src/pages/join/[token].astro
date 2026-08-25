@@ -1,0 +1,20 @@
+---
+export const prerender = false;
+import AppLayout from '../../layouts/AppLayout.astro';
+import AuthDialog from '../../components/app/AuthDialog.astro';
+const { token } = Astro.params;
+---
+
+<AppLayout title="Join a team — Doodle AI" description="Join a Doodle AI production workspace." noindex>
+  <main class="join-page" id="joinPage" data-token={token}>
+    <a href="/" class="join-brand"><span class="join-mark">〰</span> Doodle AI</a>
+    <section class="join-card"><span class="team-kicker">Team invitation</span><div class="join-avatar" id="joinAvatar">?</div><h1 id="joinTitle">Checking your invite…</h1><p id="joinDescription">One moment.</p><p id="joinError" class="join-error" hidden></p><button type="button" class="join-button" id="joinAction" disabled>Continue</button><a href="/" class="join-cancel">Back to Doodle AI</a></section>
+  </main>
+  <AuthDialog />
+</AppLayout>
+
+<script src="../../scripts/app/join-page.ts"></script>
+
+<style>
+  .join-page{min-height:100dvh;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--text)}.join-brand{position:fixed;top:24px;left:28px;display:flex;align-items:center;gap:8px;font-weight:650}.join-mark{color:var(--accent);font-size:26px;line-height:1}.join-card{width:min(420px,calc(100vw - 36px));padding:34px 30px;text-align:center;border:1px solid var(--border);border-radius:22px;background:var(--card);box-shadow:0 18px 60px rgba(0,0,0,.25)}.team-kicker{display:block;color:var(--accent);font-size:10px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;margin-bottom:22px}.join-avatar{width:58px;height:58px;display:grid;place-items:center;margin:0 auto 17px;border-radius:17px;background:var(--accent);color:var(--send-fg);font-size:24px;font-weight:750}.join-card h1{font-size:25px;letter-spacing:-.05em}.join-card p{margin-top:10px;color:var(--text-dim);font-size:13px;line-height:1.5}.join-error{color:#ff8b80!important}.join-button{width:100%;min-height:43px;margin-top:22px;border:1px solid var(--accent);border-radius:10px;background:var(--accent);color:var(--send-fg);font:inherit;font-size:13px;font-weight:700;cursor:pointer}.join-button:disabled{opacity:.55;cursor:default}.join-cancel{display:block;margin-top:15px;color:var(--text-dimmer);font-size:11px}.join-cancel:hover{color:var(--text)}
+</style>

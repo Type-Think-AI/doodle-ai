@@ -1,0 +1,31 @@
+---
+// Shared invite dialog. It creates a targeted invitation record and returns
+// a copyable /join/i-… link because email delivery is intentionally not
+// configured yet.
+---
+
+<dialog id="inviteTeamDialog" class="team-dialog" aria-labelledby="inviteTeamDialogTitle">
+  <button type="button" class="team-dialog-close" id="inviteTeamDialogClose" aria-label="Close">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  </button>
+  <div class="team-dialog-body">
+    <h2 id="inviteTeamDialogTitle">Invite your teammates</h2>
+    <p class="team-dialog-sub">Choose a role, then copy the link and send it yourself.</p>
+    <label class="team-dialog-field"><span>Email address</span><input id="inviteTeamEmail" type="email" placeholder="teammate@studio.com" autocomplete="email" /></label>
+    <label class="team-dialog-field"><span>Role</span><select id="inviteTeamRole"><option value="producer">Producer</option><option value="artist" selected>Artist</option><option value="reviewer">Reviewer</option><option value="client">Client</option></select></label>
+    <p class="team-dialog-error" id="inviteTeamError" hidden></p>
+    <button type="button" class="team-dialog-submit" id="inviteTeamSubmit">Create invite link</button>
+    <div id="inviteTeamResult" hidden>
+      <p class="team-dialog-note">Email delivery isn't live yet — copy this link and send it yourself.</p>
+      <div class="team-dialog-copy-row"><input id="inviteTeamLink" readonly /><button type="button" class="team-dialog-copy-btn" id="inviteTeamCopy">Copy</button></div>
+    </div>
+  </div>
+</dialog>
+
+<script src="../../scripts/app/invite-team-dialog.ts"></script>
+
+<style is:global>
+  .team-dialog-field { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; color: var(--text-dim); font-size: 12px; }
+  .team-dialog-field input, .team-dialog-field select { width: 100%; min-height: 40px; padding: 0 11px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; }
+  .team-dialog-field input:focus, .team-dialog-field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+</style>

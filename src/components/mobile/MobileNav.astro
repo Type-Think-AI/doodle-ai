@@ -10,7 +10,7 @@ const { active } = Astro.props;
    and more cramped than 4 on narrow phones. It's still reachable on mobile
    via the composer's "mention a character" button; the desktop sidebar
    (src/components/app/Sidebar.astro) keeps the full NAV_ITEMS list. */
-const items = [NEW_CHAT_ITEM, ...NAV_ITEMS.filter((item) => item.key !== "characters")];
+const items = [NEW_CHAT_ITEM, ...NAV_ITEMS.filter((item) => item.key !== "characters" && item.mobile !== false)];
 ---
 
 <nav class="mobile-nav" id="mobileNav" aria-label="Main">

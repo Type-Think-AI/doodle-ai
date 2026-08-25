@@ -8,6 +8,10 @@ export function GET(context: APIContext) {
 	const body = `User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /team
+Disallow: /projects
+Disallow: /join/
+Disallow: /s/
 
 Sitemap: ${new URL('sitemap.xml', site).href}
 `;
