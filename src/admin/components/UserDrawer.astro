@@ -12,6 +12,7 @@ const { detail, canMutate } = Astro.props;
 const isSelf = detail.id === Astro.locals.admin!.user.id;
 const closeUrl = new URL(Astro.url);
 closeUrl.searchParams.delete('user');
+closeUrl.searchParams.delete('credits');
 ---
 
 <aside class="drawer" aria-label={`Details for ${detail.name}`}>
@@ -37,22 +38,24 @@ closeUrl.searchParams.delete('user');
 		<div><strong>{detail.topSkill || '—'}</strong><span>Top skill</span></div>
 	</div>
 
-	<!-- CREDIT GRANT SECTION -->
+	<!-- CREDIT MANAGEMENT: this drawer is server-rendered with the real balance and ledger below. -->
 	{canMutate && (
 		<section class="section credit-section">
 			<div class="section-heading">
-				<h3>Grant credits</h3>
-				<span>Balance: {thousands(detail.credits)}</span>
+				<h3>Manage credits</h3>
+				<span>Current balance: {thousands(detail.credits)}</span>
 			</div>
-			<div class="credit-grant-form" data-credit-grant data-user-id={detail.id} data-user-email={detail.email}>
-				<div class="grant-row">
-					<input type="number" data-credit-amount min="1" max="100000" step="1" placeholder="Amount" aria-label="Credit amount" />
-					<input type="text" data-credit-reason maxlength="100" placeholder="Reason (e.g. testing, compensation)" aria-label="Reason" />
+			<div class="credit-grant-form" data-credit-grant data-user-id={detail.id}>
+				<div class="credit-operation" role="group" aria-label="Credit operation">
+					<label><input type="radio" name="credit-operation" value="add" checked /> Add</label>
+					<label><input type="radio" name="credit-operation" value="reduce" /> Reduce</label>
+					<label><input type="radio" name="credit-operation" value="set" /> Set balance</label>
 				</div>
-				<button type="button" data-credit-submit class="grant-btn">
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-					Grant credits
-				</button>
+				<div class="grant-row">
+					<input type="number" data-credit-amount min="0" max="1000000" step="1" placeholder="Amount" aria-label="Credit amount" />
+					<input type="text" data-credit-reason maxlength="100" placeholder="Reason (testing, promo, correction)" aria-label="Reason" />
+				</div>
+				<button type="button" data-credit-submit class="grant-btn"><span data-credit-submit-label>Add credits</span></button>
 				<p class="grant-msg" data-credit-msg role="status" hidden></p>
 			</div>
 		</section>
@@ -150,13 +153,29 @@ closeUrl.searchParams.delete('user');
 	const grantAmount = grantForm?.querySelector<HTMLInputElement>('[data-credit-amount]');
 	const grantReason = grantForm?.querySelector<HTMLInputElement>('[data-credit-reason]');
 	const grantSubmit = grantForm?.querySelector<HTMLButtonElement>('[data-credit-submit]');
+	const grantSubmitLabel = grantForm?.querySelector<HTMLElement>('[data-credit-submit-label]');
 	const grantMsg = grantForm?.querySelector<HTMLElement>('[data-credit-msg]');
+	const creditOperations = grantForm?.querySelectorAll<HTMLInputElement>('input[name="credit-operation"]');
+
+	function selectedCreditOperation(): 'add' | 'reduce' | 'set' {
+		const checked = grantForm?.querySelector<HTMLInputElement>('input[name="credit-operation"]:checked');
+		return checked?.value === 'reduce' || checked?.value === 'set' ? checked.value : 'add';
+	}
+
+	function updateCreditSubmitLabel() {
+		if (!grantSubmitLabel) return;
+		const operation = selectedCreditOperation();
+		grantSubmitLabel.textContent = operation === 'add' ? 'Add credits' : operation === 'reduce' ? 'Reduce credits' : 'Set balance';
+	}
+
+	creditOperations?.forEach((input) => input.addEventListener('change', updateCreditSubmitLabel));
 
 	grantSubmit?.addEventListener('click', async () => {
 		if (!grantForm || !grantAmount || !grantReason || !grantSubmit || !grantMsg) return;
 		const amount = Number.parseInt(grantAmount.value, 10);
-		if (!Number.isFinite(amount) || amount < 1) {
-			grantMsg.textContent = 'Enter a valid amount (minimum 1).';
+		const operation = selectedCreditOperation();
+		if (!Number.isFinite(amount) || amount < 0 || (operation !== 'set' && amount < 1)) {
+			grantMsg.textContent = operation === 'set' ? 'Enter a balance of 0 or more.' : 'Enter an amount of at least 1.';
 			grantMsg.className = 'grant-msg error';
 			grantMsg.hidden = false;
 			return;
@@ -171,24 +190,24 @@ closeUrl.searchParams.delete('user');
 				body: JSON.stringify({
 					userId: grantForm.dataset.userId,
 					amount,
+					operation,
 					note: grantReason.value.trim() || undefined,
 				}),
 			});
-			const body = (await res.json().catch(() => null)) as { ok?: boolean; balance?: number; error?: { message?: string } } | null;
+			const body = (await res.json().catch(() => null)) as { balance?: number; error?: { message?: string } } | null;
 			if (!res.ok) {
-				grantMsg.textContent = body?.error?.message ?? 'Failed to grant credits.';
+				grantMsg.textContent = body?.error?.message ?? 'Could not change credits.';
 				grantMsg.className = 'grant-msg error';
 				grantMsg.hidden = false;
 				return;
 			}
-			grantMsg.textContent = `✓ Granted ${amount} credits. New balance: ${body?.balance ?? '—'}`;
+			grantMsg.textContent = `Saved. New balance: ${body?.balance?.toLocaleString('en-US') ?? '—'}`;
 			grantMsg.className = 'grant-msg success';
 			grantMsg.hidden = false;
 			grantAmount.value = '';
 			grantReason.value = '';
-			// Update the displayed balance
-			const display = document.getElementById('drawer-credit-display');
-			if (display && body?.balance != null) display.textContent = body.balance.toLocaleString('en-US');
+			// Reload the server-rendered drawer so balance and credit history are always correct.
+			window.setTimeout(() => window.location.reload(), 450);
 		} catch {
 			grantMsg.textContent = 'Network error. Try again.';
 			grantMsg.className = 'grant-msg error';
@@ -333,6 +352,10 @@ closeUrl.searchParams.delete('user');
 
 	/* --- Credit Grant --- */
 	.credit-grant-form { display: flex; flex-direction: column; gap: 10px; }
+	.credit-operation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 3px; border: 1px solid var(--border2); border-radius: 9px; background: var(--surface2); }
+	.credit-operation label { display: flex; align-items: center; justify-content: center; height: 32px; border-radius: 7px; color: var(--text-dim); font-size: 12px; cursor: pointer; }
+	.credit-operation label:has(input:checked) { color: var(--text); background: var(--card); box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+	.credit-operation input { position: absolute; opacity: 0; pointer-events: none; }
 	.grant-row { display: flex; gap: 8px; }
 	.grant-row input {
 		flex: 1;
