@@ -98,14 +98,27 @@ const GAP = 28;
 const COLUMNS = 3;
 
 /** Natural size probe so portrait/landscape results aren't squashed into a square. */
+const imageSizeCache = new Map<string, { w: number; h: number }>();
+
 function probeImageSize(url: string): Promise<{ w: number; h: number }> {
+  const cached = imageSizeCache.get(url);
+  if (cached) return Promise.resolve(cached);
+
   return new Promise((resolve) => {
     const img = new Image();
     // Resolve to the default cell on error rather than rejecting — a broken
     // URL should still land on the canvas as a visible placeholder, not
     // silently vanish and leave the user wondering where their doodle went.
-    img.onerror = () => resolve({ w: CELL_W, h: CELL_H });
-    img.onload = () => resolve({ w: img.naturalWidth || CELL_W, h: img.naturalHeight || CELL_H });
+    img.onerror = () => {
+      const size = { w: CELL_W, h: CELL_H };
+      imageSizeCache.set(url, size);
+      resolve(size);
+    };
+    img.onload = () => {
+      const size = { w: img.naturalWidth || CELL_W, h: img.naturalHeight || CELL_H };
+      imageSizeCache.set(url, size);
+      resolve(size);
+    };
     img.src = url;
   });
 }

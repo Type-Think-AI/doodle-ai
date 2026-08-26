@@ -40,6 +40,31 @@ const threadId = Astro.params.id ?? 'new';
 
 		<!-- Draggable divider between the chat column and the board. Sits
 		     between the two panes so the pointer maths is a straight
+	/* Canvas mode is a focused dark workspace: the board and chat controls
+	   must read as one surface instead of a white chat pane beside a dark
+	   tldraw editor. This is scoped to the split only, so the user's theme
+	   preference still controls every other app route. */
+	.chat-split[data-whiteboard="true"] {
+		--bg: #0f0f0f;
+		--stage: #0a0a0a;
+		--surface: #141414;
+		--surface2: #141414;
+		--card: #1a1a1a;
+		--card-hover: #1f1f1f;
+		--prompt-bg: #1c1c1e;
+		--icon-hover: #2a2a2d;
+		--border: #262626;
+		--border2: #292929;
+		--border3: #3a3a3a;
+		--hover: #1f1f1f;
+		--text: #dddddd;
+		--text-dim: #999999;
+		--text-dimmer: #666666;
+		background: var(--stage);
+		color: var(--text);
+	}
+	.chat-split[data-whiteboard="true"] .chat-page { background: var(--bg); }
+
 		     "where is the cursor inside .chat-split" — see chat.ts. Exposed as
 		     a real separator (role + tabindex) so it is keyboard-operable,
 		     not mouse-only. -->
@@ -326,7 +351,7 @@ const threadId = Astro.params.id ?? 'new';
 	/* Message bubbles are built client-side by chat.ts, so this block is
 	   global — Astro's scoped-CSS attribute never reaches elements created
 	   after the initial render. */
-	.chat-msg { display: flex; }
+	.chat-msg { display: flex; content-visibility: auto; contain-intrinsic-size: auto 120px; }
 	.chat-msg-user { justify-content: flex-end; }
 	.chat-bubble {
 		max-width: 84%;

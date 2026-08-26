@@ -137,16 +137,22 @@ function initChat(): void {
 
   /** Every image this thread has produced or received, oldest first — the
       same data renderMessage already walks, just flattened across messages
-      instead of rendered per-bubble. Re-read fresh each call rather than
-      cached, since it's just a localStorage scan and the thread rarely has
-      more than a few dozen images. */
+      instead of rendered per-bubble. Cached per-frame (invalidated in
+      paintHistory and after saves) so repeated calls during the same render
+      cycle don't re-scan localStorage. */
+  let _threadImagesCache: string[] | null = null;
   function collectThreadImages(): string[] {
+    if (_threadImagesCache) return _threadImagesCache;
     const urls: string[] = [];
     for (const msg of loadThread(threadId!)) {
       if (msg.imageUrl) urls.push(msg.imageUrl);
       if (msg.images) urls.push(...msg.images);
     }
+    _threadImagesCache = urls;
     return urls;
+  }
+  function invalidateThreadImagesCache(): void {
+    _threadImagesCache = null;
   }
 
   /** Hand image URLs to the tldraw canvas island (src/components/app/
@@ -330,6 +336,7 @@ function initChat(): void {
         sourceCell.style.cursor = "pointer";
         const sourceImg = document.createElement("img");
         sourceImg.alt = "Source photo";
+        sourceImg.loading = "lazy";
         setImageSrc(sourceImg, precedingUserMessage.imageUrl);
         sourceCell.appendChild(sourceImg);
         const sourceTag = document.createElement("span");
@@ -345,6 +352,7 @@ function initChat(): void {
         cell.className = "chat-bubble-image-wrap";
         const img = document.createElement("img");
         img.alt = "Generated doodle";
+        img.loading = "lazy";
         setImageSrc(img, url);
         cell.appendChild(img);
         cell.addEventListener("click", () => openLightbox(msg.images!, url));
@@ -656,6 +664,7 @@ function initChat(): void {
         createdAt: Date.now(),
       };
       appendMessage(threadId!, assistantMessage);
+      invalidateThreadImagesCache();
       renderMessage(assistantMessage, precedingUserMessage);
       pushToCanvas(collectThreadImages());
     }
@@ -686,6 +695,7 @@ function initChat(): void {
     // A fresh request re-earns the right to reveal the canvas.
     canvasDismissed = false;
     const history = appendMessage(threadId!, userMessage);
+    invalidateThreadImagesCache();
     renderMessage(userMessage, null);
     pushToCanvas(collectThreadImages());
     clearComposer(input!);
@@ -765,6 +775,7 @@ function initChat(): void {
 
   function paintHistory(messages: ChatMessage[]): void {
     thread!.querySelectorAll(".chat-msg").forEach((el) => el.remove());
+    invalidateThreadImagesCache();
     hasResult = false;
     lastUserMessage = null;
     let precedingUserMessage: ChatMessage | null = null;

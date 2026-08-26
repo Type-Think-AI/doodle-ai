@@ -8,6 +8,8 @@
  */
 export function setImageSrc(img: HTMLImageElement, url: string): void {
   img.hidden = false;
+  // Decode off the main thread so image loads don't block interaction/paint.
+  img.decoding = "async";
   img.onerror = () => {
     img.hidden = true;
   };

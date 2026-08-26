@@ -253,7 +253,7 @@ async function failItem(
   await db
     .update(batchItem)
     .set({ status: "failed", errorCode: errorCode.slice(0, 200), completedAt: new Date() })
-    .where(eq(batchItem.id, item.id));
+    .where(and(eq(batchItem.id, item.id), eq(batchItem.status, "running")));
 }
 
 /**

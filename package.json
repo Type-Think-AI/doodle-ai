@@ -42,6 +42,7 @@
     "blog:thumbs": "node scripts/generate-blog-thumbnails.mjs",
     "build": "astro build",
     "lint": "eslint .",
+    "smoke": "node scripts/smoke-validate.mjs",
     "cf-typegen": "wrangler types",
     "check": "astro build && tsc && wrangler deploy --dry-run",
     "db:generate": "drizzle-kit generate",

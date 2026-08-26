@@ -375,5 +375,5 @@ async function refundGeneration(
   await db
     .update(generation)
     .set({ status: "refunded", errorCode: errorMessage.slice(0, 200), completedAt: new Date() })
-    .where(eq(generation.id, generationId));
+    .where(and(eq(generation.id, generationId), eq(generation.status, "pending")));
 }
