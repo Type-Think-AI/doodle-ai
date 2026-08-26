@@ -18,7 +18,7 @@ import { appendMessage, createThread, setThreadSkill, type ChatMessage } from ".
 import { whenSynced } from "./api-client";
 import { getSession } from "./auth-client";
 import { initMentions, serializeComposer } from "./composer-mentions";
-import { initMediaPicker } from "./media-picker";
+import { initMediaPicker, initComposerDropZone } from "./media-picker";
 import { setImageSrc, guardBfcacheRestore } from "./dom-utils";
 
 function $<T extends HTMLElement = HTMLElement>(id: string): T | null {
@@ -200,6 +200,14 @@ function initHome(): void {
     if (file) void handleFile(file);
   });
   attachRemove?.addEventListener("click", clearAttachment);
+
+  const dropBox = $("homeBox");
+  if (dropBox) {
+    initComposerDropZone(dropBox, (files) => {
+      const file = files[0];
+      if (file) void handleFile(file);
+    });
+  }
 
   sendBtn.addEventListener("click", () => void send());
   input.addEventListener("keydown", (e) => {

@@ -1,3 +1,53 @@
+/**
+ * Wires HTML5 drag-and-drop onto the composer box itself, so dropping an
+ * image anywhere on it attaches the photo the same way picking it from the
+ * file input or camera does — shared by the Home and Chat composers.
+ *
+ * Counts enter/leave events (rather than toggling on every dragenter/
+ * dragleave) because the box has child elements: the browser fires a
+ * dragleave when the pointer crosses from the box onto a child and a
+ * dragenter when it re-enters the box, and naively toggling on each would
+ * flicker the drop overlay off while still dragging over the box.
+ */
+export function initComposerDropZone(box: HTMLElement, onFiles: (files: FileList | File[]) => void): () => void {
+  let depth = 0;
+
+  const onDragEnter = (event: DragEvent): void => {
+    if (!event.dataTransfer?.types.includes("Files")) return;
+    event.preventDefault();
+    depth += 1;
+    box.dataset.dragOver = "true";
+  };
+  const onDragOver = (event: DragEvent): void => {
+    if (!event.dataTransfer?.types.includes("Files")) return;
+    event.preventDefault();
+  };
+  const onDragLeave = (event: DragEvent): void => {
+    if (!event.dataTransfer?.types.includes("Files")) return;
+    depth = Math.max(0, depth - 1);
+    if (depth === 0) delete box.dataset.dragOver;
+  };
+  const onDrop = (event: DragEvent): void => {
+    event.preventDefault();
+    depth = 0;
+    delete box.dataset.dragOver;
+    const files = event.dataTransfer?.files;
+    if (files && files.length) onFiles(files);
+  };
+
+  box.addEventListener("dragenter", onDragEnter);
+  box.addEventListener("dragover", onDragOver);
+  box.addEventListener("dragleave", onDragLeave);
+  box.addEventListener("drop", onDrop);
+
+  return () => {
+    box.removeEventListener("dragenter", onDragEnter);
+    box.removeEventListener("dragover", onDragOver);
+    box.removeEventListener("dragleave", onDragLeave);
+    box.removeEventListener("drop", onDrop);
+  };
+}
+
 export interface MediaPickerOptions {
   trigger: HTMLButtonElement;
   cameraButton: HTMLButtonElement;
