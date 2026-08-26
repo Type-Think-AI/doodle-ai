@@ -44,11 +44,6 @@ const { active } = Astro.props;
     <div class="sidebar-chats-list" id="sidebarChatsList"></div>
   </div>
 
-  <div class="sidebar-projects" id="sidebarProjects">
-    <div class="sidebar-projects-title sidebar-label">Projects</div>
-    <div class="sidebar-projects-list" id="sidebarProjectsList"></div>
-  </div>
-
   <div class="sidebar-bottom">
     <button type="button" class="sidebar-link sidebar-feedback" id="sidebarFeedback" aria-label="Send feedback">
       <!-- A megaphone, not a speech bubble — the bubble shape is already the
@@ -71,13 +66,8 @@ const { active } = Astro.props;
       <div class="sidebar-auth-user" id="sidebarAuthUser" hidden>
         <span class="sidebar-auth-avatar" id="sidebarAuthAvatar" aria-hidden="true"></span>
         <span class="sidebar-auth-meta sidebar-label">
-          <span class="sidebar-auth-org" id="sidebarAuthOrg" hidden></span>
           <span class="sidebar-auth-name-row">
             <span class="sidebar-auth-name" id="sidebarAuthName"></span>
-            <!-- Was a static "Free" pill; now the live balance, in the same
-                 spot — one compact line instead of a whole second block
-                 below the card. sidebar.ts fills it in and keeps it current
-                 (chat.ts's "credits" NDJSON event updates it live mid-chat). -->
             <span class="sidebar-auth-plan" id="sidebarCreditsBalance">…</span>
           </span>
           <span class="sidebar-auth-email" id="sidebarAuthEmail"></span>
@@ -317,59 +307,6 @@ const { active } = Astro.props;
   :global(.sidebar-chats-empty) { padding: 6px 10px; font-size: 12.5px; color: var(--text-dimmer); }
   :global(.sidebar.collapsed .sidebar-chats-empty) { display: none; }
 
-  .sidebar-projects {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .sidebar-projects-title {
-    padding: 4px 12px 4px;
-    font-size: 12px;
-    letter-spacing: 0;
-    color: var(--text-dimmer);
-    text-transform: none;
-  }
-  .sidebar-projects-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    overflow: auto;
-    min-height: 0;
-  }
-  :global(.sidebar-project-link) {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 6px 10px;
-    border-radius: 10px;
-    font-size: 13.5px;
-    color: var(--text-dim);
-    min-width: 0;
-  }
-  :global(.sidebar-project-link:hover) { background: var(--hover); color: var(--text); }
-  :global(.sidebar-project-icon) {
-    flex: 0 0 20px;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-dimmer);
-  }
-  :global(.sidebar-project-name) {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  :global(.sidebar.collapsed .sidebar-project-name) { display: none; }
-  :global(.sidebar.collapsed .sidebar-project-link) {
-    justify-content: center;
-    padding: 6px;
-  }
-  :global(.sidebar-projects-empty) { padding: 6px 10px; font-size: 12.5px; color: var(--text-dimmer); }
-  :global(.sidebar.collapsed .sidebar-projects-empty) { display: none; }
-
   .sidebar-bottom {
     margin-top: auto;
     display: flex;
@@ -386,10 +323,10 @@ const { active } = Astro.props;
   .sidebar-auth-user:not([hidden]) {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 8px 10px;
+    gap: 10px;
+    padding: 10px 12px;
     border: 1px solid var(--border2);
-    border-radius: 10px;
+    border-radius: 12px;
     color: var(--text-dim);
     font-size: 12.5px;
   }
@@ -407,16 +344,16 @@ const { active } = Astro.props;
   .sidebar-auth-signin svg,
   .sidebar-auth-user svg { flex: 0 0 auto; }
   .sidebar-auth-avatar {
-    width: 22px;
-    height: 22px;
-    flex: 0 0 22px;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
     border-radius: 50%;
     background: var(--accent);
     color: var(--send-fg);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     background-size: cover;
     background-position: center;
@@ -424,20 +361,10 @@ const { active } = Astro.props;
   .sidebar-auth-meta {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
     min-width: 0;
+    flex: 1;
   }
-  .sidebar-auth-org {
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: var(--text-dimmer);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .sidebar.collapsed .sidebar-auth-org { display: none; }
   .sidebar-auth-name-row {
     display: flex;
     align-items: center;

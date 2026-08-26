@@ -22,6 +22,15 @@ import { reconcile } from "../src/lib/credits/reconcile";
 import { sweepBatches } from "../src/lib/batch/sweep";
 import astroWorker from "../dist/_worker.js/index.js";
 
+/**
+ * The roadmap board's tldraw sync server. Durable Object classes must be
+ * exported from the Worker's entry module for Cloudflare to instantiate them,
+ * and `wrangler.json`'s `main` points here — so this re-export is what makes
+ * the `ROADMAP_ROOM` binding resolve. Same reason `scheduled` lives here:
+ * exports Astro's build cannot produce belong in this file.
+ */
+export { RoadmapRoom } from "../src/roadmap/RoadmapRoom";
+
 type ExportedHandler = {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => Response | Promise<Response>;
 };

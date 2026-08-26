@@ -28,6 +28,12 @@ body {
 .app-shell-content {
   flex: 1;
   min-width: 0;
+  /* min-height: 0 is required, not cosmetic: without it this flex child
+     refuses to shrink below its content's min-content height, so a
+     full-height child (the tldraw canvas on /c/[id]) pushes the shell past
+     100dvh and the page scrolls — which clipped the canvas toolbar off the
+     bottom edge. */
+  min-height: 0;
   overflow: auto;
 }
 

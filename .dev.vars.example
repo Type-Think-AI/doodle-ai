@@ -41,3 +41,8 @@ PICX_API_KEY=replace-with-a-picx-key
 # host it cannot resolve publicly, so localhost is not a usable target. Use
 # `cloudflared tunnel --url http://localhost:4321` if you need to exercise it.
 PICX_WEBHOOK_SECRET=
+
+# tldraw canvas license key (client-visible by design — tldraw validates it
+# in the browser). Without it the canvas shows a "Made with tldraw" watermark.
+# Get one at https://tldraw.dev/pricing
+PUBLIC_TLDRAW_LICENSE_KEY=replace-with-your-tldraw-license-key

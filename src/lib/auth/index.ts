@@ -72,6 +72,7 @@ export async function createAuth(context: APIContext) {
         "is the only sign-in method.",
     );
   }
+  const isLocalDevelopment = new URL(context.request.url).hostname === "localhost";
   const db = drizzle(env.DB, { schema });
 
   return betterAuth({
@@ -258,17 +259,17 @@ export async function createAuth(context: APIContext) {
     //    that actually create an account through Google sign-in:
     //    `/sign-in/social` (the client-initiated request that kicks off the
     //    OAuth redirect) and `/callback/:id` (where Better Auth creates the
-    //    user row after Google's redirect back). 5-8 attempts/hour per IP is
-    //    far above what a real person retrying a flaky OAuth flow needs, but
-    //    low enough to blunt a script hammering either endpoint.
+    //    user row after Google's redirect back). Localhost uses a temporary
+    //    60-attempt/hour allowance for manual QA; deployed environments retain
+    //    the stricter 5/8-attempt production limits.
     rateLimit: {
       enabled: true,
       window: 60,
       max: 100,
       storage: "secondary-storage",
       customRules: {
-        "/sign-in/social": { window: 60 * 60, max: 5 },
-        "/callback/:id": { window: 60 * 60, max: 8 },
+        "/sign-in/social": { window: 60 * 60, max: isLocalDevelopment ? 60 : 5 },
+        "/callback/:id": { window: 60 * 60, max: isLocalDevelopment ? 60 : 8 },
       },
     },
 

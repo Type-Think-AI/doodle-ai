@@ -21,42 +21,6 @@ function placeholderFor(id: string): string {
   return PLACEHOLDER_EMOJI[hash % PLACEHOLDER_EMOJI.length]!;
 }
 
-async function loadSidebarProjects(container: HTMLElement): Promise<void> {
-  try {
-    const res = await fetch("/api/v1/projects?status=active", { credentials: "include" });
-    if (!res.ok) return; // Silently fail — user might not be signed in
-    const payload = (await res.json()) as { projects?: { id: string; name: string }[] };
-    const projects = payload.projects || [];
-    container.innerHTML = "";
-    if (!projects.length) {
-      const empty = document.createElement("div");
-      empty.className = "sidebar-projects-empty";
-      empty.textContent = "No projects";
-      container.appendChild(empty);
-      return;
-    }
-    projects.slice(0, 8).forEach((project) => {
-      const link = document.createElement("a");
-      link.href = `/projects/${encodeURIComponent(project.id)}`;
-      link.className = "sidebar-project-link";
-
-      const icon = document.createElement("span");
-      icon.className = "sidebar-project-icon";
-      icon.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 5V3.5h8V5M3.5 10h17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
-
-      const name = document.createElement("span");
-      name.className = "sidebar-project-name";
-      name.textContent = project.name;
-
-      link.appendChild(icon);
-      link.appendChild(name);
-      container.appendChild(link);
-    });
-  } catch {
-    // Silent fail — sidebar projects are a nice-to-have, not critical
-  }
-}
-
 function initSidebar(): void {
   const sidebar = document.getElementById("sidebar");
   if (!sidebar) return;
@@ -124,11 +88,7 @@ function initSidebar(): void {
     }
   }
 
-  /* ---- Projects ---- */
-  const projectsList = document.getElementById("sidebarProjectsList");
-  if (projectsList) {
-    void loadSidebarProjects(projectsList);
-  }
+  /* ---- Sidebar ready ---- */
 
   /* ---- Collapse ---- */
   let collapsed = false;
@@ -304,15 +264,6 @@ async function renderCreditsSlot(): Promise<void> {
     const balance = payload.credits?.balance;
     if (typeof balance === "number") setCreditsBalance(balanceEl, balance);
 
-    const orgEl = document.getElementById("sidebarAuthOrg");
-    // "Just you" for the personal workspace rather than its auto-generated
-    // "<name>'s Team" label — that label exists so the switcher has
-    // something to show, but on the sidebar's own compact row it would read
-    // as if the user had already created a team.
-    if (orgEl && payload.org?.name) {
-      orgEl.textContent = payload.org.isPersonal ? "Just you" : payload.org.name;
-      orgEl.hidden = false;
-    }
   } catch {
     // Balance just stays showing "…" — not worth a visible error for a
     // secondary readout the user can always get from /settings?tab=billing.

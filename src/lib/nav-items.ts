@@ -4,7 +4,15 @@
    (MobileNav had hand-copied icons and was missing the Characters tab and
    the "New chat" action entirely). */
 
-export type NavKey = "chat" | "characters" | "moodboards" | "skills" | "projects" | "team" | "settings";
+export type NavKey =
+  | "chat"
+  | "characters"
+  | "moodboards"
+  | "skills"
+  | "projects"
+  | "team"
+  | "settings"
+  | "roadmap";
 
 export interface NavItem {
   key: NavKey;
@@ -67,6 +75,16 @@ export const NAV_ITEMS: NavItem[] = [
     shortLabel: "Team",
     mobile: false,
     icon: '<circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 20c.8-3.5 3-5.4 5.5-5.4s4.7 1.9 5.5 5.4M14 15.2c2.8-.2 5 1.4 6 4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  },
+  {
+    key: "roadmap",
+    href: "/roadmap",
+    label: "Roadmap",
+    shortLabel: "Roadmap",
+    // Desktop rail only: the board is a live multi-user canvas, and a phone tab
+    // bar is not where anyone wants to start dragging sticky notes around.
+    mobile: false,
+    icon: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 8.5h3M8 12h5M8 15.5h3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   {
     key: "settings",

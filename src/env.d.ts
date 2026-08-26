@@ -2,6 +2,21 @@ type Runtime = import("@astrojs/cloudflare").Runtime<Env>;
 type SecretLike = import("./lib/secrets").SecretLike;
 type AdminContext = import("./lib/auth/admin-guard").AdminContext;
 
+/**
+ * Client-visible env. PUBLIC_-prefixed vars are inlined into the browser
+ * bundle by Vite, which is exactly what the tldraw license key requires —
+ * tldraw validates it in the browser, so it cannot be a server secret.
+ * It is still kept out of tracked source (.dev.vars locally, a Worker var
+ * in deploys) so the key isn't published in the public repo.
+ */
+interface ImportMetaEnv {
+  readonly PUBLIC_TLDRAW_LICENSE_KEY?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 declare namespace App {
   interface Locals extends Runtime {
     /**
@@ -21,6 +36,18 @@ interface Env {
   DB: D1Database;
   /** KV binding used as Better Auth's secondaryStorage (session cache). */
   SESSIONS: KVNamespace;
+  /**
+   * One tldraw sync room per roadmap board (src/roadmap/RoadmapRoom.ts).
+   * SQLite-backed, so it works on the Workers free plan.
+   */
+  ROADMAP_ROOM: DurableObjectNamespace<import("./roadmap/RoadmapRoom").RoadmapRoom>;
+  /**
+   * Images, screenshots and video pasted onto the roadmap board. R2 rather than
+   * D1 or the DO's SQLite: these are large binaries, and a screenshot with an
+   * arrow drawn on it is the single most useful piece of feedback an artist can
+   * leave — it must not be squeezed into a row.
+   */
+  ROADMAP_ASSETS: R2Bucket;
 
   // Secrets. Two supported mechanisms, both read through
   // src/lib/secrets.ts's readSecret() so call sites don't branch on shape:

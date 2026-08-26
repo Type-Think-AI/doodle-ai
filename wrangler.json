@@ -23,6 +23,28 @@
       "migrations_dir": "migrations"
     }
   ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ROADMAP_ROOM",
+        "class_name": "RoadmapRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "RoadmapRoom"
+      ]
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ROADMAP_ASSETS",
+      "bucket_name": "doodleai-roadmap-assets"
+    }
+  ],
   "kv_namespaces": [
     {
       "binding": "SESSIONS",
@@ -68,6 +90,7 @@
   "env": {
     "staging": {
       "name": "doodleai-agent-staging",
+      "workers_dev": true,
       "routes": [
         {
           "pattern": "dev.doodleai.art",
@@ -86,6 +109,20 @@
         {
           "binding": "SESSIONS",
           "id": "56a2808c8d0640789b98d567f0221701"
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "ROADMAP_ROOM",
+            "class_name": "RoadmapRoom"
+          }
+        ]
+      },
+      "r2_buckets": [
+        {
+          "binding": "ROADMAP_ASSETS",
+          "bucket_name": "doodleai-roadmap-assets-staging"
         }
       ],
       "secrets_store_secrets": [

@@ -1,0 +1,56 @@
+---
+// /roadmap/public — USER feedback board. Visible to everyone.
+//
+// Signed-in users can add feedback notes (appear as stickies).
+// Admins can edit/delete anything (triage). Anonymous can only view.
+// This is where the feedback dialog's sticky notes land.
+export const prerender = false;
+
+import AppShellLayout from '../../layouts/AppShellLayout.astro';
+import RoadmapBoard from '../../components/app/RoadmapBoard.tsx';
+import { resolvePlatformRole } from '../../lib/auth/admin-guard';
+
+const ROOM = 'public-v6';
+
+const env = (Astro.locals as { runtime?: { env?: Env } })?.runtime?.env;
+const hasSync = !!env?.ROADMAP_ROOM;
+const resolved = hasSync ? await resolvePlatformRole(Astro as never) : null;
+const canSeed = !hasSync || resolved?.platformRole === 'admin';
+---
+
+<AppShellLayout title="Roadmap — Doodle AI" active="roadmap"
+  description="The Doodle AI public roadmap. See what's coming and drop your own feedback as a sticky note.">
+  <div class="roadmap-page">
+    <div class="roadmap-stage">
+      <RoadmapBoard client:only="react" room={ROOM} connectPath={`/api/roadmap/connect/${ROOM}`} canSeed={canSeed} variant="public" />
+    </div>
+  </div>
+</AppShellLayout>
+
+<style>
+  .roadmap-page {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+  }
+  .roadmap-stage {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+  }
+</style>
+
+<style is:global>
+  .roadmap-stage .tl-container,
+  .roadmap-stage .tl-theme__dark {
+    --tl-color-background: #0a0b0c;
+    --tl-color-grid: hsl(0, 0%, 38%);
+  }
+  .roadmap-stage .tlui-layout__bottom { padding-bottom: 10px; }
+</style>
+
+<script>
+  window.dispatchEvent(new Event("doodleai:sidebar-collapse"));
+</script>

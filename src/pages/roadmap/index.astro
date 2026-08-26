@@ -1,0 +1,61 @@
+---
+// /roadmap — TEAM board. Admin-only internal roadmap with deploy tasks, CI/CD,
+// demo videos, and all the internal items that don't belong on the public board.
+//
+// Access: admin only. Non-admins are redirected to /roadmap/public.
+export const prerender = false;
+
+import AppShellLayout from '../../layouts/AppShellLayout.astro';
+import RoadmapBoard from '../../components/app/RoadmapBoard.tsx';
+import { resolvePlatformRole } from '../../lib/auth/admin-guard';
+
+const ROOM = 'team-v1';
+
+const env = (Astro.locals as { runtime?: { env?: Env } })?.runtime?.env;
+const hasSync = !!env?.ROADMAP_ROOM;
+const resolved = await resolvePlatformRole(Astro as never);
+
+// Gate: only admins see the team board. Everyone else → public board.
+if (!resolved || resolved.platformRole !== 'admin') {
+  return Astro.redirect('/roadmap/public');
+}
+
+const canSeed = true; // Only admins reach here.
+---
+
+<AppShellLayout title="Team Roadmap — Doodle AI" active="roadmap"
+  description="Internal team roadmap — deploy, CI/CD, infrastructure, and sprint items.">
+  <div class="roadmap-page">
+    <div class="roadmap-stage">
+      <RoadmapBoard client:only="react" room={ROOM} connectPath={`/api/roadmap/connect/${ROOM}`} canSeed={canSeed} variant="team" />
+    </div>
+  </div>
+</AppShellLayout>
+
+<style>
+  .roadmap-page {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+  }
+  .roadmap-stage {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+  }
+</style>
+
+<style is:global>
+  .roadmap-stage .tl-container,
+  .roadmap-stage .tl-theme__dark {
+    --tl-color-background: #0a0b0c;
+    --tl-color-grid: hsl(0, 0%, 38%);
+  }
+  .roadmap-stage .tlui-layout__bottom { padding-bottom: 10px; }
+</style>
+
+<script>
+  window.dispatchEvent(new Event("doodleai:sidebar-collapse"));
+</script>

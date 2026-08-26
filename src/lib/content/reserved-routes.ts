@@ -17,6 +17,7 @@ export const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([
 	"characters",
 	"moodboards",
 	"projects",
+	"roadmap",
 	"settings",
 	"skills",
 	"team",

@@ -1,7 +1,7 @@
 /* /c/[id] chat page controller: renders the thread, wires the composer
    (text + photo attach + pinned skill chip + @/#// mentions), talks to
    /api/chat, and renders any doodle images the agent's generateDoodle tool
-   produced — inline, source-photo-next-to-result, with Remix/Save/Download
+   produced — inline, source-photo-next-to-result, with Remix/Download
    actions. */
 
 import { MAX_IMAGE_BYTES, STYLE_THEME_STORAGE_KEY } from "../../lib/doodle-constants";
@@ -21,7 +21,7 @@ import {
 import { initLightbox, openLightbox } from "./lightbox";
 import { initMentions, serializeComposer, clearComposer } from "./composer-mentions";
 import { setImageSrc, guardBfcacheRestore } from "./dom-utils";
-import { initMediaPicker } from "./media-picker";
+import { initMediaPicker, initComposerDropZone } from "./media-picker";
 import { getSession } from "./auth-client";
 import { trackDoodleGenerated } from "./mixpanel";
 
@@ -67,10 +67,8 @@ function initChat(): void {
   const chatSplit = $("chatSplit");
   const whiteboardToggle = $<HTMLButtonElement>("whiteboardToggle");
   const whiteboardClose = $("whiteboardClose");
-  const whiteboardPanel = $("whiteboardPanel");
-  const whiteboardGrid = $("whiteboardGrid");
-  const whiteboardEmpty = $("whiteboardEmpty");
-  const whiteboardSkills = $("whiteboardSkills");
+  const canvasPanel = $("canvasPanel");
+  const splitHandle = $("chatSplitHandle");
   if (!thread || !input || !sendBtn || !statusEl || !popover) return;
 
   initLightbox();
@@ -83,7 +81,22 @@ function initChat(): void {
   let pinnedSkillId: string | undefined = getThreadSkill(threadId);
   let lastUserMessage: ChatMessage | null = null;
   let hasResult = false;
-  let whiteboardOn = false;
+  /* Canvas starts open on desktop (where the 70/30 split works) but closed
+     on mobile (where it replaces the chat entirely and the user would see a
+     blank void with no composer). The SSR markup has data-whiteboard="true"
+     because tldraw cannot initialize inside display:none, so we immediately
+     close it here on mobile before paint — the visual flicker is
+     imperceptible since this runs synchronously before the first frame. */
+  const isMobile = window.matchMedia("(max-width: 860px)").matches;
+  let whiteboardOn = !isMobile;
+  if (isMobile && chatSplit) {
+    chatSplit.setAttribute("data-whiteboard", "false");
+    if (canvasPanel) canvasPanel.hidden = true;
+    whiteboardToggle?.setAttribute("aria-pressed", "false");
+  }
+  /* Set when the user closes the canvas by hand, so a stream of results
+     doesn't keep yanking it back open. Cleared on the next send. */
+  let canvasDismissed = false;
 
   function setStatus(msg: string, err = false): void {
     statusEl!.textContent = msg;
@@ -118,13 +131,6 @@ function initChat(): void {
     pinnedSkillId = skillId;
     setThreadSkill(threadId!, skillId);
     syncSkillChip();
-    syncWhiteboardSkillButtons();
-  }
-
-  function syncWhiteboardSkillButtons(): void {
-    whiteboardSkills?.querySelectorAll<HTMLButtonElement>(".whiteboard-skill-btn").forEach((btn) => {
-      btn.dataset.active = String(btn.dataset.skillId === pinnedSkillId);
-    });
   }
 
   /* ---- Whiteboard ---- */
@@ -143,50 +149,149 @@ function initChat(): void {
     return urls;
   }
 
-  function renderWhiteboard(): void {
-    if (!whiteboardGrid) return;
-    const urls = collectThreadImages();
-    whiteboardGrid.querySelectorAll(".whiteboard-tile").forEach((el) => el.remove());
-    if (whiteboardEmpty) whiteboardEmpty.hidden = urls.length > 0;
-    urls.forEach((url) => {
-      const tile = document.createElement("button");
-      tile.type = "button";
-      tile.className = "whiteboard-tile";
-      const img = document.createElement("img");
-      img.alt = "";
-      img.loading = "lazy";
-      setImageSrc(img, url);
-      tile.appendChild(img);
-      // Same shared lightbox the chat bubbles use — scoped to the whiteboard's
-      // own image set so prev/next paging stays within what's on screen.
-      tile.addEventListener("click", () => openLightbox(urls, url));
-      whiteboardGrid.appendChild(tile);
-    });
+  /** Hand image URLs to the tldraw canvas island (src/components/app/
+      DoodleCanvas.tsx). An event rather than a direct call so this vanilla
+      controller never imports React — the island dedupes URLs itself, so
+      re-sending an already-placed image is harmless.
+
+      The event alone is not enough: this module runs immediately while the
+      island is client:only and has to load ~1MB of tldraw first, so early
+      dispatches land before any listener exists. Appending to
+      window.__doodleCanvasQueue as well gives the island a backlog to drain
+      on mount, which is what keeps a reloaded thread's doodles on the board. */
+  function pushToCanvas(urls: string[]): void {
+    if (!urls.length) return;
+    const queue = (window.__doodleCanvasQueue ??= []);
+    queue.push(...urls);
+    window.dispatchEvent(new CustomEvent("doodleai:canvas-add", { detail: { urls } }));
+    // Hide the "your doodles will appear here" placeholder once content exists.
+    const hint = document.getElementById("canvasEmptyHint");
+    if (hint) hint.hidden = true;
   }
 
   function setWhiteboard(on: boolean): void {
     whiteboardOn = on;
     chatSplit?.setAttribute("data-whiteboard", String(on));
     whiteboardToggle?.setAttribute("aria-pressed", String(on));
-    if (whiteboardPanel) whiteboardPanel.hidden = !on;
+    if (canvasPanel) canvasPanel.hidden = !on;
     if (on) {
       window.dispatchEvent(new Event("doodleai:sidebar-collapse"));
-      renderWhiteboard();
+      // Backfill anything generated before the canvas was first opened. The
+      // island dedupes, so images already on the board are not duplicated.
+      pushToCanvas(collectThreadImages());
+      /* Tell the island it is safe to mount tldraw. It deliberately waits for
+         this: tldraw mounted inside the display:none panel never finishes
+         initializing, so it must not be created until the panel is shown.
+         Fired on the next frame, after the browser has applied the panel's
+         new display value, so the container measures non-zero. */
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("doodleai:canvas-open"));
+        // tldraw re-measures on resize; harmless if it mounted this frame.
+        window.dispatchEvent(new Event("resize"));
+      });
     }
   }
-  whiteboardToggle?.addEventListener("click", () => setWhiteboard(!whiteboardOn));
-  whiteboardClose?.addEventListener("click", () => setWhiteboard(false));
-  whiteboardSkills?.querySelectorAll<HTMLButtonElement>(".whiteboard-skill-btn").forEach((btn) => {
-    const skillId = btn.dataset.skillId;
-    if (!skillId) return;
-    btn.addEventListener("click", () => {
-      pinSkill(skillId);
-      // A skill picked visually from the whiteboard should land the user
-      // back where they type, not leave them staring at the canvas.
-      input!.focus();
-    });
+  // Both of these are explicit user intent, so they set/clear the dismissed
+  // flag that auto-open checks.
+  whiteboardToggle?.addEventListener("click", () => {
+    const next = !whiteboardOn;
+    canvasDismissed = !next;
+    setWhiteboard(next);
   });
-  syncWhiteboardSkillButtons();
+  whiteboardClose?.addEventListener("click", () => {
+    canvasDismissed = true;
+    setWhiteboard(false);
+  });
+
+  /* ---- Split resize ----
+
+     Vanilla pointer-capture drag rather than a resizable-panel package: this
+     split is Astro markup driven by this controller, and only the board
+     itself is a React island. A React panel library would mean re-homing the
+     whole chat column into React just to move a divider — a much larger change
+     than the behaviour warrants, and against the one-island/bundle constraint
+     in astro.config.mjs. Mirrors the sidebar's own resize in sidebar.ts.
+
+     The width is stored as a percentage, not pixels, so the ratio survives a
+     window resize the way the old fixed 30% did. */
+  const SPLIT_KEY = "doodleai-chat-split";
+  const SPLIT_MIN = 20;
+  const SPLIT_MAX = 65;
+
+  function applySplit(pct: number): void {
+    const clamped = Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, pct));
+    chatSplit?.style.setProperty("--chat-split-w", `${clamped}%`);
+  }
+
+  function persistSplit(): void {
+    const current = chatSplit?.style.getPropertyValue("--chat-split-w");
+    if (!current) return;
+    try {
+      localStorage.setItem(SPLIT_KEY, current.trim());
+    } catch {
+      /* storage unavailable — split width stays session-only */
+    }
+  }
+
+  try {
+    const stored = parseFloat(localStorage.getItem(SPLIT_KEY) ?? "");
+    if (Number.isFinite(stored)) applySplit(stored);
+  } catch {
+    /* storage unavailable — the CSS default (30%) applies */
+  }
+
+  splitHandle?.addEventListener("pointerdown", (event) => {
+    if (!chatSplit || !whiteboardOn) return;
+    event.preventDefault();
+    chatSplit.setAttribute("data-resizing", "true");
+    splitHandle.setPointerCapture(event.pointerId);
+
+    const onMove = (moveEvent: PointerEvent) => {
+      const rect = chatSplit.getBoundingClientRect();
+      if (!rect.width) return;
+      applySplit(((moveEvent.clientX - rect.left) / rect.width) * 100);
+    };
+    const onUp = () => {
+      chatSplit.removeAttribute("data-resizing");
+      splitHandle.removeEventListener("pointermove", onMove);
+      splitHandle.removeEventListener("pointerup", onUp);
+      splitHandle.removeEventListener("pointercancel", onUp);
+      persistSplit();
+      /* tldraw sizes itself from its container and does not observe a flex-basis
+         change on an ancestor, so the board would keep the pre-drag width until
+         something else forced a re-measure. */
+      window.dispatchEvent(new Event("resize"));
+    };
+    splitHandle.addEventListener("pointermove", onMove);
+    splitHandle.addEventListener("pointerup", onUp);
+    splitHandle.addEventListener("pointercancel", onUp);
+  });
+
+  // Keyboard equivalent, so the divider is not mouse-only (it is exposed as a
+  // role="separator" with tabindex in the markup).
+  splitHandle?.addEventListener("keydown", (event) => {
+    const step = event.key === "ArrowLeft" ? -2 : event.key === "ArrowRight" ? 2 : 0;
+    if (!step || !chatSplit) return;
+    event.preventDefault();
+    const current = parseFloat(chatSplit.style.getPropertyValue("--chat-split-w")) || 30;
+    applySplit(current + step);
+    persistSplit();
+    window.dispatchEvent(new Event("resize"));
+  });
+
+  /* The SSR markup ships with the canvas already open on desktop, which means
+     setWhiteboard(true) never runs on load — and that function is the ONLY
+     place that backfills the thread's existing images and fires
+     "doodleai:canvas-open". Without this block, opening or reloading a thread
+     left the board empty with the placeholder still up while the thread's
+     doodles sat in the chat column. Same two steps setWhiteboard(true) takes,
+     minus the sidebar collapse, which is a response to user intent, not load. */
+  if (whiteboardOn) {
+    pushToCanvas(collectThreadImages());
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("doodleai:canvas-open"));
+    });
+  }
 
   function renderMessage(msg: ChatMessage, precedingUserMessage: ChatMessage | null): void {
     empty!.hidden = true;
@@ -258,15 +363,6 @@ function initChat(): void {
         actions.appendChild(remixBtn);
       }
 
-      const saveBtn = document.createElement("button");
-      saveBtn.type = "button";
-      saveBtn.textContent = "Save to moodboard";
-      saveBtn.addEventListener("click", () => {
-        msg.images!.forEach((url) => addToMoodboard(url));
-        saveBtn.textContent = "Saved ✓";
-      });
-      actions.appendChild(saveBtn);
-
       const downloadBtn = document.createElement("button");
       downloadBtn.type = "button";
       downloadBtn.textContent = "Download";
@@ -275,8 +371,10 @@ function initChat(): void {
 
       bubble.appendChild(actions);
 
-      // Auto-save every generated image so it always shows up on
-      // /moodboards even if the user never clicks "Save".
+      /* Every generated image is saved to /moodboards here, on render. This is
+         also why there is no "Save to moodboard" button: it ran this same
+         addToMoodboard call on images that had already been added by this line,
+         so it never did anything except relabel itself "Saved ✓". */
       msg.images.forEach((url) => addToMoodboard(url));
     }
 
@@ -493,6 +591,14 @@ function initChat(): void {
             thinking.setDrawing();
           } else if (event.type === "image" && event.url) {
             images.push(event.url);
+            /* Put it on the canvas immediately and reveal the canvas, rather
+               than waiting for the message to finish rendering or for the user
+               to find the toggle — the canvas is the point of the feature, so
+               a generated doodle appearing anywhere else first is a miss.
+               Respects a deliberate close: setWhiteboard(false) sets
+               canvasDismissed, which resets on the next send. */
+            pushToCanvas([event.url]);
+            if (!whiteboardOn && !canvasDismissed) setWhiteboard(true);
             // Track the Value Moment — a doodle was successfully generated.
             trackDoodleGenerated({
               skill_id: event.skillId ?? pinnedSkillId,
@@ -551,7 +657,7 @@ function initChat(): void {
       };
       appendMessage(threadId!, assistantMessage);
       renderMessage(assistantMessage, precedingUserMessage);
-      if (whiteboardOn) renderWhiteboard();
+      pushToCanvas(collectThreadImages());
     }
   }
 
@@ -563,8 +669,7 @@ function initChat(): void {
 
     if (!text && !attachedUrl) {
       setStatus("Type a message or attach a photo first.", true);
-      return;
-    }
+      return;    }
     if (!(await getSession())) {
       setStatus("Sign in to start creating.", true);
       window.dispatchEvent(new Event("doodleai:open-auth"));
@@ -578,9 +683,11 @@ function initChat(): void {
       refImageUrl,
       createdAt: Date.now(),
     };
+    // A fresh request re-earns the right to reveal the canvas.
+    canvasDismissed = false;
     const history = appendMessage(threadId!, userMessage);
     renderMessage(userMessage, null);
-    if (whiteboardOn) renderWhiteboard();
+    pushToCanvas(collectThreadImages());
     clearComposer(input!);
     clearAttachment();
     setStatus("");
@@ -626,6 +733,14 @@ function initChat(): void {
   });
   attachRemove?.addEventListener("click", clearAttachment);
 
+  const dropBox = $("chatBox");
+  if (dropBox) {
+    initComposerDropZone(dropBox, (files) => {
+      const file = files[0];
+      if (file) void handleFile(file);
+    });
+  }
+
   sendBtn.addEventListener("click", () => void send());
   $("chatStopBtn")?.addEventListener("click", () => {
     if (activeAbort) {
@@ -659,7 +774,7 @@ function initChat(): void {
     });
     empty!.hidden = messages.length > 0;
     if (hasResult) input!.dataset.placeholder = REFINE_PLACEHOLDER;
-    if (whiteboardOn) renderWhiteboard();
+    pushToCanvas(collectThreadImages());
   }
 
   /**

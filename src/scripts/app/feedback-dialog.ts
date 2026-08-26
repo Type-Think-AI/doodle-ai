@@ -1,41 +1,41 @@
-/* Controller for the shared #feedbackDialog (src/components/app/FeedbackDialog.astro),
-   mounted once per app-shell page. Mirrors auth-dialog.ts's open/close plumbing,
-   plus a plain fetch for the one-field form. */
+/* Controller for the sticky-note-style feedback dialog.
+ *
+ * Flow:
+ *  1. POST /api/v1/feedback (stores D1 row; attempts DO RPC for multiplayer).
+ *  2. Dispatch 'doodleai:feedback-added' with the text — the RoadmapBoard
+ *     component listens for this and creates the note directly on the canvas.
+ *     This is what makes feedback visible in local mode (no DO) and also gives
+ *     instant feedback in multiplayer mode even if the RPC hasn't propagated yet.
+ */
 
-/** Any trigger opens the dialog by dispatching this on `window` — see sidebar.ts. */
 const OPEN_EVENT = "doodleai:open-feedback";
-/** How long the "Thanks!" state stays up before the dialog closes itself. */
-const AUTO_CLOSE_MS = 1500;
+const ADDED_EVENT = "doodleai:feedback-added";
+const AUTO_CLOSE_MS = 1800;
 
 function initFeedbackDialog(): void {
   const dialog = document.getElementById("feedbackDialog") as HTMLDialogElement | null;
   const body = document.getElementById("feedbackDialogBody");
   if (!dialog || !body) return;
 
-  // showThanks() replaces the form markup in place; stash the original so a
-  // later reopen can restore the real form instead of leaving "Thanks!" up.
   const formHtml = body.innerHTML;
 
   const close = (): void => {
     if (dialog.open) dialog.close();
   };
 
-  // A click that lands on the <dialog> element itself (rather than something
-  // inside feedback-dialog-body) is a click on the backdrop area within its
-  // box — <dialog> has no separate "outside" element to target since
-  // ::backdrop isn't part of the DOM.
   dialog.addEventListener("click", (e) => {
     if (e.target === dialog) close();
   });
 
   const showThanks = (): void => {
-    body.innerHTML = '<p class="feedback-dialog-thanks">Thanks for the feedback!</p>';
+    body.innerHTML = `
+      <div class="fb-thanks">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.2H22l-6 4.4 2.3 7.2L12 16.6 5.7 20.8 8 13.6 2 9.2h7.6L12 2Z" fill="#fbbf24"/></svg>
+        <p>Stuck on the board!</p>
+      </div>`;
     window.setTimeout(close, AUTO_CLOSE_MS);
   };
 
-  // Elements inside feedback-dialog-body are re-queried and re-bound every
-  // time the form markup is (re)installed, since showThanks() tears the
-  // original nodes out of the DOM via innerHTML.
   const bindForm = (): void => {
     const closeBtn = document.getElementById("feedbackDialogClose");
     const textarea = document.getElementById("feedbackDialogText") as HTMLTextAreaElement | null;
@@ -50,14 +50,14 @@ function initFeedbackDialog(): void {
 
       if (!text) {
         if (errorEl) {
-          errorEl.textContent = "Say something first.";
+          errorEl.textContent = "Write something first.";
           errorEl.hidden = false;
         }
         return;
       }
 
       submitBtn.disabled = true;
-      submitBtn.textContent = "Sending...";
+      submitBtn.textContent = "Sticking…";
 
       try {
         const res = await fetch("/api/v1/feedback", {
@@ -68,15 +68,18 @@ function initFeedbackDialog(): void {
 
         if (!res.ok) {
           const payload = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-          throw new Error(payload?.error?.message || "Couldn't send that. Try again.");
+          throw new Error(payload?.error?.message || "Couldn't stick that. Try again.");
         }
+
+        // Tell the board to add the note client-side (works in local + sync).
+        window.dispatchEvent(new CustomEvent(ADDED_EVENT, { detail: { text } }));
 
         showThanks();
       } catch (err) {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Send feedback";
+        submitBtn.textContent = "Stick it";
         if (errorEl) {
-          errorEl.textContent = err instanceof Error ? err.message : "Couldn't send that. Try again.";
+          errorEl.textContent = err instanceof Error ? err.message : "Couldn't stick that. Try again.";
           errorEl.hidden = false;
         }
       }
@@ -85,8 +88,6 @@ function initFeedbackDialog(): void {
 
   bindForm();
 
-  // Re-showing the dialog after a previous "Thanks!" close should present a
-  // fresh form, not the thanks message or leftover text from last time.
   window.addEventListener(OPEN_EVENT, () => {
     if (body.innerHTML !== formHtml) {
       body.innerHTML = formHtml;
