@@ -12,11 +12,13 @@ import {
 import SampleBadge from '../components/SampleBadge.astro';
 
 const db = getDb(Astro);
-const requestedPage = Number.parseInt(new URL(Astro.request.url).searchParams.get('page') ?? '1', 10);
+const searchParams = new URL(Astro.request.url).searchParams;
+const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10);
 const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+const q = searchParams.get('q')?.trim() || undefined;
 const pageSize = 50;
 const [ledger, totals, weekly] = await Promise.all([
-	listLedger(db, pageSize, (page - 1) * pageSize),
+	listLedger(db, pageSize, (page - 1) * pageSize, q),
 	getCreditTotals(db),
 	getCreditsByWeek(db),
 ]);
@@ -95,6 +97,7 @@ const hasNextPage = ledger.length === pageSize;
 		<div class="ledger-panel">
 			<div class="ledger-header">
 				<span class="panel-title">Ledger</span>
+				{q && <span class="ledger-filter">Filtered: "{q}"<a href="/admin/credits" class="clear-filter">✕</a></span>}
 				<span class="ledger-count">{ledger.length} {ledger.length === 1 ? 'entry' : 'entries'}{page > 1 ? ` · page ${page}` : ''}</span>
 			</div>
 			<div class="ledger-table-head"><span>DELTA</span><span>REASON</span><span>ACTOR</span><span>ORG</span><span>BALANCE</span><span>WHEN</span></div>
@@ -110,13 +113,13 @@ const hasNextPage = ledger.length === pageSize;
 						<span class="ledger-balance">{thousands(entry.balanceAfter)}</span>
 						<span class="ledger-time" title={formatDate(entry.createdAt)}>{relativeTime(entry.createdAt)}</span>
 					</div>
-				)) : <div class="empty-state">No credit ledger entries yet.</div>
+				)) : <div class="empty-state">{q ? `No ledger entries matching "${q}".` : 'No credit ledger entries yet.'}</div>
 			}
 			{(page > 1 || hasNextPage) && (
 				<nav class="pagination" aria-label="Ledger pagination">
-					{page > 1 ? <a href={`/admin/credits?page=${page - 1}`}>Previous</a> : <span></span>}
+					{page > 1 ? <a href={`/admin/credits?page=${page - 1}${q ? `&q=${encodeURIComponent(q)}` : ''}`}>Previous</a> : <span></span>}
 					<span>Page {page}</span>
-					{hasNextPage ? <a href={`/admin/credits?page=${page + 1}`}>Next</a> : <span></span>}
+					{hasNextPage ? <a href={`/admin/credits?page=${page + 1}${q ? `&q=${encodeURIComponent(q)}` : ''}`}>Next</a> : <span></span>}
 				</nav>
 			)}
 		</div>
@@ -305,6 +308,9 @@ const hasNextPage = ledger.length === pageSize;
 	.ledger-panel { padding: 6px; overflow: hidden; }
 	.ledger-header { padding: 15px 15px 11px; display: flex; align-items: center; }
 	.ledger-count { margin-left: auto; font-size: 11.5px; color: var(--text-dimmer); }
+	.ledger-filter { font-size: 11px; color: var(--accent); margin-left: 10px; display: flex; align-items: center; gap: 5px; }
+	.clear-filter { color: var(--text-dimmer); text-decoration: none; font-size: 12px; padding: 0 3px; }
+	.clear-filter:hover { color: var(--text); }
 	.ledger-table-head, .ledger-row { display: grid; grid-template-columns: 0.65fr 1fr 1.35fr 1fr 0.8fr 0.75fr; gap: 10px; align-items: center; }
 	.ledger-table-head { padding: 0 15px 8px; font-size: 9.5px; letter-spacing: .06em; color: var(--text-dimmer); }
 	.ledger-row { padding: 10px 15px; border-top: 1px solid var(--border); min-height: 56px; }

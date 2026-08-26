@@ -18,9 +18,18 @@ function toneFor(status: string): 'green' | 'red' | 'neutral' {
 			<span class="growth-tag">Growth</span>
 		</div>
 		<span class="mrr-value">$4,920</span>
-		<svg viewBox="0 0 300 54" preserveAspectRatio="none" class="mrr-spark">
-			<polyline points={mrrSpark} fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+		<svg viewBox="0 0 300 54" preserveAspectRatio="none" class="mrr-spark" id="mrr-spark-svg">
+			<defs>
+				<linearGradient id="spark-fill-grad" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="var(--green)" stop-opacity="0.25" />
+					<stop offset="100%" stop-color="var(--green)" stop-opacity="0" />
+				</linearGradient>
+			</defs>
+			<polygon points={`0,54 ${mrrSpark} 300,54`} fill="url(#spark-fill-grad)" class="mrr-area" />
+			<polyline points={mrrSpark} fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="mrr-line"></polyline>
+			<circle cx="0" cy="0" r="4" class="mrr-dot" id="mrr-dot" />
 		</svg>
+		<div class="mrr-tooltip" id="mrr-tooltip"></div>
 	</div>
 
 	<div class="panel">
@@ -98,6 +107,64 @@ function toneFor(status: string): 'green' | 'red' | 'neutral' {
 		width: 100%;
 		height: 48px;
 		margin-top: 10px;
+		overflow: visible;
+		cursor: crosshair;
+		filter: drop-shadow(0 0 4px rgba(var(--green-rgb, 34, 197, 94), 0.35));
+	}
+	.mrr-line {
+		stroke-dasharray: 500;
+		stroke-dashoffset: 500;
+		animation: draw-line 1.5s ease-out forwards;
+	}
+	.mrr-area {
+		opacity: 0;
+		animation: fade-area 0.8s ease-out 1s forwards;
+	}
+	@keyframes draw-line {
+		to { stroke-dashoffset: 0; }
+	}
+	@keyframes fade-area {
+		to { opacity: 1; }
+	}
+	.mrr-dot {
+		fill: var(--green);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.15s ease;
+	}
+	.mrr-dot.visible {
+		opacity: 1;
+		animation: sparkle-pulse 1s ease-in-out infinite;
+	}
+	.mrr-dot.pinned {
+		opacity: 1;
+		animation: sparkle-pulse 0.8s ease-in-out infinite;
+	}
+	@keyframes sparkle-pulse {
+		0%, 100% { r: 4; opacity: 1; }
+		50% { r: 6; opacity: 0.7; }
+	}
+	.mrr-tooltip {
+		position: absolute;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 3px 8px;
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--green);
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s ease, transform 0.15s ease;
+		transform: translateY(2px);
+		white-space: nowrap;
+	}
+	.mrr-tooltip.visible {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.mrr-panel {
+		position: relative;
 	}
 	.stat-value {
 		font-size: 26px;
@@ -178,3 +245,89 @@ function toneFor(status: string): 'green' | 'red' | 'neutral' {
 		}
 	}
 </style>
+
+<script>
+(() => {
+	const data = [18, 20, 19, 24, 23, 28, 27, 32, 31, 36, 35, 41, 44, 48];
+	const values = data.map(d => d * 100); // $1800 .. $4800
+	const svg = document.getElementById('mrr-spark-svg');
+	const dot = document.getElementById('mrr-dot');
+	const tooltip = document.getElementById('mrr-tooltip');
+	if (!svg || !dot || !tooltip) return;
+
+	const w = 300, h = 54, pad = 5;
+	const n = data.length;
+	const min = Math.min(...data);
+	const max = Math.max(...data);
+
+	function getPoint(i: number): [number, number] {
+		const x = (i / (n - 1)) * w;
+		const y = pad + ((max - data[i]) / (max - min)) * (h - 2 * pad);
+		return [x, y];
+	}
+
+	let pinned = false;
+
+	svg.addEventListener('mousemove', (e: MouseEvent) => {
+		if (pinned) return;
+		const rect = svg.getBoundingClientRect();
+		const relX = (e.clientX - rect.left) / rect.width;
+		const idx = Math.round(relX * (n - 1));
+		const clamped = Math.max(0, Math.min(n - 1, idx));
+		showPoint(clamped, e.clientX, rect);
+	});
+
+	svg.addEventListener('mouseleave', () => {
+		if (pinned) return;
+		hidePoint();
+	});
+
+	svg.addEventListener('click', (e: MouseEvent) => {
+		e.stopPropagation();
+		const rect = svg.getBoundingClientRect();
+		const relX = (e.clientX - rect.left) / rect.width;
+		const idx = Math.round(relX * (n - 1));
+		const clamped = Math.max(0, Math.min(n - 1, idx));
+		pinned = true;
+		dot.classList.add('pinned');
+		showPoint(clamped, e.clientX, rect);
+	});
+
+	document.addEventListener('click', (e: MouseEvent) => {
+		if (!pinned) return;
+		if (svg.contains(e.target as Node)) return;
+		pinned = false;
+		dot.classList.remove('pinned');
+		hidePoint();
+	});
+
+	function showPoint(idx: number, clientX: number, rect: DOMRect) {
+		const [px, py] = getPoint(idx);
+		dot.setAttribute('cx', String(px));
+		dot.setAttribute('cy', String(py));
+		dot.classList.add('visible');
+
+		const dollar = '$' + values[idx].toLocaleString();
+		tooltip.textContent = dollar;
+		tooltip.classList.add('visible');
+
+		// Position tooltip above the svg relative to the panel
+		const panel = svg.closest('.mrr-panel') as HTMLElement;
+		if (!panel) return;
+		const panelRect = panel.getBoundingClientRect();
+		const svgTop = rect.top - panelRect.top;
+		const dotScreenX = rect.left + (px / w) * rect.width;
+		const tooltipLeft = dotScreenX - panelRect.left;
+		const tooltipTop = svgTop + (py / h) * rect.height - 24;
+
+		tooltip.style.left = tooltipLeft + 'px';
+		tooltip.style.top = tooltipTop + 'px';
+		tooltip.style.transform = 'translate(-50%, 0)';
+	}
+
+	function hidePoint() {
+		dot.classList.remove('visible');
+		tooltip.classList.remove('visible');
+	}
+})();
+</script>

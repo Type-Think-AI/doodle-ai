@@ -138,6 +138,7 @@ const hasPrev = page > 1;
 	.seg-chip,
 	.sort-chip {
 		text-decoration: none;
+		cursor: pointer;
 	}
 	.seg-chip {
 		display: flex;
@@ -151,8 +152,7 @@ const hasPrev = page > 1;
 		background: transparent;
 		color: var(--text-dim);
 	}
-	.seg-chip:hover,
-	.sort-chip:hover {
+	.seg-chip:hover {
 		color: var(--text);
 		border-color: var(--border3);
 	}
@@ -180,14 +180,22 @@ const hasPrev = page > 1;
 	.sort-chip {
 		padding: 5px 11px;
 		border-radius: 999px;
-		border: 1px solid transparent;
+		border: 1px solid var(--border2);
 		font-size: 11.5px;
 		background: transparent;
 		color: var(--text-dim);
+		cursor: pointer;
+		transition: border-color 0.15s, color 0.15s, background 0.15s;
+	}
+	.sort-chip:hover {
+		color: var(--text);
+		border-color: var(--border3);
+		background: var(--surface2);
 	}
 	.sort-chip.active {
 		background: var(--hover);
 		color: var(--text);
+		border-color: var(--border3);
 	}
 	.pagination {
 		display: flex;

@@ -798,7 +798,18 @@ export interface AdminLedgerRow {
   orgName: string | null;
 }
 
-export async function listLedger(db: Db, limit = 50, offset = 0): Promise<AdminLedgerRow[]> {
+export async function listLedger(
+  db: Db,
+  limit = 50,
+  offset = 0,
+  q?: string,
+): Promise<AdminLedgerRow[]> {
+  const filters = [];
+  if (q) {
+    const like = `%${q.toLowerCase()}%`;
+    filters.push(sql`(LOWER(${user.name}) LIKE ${like} OR LOWER(${user.email}) LIKE ${like})`);
+  }
+
   const rows = await db
     .select({
       id: creditLedger.id,
@@ -813,6 +824,7 @@ export async function listLedger(db: Db, limit = 50, offset = 0): Promise<AdminL
     .from(creditLedger)
     .innerJoin(user, eq(creditLedger.userId, user.id))
     .leftJoin(organization, eq(creditLedger.organizationId, organization.id))
+    .where(filters.length > 0 ? and(...filters) : undefined)
     .orderBy(desc(creditLedger.createdAt))
     .limit(limit)
     .offset(offset);
