@@ -110,6 +110,10 @@ const threadId = Astro.params.id ?? 'new';
 		border-right: 1px solid var(--border);
 	}
 	/* No transition while dragging — animating flex-basis on every pointermove
+	   makes the divider lag behind the cursor. */
+	.chat-split[data-resizing="true"] .chat-page { transition: none; }
+	.chat-split[data-resizing="true"] { cursor: col-resize; user-select: none; }
+
 	/* Canvas mode is a focused dark workspace: the board and chat controls
 	   must read as one surface instead of a white chat pane beside a dark
 	   tldraw editor. This is scoped to the split only, so the user's theme
@@ -135,9 +139,6 @@ const threadId = Astro.params.id ?? 'new';
 	}
 	.chat-split[data-whiteboard="true"] .chat-page { background: var(--bg); }
 
-	   makes the divider lag behind the cursor. */
-	.chat-split[data-resizing="true"] .chat-page { transition: none; }
-	.chat-split[data-resizing="true"] { cursor: col-resize; user-select: none; }
 
 	.chat-split-handle {
 		display: none;
