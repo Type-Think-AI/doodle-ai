@@ -44,6 +44,11 @@ const { active } = Astro.props;
     <div class="sidebar-chats-list" id="sidebarChatsList"></div>
   </div>
 
+  <div class="sidebar-projects" id="sidebarProjects">
+    <div class="sidebar-projects-title sidebar-label">Projects</div>
+    <div class="sidebar-projects-list" id="sidebarProjectsList"></div>
+  </div>
+
   <div class="sidebar-bottom">
     <button type="button" class="sidebar-link sidebar-feedback" id="sidebarFeedback" aria-label="Send feedback">
       <!-- A megaphone, not a speech bubble — the bubble shape is already the
@@ -311,6 +316,59 @@ const { active } = Astro.props;
   }
   :global(.sidebar-chats-empty) { padding: 6px 10px; font-size: 12.5px; color: var(--text-dimmer); }
   :global(.sidebar.collapsed .sidebar-chats-empty) { display: none; }
+
+  .sidebar-projects {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sidebar-projects-title {
+    padding: 4px 12px 4px;
+    font-size: 12px;
+    letter-spacing: 0;
+    color: var(--text-dimmer);
+    text-transform: none;
+  }
+  .sidebar-projects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: auto;
+    min-height: 0;
+  }
+  :global(.sidebar-project-link) {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    min-width: 0;
+  }
+  :global(.sidebar-project-link:hover) { background: var(--hover); color: var(--text); }
+  :global(.sidebar-project-icon) {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dimmer);
+  }
+  :global(.sidebar-project-name) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :global(.sidebar.collapsed .sidebar-project-name) { display: none; }
+  :global(.sidebar.collapsed .sidebar-project-link) {
+    justify-content: center;
+    padding: 6px;
+  }
+  :global(.sidebar-projects-empty) { padding: 6px 10px; font-size: 12.5px; color: var(--text-dimmer); }
+  :global(.sidebar.collapsed .sidebar-projects-empty) { display: none; }
 
   .sidebar-bottom {
     margin-top: auto;

@@ -45,6 +45,9 @@ const { id, variant = "compact", placeholder = "Describe a doodle or attach a ph
       </button>
       <input type="file" id={`${id}FileInput`} accept="image/*" hidden />
       <span class="composer-auto">Auto</span>
+      <button class="composer-stop" id={`${id}StopBtn`} type="button" aria-label="Stop generation" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+      </button>
       <button class="composer-send" id={`${id}Send`} type="button" aria-label="Send">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
       </button>
@@ -161,7 +164,7 @@ const { id, variant = "compact", placeholder = "Describe a doodle or attach a ph
 
   .composer-editable {
     width: 100%;
-    min-height: 24px;
+    min-height: 44px;
     max-height: 200px;
     overflow-y: auto;
     outline: none;
@@ -177,7 +180,7 @@ const { id, variant = "compact", placeholder = "Describe a doodle or attach a ph
     color: var(--text-dimmer);
     pointer-events: none;
   }
-  .composer-compact .composer-editable { font-size: 14.5px; line-height: 21px; max-height: 140px; }
+  .composer-compact .composer-editable { font-size: 14.5px; line-height: 21px; min-height: 42px; max-height: 140px; }
 
   /* iOS Safari zooms the whole page on focus of any input/contenteditable
      under 16px — the compact variant's 14.5px triggers it every time the
@@ -242,6 +245,23 @@ const { id, variant = "compact", placeholder = "Describe a doodle or attach a ph
   }
   .composer-compact .composer-send { width: 30px; height: 30px; flex-basis: 30px; margin-left: auto; }
   .composer-send:disabled { opacity: 0.5; cursor: default; }
+  .composer-send[hidden] { display: none; }
+
+  .composer-stop {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 50%;
+    border: 0;
+    background: #e53935;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .composer-compact .composer-stop { width: 30px; height: 30px; flex-basis: 30px; margin-left: auto; }
+  .composer-stop[hidden] { display: none; }
 
   .composer-status { text-align: center; font-size: 12.5px; color: var(--text-dim); margin: 8px 0 0; min-height: 16px; }
   .composer-status[data-err="true"] { color: #ff8a8a; }

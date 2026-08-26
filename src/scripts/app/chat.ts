@@ -79,6 +79,7 @@ function initChat(): void {
   let attachedPreviewUrl: string | null = null;
   let uploading = false;
   let sending = false;
+  let activeAbort: AbortController | null = null;
   let pinnedSkillId: string | undefined = getThreadSkill(threadId);
   let lastUserMessage: ChatMessage | null = null;
   let hasResult = false;
@@ -90,6 +91,13 @@ function initChat(): void {
   }
   function syncSendState(): void {
     sendBtn!.disabled = sending || uploading;
+    const stopBtn = $("chatStopBtn");
+    if (stopBtn) stopBtn.hidden = !sending;
+    if (sending) {
+      sendBtn!.hidden = true;
+    } else {
+      sendBtn!.hidden = false;
+    }
   }
 
   function syncSkillChip(): void {
@@ -191,7 +199,9 @@ function initChat(): void {
       const img = document.createElement("img");
       img.className = "chat-bubble-photo";
       img.alt = "Attached photo";
+      img.style.cursor = "pointer";
       setImageSrc(img, msg.imageUrl);
+      img.addEventListener("click", () => openLightbox([msg.imageUrl!], msg.imageUrl!));
       bubble.appendChild(img);
     }
 
@@ -212,6 +222,7 @@ function initChat(): void {
       if (precedingUserMessage?.imageUrl) {
         const sourceCell = document.createElement("div");
         sourceCell.className = "chat-bubble-image-wrap chat-bubble-image-source";
+        sourceCell.style.cursor = "pointer";
         const sourceImg = document.createElement("img");
         sourceImg.alt = "Source photo";
         setImageSrc(sourceImg, precedingUserMessage.imageUrl);
@@ -220,6 +231,7 @@ function initChat(): void {
         sourceTag.className = "chat-bubble-image-tag";
         sourceTag.textContent = "Source";
         sourceCell.appendChild(sourceTag);
+        sourceCell.addEventListener("click", () => openLightbox([precedingUserMessage!.imageUrl!], precedingUserMessage!.imageUrl!));
         grid.appendChild(sourceCell);
       }
 
@@ -426,6 +438,9 @@ function initChat(): void {
     const thinking = renderThinking();
     const precedingUserMessage = lastUserMessage;
 
+    const abortController = new AbortController();
+    activeAbort = abortController;
+
     let text = "";
     const images: string[] = [];
     let streamError: string | null = null;
@@ -438,6 +453,7 @@ function initChat(): void {
           messages: toApiMessages(history),
           styleId: getStyleId(),
         }),
+        signal: abortController.signal,
       });
       if (!res.ok || !res.body) {
         const data = (await res.json().catch(() => ({}))) as {
@@ -507,7 +523,11 @@ function initChat(): void {
       saveAssistantReply();
     } catch (err) {
       thinking.wrap.remove();
-      setStatus(err instanceof Error ? err.message : "Chat request failed", true);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setStatus("Generation stopped.", false);
+      } else {
+        setStatus(err instanceof Error ? err.message : "Chat request failed", true);
+      }
       // A doodle the server already generated (and already charged a
       // credit for, before the stream had any way to fail) must not
       // vanish just because the connection dropped on the way back —
@@ -516,6 +536,7 @@ function initChat(): void {
       // showing a partial reply.
       saveAssistantReply();
     } finally {
+      activeAbort = null;
       sending = false;
       syncSendState();
     }
@@ -606,6 +627,12 @@ function initChat(): void {
   attachRemove?.addEventListener("click", clearAttachment);
 
   sendBtn.addEventListener("click", () => void send());
+  $("chatStopBtn")?.addEventListener("click", () => {
+    if (activeAbort) {
+      activeAbort.abort();
+      activeAbort = null;
+    }
+  });
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
