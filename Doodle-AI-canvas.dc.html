@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<style>
+@keyframes ddo-shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+@keyframes ddo-pop{0%{opacity:0;transform:scale(.92)}100%{opacity:1;transform:scale(1)}}
+body{margin:0;background:#0a0b0c}
+</style>
+</helmet>
+<div style="position:fixed;inset:0;display:flex;background:#0a0b0c;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;user-select:none">
+
+  <div style="width:{{ chatWidthPct }}%;min-width:280px;max-width:440px;height:100%;background:#141617;border-right:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;flex-shrink:0;box-shadow:2px 0 24px rgba(0,0,0,.25)">
+    <div style="display:flex;align-items:center;gap:9px;padding:16px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div style="width:24px;height:24px;border-radius:7px;background:linear-gradient(155deg,{{ accentColor }},rgba(255,255,255,.15));flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)"></div>
+      <div style="font-size:14px;font-weight:600;color:#f2f3f2;letter-spacing:.01em">Doodle AI</div>
+      <div style="margin-left:auto;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);cursor:pointer" style-hover="background:rgba(255,255,255,.08);color:#fff" title="New chat">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ messages }}" as="msg" hint-placeholder-count="2">
+        <div style="{{ msg.rowStyle }}">
+          <div style="{{ msg.bubbleStyle }}">{{ msg.text }}</div>
+          <sc-if value="{{ msg.thumb }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;width:130px;height:86px;border-radius:9px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,0.1);box-shadow:0 4px 14px rgba(0,0,0,.3)">
+              <div style="{{ msg.thumbStyle }}">
+                <div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="9" cy="9" r="1.6"></circle><path d="M21 15l-5-5-9 9"></path></svg>
+                </div>
+                <div style="font:9px/1 ui-monospace,monospace;color:rgba(255,255,255,.5)">preview</div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ generating }}" hint-placeholder-val="{{ false }}">
+        <div style="align-self:flex-start;display:flex;gap:4px;padding:9px 12px;background:#1b1d1e;border-radius:12px 12px 12px 3px">
+          <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5)"></div>
+          <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3)"></div>
+          <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.15)"></div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="padding:12px 14px 16px;border-top:1px solid rgba(255,255,255,0.06)">
+      <div style="display:flex;align-items:flex-end;gap:8px;background:#1b1d1e;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:9px 10px" style-focus="border-color:{{ accentColor }}">
+        <input value="{{ promptText }}" onChange="{{ onPromptChange }}" onKeyDown="{{ onPromptKeyDown }}" placeholder="Describe something to doodle..." style="flex:1;background:transparent;border:none;outline:none;color:#f0f0ef;font-size:13px;padding:4px 2px"></input>
+        <div onClick="{{ sendPrompt }}" style="width:30px;height:30px;border-radius:9px;background:{{ accentColor }};display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)" style-hover="filter:brightness(1.08)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a0b0c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="6 11 12 5 18 11"></polyline></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="{{ canvasOuterStyle }}" onMouseDown="{{ onCanvasMouseDown }}">
+    <div style="{{ gridStyle }}"></div>
+
+    <div style="{{ worldStyle }}">
+      <sc-for list="{{ vmImages }}" as="img" hint-placeholder-count="3">
+        <div style="{{ img.wrapStyle }}" onMouseDown="{{ img.onMouseDown }}">
+          <div style="{{ img.faceStyle }}">
+            <div style="{{ img.iconWrapStyle }}">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="9" cy="9" r="1.6"></circle><path d="M21 15l-5-5-9 9"></path></svg>
+            </div>
+            <div style="{{ img.labelStyle }}">{{ img.label }}</div>
+          </div>
+          <sc-if value="{{ img.selected }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid {{ accentColor }};box-shadow:0 1px 4px rgba(0,0,0,.35)" onMouseDown="{{ img.onResizeTL }}"></div>
+            <div style="position:absolute;right:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid {{ accentColor }};box-shadow:0 1px 4px rgba(0,0,0,.35)" onMouseDown="{{ img.onResizeTR }}"></div>
+            <div style="position:absolute;left:-5px;bottom:-5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid {{ accentColor }};box-shadow:0 1px 4px rgba(0,0,0,.35)" onMouseDown="{{ img.onResizeBL }}"></div>
+            <div style="position:absolute;right:-5px;bottom:-5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid {{ accentColor }};box-shadow:0 1px 4px rgba(0,0,0,.35)" onMouseDown="{{ img.onResizeBR }}"></div>
+            <div style="position:absolute;top:-44px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:#1b1d1e;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:4px;box-shadow:0 8px 22px rgba(0,0,0,.45)">
+              <div onMouseDown="{{ img.stop }}" onClick="{{ img.onDuplicate }}" title="Duplicate" style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);cursor:pointer" style-hover="background:rgba(255,255,255,.08);color:#fff">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="13" height="13" rx="2"></rect><path d="M8 16v3a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-3"></path></svg>
+              </div>
+              <div onMouseDown="{{ img.stop }}" onClick="{{ img.onRegenerate }}" title="Regenerate" style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);cursor:pointer" style-hover="background:rgba(255,255,255,.08);color:#fff">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.36"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+              </div>
+              <div style="width:1px;height:18px;background:rgba(255,255,255,0.1);margin:0 1px"></div>
+              <div onMouseDown="{{ img.stop }}" onClick="{{ img.onDelete }}" title="Delete" style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);cursor:pointer" style-hover="background:rgba(220,80,80,.18);color:#ff9c9c">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 6"></path></svg>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="position:absolute;left:20px;bottom:20px;display:flex;align-items:center;gap:2px;background:#131516;border:1px solid rgba(255,255,255,0.08);border-radius:11px;padding:5px;box-shadow:0 8px 24px rgba(0,0,0,.4)">
+      <div onClick="{{ zoomOut }}" style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);cursor:pointer" style-hover="background:rgba(255,255,255,.08)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+      <div style="width:44px;text-align:center;font:11px/1 ui-monospace,monospace;color:rgba(255,255,255,.65)">{{ zoomLabel }}</div>
+      <div onClick="{{ zoomIn }}" style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);cursor:pointer" style-hover="background:rgba(255,255,255,.08)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:#131516;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.45)">
+      <div onClick="{{ setToolSelect }}" style="{{ styleToolSelect }}" title="Select">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 4l7.07 17 2.51-7.39L21 11.07z"></path></svg>
+      </div>
+      <div onClick="{{ setToolPan }}" style="{{ styleToolPan }}" title="Pan">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v7M12 3l-3 3M12 3l3 3M12 21v-7M12 21l-3-3M12 21l3-3M3 12h7M3 12l3-3M3 12l3 3M21 12h-7M21 12l-3-3M21 12l-3 3"></path></svg>
+      </div>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 3px"></div>
+      <div onClick="{{ addImage }}" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.78);cursor:pointer" style-hover="background:rgba(255,255,255,.08)" title="Add image">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="9" cy="9" r="1.6"></circle><path d="M21 15l-5-5-9 9"></path></svg>
+      </div>
+      <div onClick="{{ setToolDraw }}" style="{{ styleToolDraw }}" title="Draw">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+      </div>
+      <div onClick="{{ setToolShapes }}" style="{{ styleToolShapes }}" title="Shapes">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="10" width="9" height="9" rx="1.5"></rect><circle cx="16.5" cy="7.5" r="4.5"></circle></svg>
+      </div>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 3px"></div>
+      <div onClick="{{ undo }}" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.78);cursor:pointer" style-hover="background:rgba(255,255,255,.08)" title="Undo">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h10a5 5 0 0 1 0 10H9"></path><polyline points="8 5 3 10 8 15"></polyline></svg>
+      </div>
+      <div onClick="{{ redo }}" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.78);cursor:pointer" style-hover="background:rgba(255,255,255,.08)" title="Redo">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10H11a5 5 0 0 0 0 10h4"></path><polyline points="16 5 21 10 16 15"></polyline></svg>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:860},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#34d399&quot;,&quot;options&quot;:[&quot;#34d399&quot;,&quot;#22c55e&quot;,&quot;#84cc16&quot;,&quot;#2dd4bf&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;showDotGrid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;chatWidthPct&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:15,&quot;max&quot;:30,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  state = {
+    zoom: 1,
+    pan: { x: 0, y: 0 },
+    activeTool: 'select',
+    selectedId: 'c',
+    promptText: '',
+    generating: false,
+    nextN: 5,
+    images: [
+      { id: 'a', x: 90, y: 120, w: 250, h: 190, label: 'sketch_01 — mountain cabin' },
+      { id: 'b', x: 400, y: 300, w: 290, h: 210, label: 'sketch_02 — robot dog' },
+      { id: 'c', x: 760, y: 110, w: 230, h: 290, label: 'sketch_03 — city skyline' },
+      { id: 'd', x: 730, y: 440, w: 270, h: 180, label: 'sketch_04 — floating island' }
+    ],
+    messages: [
+      { id: 1, role: 'assistant', text: "Doodle AI ready. Describe a scene and I'll sketch it onto your canvas." },
+      { id: 2, role: 'user', text: 'a floating island with a waterfall' },
+      { id: 3, role: 'assistant', text: 'Added to your canvas.', thumb: true }
+    ]
+  };
+
+  componentDidMount() {
+    this._onMove = (e) => this.handleMove(e);
+    this._onUp = () => { this.drag = null; };
+    this._onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || '';
+      if ((e.key === 'Delete' || e.key === 'Backspace') && this.state.selectedId && tag !== 'INPUT') {
+        this.deleteImage(this.state.selectedId);
+      }
+    };
+    window.addEventListener('mousemove', this._onMove);
+    window.addEventListener('mouseup', this._onUp);
+    window.addEventListener('keydown', this._onKey);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('mousemove', this._onMove);
+    window.removeEventListener('mouseup', this._onUp);
+    window.removeEventListener('keydown', this._onKey);
+  }
+
+  handleMove(e) {
+    const d = this.drag;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (d.mode === 'pan') {
+      this.setState({ pan: { x: d.origX + dx, y: d.origY + dy } });
+    } else if (d.mode === 'move') {
+      const z = this.state.zoom;
+      this.setState({
+        images: this.state.images.map(im => im.id === d.id ? { ...im, x: d.origX + dx / z, y: d.origY + dy / z } : im)
+      });
+    } else if (d.mode === 'resize') {
+      const z = this.state.zoom;
+      this.setState({
+        images: this.state.images.map(im => {
+          if (im.id !== d.id) return im;
+          let { x, y, w, h } = { x: d.origX, y: d.origY, w: d.origW, h: d.origH };
+          const ddx = dx / z, ddy = dy / z;
+          if (d.corner === 'br') { w = Math.max(80, d.origW + ddx); h = Math.max(60, d.origH + ddy); }
+          if (d.corner === 'bl') { w = Math.max(80, d.origW - ddx); x = d.origX + ddx; h = Math.max(60, d.origH + ddy); }
+          if (d.corner === 'tr') { w = Math.max(80, d.origW + ddx); h = Math.max(60, d.origH - ddy); y = d.origY + ddy; }
+          if (d.corner === 'tl') { w = Math.max(80, d.origW - ddx); x = d.origX + ddx; h = Math.max(60, d.origH - ddy); y = d.origY + ddy; }
+          return { ...im, x, y, w, h };
+        })
+      });
+    }
+  }
+
+  onCanvasMouseDown(e) {
+    if (e.target !== e.currentTarget && this.state.activeTool !== 'pan') return;
+    if (this.state.activeTool === 'pan' || e.button === 1) {
+      this.drag = { mode: 'pan', startX: e.clientX, startY: e.clientY, origX: this.state.pan.x, origY: this.state.pan.y };
+    } else {
+      this.setState({ selectedId: null });
+    }
+  }
+
+  selectImage(id) { this.setState({ selectedId: id }); }
+
+  startMove(img, e) {
+    e.stopPropagation();
+    if (this.state.activeTool !== 'select') return;
+    this.setState({ selectedId: img.id });
+    this.drag = { mode: 'move', id: img.id, startX: e.clientX, startY: e.clientY, origX: img.x, origY: img.y };
+  }
+
+  startResize(img, corner, e) {
+    e.stopPropagation();
+    this.drag = { mode: 'resize', id: img.id, corner, startX: e.clientX, startY: e.clientY, origX: img.x, origY: img.y, origW: img.w, origH: img.h };
+  }
+
+  deleteImage(id) {
+    this.setState({ images: this.state.images.filter(im => im.id !== id), selectedId: null });
+  }
+  duplicateImage(id) {
+    const src = this.state.images.find(im => im.id === id);
+    if (!src) return;
+    const nid = 'i' + this.state.nextN;
+    this.setState({
+      images: [...this.state.images, { ...src, id: nid, x: src.x + 24, y: src.y + 24 }],
+      selectedId: nid, nextN: this.state.nextN + 1
+    });
+  }
+  regenerateImage(id) {
+    this.setState({ images: this.state.images.map(im => im.id === id ? { ...im, label: im.label.split(' — ')[0] + ' — regenerated' } : im) });
+  }
+
+  zoomIn() { this.setState({ zoom: Math.min(2, +(this.state.zoom + 0.1).toFixed(2)) }); }
+  zoomOut() { this.setState({ zoom: Math.max(0.3, +(this.state.zoom - 0.1).toFixed(2)) }); }
+  setTool(t) { this.setState({ activeTool: t }); }
+  undo() {}
+  redo() {}
+
+  onPromptChange(e) { this.setState({ promptText: e.target.value }); }
+  onPromptKeyDown(e) { if (e.key === 'Enter') this.sendPrompt(); }
+
+  addImage() {
+    const id = 'i' + this.state.nextN;
+    this.setState({
+      images: [...this.state.images, { id, x: 300 + Math.random() * 300, y: 200 + Math.random() * 200, w: 240, h: 190, label: 'sketch_0' + this.state.nextN + ' — new idea' }],
+      selectedId: id, nextN: this.state.nextN + 1
+    });
+  }
+
+  sendPrompt() {
+    const text = this.state.promptText.trim();
+    if (!text) return;
+    const msgs = [...this.state.messages, { id: Date.now(), role: 'user', text }];
+    this.setState({ messages: msgs, promptText: '', generating: true });
+    setTimeout(() => {
+      const id = 'i' + this.state.nextN;
+      this.setState({
+        generating: false,
+        images: [...this.state.images, { id, x: 320 + Math.random() * 320, y: 180 + Math.random() * 220, w: 250, h: 190, label: 'sketch_0' + this.state.nextN + ' — ' + text.slice(0, 24) }],
+        selectedId: id, nextN: this.state.nextN + 1,
+        messages: [...msgs, { id: Date.now() + 1, role: 'assistant', text: 'Added to your canvas.', thumb: true }]
+      });
+    }, 900);
+  }
+
+  renderVals() {
+    const accent = this.props.accentColor || '#34d399';
+    const showGrid = this.props.showDotGrid !== false;
+    const chatWidthPct = this.props.chatWidthPct ?? 20;
+    const { zoom, pan, activeTool, selectedId, images } = this.state;
+
+    const toolStyle = (t) => ({
+      width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      cursor: 'pointer', color: activeTool === t ? '#0a0b0c' : 'rgba(255,255,255,.78)',
+      background: activeTool === t ? accent : 'transparent'
+    });
+
+    const vmImages = images.map(im => {
+      const selected = im.id === selectedId;
+      return {
+        ...im,
+        selected,
+        wrapStyle: {
+          position: 'absolute', left: im.x, top: im.y, width: im.w, height: im.h,
+          cursor: activeTool === 'select' ? 'move' : 'default'
+        },
+        faceStyle: {
+          width: '100%', height: '100%', borderRadius: 10, overflow: 'hidden', position: 'relative',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
+          border: selected ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.12)',
+          background: 'linear-gradient(155deg, #1a1d1c 0%, #202423 60%, #1c2019 100%)',
+          boxShadow: selected ? `0 0 0 3px ${accent}33, 0 10px 24px rgba(0,0,0,.35)` : '0 6px 20px rgba(0,0,0,.3)'
+        },
+        iconWrapStyle: {
+          width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,.05)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        },
+        labelStyle: {
+          font: '11px/1.3 ui-monospace,SFMono-Regular,monospace', color: 'rgba(255,255,255,.55)',
+          padding: '0 12px', textAlign: 'center', maxWidth: '100%',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+        },
+        onMouseDown: (e) => this.startMove(im, e),
+        onResizeTL: (e) => this.startResize(im, 'tl', e),
+        onResizeTR: (e) => this.startResize(im, 'tr', e),
+        onResizeBL: (e) => this.startResize(im, 'bl', e),
+        onResizeBR: (e) => this.startResize(im, 'br', e),
+        onDelete: () => this.deleteImage(im.id),
+        onDuplicate: () => this.duplicateImage(im.id),
+        onRegenerate: () => this.regenerateImage(im.id),
+        stop: (e) => e.stopPropagation()
+      };
+    });
+
+    const messages = this.state.messages.map(m => ({
+      ...m,
+      rowStyle: { display: 'flex', flexDirection: 'column', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start' },
+      bubbleStyle: {
+        maxWidth: '85%', padding: '9px 12px', borderRadius: m.role === 'user' ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
+        background: m.role === 'user' ? accent : '#1b1d1e',
+        border: m.role === 'user' ? 'none' : '1px solid rgba(255,255,255,.06)',
+        color: m.role === 'user' ? '#0a0b0c' : '#e8e9e8',
+        fontSize: 13, lineHeight: 1.45
+      },
+      thumbStyle: {
+        width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+        background: 'linear-gradient(155deg, #1a1d1c 0%, #202423 60%, #1c2019 100%)'
+      }
+    }));
+
+    return {
+      accentColor: accent,
+      chatWidthPct,
+      messages,
+      promptText: this.state.promptText,
+      generating: this.state.generating,
+      onPromptChange: (e) => this.onPromptChange(e),
+      onPromptKeyDown: (e) => this.onPromptKeyDown(e),
+      sendPrompt: () => this.sendPrompt(),
+      vmImages,
+      canvasOuterStyle: {
+        flex: 1, height: '100%', position: 'relative', overflow: 'hidden',
+        background: 'radial-gradient(ellipse 80% 60% at 50% 40%, #10120f 0%, #0a0b0a 65%, #060706 100%)',
+        cursor: activeTool === 'pan' ? 'grab' : 'default'
+      },
+      onCanvasMouseDown: (e) => this.onCanvasMouseDown(e),
+      gridStyle: showGrid ? {
+        position: 'absolute', inset: 0,
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1.6px)',
+        backgroundSize: `${28 * zoom}px ${28 * zoom}px`,
+        backgroundPosition: `${pan.x}px ${pan.y}px`
+      } : { position: 'absolute', inset: 0 },
+      worldStyle: {
+        position: 'absolute', left: 0, top: 0,
+        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0'
+      },
+      zoomLabel: Math.round(zoom * 100) + '%',
+      zoomIn: () => this.zoomIn(),
+      zoomOut: () => this.zoomOut(),
+      addImage: () => this.addImage(),
+      setToolSelect: () => this.setTool('select'),
+      setToolPan: () => this.setTool('pan'),
+      setToolDraw: () => this.setTool('draw'),
+      setToolShapes: () => this.setTool('shapes'),
+      styleToolSelect: toolStyle('select'),
+      styleToolPan: toolStyle('pan'),
+      styleToolDraw: toolStyle('draw'),
+      styleToolShapes: toolStyle('shapes'),
+      undo: () => this.undo(),
+      redo: () => this.redo()
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body { margin: 0; background: #09090a; }
+  a { color: #f7bb32; text-decoration: none; }
+  a:hover { color: #ffd166; }
+  [data-ph]:empty::before { content: attr(data-ph); color: #6b6b64; pointer-events: none; }
+  [data-scroll]::-webkit-scrollbar { width: 8px; }
+  [data-scroll]::-webkit-scrollbar-thumb { background: #35353c; border-radius: 8px; }
+  [data-scroll]::-webkit-scrollbar-track { background: transparent; }
+  @keyframes dcRise { from { opacity: 0; transform: translateY(6px) scale(.985) } to { opacity: 1; transform: none } }
+  @keyframes dcFade { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes dcSweep { 0% { transform: translateX(-100%) } 100% { transform: translateX(100%) } }
+</style>
+</helmet>
+<div style="min-height: 100vh; box-sizing: border-box; padding: 40px 30px 80px; background: radial-gradient(1100px 520px at 50% -12%, #17140c 0%, #09090a 62%); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #f2f1ec; display: flex; flex-direction: column; align-items: center; gap: 24px;">
+
+  <div style="width: 100%; max-width: 900px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+    <div style="display: flex; flex-direction: column; gap: 5px;">
+      <div style="font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #7c7c72;">Doodle AI · composer v2</div>
+      <div style="font-size: 21px; font-weight: 600; letter-spacing: -0.015em;">Compact base · expand · upload</div>
+    </div>
+    <div style="display: flex; gap: 2px; padding: 3px; border: 1px solid #26262b; border-radius: 12px; background: #121215;">
+      <sc-for list="{{ variants }}" as="v" hint-placeholder-count="2">
+        <button type="button" onClick="{{ v.pick }}" style="{{ v.style }}">{{ v.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <sc-if value="{{ expanded }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ collapse }}" style="position: fixed; inset: 0; z-index: 80; background: rgba(6,6,7,.74); backdrop-filter: blur(6px); animation: dcFade .18s ease;"></div>
+  </sc-if>
+
+  <div style="{{ frameStyle }}">
+
+    <sc-if value="{{ expanded }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #f7bb32; box-shadow: 0 0 12px rgba(247,187,50,.7);"></span>
+          <span style="font-size: 13px; font-weight: 500; letter-spacing: -0.005em;">Focus composer</span>
+          <span style="font-size: 11.5px; color: #7a7a71;">Esc to collapse</span>
+        </div>
+        <button type="button" onClick="{{ collapse }}" aria-label="Collapse composer" style="{{ ghostBtnStyle }}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 4H4v6M14 20h6v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 4l6 6M20 20l-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+        </button>
+      </div>
+    </sc-if>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+      <sc-if value="{{ skill }}" hint-placeholder-val="{{ false }}">
+        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 9px 5px 10px; margin-bottom: 9px; border-radius: 999px; border: 1px solid rgba(247,187,50,.28); background: linear-gradient(180deg, rgba(247,187,50,.16), rgba(247,187,50,.07));">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="color: #f7bb32;"><path d="m12 3 1.9 4.6 4.6 1.9-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path><path d="M18.5 15.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1Z" fill="currentColor"></path></svg>
+          <span style="font-size: 12.5px; color: #f7bb32;">{{ skill }}</span>
+          <button type="button" onClick="{{ clearSkill }}" aria-label="Unpin skill" style="border: 0; background: none; padding: 0 1px; font-size: 13px; line-height: 1; color: #9a9a90; cursor: pointer;">✕</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <div onDragOver="{{ onDragOver }}" onDragLeave="{{ onDragLeave }}" onDrop="{{ onDrop }}" style="{{ boxStyle }}">
+
+      <sc-if value="{{ resizable }}" hint-placeholder-val="{{ true }}">
+        <div onPointerDown="{{ onResizeStart }}" onDoubleClick="{{ resetHeight }}" title="Drag to resize · double-click to reset" style="position: absolute; top: 0; left: 0; right: 0; height: 15px; display: flex; align-items: center; justify-content: center; cursor: ns-resize; touch-action: none;">
+          <div style="{{ grabberStyle }}"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasFiles }}" hint-placeholder-val="{{ false }}">
+        <div data-scroll="true" style="{{ trayStyle }}">
+          <sc-for list="{{ attachments }}" as="a" hint-placeholder-count="0">
+            <div style="{{ a.cardStyle }}">
+              <div style="{{ a.thumbStyle }}"></div>
+              <sc-if value="{{ a.loading }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; inset: 0; display: flex; align-items: flex-end; background: rgba(9,9,10,.62);">
+                  <div style="height: 3px; width: 100%; background: rgba(255,255,255,.1);">
+                    <div style="{{ a.barStyle }}"></div>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 6px 4px; font-size: 9.5px; color: #eae9e4; background: linear-gradient(to top, rgba(0,0,0,.82), transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ a.name }}</div>
+              <button type="button" onClick="{{ a.remove }}" aria-label="Remove attachment" style="position: absolute; top: 4px; right: 4px; width: 19px; height: 19px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: rgba(9,9,10,.8); color: #eceae5; font-size: 10px; line-height: 1; cursor: pointer;">✕</button>
+            </div>
+          </sc-for>
+          <button type="button" onClick="{{ pickFiles }}" aria-label="Add more images" style="{{ trayAddStyle }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
+          </button>
+        </div>
+      </sc-if>
+
+      <div data-scroll="true" data-ph="{{ placeholder }}" contenteditable="true" role="textbox" aria-multiline="true" ref="{{ edRef }}" onInput="{{ onInput }}" onKeyDown="{{ onKeyDown }}" onPaste="{{ onPaste }}" onFocus="{{ onFocus }}" onBlur="{{ onBlur }}" style="{{ editorStyle }}"></div>
+
+      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 11px;">
+        <button type="button" onClick="{{ togglePlus }}" aria-label="Attach" title="Attach" style="{{ iconBtnStyle }}">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3.5" stroke="currentColor" stroke-width="1.6"></rect><path d="M4 16.2l3.9-3.6a2 2 0 0 1 2.7 0l3.2 3M14 14.6l1.6-1.4a2 2 0 0 1 2.6 0l2 1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path><circle cx="15.3" cy="9.4" r="1.35" fill="currentColor"></circle></svg>
+        </button>
+        <button type="button" onClick="{{ openCamera }}" aria-label="Camera" title="Camera" style="{{ iconBtnStyle }}">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 8.5h2.2l1.4-2h7.8l1.4 2h2.2a1.5 1.5 0 0 1 1.5 1.5v7.5a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5V10a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><circle cx="12" cy="13.6" r="3.3" stroke="currentColor" stroke-width="1.6"></circle></svg>
+        </button>
+        <button type="button" onClick="{{ openCharacters }}" aria-label="Mention character" title="Mention a character" style="{{ iconBtnStyle }}">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.4" stroke="currentColor" stroke-width="1.6"></circle><circle cx="12" cy="10.4" r="2.7" stroke="currentColor" stroke-width="1.6"></circle><path d="M6.9 18.3c1.1-2.1 3-3.2 5.1-3.2s4 1.1 5.1 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+        </button>
+        <button type="button" onClick="{{ openSkills }}" aria-label="Use a skill" title="Use a skill" style="{{ iconBtnStyle }}">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3.6 1.85 4.55L18.4 10l-4.55 1.85L12 16.4l-1.85-4.55L5.6 10l4.55-1.85L12 3.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path><path d="m18.2 15.4.75 1.85 1.85.75-1.85.75-.75 1.85-.75-1.85-1.85-.75 1.85-.75.75-1.85Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path></svg>
+        </button>
+
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 7px; position: relative;">
+          <sc-if value="{{ showCount }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 11px; color: #6f6f68; font-variant-numeric: tabular-nums;">{{ charCount }}</span>
+          </sc-if>
+          <button type="button" onClick="{{ toggleModeMenu }}" title="Rendering mode" style="{{ modeBtnStyle }}">
+            <span style="{{ modeDotStyle }}"></span>
+            <span>{{ mode }}</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>
+          </button>
+          <button type="button" onClick="{{ toggleExpand }}" aria-label="Expand composer" title="Expand (⌘⏎)" style="{{ iconBtnStyle }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="m20 4-7 7M4 20l7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+          </button>
+          <sc-if value="{{ generating }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ stop }}" aria-label="Stop generation" style="{{ stopStyle }}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="2.5" fill="currentColor"></rect></svg>
+            </button>
+          </sc-if>
+          <sc-if value="{{ showSend }}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{ send }}" aria-label="Send" style="{{ sendStyle }}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19.5V5m0 0-6.2 6.2M12 5l6.2 6.2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </button>
+          </sc-if>
+
+          <sc-if value="{{ modeMenu }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; bottom: calc(100% + 12px); right: 0; z-index: 60; min-width: 236px; padding: 6px; border-radius: 15px; border: 1px solid #2c2c33; background: linear-gradient(180deg, #1a1a1e, #141417); box-shadow: 0 22px 52px rgba(0,0,0,.6); animation: dcRise .16s ease;">
+              <sc-for list="{{ modes }}" as="m" hint-placeholder-count="3">
+                <button type="button" onClick="{{ m.pick }}" style="{{ m.style }}">
+                  <span style="{{ m.dot }}"></span>
+                  <span style="display: flex; flex-direction: column; gap: 2px; text-align: left; flex: 1;">
+                    <span style="font-size: 13px; color: #f0efea;">{{ m.label }}</span>
+                    <span style="font-size: 11px; color: #7d7d75;">{{ m.sub }}</span>
+                  </span>
+                  <span style="{{ m.check }}">✓</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+
+      <sc-if value="{{ plusMenu }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; bottom: 60px; left: 12px; z-index: 60; min-width: 226px; padding: 6px; border-radius: 15px; border: 1px solid #2c2c33; background: linear-gradient(180deg, #1a1a1e, #141417); box-shadow: 0 22px 52px rgba(0,0,0,.6); animation: dcRise .16s ease;">
+          <sc-for list="{{ plusItems }}" as="p" hint-placeholder-count="4">
+            <button type="button" onClick="{{ p.pick }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 9px; border: 0; border-radius: 10px; background: transparent; color: #eae9e4; font: inherit; font-size: 13px; text-align: left; cursor: pointer;" style-hover="background: rgba(247,187,50,.1); color: #ffd166;">
+              <span style="width: 22px; height: 22px; flex: 0 0 22px; border-radius: 7px; border: 1px solid #33333a; display: flex; align-items: center; justify-content: center; color: #f7bb32; font-size: 11px;">{{ p.glyph }}</span>
+              <span>{{ p.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ popover }}" hint-placeholder-val="{{ false }}">
+        <div data-scroll="true" style="position: absolute; bottom: 60px; left: 12px; right: 12px; z-index: 65; max-height: 246px; overflow-y: auto; padding: 6px; border-radius: 15px; border: 1px solid #2c2c33; background: linear-gradient(180deg, #1a1a1e, #141417); box-shadow: 0 22px 52px rgba(0,0,0,.6); animation: dcRise .16s ease;">
+          <div style="padding: 7px 9px 8px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6f68;">{{ popoverTitle }}</div>
+          <sc-for list="{{ popoverItems }}" as="it" hint-placeholder-count="4">
+            <button type="button" onClick="{{ it.pick }}" onMouseEnter="{{ it.hover }}" style="{{ it.style }}">
+              <span style="{{ it.avatar }}">{{ it.initial }}</span>
+              <span style="display: flex; flex-direction: column; gap: 1px; overflow: hidden; text-align: left;">
+                <span style="font-size: 13px; color: #f0efea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ it.label }}</span>
+                <span style="font-size: 11px; color: #7d7d75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ it.sub }}</span>
+              </span>
+            </button>
+          </sc-for>
+          <sc-if value="{{ popoverEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 8px 10px 10px; font-size: 12.5px; color: #6f6f68;">No matches</div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ dragOver }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; inset: 0; z-index: 70; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border-radius: inherit; border: 1.5px dashed rgba(247,187,50,.85); background: rgba(9,9,10,.9); pointer-events: none;">
+          <div style="position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(247,187,50,.09), transparent); animation: dcSweep 1.3s linear infinite;"></div>
+          <div style="width: 38px; height: 38px; border-radius: 12px; border: 1px solid rgba(247,187,50,.45); display: flex; align-items: center; justify-content: center; color: #f7bb32;">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V5m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+          </div>
+          <div style="font-size: 13.5px; font-weight: 500; color: #ffd166;">Drop to attach</div>
+          <div style="font-size: 11px; color: #8a8a80;">PNG · JPG · WEBP — up to 6, 12 MB each</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-top: 10px; padding: 0 4px; min-height: 16px;">
+      <div style="display: flex; gap: 13px; flex-wrap: wrap; font-size: 11px; color: #66665f;">
+        <span>⏎ send</span><span>⇧⏎ newline</span><span>@ character</span><span>/ skill</span><span>⌘⏎ expand</span>
+      </div>
+      <sc-if value="{{ status }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ statusStyle }}">{{ status }}</div>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-if value="{{ cameraOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: 22px; background: rgba(6,6,7,.8); backdrop-filter: blur(7px); animation: dcFade .16s ease;">
+      <div style="width: min(100%, 440px); padding: 18px; border-radius: 22px; border: 1px solid #2c2c33; background: linear-gradient(180deg, #1a1a1e, #131316); box-shadow: 0 30px 80px rgba(0,0,0,.62); animation: dcRise .18s ease;">
+        <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 16px; font-weight: 600; letter-spacing: -0.01em;">Take a photo</div>
+            <div style="font-size: 12px; color: #7d7d75; line-height: 1.45;">Frame your subject and capture — it lands straight in the composer.</div>
+          </div>
+          <button type="button" onClick="{{ closeCamera }}" aria-label="Close" style="{{ ghostBtnStyle }}">✕</button>
+        </div>
+        <div style="{{ cameraStageStyle }}">
+          <div style="position: absolute; inset: 12px; border-radius: 12px; border: 1px solid rgba(247,187,50,.28);"></div>
+          <div style="position: relative; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #85857b; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">camera preview</div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 14px;">
+          <button type="button" onClick="{{ closeCamera }}" style="{{ secondaryBtnStyle }}">Cancel</button>
+          <button type="button" onClick="{{ capture }}" style="{{ primaryBtnStyle }}">Capture</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ moodOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: 22px; background: rgba(6,6,7,.8); backdrop-filter: blur(7px); animation: dcFade .16s ease;">
+      <div style="width: min(100%, 520px); padding: 18px; border-radius: 22px; border: 1px solid #2c2c33; background: linear-gradient(180deg, #1a1a1e, #131316); box-shadow: 0 30px 80px rgba(0,0,0,.62); animation: dcRise .18s ease;">
+        <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 16px; font-weight: 600; letter-spacing: -0.01em;">Pick from moodboard</div>
+            <div style="font-size: 12px; color: #7d7d75;">Select references to send with your prompt.</div>
+          </div>
+          <button type="button" onClick="{{ closeMood }}" aria-label="Close" style="{{ ghostBtnStyle }}">✕</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px;">
+          <sc-for list="{{ moodItems }}" as="m" hint-placeholder-count="8">
+            <button type="button" onClick="{{ m.pick }}" style="{{ m.style }}">
+              <span style="position: absolute; left: 6px; bottom: 5px; font-size: 9px; color: #d9d7d1;">{{ m.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 15px;">
+          <button type="button" onClick="{{ closeMood }}" style="{{ secondaryBtnStyle }}">Done</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <input type="file" accept="image/*" multiple ref="{{ fileRef }}" onChange="{{ onFiles }}" style="display: none;" />
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:460},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#f7bb32&quot;,&quot;options&quot;:[&quot;#f7bb32&quot;,&quot;#63c3ad&quot;,&quot;#e9924e&quot;,&quot;#d193c8&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;defaultVariant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;compact&quot;,&quot;canvas&quot;],&quot;default&quot;:&quot;compact&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;placeholder&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;maxFiles&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:6,&quot;min&quot;:1,&quot;max&quot;:10,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  state = {
+    variant: null, text: "", attachments: [], skill: null, mode: "Auto",
+    boxH: null, dragOver: false, generating: false, focused: false, expanded: false,
+    popover: null, query: "", pIndex: 0, plusMenu: false, modeMenu: false,
+    cameraOpen: false, moodOpen: false, status: "", statusErr: false, resizing: false
+  };
+
+  CHARACTERS = [
+    { label: "Mira", sub: "Teal hair · denim jacket", a: "#63c3ad", b: "#2f7f8f" },
+    { label: "Kabir", sub: "Curly hair · green hoodie", a: "#e9924e", b: "#a8562a" },
+    { label: "Noor", sub: "Yellow jumpsuit · sneakers", a: "#f7bb32", b: "#c07f0d" },
+    { label: "Ella", sub: "Twin tails · school outfit", a: "#d193c8", b: "#8d5290" }
+  ];
+  SKILLS = [
+    { label: "Doodle Avatar", sub: "One avatar from your photo", a: "#f7bb32", b: "#bf7f10" },
+    { label: "Doodle Collage", sub: "Six close-up poses, 3×2", a: "#63c3ad", b: "#2f7f8f" },
+    { label: "Full-Body Action", sub: "Six full-body poses", a: "#e9924e", b: "#a8562a" },
+    { label: "Surprise Me", sub: "No photo needed", a: "#d193c8", b: "#8d5290" },
+    { label: "Sticker Sheet", sub: "Die-cut sticker set", a: "#8fa9d8", b: "#4d69a8" }
+  ];
+  MODES = [
+    { label: "Auto", sub: "Picks a model per prompt", c: "#f7bb32" },
+    { label: "Fast", sub: "Quick sketch passes", c: "#63c3ad" },
+    { label: "Fine", sub: "Slower, highest detail", c: "#d193c8" }
+  ];
+
+  stripe(tint) {
+    return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><defs><pattern id="p" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#1b1b1f"/><rect width="5" height="12" fill="' + tint + '"/></pattern></defs><rect width="140" height="140" fill="url(#p)"/></svg>');
+  }
+
+  get variant() { return this.state.variant || this.props.defaultVariant || "compact"; }
+  get accent() { return this.props.accent || "#f7bb32"; }
+  maxFiles = 6;
+
+  edRef = (el) => { this.ed = el; };
+  fileRef = (el) => { this.fileEl = el; };
+
+  componentDidMount() {
+    this.onKey = (e) => {
+      if (e.key === "Escape") this.setState({ expanded: false, cameraOpen: false, moodOpen: false, plusMenu: false, modeMenu: false, popover: null });
+    };
+    this.away = (e) => {
+      if (this.boxEl && !this.boxEl.contains(e.target)) this.setState({ plusMenu: false, modeMenu: false, popover: null });
+    };
+    document.addEventListener("keydown", this.onKey);
+    document.addEventListener("pointerdown", this.away, true);
+  }
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.onKey);
+    document.removeEventListener("pointerdown", this.away, true);
+    (this.timers || []).forEach(clearInterval);
+  }
+
+  sync() { this.setState({ text: this.ed ? this.ed.innerText.replace(/\u00a0/g, " ").trim() : "" }); }
+
+  detectTrigger() {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !this.ed || !this.ed.contains(sel.anchorNode)) return this.setState({ popover: null });
+    const r = sel.getRangeAt(0);
+    if (r.startContainer.nodeType !== 3) return this.setState({ popover: null });
+    const m = r.startContainer.nodeValue.slice(0, r.startOffset).match(/(^|\s)([@/])([\w-]*)$/);
+    if (!m) return this.setState({ popover: null });
+    this.setState({ popover: m[2] === "@" ? "character" : "skill", query: m[3].toLowerCase(), pIndex: 0 });
+  }
+
+  list() {
+    const src = this.state.popover === "skill" ? this.SKILLS : this.CHARACTERS;
+    const q = this.state.query;
+    return q ? src.filter((i) => i.label.toLowerCase().includes(q)) : src;
+  }
+
+  insert(item) {
+    const type = this.state.popover === "skill" ? "skill" : "character";
+    if (type === "skill") this.setState({ skill: item.label });
+    const sel = window.getSelection();
+    const pill = this.pill(item, type);
+    if (sel && sel.rangeCount && this.ed && this.ed.contains(sel.anchorNode) && sel.getRangeAt(0).startContainer.nodeType === 3) {
+      const r = sel.getRangeAt(0), node = r.startContainer;
+      const m = node.nodeValue.slice(0, r.startOffset).match(/[@/][\w-]*$/);
+      const range = document.createRange();
+      range.setStart(node, m ? r.startOffset - m[0].length : r.startOffset);
+      range.setEnd(node, r.startOffset);
+      range.deleteContents();
+      range.insertNode(pill);
+    } else if (this.ed) {
+      this.ed.appendChild(pill);
+    }
+    pill.after(document.createTextNode("\u00a0"));
+    this.ed.focus();
+    const nr = document.createRange();
+    nr.setStartAfter(pill.nextSibling); nr.collapse(true);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(nr);
+    this.setState({ popover: null, query: "" });
+    this.sync();
+  }
+
+  pill(item, type) {
+    const el = document.createElement("span");
+    el.contentEditable = "false";
+    el.textContent = (type === "skill" ? "" : "@") + item.label;
+    el.style.cssText = "display:inline-flex;align-items:center;padding:1.5px 9px;margin:0 1px;border-radius:999px;font-size:.92em;font-weight:500;white-space:nowrap;user-select:none;color:" + item.a + ";background:" + item.a + "22;box-shadow:inset 0 0 0 1px " + item.a + "33;";
+    return el;
+  }
+
+  addFiles(files, label) {
+    const all = Array.from(files || []);
+    const imgs = all.filter((f) => f.type.startsWith("image/"));
+    if (all.length && !imgs.length) return this.flash("Only image files are supported", true);
+    const room = this.maxFiles - this.state.attachments.length;
+    if (room <= 0) return this.flash("Attachment limit reached (6)", true);
+    const next = imgs.slice(0, room).map((f) => ({ id: Math.random().toString(36).slice(2), name: f.name, url: URL.createObjectURL(f), progress: 0 }));
+    this.commit(next, label);
+  }
+
+  addSynthetic(name, tint) {
+    if (this.state.attachments.length >= this.maxFiles) return this.flash("Attachment limit reached (6)", true);
+    this.commit([{ id: Math.random().toString(36).slice(2), name: name, url: this.stripe(tint || "#26262c"), progress: 0 }]);
+  }
+
+  commit(next, label) {
+    if (!next.length) return;
+    this.setState((s) => ({ attachments: s.attachments.concat(next), dragOver: false, plusMenu: false }));
+    this.timers = this.timers || [];
+    next.forEach((f) => {
+      const t = setInterval(() => {
+        this.setState((s) => ({
+          attachments: s.attachments.map((x) => x.id === f.id ? Object.assign({}, x, { progress: Math.min(100, x.progress + 14 + Math.random() * 16) }) : x)
+        }), () => {
+          const cur = this.state.attachments.find((x) => x.id === f.id);
+          if (!cur || cur.progress >= 100) clearInterval(t);
+        });
+      }, 110);
+      this.timers.push(t);
+    });
+    this.flash((label || "Attached") + " · " + next.length + " image" + (next.length > 1 ? "s" : ""));
+  }
+
+  flash(msg, err) {
+    this.setState({ status: msg, statusErr: !!err });
+    clearTimeout(this.st);
+    this.st = setTimeout(() => this.setState({ status: "", statusErr: false }), 2400);
+  }
+
+  renderVals() {
+    const st = this.state, a = this.accent, v = this.variant;
+    const canvas = v === "canvas", exp = st.expanded;
+    const minH = exp ? 190 : canvas ? 62 : 54;
+    const h = exp ? Math.max(minH, st.boxH || minH) : (st.boxH ? Math.max(minH, st.boxH) : minH);
+    const fs = exp ? 16.5 : canvas ? 14.5 : 15.5;
+    const iconSize = exp ? 34 : canvas ? 31 : 32;
+    const send = exp ? 38 : canvas ? 33 : 34;
+    const items = this.list();
+    const active = st.text || st.attachments.length;
+    const modeC = (this.MODES.find((m) => m.label === st.mode) || this.MODES[0]).c;
+
+    const icon = {
+      width: iconSize, height: iconSize, flex: "0 0 " + iconSize + "px", borderRadius: 11,
+      border: "1px solid #2e2e35", background: "linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0))",
+      color: "#9a9a91", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+      transition: "color .15s, border-color .15s, background .15s"
+    };
+    const menuRow = (on) => ({
+      display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 9px", border: 0,
+      borderRadius: 10, background: on ? "rgba(247,187,50,.1)" : "transparent", color: "#eae9e4",
+      font: "inherit", textAlign: "left", cursor: "pointer"
+    });
+    const dialogBtn = (primary) => ({
+      minHeight: 40, padding: "0 16px", borderRadius: 999, font: "inherit", fontSize: 13, cursor: "pointer",
+      border: primary ? "0" : "1px solid #33333a",
+      background: primary ? "linear-gradient(180deg, #ffd166, " + a + ")" : "transparent",
+      color: primary ? "#241a02" : "#a5a59b", fontWeight: primary ? 600 : 400,
+      marginLeft: primary ? "auto" : 0, boxShadow: primary ? "0 6px 18px rgba(247,187,50,.28)" : "none"
+    });
+
+    return {
+      placeholder: this.props.placeholder || (exp ? "Describe the doodle in as much detail as you like — style, palette, pose, background…" : canvas ? "Ask for a change — thicker outline, warmer paper…" : "Describe a doodle, drop a photo, or @mention a character"),
+      resizable: !exp,
+      expanded: exp, skill: st.skill, mode: st.mode, generating: st.generating, dragOver: st.dragOver,
+      status: st.status, statusStyle: { fontSize: 11.5, color: st.statusErr ? "#ff9d8a" : a, letterSpacing: "-0.005em" },
+      charCount: st.text.length, showCount: st.text.length > 160, showSend: !st.generating,
+      plusMenu: st.plusMenu, modeMenu: st.modeMenu, cameraOpen: st.cameraOpen, moodOpen: st.moodOpen,
+      hasFiles: st.attachments.length > 0,
+      attachments: st.attachments.map((f) => {
+        const size = exp ? 76 : 58;
+        return {
+          name: f.name, loading: f.progress < 100,
+          cardStyle: { position: "relative", width: size, height: size, flex: "0 0 " + size + "px", borderRadius: 14, overflow: "hidden", border: "1px solid " + (f.progress < 100 ? "rgba(247,187,50,.5)" : "#2e2e35"), background: "#16161a" },
+          thumbStyle: { width: "100%", height: "100%", backgroundImage: 'url("' + f.url + '")', backgroundSize: "cover", backgroundPosition: "center" },
+          barStyle: { height: "100%", width: Math.round(f.progress) + "%", background: "linear-gradient(90deg, #ffd166, " + a + ")", transition: "width .12s linear" },
+          remove: () => this.setState((s) => ({ attachments: s.attachments.filter((x) => x.id !== f.id) }))
+        };
+      }),
+      trayStyle: { display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 11 },
+      trayAddStyle: { width: exp ? 76 : 58, height: exp ? 76 : 58, flex: "0 0 " + (exp ? 76 : 58) + "px", borderRadius: 14, border: "1px dashed #3a3a41", background: "transparent", color: "#7c7c73", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
+      pickFiles: () => this.fileEl && this.fileEl.click(),
+
+      variants: ["compact", "canvas"].map((k) => ({
+        label: k === "compact" ? "Compact" : "Canvas rail",
+        pick: () => this.setState({ variant: k, boxH: null, expanded: false }),
+        style: { padding: "7px 14px", border: 0, borderRadius: 9, background: k === v ? "rgba(247,187,50,.13)" : "transparent", color: k === v ? "#ffd166" : "#83837b", font: "inherit", fontSize: 12.5, cursor: "pointer" }
+      })),
+
+      frameStyle: exp
+        ? { position: "fixed", zIndex: 90, top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "min(780px, 92vw)", animation: "dcRise .2s ease" }
+        : { width: "100%", maxWidth: canvas ? 400 : 720, transition: "max-width .25s ease" },
+
+      boxStyle: {
+        position: "relative", borderRadius: exp ? 24 : canvas ? 18 : 20,
+        padding: exp ? "22px 18px 15px" : canvas ? "17px 13px 12px" : "18px 14px 12px",
+        background: "linear-gradient(180deg, #1c1c20 0%, #141417 100%)",
+        border: "1px solid " + (st.focused || exp ? "rgba(247,187,50,.34)" : "#292930"),
+        boxShadow: (st.focused || exp)
+          ? "inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 3px rgba(247,187,50,.09), 0 24px 60px rgba(0,0,0,.55)"
+          : "inset 0 1px 0 rgba(255,255,255,.04), 0 14px 38px rgba(0,0,0,.4)",
+        transition: "box-shadow .2s, border-color .2s, padding .2s"
+      },
+      grabberStyle: { width: 46, height: 3.5, borderRadius: 4, background: st.resizing ? a : "#3a3a42", transition: "background .15s" },
+      editorStyle: { height: h, minHeight: minH, maxHeight: exp ? 460 : 300, overflowY: "auto", outline: "none", color: "#f3f2ed", caretColor: a, fontSize: fs, lineHeight: Math.round(fs * 1.55) + "px", whiteSpace: "pre-wrap", wordBreak: "break-word", letterSpacing: "-0.005em" },
+      iconBtnStyle: icon,
+      ghostBtnStyle: { width: 30, height: 30, flex: "0 0 30px", marginLeft: "auto", borderRadius: "50%", border: "1px solid #2e2e35", background: "transparent", color: "#9a9a91", font: "inherit", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
+      secondaryBtnStyle: dialogBtn(false),
+      primaryBtnStyle: dialogBtn(true),
+      cameraStageStyle: { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", aspectRatio: "4 / 3", borderRadius: 16, overflow: "hidden", border: "1px solid #2a2a30", backgroundImage: 'url("' + this.stripe("#212127") + '")', backgroundSize: "cover" },
+      modeBtnStyle: { display: "flex", alignItems: "center", gap: 6, height: iconSize, padding: "0 11px", borderRadius: 999, border: "1px solid #2e2e35", background: "linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0))", color: "#a8a89e", font: "inherit", fontSize: 12.5, cursor: "pointer" },
+      modeDotStyle: { width: 6, height: 6, borderRadius: "50%", background: modeC, boxShadow: "0 0 8px " + modeC },
+      sendStyle: {
+        width: send, height: send, flex: "0 0 " + send + "px", borderRadius: "50%", border: 0,
+        background: active ? "linear-gradient(180deg, #ffd166, " + a + ")" : "#26262c",
+        color: active ? "#241a02" : "#6d6d65", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: active ? "0 6px 18px rgba(247,187,50,.32)" : "none", transition: "background .18s, box-shadow .18s, color .18s"
+      },
+      stopStyle: { width: send, height: send, flex: "0 0 " + send + "px", borderRadius: "50%", border: "1px solid #3b3b42", background: "#1d1d21", color: "#f0efea", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
+
+      modes: this.MODES.map((m) => ({
+        label: m.label, sub: m.sub, style: menuRow(m.label === st.mode),
+        dot: { width: 8, height: 8, flex: "0 0 8px", borderRadius: "50%", background: m.c, boxShadow: m.label === st.mode ? "0 0 10px " + m.c : "none" },
+        check: { color: m.label === st.mode ? a : "transparent", fontSize: 12 },
+        pick: () => this.setState({ mode: m.label, modeMenu: false })
+      })),
+      plusItems: [
+        { label: "Upload from device", glyph: "↑", pick: () => { this.setState({ plusMenu: false }); this.fileEl && this.fileEl.click(); } },
+        { label: "Pick from moodboard", glyph: "▦", pick: () => this.setState({ moodOpen: true, plusMenu: false }) },
+        { label: "Take a photo", glyph: "◉", pick: () => this.setState({ cameraOpen: true, plusMenu: false }) },
+        { label: "Paste reference URL", glyph: "⌘", pick: () => this.addSynthetic("reference-url.png", "#26262c") }
+      ],
+      moodItems: Array.from({ length: 8 }).map((_, i) => ({
+        label: "ref-" + (i + 1),
+        style: { position: "relative", height: 78, borderRadius: 12, border: "1px solid #2c2c33", cursor: "pointer", backgroundImage: 'url("' + this.stripe(i % 2 ? "#242430" : "#2b2419") + '")', backgroundSize: "cover" },
+        pick: () => this.addSynthetic("moodboard-" + (i + 1) + ".png", i % 2 ? "#242430" : "#2b2419")
+      })),
+
+      popover: !!st.popover, popoverEmpty: !!st.popover && !items.length,
+      popoverTitle: st.popover === "skill" ? "Skills" : "Characters",
+      popoverItems: items.map((it, i) => ({
+        label: it.label, sub: it.sub, initial: it.label[0],
+        style: menuRow(i === st.pIndex),
+        avatar: { width: 28, height: 28, flex: "0 0 28px", borderRadius: "50%", background: "linear-gradient(145deg, " + it.a + ", " + it.b + ")", color: "#12100a", fontSize: 12.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.14)" },
+        pick: () => this.insert(it), hover: () => this.setState({ pIndex: i })
+      })),
+
+      edRef: this.edRef, fileRef: this.fileRef,
+      onFiles: (e) => { this.addFiles(e.target.files, "Uploaded"); e.target.value = ""; },
+      onInput: () => { this.sync(); this.detectTrigger(); },
+      onFocus: () => this.setState({ focused: true }),
+      onBlur: () => this.setState({ focused: false }),
+      onPaste: (e) => {
+        const files = e.clipboardData ? Array.from(e.clipboardData.files) : [];
+        if (files.length) { e.preventDefault(); return this.addFiles(files, "Pasted"); }
+        e.preventDefault();
+        document.execCommand("insertText", false, e.clipboardData.getData("text"));
+        this.sync();
+      },
+      onKeyDown: (e) => {
+        if (st.popover && items.length) {
+          if (e.key === "ArrowDown") { e.preventDefault(); return this.setState({ pIndex: (st.pIndex + 1) % items.length }); }
+          if (e.key === "ArrowUp") { e.preventDefault(); return this.setState({ pIndex: (st.pIndex - 1 + items.length) % items.length }); }
+          if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); return this.insert(items[st.pIndex] || items[0]); }
+        }
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); return this.setState({ expanded: !st.expanded, boxH: null }); }
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); this.doSend(); }
+      },
+      onDragOver: (e) => { e.preventDefault(); if (!st.dragOver) this.setState({ dragOver: true }); },
+      onDragLeave: (e) => { if (!e.currentTarget.contains(e.relatedTarget)) this.setState({ dragOver: false }); },
+      onDrop: (e) => { e.preventDefault(); this.addFiles(e.dataTransfer.files, "Dropped"); },
+      onResizeStart: (e) => {
+        e.preventDefault();
+        this.boxEl = e.currentTarget.parentNode;
+        const startY = e.clientY, startH = h;
+        this.setState({ resizing: true });
+        const move = (ev) => this.setState({ boxH: Math.min(300, Math.max(minH, startH + (startY - ev.clientY))) });
+        const up = () => { this.setState({ resizing: false }); window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+        window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
+      },
+      resetHeight: () => this.setState({ boxH: null }),
+      toggleExpand: () => this.setState({ expanded: !st.expanded, boxH: null, plusMenu: false, modeMenu: false }),
+      collapse: () => this.setState({ expanded: false }),
+      togglePlus: () => this.setState({ plusMenu: !st.plusMenu, modeMenu: false, popover: null }),
+      toggleModeMenu: () => this.setState({ modeMenu: !st.modeMenu, plusMenu: false, popover: null }),
+      openCharacters: () => { this.ed && this.ed.focus(); this.setState({ popover: "character", query: "", pIndex: 0, plusMenu: false, modeMenu: false }); },
+      openSkills: () => { this.ed && this.ed.focus(); this.setState({ popover: "skill", query: "", pIndex: 0, plusMenu: false, modeMenu: false }); },
+      openCamera: () => this.setState({ cameraOpen: true, plusMenu: false }),
+      closeCamera: () => this.setState({ cameraOpen: false }),
+      capture: () => { this.setState({ cameraOpen: false }); this.addSynthetic("capture-" + Date.now().toString().slice(-4) + ".jpg", "#2b2419"); },
+      closeMood: () => this.setState({ moodOpen: false }),
+      clearSkill: () => this.setState({ skill: null }),
+      stop: () => this.setState({ generating: false, status: "" }),
+      send: () => this.doSend()
+    };
+  }
+
+  doSend() {
+    if (!this.state.text && !this.state.attachments.length) return this.flash("Add a prompt or an image first", true);
+    if (this.ed) this.ed.innerHTML = "";
+    const mode = this.state.mode.toLowerCase();
+    this.setState({ text: "", attachments: [], expanded: false, generating: true, status: "Sending to the " + mode + " pipeline…", statusErr: false });
+    clearTimeout(this.st);
+    setTimeout(() => this.setState({ generating: false, status: "" }), 2600);
+  }
+}
+</script>
+</body>
+</html>

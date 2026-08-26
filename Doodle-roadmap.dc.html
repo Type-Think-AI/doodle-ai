@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:0; background:#0A0A0A; }
+  * { box-sizing:border-box; }
+  a { color:#FAB700; text-decoration:none; }
+  a:hover { color:#FFD152; }
+  input, button, textarea, select { font-family:inherit; }
+  ::-webkit-scrollbar { width:9px; height:9px; }
+  ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.16); border-radius:9px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  @keyframes rmSiren { 0%,100%{ box-shadow:0 0 0 0 rgba(255,45,80,.55); } 50%{ box-shadow:0 0 0 10px rgba(255,45,80,0); } }
+  @keyframes rmPulse { 0%{opacity:.35; transform:scale(.7)} 50%{opacity:1; transform:scale(1)} 100%{opacity:.35; transform:scale(.7)} }
+  @keyframes rmPop { from{ opacity:0; transform:translateY(14px) scale(.94) rotate(0deg); } to{ opacity:1; transform:none; } }
+  @keyframes rmDrawerIn { from{ transform:translateX(34px); opacity:0 } to{ transform:none; opacity:1 } }
+  @keyframes rmPageIn { from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:none } }
+  @keyframes rmToast { 0%{ transform:translateY(18px); opacity:0 } 12%,88%{ transform:none; opacity:1 } 100%{ transform:translateY(10px); opacity:0 } }
+  @keyframes rmDash { to { stroke-dashoffset:0; } }
+  @keyframes rmBob { 0%{transform:rotate(-2.5deg) translateY(0)} 50%{transform:rotate(2deg) translateY(-6px)} 100%{transform:rotate(-2.5deg) translateY(0)} }
+  @keyframes rmSpin { to { transform:rotate(360deg); } }
+  @keyframes rmMarquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  .rm-sticky { animation:rmPop .5s cubic-bezier(.16,.9,.2,1) backwards; }
+  .rm-sticky:hover { transform:rotate(0deg) translateY(-5px) scale(1.03) !important; z-index:5; }
+  .rm-board { display:grid; grid-template-columns:184px repeat(5, minmax(196px,1fr)); gap:0; }
+  .rm-detail-grid { display:grid; grid-template-columns:360px 1fr; gap:30px; align-items:start; }
+  @media (max-width:1180px) { .rm-board { grid-template-columns:150px repeat(5,minmax(168px,1fr)); } }
+  @media (max-width:900px) { .rm-detail-grid { grid-template-columns:1fr; } }
+  @media (max-width:760px) {
+    .rm-board { grid-template-columns:1fr; gap:0; }
+    .rm-rail { flex-direction:row !important; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 4px 12px !important; gap:7px !important; border-bottom:1px dashed #26262A; margin-bottom:6px; }
+    .rm-rail-title, .rm-rail-hint { display:none; }
+    .rm-rail-btn { flex:none !important; white-space:nowrap; border-left:none !important; }
+    .rm-col { min-height:0 !important; }
+    .rm-shell { padding:12px !important; border-width:9px !important; border-radius:14px !important; overflow-x:hidden !important; }
+  }
+  @media (max-width:640px) {
+    .rm-rail-label { display:none; }
+    .rm-btn-label { display:none; }
+    .rm-filter-note { display:none; }
+    .rm-send-label { display:none; }
+    .rm-detail-grid { gap:18px; padding-left:14px !important; padding-right:14px !important; }
+    .rm-stage-label { font-size:7.5px !important; letter-spacing:.2px !important; }
+  }
+</style>
+</helmet>
+
+<div style="{{ rootStyle }}">
+
+  <div style="max-width:1560px; margin:0 auto; padding:26px 22px 90px; width:100%;">
+
+    <div style="display:flex; align-items:center; gap:10px; margin:0 0 18px; flex-wrap:wrap;">
+      <span style="display:flex; align-items:center; gap:8px; flex:none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 15c2-10 4 5 6-4s3 8 6-2 4 9 6-3" stroke="#FAB700" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span style="font-size:14px; font-weight:700; letter-spacing:-.02em; color:#EDEDED; white-space:nowrap;">The Board</span>
+      </span>
+      <button onClick="{{ openComposer }}" style="{{ dropBtnStyle }}" style-hover="transform: translateY(-2px); box-shadow: 0 14px 30px rgba(250,183,0,.3);">
+        <span style="font-size:15px; line-height:1;">✏️</span> <span class="rm-btn-label">Drop a sticky</span>
+      </button>
+      <span class="rm-filter-note" style="font-size:12px; color:#6A6A72; white-space:nowrap;">{{ filterNote }}</span>
+      <sc-if value="{{ filtered }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ clearFilter }}" style="height:30px; padding:0 12px; border-radius:9px; border:1px dashed #3A3A40; background:transparent; color:#A9A9B2; font-size:11.5px; cursor:pointer; flex:none;">Clear filter</button>
+      </sc-if>
+      <span style="margin-left:auto; display:flex; align-items:center; gap:8px; flex:none; white-space:nowrap;">
+        <span style="display:flex; align-items:center; gap:6px; flex:none; padding:5px 10px; border-radius:999px; border:1px solid #26262A; background:#131315; font-size:11.5px; color:#A9A9B2; white-space:nowrap;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FAB700" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6 12l6-6 6 6"></path></svg>
+          {{ votesLeftLabel }}
+        </span>
+        <button onClick="{{ toggleFounder }}" style="{{ founderBtnStyle }}" title="{{ founderLabel }}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="{{ founderIconPath }}"></path></svg>
+        </button>
+      </span>
+    </div>
+
+    <div class="rm-shell" style="{{ boardShellStyle }}">
+      <div style="position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px); background-size:22px 22px; pointer-events:none;"></div>
+
+      <div class="rm-board" style="position:relative;">
+
+        <div class="rm-rail" style="display:flex; flex-direction:column; gap:9px; padding:0 14px 0 0;">
+          <span class="rm-rail-title" style="height:46px; display:flex; align-items:center; font-family:'Caveat',cursive; font-size:22px; color:#8A8A92;">the stack</span>
+          <sc-for list="{{ rails }}" as="r" hint-placeholder-count="8">
+            <button class="rm-rail-btn" onClick="{{ r.pick }}" title="{{ r.title }}" style="{{ r.style }}">
+              <span style="flex:none;">{{ r.icon }}</span>
+              <span class="rm-rail-label" style="text-align:left; line-height:1.15;">{{ r.label }}</span>
+              <span style="{{ r.swatch }}"></span>
+            </button>
+          </sc-for>
+          <span class="rm-rail-hint" style="margin-top:8px; font-family:'Caveat',cursive; font-size:17px; color:#5A5A62; line-height:1.25;">tap a layer<br />to filter the wall</span>
+        </div>
+
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="5">
+          <div class="rm-col" onDragOver="{{ c.onDragOver }}" onDrop="{{ c.onDrop }}" style="{{ c.colStyle }}">
+            <div style="{{ c.headerWrapStyle }}">
+              <span style="{{ c.headerStyle }}">{{ c.label }}</span>
+              <span style="{{ c.countStyle }}">{{ c.count }}</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:11px; padding:14px 10px 20px; min-height:180px;">
+              <sc-for list="{{ c.notes }}" as="n" hint-placeholder-count="3">
+                <div class="rm-sticky" draggable="{{ n.draggable }}" onDragStart="{{ n.onDragStart }}" onClick="{{ n.open }}" style="{{ n.style }}">
+                  <span style="{{ n.tapeStyle }}"></span>
+                  <span style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                    <span style="{{ n.kindStyle }}" title="{{ n.kindTitle }}">{{ n.kind }}</span>
+                    <span style="font-family:'Space Grotesk',sans-serif; font-size:9.5px; font-weight:600; letter-spacing:.5px; opacity:.55;">{{ n.code }}</span>
+                  </span>
+                  <span style="font-family:'Caveat',cursive; font-size:19px; font-weight:600; line-height:1.14;">{{ n.title }}</span>
+                  <span style="display:flex; align-items:center; gap:7px; margin-top:auto;">
+                    <span onClick="{{ n.vote }}" style="{{ n.voteStyle }}">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6 12l6-6 6 6"></path></svg>
+                      {{ n.votes }}
+                    </span>
+                    <span style="display:flex; align-items:center; gap:3px; font-family:'Space Grotesk',sans-serif; font-size:10px; font-weight:600; opacity:.6;">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 15a2 2 0 01-2 2H8l-4 4V6a2 2 0 012-2h12a2 2 0 012 2z"></path></svg>
+                      {{ n.chatCount }}
+                    </span>
+                    <span style="margin-left:auto; font-family:'Space Grotesk',sans-serif; font-size:9.5px; font-weight:600; opacity:.5;">{{ n.author }}</span>
+                  </span>
+                  <span style="{{ n.poolBarStyle }}"><span style="{{ n.poolFillStyle }}"></span></span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ c.empty }}" hint-placeholder-val="{{ false }}">
+                <span style="font-family:'Caveat',cursive; font-size:18px; color:rgba(255,255,255,.3); line-height:1.3; padding:8px 4px;">{{ c.emptyNote }}</span>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="{{ creditStyle }}">
+      <span style="position:absolute; right:26px; top:-16px; animation:rmBob 6s ease-in-out infinite;">
+        <svg width="86" height="86" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="26" stroke="#FAB700" stroke-width="2.6" stroke-dasharray="8 12" style="animation:rmSpin 24s linear infinite; transform-origin:32px 32px;"></circle>
+          <path d="M19 41c4-14 9-20 13-20s5 8 2 13-9 5-6-2 8-12 15-10" stroke="#EDEDED" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="130" stroke-dashoffset="130" style="animation:rmDash 2.6s cubic-bezier(.6,.05,.3,1) .4s forwards;"></path>
+        </svg>
+      </span>
+      <span style="font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; color:#6A6A72;">Board methodology, credited</span>
+      <span style="font-family:'Caveat',cursive; font-size:clamp(26px,3.4vw,40px); font-weight:700; color:#EDEDED; line-height:1.14; max-width:760px;">
+        Created by Z — self-declared CEO of a fictional Palo Alto incubator, inventor of the felt wall, wearer of the same shirt.
+      </span>
+      <span style="font-size:13px; line-height:1.7; color:#9A9AA2; max-width:640px; text-wrap:pretty;">
+        He walked in, called our sprint board a "beautiful piece of nothing", ripped the ice box off the wall and threw it on the floor. Then he sat in the hot tub for six hours. We taped it all back up, added voting, and shipped anyway. The EMERGENCY column is his only lasting contribution.
+      </span>
+      <span style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:4px;">
+        <span style="display:flex; align-items:center; gap:7px; padding:6px 11px; border-radius:999px; border:1px dashed #3A3A40; font-size:11.5px; color:#A9A9B2;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#FF2D50; animation:rmPulse 1.4s ease-in-out infinite;"></span>
+          Emergency column: {{ emergencyCount }} live
+        </span>
+        <span style="font-family:'Caveat',cursive; font-size:19px; color:#FAB700;">"You're gonna need a bigger wall." — Z, probably</span>
+      </span>
+    </div>
+  </div>
+
+  <sc-if value="{{ sel }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ sel.pageStyle }}">
+      <div style="{{ sel.heroStyle }}">
+        <span style="{{ sel.tapeStyle }}"></span>
+        <div style="display:flex; align-items:center; gap:10px; width:100%; flex-wrap:wrap;">
+          <button onClick="{{ closeDrawer }}" style="{{ sel.backBtnStyle }}" title="Back to board">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+          </button>
+          <span style="{{ sel.chipStyle }}" title="{{ sel.kindTitle }}">{{ sel.kind }}</span>
+          <span style="{{ sel.metaStyle }}">{{ sel.railIcon }} {{ sel.railLabel }} · {{ sel.code }} · {{ sel.age }}</span>
+        </div>
+        <span style="{{ sel.heroTitleStyle }}">{{ sel.title }}</span>
+      </div>
+
+      <div class="rm-detail-grid" style="max-width:1240px; margin:0 auto; padding:30px 22px 90px; width:100%;">
+
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <p style="margin:0; font-size:13.5px; line-height:1.72; color:#A9A9B2; text-wrap:pretty;">{{ sel.body }}</p>
+          <span style="{{ dividerStyle }}"></span>
+
+          <div style="{{ sel.poolCardStyle }}">
+            <span style="{{ sel.cardTapeStyle }}"></span>
+            <span style="display:flex; align-items:baseline; justify-content:space-between; gap:10px; row-gap:4px; flex-wrap:wrap;">
+              <span style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#6A6A72; white-space:nowrap;">Vote pool</span>
+              <span style="font-size:12px; color:#9A9AA2; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ sel.votes }} / {{ threshold }} to unfreeze</span>
+            </span>
+            <span style="{{ sel.poolTrackStyle }}">
+              <span style="{{ sel.poolFill }}"></span>
+            </span>
+            <span style="display:flex; align-items:center; gap:9px; flex-wrap:wrap;">
+              <button onClick="{{ sel.vote }}" style="{{ sel.voteBtnStyle }}">{{ sel.voteBtnLabel }}</button>
+              <span style="font-size:11.5px; color:#6A6A72;">{{ sel.poolNote }}</span>
+            </span>
+            <span style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:2px;">
+              <sc-for list="{{ sel.voters }}" as="v" hint-placeholder-count="6">
+                <span style="{{ v.style }}" title="{{ v.id }}">{{ v.initials }}</span>
+              </sc-for>
+              <span style="font-size:11px; color:#6A6A72;">{{ sel.voterNote }}</span>
+            </span>
+          </div>
+
+          <div style="{{ sel.accessStyle }}">
+            <span style="{{ sel.cardTapeStyle }}"></span>
+            <span style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; white-space:nowrap;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 15v3M7 11V8a5 5 0 0110 0v3M6 11h12v9H6z"></path></svg>
+              {{ sel.accessTitle }}
+            </span>
+            <span style="font-size:12px; line-height:1.6; opacity:.85;">{{ sel.accessBody }}</span>
+            <button onClick="{{ sel.claim }}" style="{{ sel.claimStyle }}">{{ sel.claimLabel }}</button>
+          </div>
+
+          <span style="{{ dividerStyle }}"></span>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <span style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#6A6A72;">Where it sits on the wall</span>
+            <div style="position:relative; padding:2px 8px 0;">
+              <span style="{{ sel.railLineStyle }}"><span style="{{ sel.railFillStyle }}"></span></span>
+              <div style="position:relative; display:flex; justify-content:space-between;">
+                <sc-for list="{{ sel.stages }}" as="st" hint-placeholder-count="5">
+                  <span style="display:flex; flex-direction:column; align-items:center; gap:7px; flex:1;">
+                    <span style="{{ st.dotStyle }}"></span>
+                    <span class="rm-stage-label" style="{{ st.labelStyle }}">{{ st.label }}</span>
+                  </span>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="{{ sel.threadColStyle }}">
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <span style="font-size:15px; font-weight:700; letter-spacing:-.01em; color:#EDEDED;">Discussion</span>
+            <span style="font-size:11.5px; color:#6A6A72;">{{ sel.chatCount }} public · 🤖 Akku + maintainers reply here</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <sc-for list="{{ sel.chat }}" as="m" hint-placeholder-count="4">
+              <div style="{{ m.rowStyle }}">
+                <span style="{{ m.avatarStyle }}">{{ m.initials }}</span>
+                <span style="display:flex; flex-direction:column; gap:6px; min-width:0; max-width:80%;">
+                  <span style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span style="font-size:13px; font-weight:600; color:#EDEDED;">{{ m.who }}</span>
+                    <span style="{{ m.tagStyle }}">{{ m.tag }}</span>
+                    <span style="font-size:11px; color:#5A5A62;">{{ m.time }}</span>
+                  </span>
+                  <span style="{{ m.bubbleStyle }}">{{ m.text }}</span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="{{ sel.composerBarStyle }}">
+            <span style="width:34px; height:34px; flex:none; border-radius:9px; background:linear-gradient(140deg,#FAB700,#FF7A45); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; color:#141416;">YP</span>
+            <input value="{{ draft }}" onChange="{{ setDraft }}" onKeyDown="{{ draftKey }}" placeholder="Say something — it's all public" style="{{ inputStyle }}" />
+            <button onClick="{{ send }}" title="Send" style="{{ sendStyle }}">
+              <span class="rm-send-label">Send</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ composer }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeComposer }}" style="position:fixed; inset:0; z-index:70; background:rgba(6,6,7,.7); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:24px;">
+      <div onClick="{{ stop }}" style="{{ composerStyle }}">
+        <span style="position:absolute; left:50%; top:-13px; transform:translateX(-50%) rotate(-2deg); width:110px; height:26px; background:rgba(183,228,21,.85); box-shadow:0 2px 8px rgba(0,0,0,.3);"></span>
+        <span style="font-family:'Caveat',cursive; font-size:30px; font-weight:700; color:#161616;">What should we build?</span>
+        <span style="font-size:12.5px; line-height:1.6; color:rgba(20,20,22,.72);">Goes straight on the wall in the ice box with your ID on it. No form fields nobody reads.</span>
+        <input value="{{ newTitle }}" onChange="{{ setNewTitle }}" placeholder="e.g. Let me pin a character sheet to the canvas" style="{{ composerInputStyle }}" />
+        <span style="display:flex; gap:7px; flex-wrap:wrap;">
+          <sc-for list="{{ kindOpts }}" as="k" hint-placeholder-count="4">
+            <button onClick="{{ k.pick }}" style="{{ k.style }}">{{ k.label }}</button>
+          </sc-for>
+        </span>
+        <span style="display:flex; gap:7px; flex-wrap:wrap;">
+          <sc-for list="{{ railOpts }}" as="r" hint-placeholder-count="4">
+            <button onClick="{{ r.pick }}" style="{{ r.style }}">{{ r.label }}</button>
+          </sc-for>
+        </span>
+        <span style="display:flex; align-items:center; gap:10px; margin-top:2px;">
+          <button onClick="{{ submitNote }}" style="{{ submitStyle }}">Tape it to the wall</button>
+          <span style="font-family:'Caveat',cursive; font-size:18px; color:rgba(20,20,22,.6);">it goes up instantly, publicly</span>
+        </span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ toastStyle }}">{{ toast }}</div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;voteBudget&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:1,&quot;max&quot;:12,&quot;section&quot;:&quot;Pool rules&quot;},&quot;promoteAt&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:10,&quot;max&quot;:200,&quot;step&quot;:5,&quot;section&quot;:&quot;Pool rules&quot;}}">
+const RAILS = [
+  { key:"canvas",  label:"CANVAS ENGINE",     color:"#4FE0F0" },
+  { key:"char",    label:"CHARACTER MODEL",   color:"#FF4D8D" },
+  { key:"style",   label:"STYLE + PRESETS",   color:"#FFE14D" },
+  { key:"export",  label:"EXPORT PIPELINE",   color:"#C6F13C" },
+  { key:"skills",  label:"SKILL STORE",       color:"#FF9F45" },
+  { key:"akku",    label:"AKKU AGENT",        color:"#B98CFF" },
+  { key:"billing", label:"CREDITS + BILLING", color:"#7CE0B0" },
+  { key:"api",     label:"API / MCP / CLI",   color:"#9FB4FF" }
+];
+
+const COLS = [
+  { key:"icebox",    label:"ICE BOX",     tone:"paper",  empty:"nothing frozen. suspicious." },
+  { key:"emergency", label:"EMERGENCY",   tone:"red",    empty:"empty. keep it that way." },
+  { key:"progress",  label:"IN PROGRESS", tone:"paper",  empty:"idle hands…" },
+  { key:"testing",   label:"TESTING",     tone:"paper",  empty:"nothing under the microscope" },
+  { key:"complete",  label:"COMPLETE",    tone:"paper",  empty:"ship something already" }
+];
+
+const KINDS = { idea:"IDEA", bug:"BUG", ui:"UI", api:"API", seo:"SEO" };
+const KIND_ICON = { idea:"💡", bug:"🐛", ui:"🎨", api:"🔌", seo:"🔍" };
+const RAIL_ICON = { canvas:"🖼️", char:"🧑‍🎨", style:"🎨", export:"📦", skills:"🧩", akku:"🤖", billing:"💳", api:"🔌" };
+
+const SEED = [
+  { id:1,  col:"icebox", rail:"api", kind:"api", code:"DB-4821", title:"WhatsApp connector so my doodles post themselves", votes:38, author:"@nikhil", age:"6d",
+    body:"Half my team lives in WhatsApp. Let me connect a number and drop finished frames into a group without leaving the studio.",
+    chat:[["Nikhil R.","user","2d","Would pay for this alone. Even one-way push is enough."],["Akku","bot","2d","Logged. Related to DB-4102 (image webhook) — I merged the vote pools so you two aren't splitting the count."],["Yash P.","team","1d","Realistic once webhooks land in testing. Not before."]] },
+  { id:2,  col:"icebox", rail:"skills", kind:"idea", code:"DB-4770", title:"Let users publish + share their own skills", votes:64, author:"@mira", age:"11d",
+    body:"I built a whole comic-panel workflow out of three skills. Right now it dies in my account. Give me a share link and a gallery slot.",
+    chat:[["Mira K.","user","5d","A share link is enough for v1, honestly. Skip the marketplace."],["Yash P.","team","4d","This crossed the line while I was asleep. Moving it up next sprint."]] },
+  { id:3,  col:"icebox", rail:"billing", kind:"idea", code:"DB-4655", title:"Raise the AWS ceiling before Friday drops", votes:12, author:"@devraj", age:"9d",
+    body:"Every Friday at 6pm the queue crawls. Either raise the limit or show me an honest wait time.",
+    chat:[["Akku","bot","3d","Confirmed: p95 render time triples Fri 18:00–21:00 IST."]] },
+  { id:4,  col:"icebox", rail:"style", kind:"seo", code:"DB-4590", title:"Public pages for every shared doodle", votes:9, author:"@sana", age:"14d",
+    body:"If a doodle is public it should have a real page with a real title. Free traffic, free proof.",
+    chat:[["Sana M.","user","6d","My share links look like nothing when pasted anywhere."]] },
+  { id:5,  col:"icebox", rail:"char", kind:"ui", code:"DB-4512", title:"Sticker pack export (the whole set, one click)", votes:27, author:"@toshi", age:"8d",
+    body:"Export all poses of a character as a padded sticker sheet. Telegram sizes, please.",
+    chat:[["Toshi A.","user","4d","Telegram + WhatsApp sizes and I'm never leaving."]] },
+  { id:6,  col:"icebox", rail:"akku", kind:"idea", code:"DB-4408", title:"Akku should narrate what it changed", votes:19, author:"@priya", age:"5d",
+    body:"The agent edits my canvas and I have no idea what it touched. A plain-English diff would do.",
+    chat:[["Priya S.","user","2d","Even a list of layers touched is fine."]] },
+  { id:7,  col:"icebox", rail:"canvas", kind:"idea", code:"DB-4390", title:"Infinite whiteboard mode", votes:44, author:"@leo", age:"16d",
+    body:"One canvas, many frames, pan forever. Stop making me open six projects for one storyboard.",
+    chat:[["Leo B.","user","7d","This is the one. Everything else is downstream of this."],["Yash P.","team","6d","Biggest ask on the wall. Also the biggest build. Being honest: Q4."]] },
+
+  { id:8,  col:"emergency", rail:"billing", kind:"bug", code:"DB-4901", title:"Credits double-charged on retried renders", votes:71, author:"@arjun", age:"9h",
+    body:"A failed render still burns credits, and the retry burns them again. 340 credits gone in one evening.",
+    chat:[["Arjun T.","user","8h","Screenshots in the thread. This is not a rounding error."],["Yash P.","team","7h","Confirmed and refunding everyone affected today. Fix is in the branch."],["Akku","bot","6h","117 accounts affected. Refund job queued."]] },
+
+  { id:9,  col:"progress", rail:"canvas", kind:"ui", code:"DB-4260", title:"Whiteboard canvas — pan, zoom, multi-frame", votes:52, author:"@leo", age:"21d",
+    body:"First slice of the infinite board: pan, zoom, and four frames on one surface.",
+    chat:[["Yash P.","team","3d","Pan and zoom are in. Frame linking is the hard half."]] },
+  { id:10, col:"progress", rail:"api", kind:"api", code:"DB-4102", title:"Image webhook + generation polling", votes:33, author:"@nikhil", age:"18d",
+    body:"Fire a webhook when a render finishes so nobody has to sit and poll.",
+    chat:[["Akku","bot","4d","Endpoint shape is drafted. Signing secret included."]] },
+  { id:11, col:"progress", rail:"char", kind:"ui", code:"DB-4055", title:"Team workspace + shared characters", votes:41, author:"@mira", age:"24d",
+    body:"Shared character library across a team so nobody redraws the mascot twice.",
+    chat:[["Mira K.","user","5d","Roles can wait. Shared library cannot."]] },
+  { id:12, col:"progress", rail:"style", kind:"ui", code:"DB-3990", title:"Footer + navigation refresh", votes:14, author:"@sana", age:"12d",
+    body:"The old footer hid half the product. New one ships with the roadmap link in it.",
+    chat:[["Yash P.","team","2d","You're looking at the result of this one right now."]] },
+
+  { id:13, col:"testing", rail:"export", kind:"idea", code:"DB-3840", title:"Batch export 50 images with naming rules", votes:29, author:"@devraj", age:"30d",
+    body:"Article workflows need fifty exports with predictable filenames.",
+    chat:[["Devraj N.","team","6d","In beta with 12 voters. No complaints yet, which worries me."]] },
+  { id:14, col:"testing", rail:"akku", kind:"bug", code:"DB-3788", title:"Akku loses context after 40 turns", votes:22, author:"@priya", age:"27d",
+    body:"Long sessions forget the character sheet. Compaction fix under test.",
+    chat:[["Akku","bot","3d","I am, ironically, testing my own memory."]] },
+  { id:15, col:"testing", rail:"api", kind:"seo", code:"DB-3701", title:"Analytics events for every studio action", votes:8, author:"@toshi", age:"33d",
+    body:"Instrumentation so we can stop guessing which features matter.",
+    chat:[["Yash P.","team","5d","Boring. Necessary."]] },
+
+  { id:16, col:"complete", rail:"style", kind:"ui", code:"DB-3520", title:"Admin panel + user management", votes:31, author:"@yash", age:"41d",
+    body:"Shipped. Full user, credit and project control in one place.",
+    chat:[["Yash P.","team","9d","Shipped v2 with device preview and light mode."]] },
+  { id:17, col:"complete", rail:"billing", kind:"api", code:"DB-3455", title:"Zero-trust auth + secrets store", votes:18, author:"@arjun", age:"46d",
+    body:"Shipped. Keys are scoped, rotated and never logged.",
+    chat:[["Arjun T.","user","12d","Verified on my account. Clean."]] },
+  { id:18, col:"complete", rail:"skills", kind:"idea", code:"DB-3390", title:"Skill support in the studio", votes:47, author:"@mira", age:"52d",
+    body:"Shipped. Skills run inside any project with one click.",
+    chat:[["Mira K.","user","20d","This changed how I use the product entirely."]] },
+  { id:19, col:"complete", rail:"canvas", kind:"bug", code:"DB-3301", title:"Sidebar collapse forgot itself on reload", votes:6, author:"@leo", age:"57d",
+    body:"Shipped. It remembers now.",
+    chat:[["Leo B.","user","30d","Small thing. Noticed immediately."]] }
+];
+
+class Component extends DCLogic {
+  state = {
+    notes: SEED.map(n => ({ ...n, voted:false, chat:n.chat.map(c => ({ who:c[0], role:c[1], time:c[2], text:c[3] })) })),
+    railFilter:null, selId:null, draft:"", founder:false,
+    votesLeft:null, toast:"", composer:false, newTitle:"", newKind:"idea", newRail:"canvas",
+    dragId:null, nextId:100, claimed:{}
+  };
+
+  get budget() { return this.props.voteBudget ?? 5; }
+  get threshold() { return this.props.promoteAt ?? 50; }
+  get left() { return this.state.votesLeft == null ? this.budget : this.state.votesLeft; }
+  rail(k) { return RAILS.find(r => r.key === k) || RAILS[0]; }
+
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: "" }), 3200);
+  }
+
+  vote(id, e) {
+    if (e) { e.stopPropagation(); }
+    const n = this.state.notes.find(x => x.id === id);
+    if (!n) return;
+    if (n.voted) {
+      this.setState(s => ({ notes: s.notes.map(x => x.id === id ? { ...x, voted:false, votes:x.votes - 1 } : x), votesLeft: this.left + 1 }));
+      this.flash("Vote pulled back. " + (this.left + 1) + " in your pocket.");
+      return;
+    }
+    if (this.left <= 0) { this.flash("Out of votes this week. They reset Monday — spend them like they matter."); return; }
+    const after = n.votes + 1;
+    this.setState(s => ({ notes: s.notes.map(x => x.id === id ? { ...x, voted:true, votes:after } : x), votesLeft: this.left - 1 }));
+    this.flash(after >= this.threshold && n.col === "icebox"
+      ? "That's " + after + " — " + n.code + " just cleared the line. It leaves the ice box this sprint."
+      : "Pooled. " + (this.threshold - after > 0 ? (this.threshold - after) + " more to unfreeze it." : "Already past the line.") + " " + (this.left - 1) + " votes left.");
+  }
+
+  send = () => {
+    const t = this.state.draft.trim();
+    if (!t || this.state.selId == null) return;
+    const id = this.state.selId;
+    this.setState(s => ({
+      draft: "",
+      notes: s.notes.map(n => n.id === id ? { ...n, chat:[...n.chat, { who:"You", role:"you", time:"now", text:t }] } : n)
+    }));
+    setTimeout(() => this.setState(s => ({
+      notes: s.notes.map(n => n.id === id ? { ...n, chat:[...n.chat, { who:"Akku", role:"bot", time:"now", text:"Got it — attached to " + n.code + " and pinged the maintainer. Every reply here is public, including ours." }] } : n)
+    })), 900);
+  };
+
+  move(id, col) {
+    const n = this.state.notes.find(x => x.id === id);
+    this.setState(s => ({ notes: s.notes.map(x => x.id === id ? { ...x, col } : x) }));
+    if (n) this.flash(n.code + " → " + (COLS.find(c => c.key === col) || {}).label + ". Wall updated for everyone.");
+  }
+
+  submitNote = () => {
+    const t = this.state.newTitle.trim();
+    if (!t) { this.flash("Write the thing first."); return; }
+    const s = this.state;
+    const note = { id:s.nextId, col:"icebox", rail:s.newRail, kind:s.newKind, code:"DB-" + (4900 + (s.nextId - 100) * 7),
+      title:t, votes:1, voted:true, author:"@you", age:"just now", body:t,
+      chat:[{ who:"Akku", role:"bot", time:"now", text:"On the wall. I'll watch for duplicates and merge the pools if someone asked for this already." }] };
+    this.setState({ notes:[note, ...s.notes], nextId:s.nextId + 1, composer:false, newTitle:"", selId:note.id });
+    this.flash("Taped up as " + note.code + ". You gave it its first vote.");
+  };
+
+  renderVals() {
+    const s = this.state, TH = this.threshold;
+    const btn = (on) => "height:27px; padding:0 11px; border-radius:8px; cursor:pointer; font-size:11.5px; font-weight:600; transition:all .2s; border:1px solid " +
+      (on ? "#FAB700; background:rgba(250,183,0,.14); color:#FAB700;" : "#26262A; background:transparent; color:#8A8A92;");
+
+    const rails = RAILS.map(r => {
+      const on = s.railFilter === r.key;
+      return { label:r.label, icon:RAIL_ICON[r.key], pick:() => this.setState({ railFilter: on ? null : r.key }), title:r.label,
+        style:"display:flex; align-items:center; gap:7px; padding:7px 8px; border-radius:4px; cursor:pointer; text-align:left; transition:all .18s; font-family:'Space Grotesk',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.4px; " +
+          "border:none; border-left:2px solid " + (on ? r.color : "transparent") + "; background:" + (on ? "rgba(255,255,255,.06)" : "transparent") + "; color:" + (on ? "#FFFFFF" : "#8A8A92") + ";",
+        swatch:"width:8px; height:8px; flex:none; border-radius:50%; margin-left:auto; background:" + r.color + "; opacity:" + (on ? "1" : ".8") + ";" };
+    });
+
+    const cols = COLS.map(c => {
+      const list = s.notes.filter(n => n.col === c.key && (!s.railFilter || n.rail === s.railFilter));
+      const red = c.tone === "red";
+      return {
+        label:c.label, count:list.length, empty:list.length === 0, emptyNote:c.empty,
+        colStyle:"position:relative; display:flex; flex-direction:column; border-left:6px solid #B7E415; background:rgba(255,255,255,.028); min-height:280px;" +
+          (s.dragId && s.founder ? " outline:1px dashed rgba(183,228,21,.45); outline-offset:-4px;" : ""),
+        headerWrapStyle:"display:flex; align-items:center; gap:7px; padding:10px 10px 12px; border-bottom:6px solid #B7E415;",
+        headerStyle:"flex:1; padding:6px 9px; text-align:center; font-size:12.5px; font-weight:700; letter-spacing:1.1px; box-shadow:0 2px 6px rgba(0,0,0,.4); transform:rotate(-.5deg); " +
+          (red ? "background:#E8213F; color:#FFFFFF; animation:rmSiren 1.8s ease-out infinite;" : "background:#F2F0EA; color:#161616;"),
+        countStyle:"width:24px; height:24px; flex:none; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:11px; font-weight:700; font-variant-numeric:tabular-nums; " +
+          (red ? "background:rgba(232,33,63,.2); color:#FF6B80;" : "background:rgba(255,255,255,.08); color:#A9A9B2;"),
+        onDragOver:(e) => { if (s.founder) e.preventDefault(); },
+        onDrop:(e) => { e.preventDefault(); if (s.founder && s.dragId != null) { this.move(s.dragId, c.key); this.setState({ dragId:null }); } },
+        notes: list.map((n, i) => {
+          const r = this.rail(n.rail), rot = (n.id % 5) - 2;
+          const pool = Math.min(100, Math.round(n.votes / TH * 100));
+          return {
+            code:n.code, title:n.title, votes:n.votes, author:n.author, kind:KIND_ICON[n.kind] || "💡", kindTitle:KINDS[n.kind] || "IDEA",
+            chatCount:n.chat.length, draggable:!!s.founder,
+            onDragStart:() => this.setState({ dragId:n.id }),
+            open:() => this.setState({ selId:n.id, draft:"" }),
+            vote:(e) => this.vote(n.id, e),
+            style:"position:relative; display:flex; flex-direction:column; gap:7px; padding:14px 12px 11px; min-height:112px; color:#141416; " +
+              "background:" + r.color + "; box-shadow:2px 4px 0 rgba(0,0,0,.28), 0 10px 22px rgba(0,0,0,.3); " +
+              "transform:rotate(" + rot + "deg); cursor:" + (s.founder ? "grab" : "pointer") + "; " +
+              "transition:transform .28s cubic-bezier(.2,.85,.2,1), box-shadow .28s; animation-delay:" + (i * 0.05).toFixed(2) + "s;",
+            tapeStyle:"position:absolute; left:50%; top:-9px; transform:translateX(-50%) rotate(" + (-rot * 1.6) + "deg); width:52px; height:17px; background:rgba(255,255,255,.42); box-shadow:0 1px 3px rgba(0,0,0,.25);",
+            kindStyle:"font-family:'Space Grotesk',sans-serif; font-size:9px; font-weight:700; letter-spacing:1px; padding:2px 5px; background:rgba(20,20,22,.16); border-radius:3px;",
+            voteStyle:"display:inline-flex; align-items:center; gap:4px; padding:3px 7px; border-radius:999px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-size:10.5px; font-weight:700; font-variant-numeric:tabular-nums; transition:all .2s; " +
+              (n.voted ? "background:#141416; color:" + r.color + ";" : "background:rgba(20,20,22,.14); color:#141416;"),
+            poolBarStyle:"position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(20,20,22,.14);",
+            poolFillStyle:"display:block; height:100%; width:" + pool + "%; background:rgba(20,20,22,.55); transition:width .4s cubic-bezier(.2,.85,.2,1);"
+          };
+        })
+      };
+    });
+
+    const dividerStyle = "height:1px; background-image:repeating-linear-gradient(90deg, #2A2A2E 0 6px, transparent 6px 13px); opacity:.8; flex:none;";
+
+    const sel = (() => {
+      const n = s.notes.find(x => x.id === s.selId);
+      if (!n) return false;
+      const r = this.rail(n.rail);
+      const claimed = !!s.claimed[n.id];
+      const stageIdx = COLS.findIndex(c => c.key === n.col);
+      const voters = ["AR","MK","LB","NR","PS","TA","DN","SM"].slice(0, Math.min(8, Math.max(3, Math.round(n.votes / 9))));
+      return {
+        code:n.code, title:n.title, body:n.body, votes:n.votes, kind:KIND_ICON[n.kind] || "💡", kindTitle:KINDS[n.kind], railLabel:r.label, railIcon:RAIL_ICON[n.rail], age:n.age + " ago",
+        chatCount:n.chat.length,
+        pageStyle:"position:fixed; inset:0; z-index:75; background:#0A0A0A; overflow-y:auto; animation:rmPageIn .3s cubic-bezier(.16,.9,.2,1);",
+        heroStyle:"position:relative; display:flex; flex-direction:column; gap:14px; align-items:flex-start; padding:18px 20px 26px; background:" + r.color + "; overflow:hidden;",
+        tapeStyle:"position:absolute; left:50%; top:-10px; transform:translateX(-50%) rotate(-2deg); width:80px; height:22px; background:rgba(255,255,255,.5); box-shadow:0 2px 6px rgba(0,0,0,.25);",
+        backBtnStyle:"width:30px; height:30px; flex:none; display:flex; align-items:center; justify-content:center; border-radius:50%; cursor:pointer; border:1px solid rgba(20,20,22,.22); background:rgba(255,255,255,.32); color:#141416;",
+        chipStyle:"padding:4px 9px; border-radius:6px; font-size:14px; letter-spacing:1px; background:rgba(20,20,22,.16); flex:none;",
+        metaStyle:"font-size:11.5px; letter-spacing:.4px; font-weight:600; color:rgba(20,20,22,.58); min-width:0;",
+        heroTitleStyle:"font-family:'Caveat',cursive; font-weight:700; font-size:clamp(24px,3.6vw,40px); line-height:1.16; color:#141416; max-width:820px;",
+        threadColStyle:"display:flex; flex-direction:column; gap:20px; min-width:0; padding-left:2px;",
+        composerBarStyle:"display:flex; align-items:center; gap:10px; margin-top:6px; padding:12px; border-radius:14px; border:1px solid #232326; background:#111113;",
+        cardTapeStyle:"position:absolute; left:16px; top:-8px; transform:rotate(-3deg); width:30px; height:14px; background:" + r.color + "55; border:1px solid " + r.color + "88;",
+        poolCardStyle:"position:relative; display:flex; flex-direction:column; gap:12px; padding:16px 14px 14px; border-radius:3px 14px 14px 14px; border:1px solid #232326; background:#111113;",
+        poolTrackStyle:"position:relative; height:14px; border-radius:5px; overflow:hidden; border:1px solid #232326; background:repeating-linear-gradient(90deg, #16161A 0 1px, #101012 1px 12px);",
+        poolFill:"position:absolute; left:0; top:0; bottom:0; width:" + Math.min(100, Math.round(n.votes / TH * 100)) + "%; border-radius:4px; background:linear-gradient(90deg," + r.color + ",#FAB700); transition:width .45s cubic-bezier(.2,.85,.2,1);",
+        vote:() => this.vote(n.id),
+        voteBtnLabel:n.voted ? "✓ You pooled a vote" : "Pool a vote (" + this.left + " left)",
+        voteBtnStyle:"height:36px; padding:0 15px; border-radius:11px; cursor:pointer; font-size:12.5px; font-weight:600; transition:all .25s; border:1px solid " +
+          (n.voted ? "#3ECF8E; background:rgba(62,207,142,.12); color:#3ECF8E;" : "#FAB700; background:#FAB700; color:#141416;"),
+        poolNote: n.votes >= TH ? "Past the line — scheduled." : (TH - n.votes) + " votes from unfreezing.",
+        voters: voters.map(v => ({ initials:v, id:"#DB-" + (1000 + v.charCodeAt(0) * 7),
+          style:"width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:700; color:#141416; background:" + r.color + "; box-shadow:0 0 0 2px #0D0D0F;" })),
+        voterNote:"+" + Math.max(0, n.votes - voters.length) + " more, all public",
+        accessStyle:"position:relative; display:flex; flex-direction:column; gap:8px; align-items:flex-start; padding:16px 14px 14px; border-radius:3px 14px 14px 14px; border:1px dashed " +
+          (claimed ? "#3ECF8E55; background:rgba(62,207,142,.07); color:#3ECF8E;" : "#FAB70055; background:rgba(250,183,0,.06); color:#FAB700;"),
+        accessTitle: n.col === "complete" ? "Shipped for everyone" : "Early access",
+        accessBody: n.col === "complete"
+          ? "First 12 voters got it 3 weeks early plus a credit drop."
+          : "Voting queues you for beta. First 12 voters get 500 credits and their handle on the note.",
+        claim:() => { this.setState(st => ({ claimed:{ ...st.claimed, [n.id]:!claimed } })); this.flash(claimed ? "Removed from the early-access list." : "You're on the list for " + n.code + ". We'll email the moment it hits testing."); },
+        claimLabel: claimed ? "✓ You're on the list" : (n.col === "complete" ? "Open it in the studio" : "Put me on the early list"),
+        claimStyle:"height:32px; padding:0 13px; border-radius:10px; cursor:pointer; font-size:11.5px; font-weight:600; border:1px solid currentColor; background:transparent; color:inherit;",
+        railLineStyle:"position:absolute; left:16px; right:16px; top:9px; height:2px; border-radius:2px; background:#232326;",
+        railFillStyle:"display:block; height:100%; border-radius:2px; width:" + (stageIdx / (COLS.length - 1) * 100) + "%; background:linear-gradient(90deg," + r.color + ",#FAB700); transition:width .5s cubic-bezier(.2,.85,.2,1);",
+        stages: COLS.map((c, i) => ({ label:c.label,
+          dotStyle:"position:relative; z-index:1; width:11px; height:11px; border-radius:50%; border:2px solid #0B0B0D; background:" +
+            (i === stageIdx ? r.color : i < stageIdx ? "#5A5A62" : "#232326") + (i === stageIdx ? "; box-shadow:0 0 0 3px " + r.color + "33;" : ";"),
+          labelStyle:"font-size:9px; font-weight:700; letter-spacing:.5px; text-align:center; color:" +
+            (i === stageIdx ? r.color : i < stageIdx ? "#6A6A72" : "#3A3A40") + ";" })),
+        chat: n.chat.map((m, ci) => {
+          const you = m.role === "you", bot = m.role === "bot", team = m.role === "team";
+          const c = you ? "#FAB700" : bot ? "#B98CFF" : team ? "#3ECF8E" : r.color;
+          const rot = ci % 2 ? .4 : -.4;
+          return { who:m.who, time:m.time, text:m.text, initials:m.who.slice(0, 2).toUpperCase(),
+            tag: bot ? "AI AGENT" : team ? "MAINTAINER" : you ? "#DB-0001" : "USER",
+            rowStyle:"display:flex; gap:10px; align-items:flex-start;" + (you ? " flex-direction:row-reverse; text-align:right;" : ""),
+            avatarStyle:"width:32px; height:32px; flex:none; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#141416; background:" + c + "; transform:rotate(" + (-rot * 3) + "deg);",
+            tagStyle:"padding:2px 7px; border-radius:5px; font-size:9px; font-weight:700; letter-spacing:.7px; border:1px solid " + c + "55; color:" + c + ";",
+            bubbleStyle:"padding:12px 14px; border-radius:" + (you ? "14px 4px 14px 14px" : "4px 14px 14px 14px") + "; font-size:13px; line-height:1.65; color:#C4C4CC; " +
+              "border-left:3px solid " + c + "; background:" + c + "14; transform:rotate(" + rot + "deg);" };
+        })
+      };
+    })();
+
+    const kindOpts = Object.keys(KINDS).map(k => ({ label:KIND_ICON[k] + " " + KINDS[k], pick:() => this.setState({ newKind:k }),
+      style:"height:28px; padding:0 11px; border-radius:8px; cursor:pointer; font-size:10.5px; font-weight:700; letter-spacing:.5px; transition:all .2s; border:1px solid " +
+        (s.newKind === k ? "#161616; background:#161616; color:#F2F0EA;" : "rgba(20,20,22,.3); background:transparent; color:rgba(20,20,22,.7);") }));
+
+    const railOpts = RAILS.map(r => ({ label:RAIL_ICON[r.key] + " " + r.label, pick:() => this.setState({ newRail:r.key }),
+      style:"height:26px; padding:0 9px; border-radius:7px; cursor:pointer; font-size:9.5px; font-weight:700; letter-spacing:.5px; transition:all .2s; border:1px solid " +
+        (s.newRail === r.key ? "#161616;" : "rgba(20,20,22,.22);") + " background:" + (s.newRail === r.key ? r.color : "transparent") + "; color:rgba(20,20,22,.85);" }));
+
+    return {
+      rootStyle:"position:relative; min-height:100vh; background:#0A0A0A; color:#EDEDED; font-family:'Space Grotesk',system-ui,sans-serif;",
+      votesLeftLabel:this.left + " vote" + (this.left === 1 ? "" : "s") + " left",
+      rails, cols, sel, kindOpts, railOpts, dividerStyle,
+      threshold:TH, emergencyCount:s.notes.filter(n => n.col === "emergency").length,
+      filtered: !!s.railFilter,
+      filterNote: s.railFilter ? "Showing " + this.rail(s.railFilter).label + " only" : "Click any sticky to read the thread and vote",
+      clearFilter:() => this.setState({ railFilter:null }),
+      boardShellStyle:"position:relative; padding:18px; border-radius:20px; background:#22262B; border:14px solid #C8C4B8; box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 60px rgba(0,0,0,.45); overflow-x:auto;",
+      founderLabel: s.founder ? "Maintainer mode on — click to exit" : "Maintainer mode (drag stickies)",
+      founderIconPath: s.founder ? "M12 15v3M7 11V8a5 5 0 0110 0M6 11h12v9H6z" : "M12 15v3M7 11V8a5 5 0 0110 0v3M6 11h12v9H6z",
+      founderBtnStyle:"width:30px; height:30px; flex:none; display:flex; align-items:center; justify-content:center; border-radius:50%; cursor:pointer; transition:all .25s; border:1px solid " +
+        (s.founder ? "#3ECF8E; background:rgba(62,207,142,.12); color:#3ECF8E;" : "#26262A; background:transparent; color:#8A8A92;"),
+      toggleFounder:() => { this.setState({ founder:!s.founder }); this.flash(s.founder ? "Back to read-only. Vote away." : "Granted. Drag stickies between columns — everyone sees the move."); },
+      dropBtnStyle:"display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 16px; border-radius:12px; cursor:pointer; border:none; font-size:13px; font-weight:600; color:#141416; background:#FAB700; transition:transform .25s, box-shadow .25s;",
+      openComposer:() => this.setState({ composer:true }),
+      closeComposer:() => this.setState({ composer:false }),
+      composer:s.composer, stop:(e) => e.stopPropagation(),
+      composerStyle:"position:relative; display:flex; flex-direction:column; gap:11px; width:min(520px,100%); padding:26px 24px 24px; background:#FFE14D; color:#141416; box-shadow:4px 8px 0 rgba(0,0,0,.35), 0 30px 70px rgba(0,0,0,.5); transform:rotate(-.7deg);",
+      composerInputStyle:"height:44px; padding:0 13px; border-radius:0; border:1px solid rgba(20,20,22,.35); background:rgba(255,255,255,.55); color:#141416; font-size:13.5px; outline:none;",
+      newTitle:s.newTitle, setNewTitle:(e) => this.setState({ newTitle:e.target.value }),
+      submitNote:this.submitNote,
+      submitStyle:"height:40px; padding:0 18px; border-radius:0; cursor:pointer; border:none; background:#161616; color:#F2F0EA; font-size:13px; font-weight:600;",
+      closeDrawer:() => this.setState({ selId:null }),
+      draft:s.draft, setDraft:(e) => this.setState({ draft:e.target.value }),
+      draftKey:(e) => { if (e.key === "Enter") this.send(); }, send:this.send,
+      inputStyle:"flex:1; min-width:0; height:42px; padding:0 13px; border-radius:12px; border:1px solid #26262A; background:#131315; color:#EDEDED; font-size:13px; outline:none;",
+      sendStyle:"display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 17px; border-radius:12px; cursor:pointer; border:none; background:#FAB700; color:#141416; font-size:12.5px; font-weight:600; flex:none;",
+      creditStyle:"position:relative; display:flex; flex-direction:column; gap:11px; margin-top:44px; padding:30px 28px; border-radius:20px; border:1px solid #232326; background:linear-gradient(160deg,#111113,#0C0C0E); overflow:hidden;",
+      toast:s.toast,
+      toastStyle:"position:fixed; left:50%; bottom:26px; z-index:90; transform:translateX(-50%); max-width:min(560px,92vw); padding:12px 18px; border-radius:13px; border:1px solid #2E2E32; background:#161618; color:#EDEDED; font-size:12.5px; box-shadow:0 20px 50px rgba(0,0,0,.55); animation:rmToast 3.2s ease forwards;"
+    };
+  }
+}
+
+</script>
+</body>
+</html>
