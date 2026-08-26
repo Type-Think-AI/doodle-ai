@@ -87,7 +87,7 @@ type BoardMode = "loading" | "sync" | "local";
 /** Colour = category. Legend is rendered on the board so it is self-describing. */
 const CATEGORY = {
   ui: "grey",
-  api: "violet",
+  api: "yellow",
   idea: "orange",
   seo: "green",
   bug: "red",

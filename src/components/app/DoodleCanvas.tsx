@@ -142,6 +142,12 @@ export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanva
      imperative canvas side effect, and putting it in state would re-render
      the whole canvas on every image. */
   const slotRef = useRef(0);
+  const themeObserverRef = useRef<MutationObserver | null>(null);
+  useEffect(() => () => {
+    themeObserverRef.current?.disconnect();
+    themeObserverRef.current = null;
+  }, []);
+
 
   /* Gate on the canvas actually being visible before mounting <Tldraw>.
    *
@@ -274,9 +280,16 @@ export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanva
          never appear. Failing loudly to the console — and still draining the
          backlog in `finally` — turns that into a debuggable error. */
       try {
-        // Dark canvas to match the app shell — the app has no light mode on
-        // this surface, so this is set once rather than synced to a theme toggle.
-        editor.user.updateUserPreferences({ colorScheme: "dark" });
+        // Keep tldraw in lockstep with the app shell. The app can switch themes
+        // without remounting this island, so this is also observed below.
+        const syncCanvasTheme = () => {
+          const isLight = document.documentElement.dataset.theme === "light";
+          editor.user.updateUserPreferences({ colorScheme: isLight ? "light" : "dark" });
+        };
+        syncCanvasTheme();
+        const themeObserver = new MutationObserver(syncCanvasTheme);
+        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+        themeObserverRef.current = themeObserver;
 
         /* Dotted grid on by default. tldraw renders its grid as dots
            (.tl-grid-dot), which is exactly the reference look, but grid mode
