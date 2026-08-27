@@ -7,7 +7,8 @@
     {
       "binding": "DB",
       "database_name": "doodleai",
-      "database_id": "543c9d04-42eb-4b21-8aab-9f8216a907d5"
+      "database_id": "543c9d04-42eb-4b21-8aab-9f8216a907d5",
+      "migrations_dir": "migrations"
     }
   ],
   "kv_namespaces": [
