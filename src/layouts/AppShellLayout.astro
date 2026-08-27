@@ -19,15 +19,26 @@ interface Props {
   /** Open Graph image. Forwarded to AppLayout so shell pages can set a social card. */
   image?: string;
   active: 'chat' | 'skills' | 'moodboards' | 'characters' | 'projects' | 'team' | 'settings' | 'roadmap';
+  /**
+   * Override the footer decision for this page.
+   *
+   * The default derives from `active` (see below). Pass `true` on a canvas
+   * surface that is ALSO a public/indexable page and therefore wants the
+   * footer's nav and interlinking — /roadmap/public is the case this exists
+   * for. A page opting in must give its canvas a bounded height instead of
+   * filling the shell, otherwise the footer sits below an unreachable 100dvh
+   * canvas.
+   */
+  showFooter?: boolean;
 }
-const { title, description, image, active } = Astro.props;
+const { title, description, image, active, showFooter: showFooterProp } = Astro.props;
 // The marketing footer (CTA hero, marquee, partner grid) belongs on the
 // content-browsing pages (skills, moodboards, characters, projects, team) —
 // it was added there deliberately. "chat" and "roadmap" are live tool
 // surfaces with a sticky composer / full-bleed canvas; appending a full
 // marketing footer under them pushes the shell past 100dvh and becomes
 // scrollable-into on mobile, replacing the tool with a landing page.
-const showFooter = active !== 'chat' && active !== 'roadmap';
+const showFooter = showFooterProp ?? (active !== 'chat' && active !== 'roadmap');
 ---
 
 <AppLayout title={title} description={description} image={image}>

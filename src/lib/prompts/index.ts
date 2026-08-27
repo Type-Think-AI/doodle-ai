@@ -22,6 +22,12 @@ import { buildFacelessPortraitPrompt } from "./faceless-portrait";
 import { buildSeasonalPack } from "./seasonal-pack";
 import { buildEmotionalModes } from "./emotional-modes";
 import { buildExpressionSheet } from "./expression-sheet";
+import { buildStyleRoll } from "./style-roll";
+import { buildChildhoodMe } from "./childhood-me";
+import { buildFestivalPack } from "./festival-pack";
+import { buildWebtoonCaricature } from "./webtoon-caricature";
+import { buildFamilyPortrait } from "./family-portrait";
+import { buildOccupationCaricature } from "./occupation-caricature";
 import type { PackSkillId } from "../credits/costs";
 
 /** Everything a prompt builder is allowed to see. Never credentials. */
@@ -106,6 +112,11 @@ export const SKILL_PROMPT_BUILDERS: Record<string, PromptBuilder> = {
   // Deliberately ignores the theme: this skill's muted editorial palette is
   // the product, and the louder visual themes fight it.
   faceless: () => buildFacelessPortraitPrompt(),
+  family: (input) => buildFamilyPortrait(input),
+  // The occupation is carried in `description` — the tool's schema already
+  // documents that field as free-text guidance, and the builder falls back to a
+  // neutral setting rather than guessing a profession when it is absent.
+  occupation: (input) => buildOccupationCaricature(input),
 };
 
 export function promptBuilderFor(skillId: string): PromptBuilder | undefined {
@@ -138,6 +149,13 @@ export const SKILL_PACK_BUILDERS: Record<PackSkillId, PackPromptBuilder> = {
   // and a loud theme fights the emotional lens. Same reasoning as `faceless`.
   moods: (input) => buildEmotionalModes(input),
   expressions: (input) => buildExpressionSheet(input),
+  // Ignores the theme too, for the same class of reason as `moods`: the four
+  // MEDIUMS are this skill's product, and one shared visual theme would flatten
+  // them back into a single look.
+  "style-roll": (input) => buildStyleRoll(input),
+  childhood: (input) => buildChildhoodMe(input),
+  festival: (input) => buildFestivalPack(input),
+  webtoon: (input) => buildWebtoonCaricature(input),
 };
 
 export function packBuilderFor(skillId: string): PackPromptBuilder | undefined {

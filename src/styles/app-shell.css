@@ -55,6 +55,15 @@ body {
 .app-shell-main.has-footer > .app-shell-content {
   flex: 1 0 auto;
   overflow: visible;
+  /* Sticky-footer floor. `flex-grow: 1` alone does nothing here: the footer is
+     taller than the viewport, so the column's free space is already negative
+     and there is nothing for the content pane to grow into. Without this floor
+     a sparse page (Characters with no characters, Moodboards with no doodles)
+     rendered ~200px of content and then handed the rest of the first screen to
+     the marketing footer — landing on Characters showed a CTA hero. One
+     viewport of floor keeps the page's own content in the fold and moves the
+     footer to where a footer belongs: below it. */
+  min-height: 100dvh;
 }
 
 @media (max-width: 860px) {

@@ -49,6 +49,9 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		background: var(--bg);
 		margin-top: 60px;
 		border-top: none;
+		/* Named so the sub-component styles in the global block below can query
+		   this same container without depending on nesting order. */
+		container: db-footer / inline-size;
 	}
 	.db-footer::before {
 		content: "";
@@ -128,7 +131,14 @@ import FooterLegal from "./footer/FooterLegal.astro";
 	}
 
 	/* ─── Tablet ─── */
-	@media (max-width: 1080px) {
+	/* Container queries, not viewport queries: inside the app shell this footer
+	   is 258px narrower than the viewport when the sidebar is open, and snaps
+	   back to full width when it collapses. Keying the layout to the viewport
+	   meant a 1200px window with the sidebar open ran the two-column desktop
+	   grid inside ~940px and crammed. `container-type: inline-size` on
+	   .db-footer makes these breakpoints measure the footer's own box, so the
+	   same rules work on full-width marketing pages and beside the sidebar. */
+	@container db-footer (max-width: 1080px) {
 		.db-top {
 			grid-template-columns: 1fr;
 			gap: 48px;
@@ -136,10 +146,7 @@ import FooterLegal from "./footer/FooterLegal.astro";
 	}
 
 	/* ─── Mobile ─── */
-	@media (max-width: 720px) {
-		.db-footer {
-			margin-top: 40px;
-		}
+	@container db-footer (max-width: 720px) {
 		.db-shell {
 			padding: 32px 20px 0;
 		}
@@ -162,6 +169,14 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		}
 		.db-dots {
 			background-size: 22px 22px;
+		}
+	}
+
+	/* Outer spacing still keys off the viewport — it is about the page, not
+	   about how wide the footer's own content box happens to be. */
+	@media (max-width: 720px) {
+		.db-footer {
+			margin-top: 40px;
 		}
 	}
 
@@ -784,8 +799,15 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		50% { transform: translateX(4px); }
 	}
 
-	/* ─── Mobile overrides for sub-components ─── */
-	@media (max-width: 720px) {
+	/* ─── Narrow-footer layout overrides ─── */
+	/* These are LAYOUT rules, so they key off the footer's own width via the
+	   db-footer container. That is what makes the footer correct beside the
+	   258px app sidebar: at a 1000px viewport with the sidebar open the footer
+	   box is ~740px and must already be in its stacked layout, even though the
+	   viewport is well above 720px. Device-dependent rules (touch target sizes,
+	   safe-area padding, cursor vs touch) stay in real media queries below —
+	   those are about the device, not about how wide this box happens to be. */
+	@container db-footer (max-width: 720px) {
 		.db-cta {
 			flex-direction: column;
 			align-items: flex-start;
@@ -798,12 +820,6 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		}
 		.db-cta-actions {
 			width: 100%;
-		}
-		.db-btn {
-			height: 44px;
-			padding: 0 16px;
-			font-size: 13px;
-			border-radius: 11px;
 		}
 		.db-btn-primary {
 			flex: 1;
@@ -838,18 +854,10 @@ import FooterLegal from "./footer/FooterLegal.astro";
 			grid-template-columns: 1fr 1fr;
 			gap: 10px 16px;
 		}
-		.db-link {
-			font-size: 14px;
-			min-height: 36px;
-			align-items: center;
-		}
 		.db-brand-col {
 			gap: 14px;
 		}
-		.db-mark {
-			width: 40px;
-			height: 40px;
-		}
+		.db-mark,
 		.db-mark svg {
 			width: 40px;
 			height: 40px;
@@ -860,10 +868,6 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		.db-blurb {
 			font-size: 13px;
 			line-height: 1.6;
-		}
-		.db-social-link {
-			width: 44px;
-			height: 44px;
 		}
 		.db-partners {
 			margin-top: 30px;
@@ -887,26 +891,23 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		.db-word-lit {
 			max-width: 100%;
 		}
-		.db-word-base {
-			opacity: 1;
-		}
-		.db-word-hint {
-			display: none;
-		}
-		.db-word-lit {
-			/* no cursor on touch — hide the reveal layer entirely */
-			display: none;
-		}
 		.db-legal {
 			flex-direction: column;
 			align-items: flex-start;
 			gap: 10px;
 			margin-top: 28px;
-			padding: 16px 0 env(safe-area-inset-bottom, 20px);
 		}
 	}
 
-	@media (max-width: 390px) {
+	/* Mid width: the two-up link grid still fits, but 5 partner tiles do not. */
+	@container db-footer (max-width: 980px) {
+		.db-partners-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			max-width: none;
+		}
+	}
+
+	@container db-footer (max-width: 430px) {
 		.db-headline {
 			font-size: 21px;
 		}
@@ -920,9 +921,44 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		.db-col-links {
 			grid-template-columns: 1fr;
 		}
-		.db-word-base,
-		.db-word-lit {
-			font-size: 32px;
+		/* No room for the affordance line at this width, pointer aside. */
+		.db-word-hint {
+			display: none;
+		}
+	}
+
+	/* ─── Device overrides (touch targets, safe area, pointer) ─── */
+	@media (max-width: 720px) {
+		.db-btn {
+			height: 44px;
+			padding: 0 16px;
+			font-size: 13px;
+			border-radius: 11px;
+		}
+		.db-link {
+			font-size: 14px;
+			min-height: 36px;
+			align-items: center;
+		}
+		.db-social-link {
+			width: 44px;
+			height: 44px;
+		}
+		.db-legal {
+			padding: 16px 0 env(safe-area-inset-bottom, 20px);
+		}
+	}
+
+	/* No cursor means no spotlight to chase: show the mark at full strength and
+	   drop the reveal layer entirely. Keyed to the pointer, not the width, so a
+	   narrow desktop window keeps the effect and a large tablet does not. */
+	@media (hover: none), (pointer: coarse) {
+		.db-word-base {
+			opacity: 1;
+		}
+		.db-word-lit,
+		.db-word-hint {
+			display: none;
 		}
 	}
 

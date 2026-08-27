@@ -39,15 +39,15 @@ function progress(row: { itemsOk: number; variantCount: number }): number {
 	</div>
 
 	{rows.length === 0 ? (
-		<div class="empty-state">
+		<div class="admin-empty">
 			<strong>No batch jobs with this status.</strong>
 			<span>Variant runs will appear here as soon as a team starts one.</span>
 		</div>
 	) : (
-			<div class="table-card">
-				<div class="table-wrap">
+			<div class="admin-table-card">
+				<div class="admin-table-wrap">
 					<table>
-						<thead><tr><th>JOB</th><th>SKILL</th><th>TEAM</th><th>BY</th><th>VARIANTS</th><th>PROGRESS</th><th>CREDITS</th><th>STATUS</th><th>CREATED</th></tr></thead>
+						<thead><tr><th>Job</th><th>Skill</th><th>Team</th><th>By</th><th class="num">Variants</th><th>Progress</th><th class="num">Credits</th><th>Status</th><th>Created</th></tr></thead>
 						<tbody>
 							{rows.map((row) => {
 								const pct = progress(row);
@@ -58,9 +58,9 @@ function progress(row: { itemsOk: number; variantCount: number }): number {
 										<td>{row.skillId}</td>
 										<td>{row.orgName}</td>
 										<td>{row.createdByName}</td>
-										<td>{thousands(row.variantCount)}</td>
+										<td class="num">{thousands(row.variantCount)}</td>
 										<td class="progress-cell"><div class="progress-track"><span style={`width:${pct}%`}></span></div><small>{row.itemsOk} ok · {row.itemsFailed} failed · {row.itemsPending} pending</small></td>
-										<td>{thousands(row.creditsReserved)}</td>
+										<td class="num">{thousands(row.creditsReserved)}</td>
 										<td><StatusPill status={row.status} tone={statusTone(row.status)} /></td>
 										<td title={formatDate(row.createdAt)}>{relativeTime(row.createdAt)}</td>
 									</tr>
@@ -79,12 +79,7 @@ function progress(row: { itemsOk: number; variantCount: number }): number {
 	.filter-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border: 1px solid var(--border2); border-radius: 999px; color: var(--text-dim); text-decoration: none; font-size: 12px; background: var(--surface2); }
 	.filter-chip:hover, .filter-chip.active { color: var(--text); border-color: var(--accent); background: var(--hover); }
 	.filter-chip span { color: var(--text-dimmer); font-size: 11px; }
-	.table-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; }
-	.table-wrap { overflow-x: auto; }
-	table { width: 100%; border-collapse: collapse; min-width: 1060px; font-size: 13px; }
-	th { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text-dimmer); font-size: 10px; font-weight: 600; letter-spacing: .07em; text-align: left; white-space: nowrap; }
-	td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dim); white-space: nowrap; vertical-align: middle; }
-	tr:last-child td { border-bottom: 0; }
+	table { min-width: 1060px; }
 	.job-cell { color: var(--text); }
 	code { color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
 	.warning { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; margin-left: 7px; border-radius: 50%; background: var(--red-faint); color: var(--red); font-size: 11px; font-weight: 700; cursor: help; }
@@ -92,15 +87,11 @@ function progress(row: { itemsOk: number; variantCount: number }): number {
 	.progress-track { width: 100%; height: 5px; margin-bottom: 5px; border-radius: 999px; background: var(--surface2); overflow: hidden; }
 	.progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
 	small { color: var(--text-dimmer); font-size: 10px; }
-	.empty-state { border: 1px dashed var(--border2); border-radius: 12px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--text-dimmer); text-align: center; }
-	.empty-state strong { color: var(--text-dim); font-size: 14px; }
 	@media (max-width: 640px) {
 		.filters { gap: 6px; }
 		.filter-chip { padding: 9px 12px; font-size: 13px; min-height: 38px; }
-		.empty-state { padding: 36px 16px; border-radius: 10px; }
-		.empty-state strong { font-size: 13px; }
-		.empty-state span { font-size: 12px; }
-		.table-card { border-radius: 10px; }
-		.table-wrap { -webkit-overflow-scrolling: touch; }
+		.batches-page :global(.admin-empty) { padding: 36px 16px; border-radius: 10px; }
+		.batches-page :global(.admin-empty) strong { font-size: 13px; }
+		.batches-page :global(.admin-empty) span { font-size: 12px; }
 	}
 </style>

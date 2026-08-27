@@ -29,6 +29,14 @@ export const GENERATION_MODES = [
   "moods",
   "seasonal",
   "expressions",
+  "style-roll",
+  "childhood",
+  "festival",
+  "webtoon",
+  /* Single-image additions from the same research pass — the Etsy "wallet
+     lane" (Tier C), where demand is gifting rather than social sharing. */
+  "family",
+  "occupation",
 ] as const;
 export type GenerationMode = (typeof GENERATION_MODES)[number];
 

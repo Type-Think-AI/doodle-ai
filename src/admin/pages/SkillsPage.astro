@@ -51,11 +51,11 @@ const skills = [
 <div class="skills-page">
 	<div id="skillActionError" class="action-error" role="alert" hidden></div>
 	{skills.length === 0 ? (
-		<div class="empty-state">No skills are available.</div>
+		<div class="admin-empty">No skills are available.</div>
 	) : (
 		<div class="skills-grid">
 			{skills.map((skill) => (
-				<div class="panel">
+				<div class="admin-panel">
 					<div class="skill-head">
 						<GradientAvatar seed={skill.skillId} size={32} radius="9px" />
 						<div class="skill-title">
@@ -162,12 +162,6 @@ const skills = [
 		grid-template-columns: repeat(3, 1fr);
 		gap: 14px;
 	}
-	.panel {
-		border: 1px solid var(--border);
-		border-radius: 16px;
-		background: var(--card);
-		padding: 18px 20px;
-	}
 	.skill-head {
 		display: flex;
 		align-items: flex-start;
@@ -258,15 +252,6 @@ const skills = [
 		font-size: 10.5px;
 		color: var(--text-dimmer);
 		margin-top: 16px;
-	}
-	.empty-state {
-		border: 1px solid var(--border);
-		border-radius: 16px;
-		background: var(--card);
-		padding: 42px 20px;
-		text-align: center;
-		color: var(--text-dimmer);
-		font-size: 13px;
 	}
 	.action-error {
 		border: 1px solid var(--red);

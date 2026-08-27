@@ -43,19 +43,19 @@ const hasNextPage = ledger.length === pageSize;
 ---
 
 <div class="credits-page">
-	<div class="stat-row" aria-label="Credit totals">
-		<div class="stat-card"><span class="stat-label">Issued</span><strong>{thousands(totals.issued)}</strong></div>
-		<div class="stat-card"><span class="stat-label">Used</span><strong>{thousands(totals.used)}</strong></div>
-		<div class="stat-card"><span class="stat-label">Outstanding</span><strong>{thousands(totals.outstanding)}</strong></div>
-		<div class="stat-card"><span class="stat-label">Utilisation</span><strong>{totals.utilisationPct}%</strong></div>
+	<div class="admin-stats-grid" aria-label="Credit totals">
+		<div class="admin-stat-card"><span>Issued</span><strong>{thousands(totals.issued)}</strong></div>
+		<div class="admin-stat-card"><span>Used</span><strong>{thousands(totals.used)}</strong></div>
+		<div class="admin-stat-card"><span>Outstanding</span><strong>{thousands(totals.outstanding)}</strong></div>
+		<div class="admin-stat-card"><span>Utilisation</span><strong>{totals.utilisationPct}%</strong></div>
 	</div>
 
 	<div class="credits-grid">
 		{
 			canGrant ? (
-				<div class="panel grant-panel">
-					<span class="panel-title">Grant credits</span>
-					<p class="panel-subtitle">Applied instantly, logged in the append-only ledger</p>
+				<div class="admin-panel grant-panel">
+					<span class="admin-panel-title">Grant credits</span>
+					<p class="admin-panel-sub">Applied instantly, logged in the append-only ledger</p>
 					<form id="credit-grant-form">
 						<label class="field-label" for="credit-user-search">User</label>
 						<div class="target-input">
@@ -87,33 +87,45 @@ const hasNextPage = ledger.length === pageSize;
 					</form>
 				</div>
 			) : (
-				<div class="panel grant-panel grant-readonly">
-					<span class="panel-title">Grant credits</span>
-					<p class="panel-subtitle">Granting credits requires full admin access.</p>
+				<div class="admin-panel grant-panel grant-readonly">
+					<span class="admin-panel-title">Grant credits</span>
+					<p class="admin-panel-sub">Granting credits requires full admin access.</p>
 				</div>
 			)
 		}
 
-		<div class="ledger-panel">
+		<div class="admin-table-card ledger-panel">
 			<div class="ledger-header">
-				<span class="panel-title">Ledger</span>
+				<span class="admin-panel-title">Ledger</span>
 				{q && <span class="ledger-filter">Filtered: "{q}"<a href="/admin/credits" class="clear-filter">✕</a></span>}
 				<span class="ledger-count">{ledger.length} {ledger.length === 1 ? 'entry' : 'entries'}{page > 1 ? ` · page ${page}` : ''}</span>
 			</div>
-			<div class="ledger-table-head"><span>DELTA</span><span>REASON</span><span>ACTOR</span><span>ORG</span><span>BALANCE</span><span>WHEN</span></div>
 			{
-				ledger.length > 0 ? ledger.map((entry) => (
-					<div class="ledger-row">
-						<span class:list={['ledger-amount', entry.delta >= 0 ? 'pos' : 'neg']}>
-							{entry.delta >= 0 ? '+' : ''}{thousands(entry.delta)}
-						</span>
-						<span class="ledger-reason">{entry.reason}</span>
-						<span class="ledger-actor"><strong>{entry.actorName || '—'}</strong><small>{entry.actorEmail}</small></span>
-						<span class="ledger-org">{entry.orgName || '—'}</span>
-						<span class="ledger-balance">{thousands(entry.balanceAfter)}</span>
-						<span class="ledger-time" title={formatDate(entry.createdAt)}>{relativeTime(entry.createdAt)}</span>
+				ledger.length > 0 ? (
+					<div class="admin-table-wrap">
+						<table>
+							<thead>
+								<tr><th>Delta</th><th>Reason</th><th>Actor</th><th>Org</th><th class="num">Balance</th><th>When</th></tr>
+							</thead>
+							<tbody>
+								{ledger.map((entry) => (
+									<tr>
+										<td>
+											<span class:list={['ledger-amount', entry.delta >= 0 ? 'pos' : 'neg']}>
+												{entry.delta >= 0 ? '+' : ''}{thousands(entry.delta)}
+											</span>
+										</td>
+										<td class="ledger-reason">{entry.reason}</td>
+										<td class="ledger-actor"><strong>{entry.actorName || '—'}</strong><small>{entry.actorEmail}</small></td>
+										<td>{entry.orgName || '—'}</td>
+										<td class="num">{thousands(entry.balanceAfter)}</td>
+										<td title={formatDate(entry.createdAt)}>{relativeTime(entry.createdAt)}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
 					</div>
-				)) : <div class="empty-state">{q ? `No ledger entries matching "${q}".` : 'No credit ledger entries yet.'}</div>
+				) : <div class="admin-empty">{q ? `No ledger entries matching "${q}".` : 'No credit ledger entries yet.'}</div>
 			}
 			{(page > 1 || hasNextPage) && (
 				<nav class="pagination" aria-label="Ledger pagination">
@@ -125,11 +137,11 @@ const hasNextPage = ledger.length === pageSize;
 		</div>
 	</div>
 
-	<div class="panel chart-panel">
+	<div class="admin-panel chart-panel">
 		<div class="chart-header">
 			<div>
-				<span class="panel-title">Issued vs. used credits</span>
-				<p class="panel-subtitle">Weekly totals from the credit ledger</p>
+				<span class="admin-panel-title">Issued vs. used credits</span>
+				<p class="admin-panel-sub">Weekly totals from the credit ledger</p>
 			</div>
 			<div class="chart-legend">
 				<span class="legend-item"><span class="legend-dot issued"></span>Issued</span>
@@ -147,7 +159,7 @@ const hasNextPage = ledger.length === pageSize;
 						</g>
 					))}
 				</svg>
-			) : <div class="empty-state chart-empty">No credit activity to chart yet.</div>
+			) : <div class="admin-empty chart-empty">No credit activity to chart yet.</div>
 		}
 	</div>
 </div>
@@ -271,17 +283,9 @@ const hasNextPage = ledger.length === pageSize;
 
 <style>
 	.credits-page { display: flex; flex-direction: column; gap: 14px; }
-	.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-	.stat-card, .panel, .ledger-panel { border: 1px solid var(--border); border-radius: 16px; background: var(--card); }
-	.stat-card { padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; }
-	.stat-label, .field-label { font-size: 11.5px; color: var(--text-dimmer); }
-	.stat-card strong { font-size: 22px; color: var(--text); }
 	.credits-grid { display: grid; grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.8fr); gap: 14px; align-items: start; }
-	.panel { padding: 18px 20px; }
-	.panel-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
-	.panel-subtitle { font-size: 11.5px; color: var(--text-dimmer); margin: 5px 0 16px; }
 	.grant-panel form { display: flex; flex-direction: column; gap: 8px; }
-	.field-label { margin-top: 5px; }
+	.field-label { font-size: 11.5px; color: var(--text-dimmer); margin-top: 5px; }
 	.field-label span { opacity: 0.8; }
 	.target-input, .note-input { height: 42px; padding: 0 14px; border-radius: 11px; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); }
 	.target-input { display: flex; align-items: center; gap: 8px; }
@@ -311,17 +315,13 @@ const hasNextPage = ledger.length === pageSize;
 	.ledger-filter { font-size: 11px; color: var(--accent); margin-left: 10px; display: flex; align-items: center; gap: 5px; }
 	.clear-filter { color: var(--text-dimmer); text-decoration: none; font-size: 12px; padding: 0 3px; }
 	.clear-filter:hover { color: var(--text); }
-	.ledger-table-head, .ledger-row { display: grid; grid-template-columns: 0.65fr 1fr 1.35fr 1fr 0.8fr 0.75fr; gap: 10px; align-items: center; }
-	.ledger-table-head { padding: 0 15px 8px; font-size: 9.5px; letter-spacing: .06em; color: var(--text-dimmer); }
-	.ledger-row { padding: 10px 15px; border-top: 1px solid var(--border); min-height: 56px; }
 	.ledger-amount { font-size: 12.5px; font-weight: 700; }
 	.ledger-amount.pos { color: var(--green); }
 	.ledger-amount.neg { color: var(--red); }
-	.ledger-reason, .ledger-org, .ledger-balance, .ledger-time { font-size: 11.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.ledger-reason { max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
 	.ledger-actor { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 	.ledger-actor strong { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 	.ledger-actor small { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dimmer); }
-	.empty-state { padding: 24px 15px; color: var(--text-dimmer); font-size: 12px; text-align: center; }
 	.pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px 8px; font-size: 11.5px; color: var(--text-dimmer); }
 	.pagination a { color: var(--blue); text-decoration: none; }
 	.chart-panel { display: flex; flex-direction: column; gap: 8px; }
@@ -333,6 +333,5 @@ const hasNextPage = ledger.length === pageSize;
 	.legend-dot.used { background: var(--accent); }
 	.bar-chart { width: 100%; height: 160px; }
 	.chart-empty { min-height: 160px; display: flex; align-items: center; justify-content: center; }
-	@media (max-width: 1100px) { .ledger-table-head, .ledger-row { grid-template-columns: .7fr 1fr 1.3fr 1fr .8fr; } .ledger-table-head span:last-child, .ledger-time { display: none; } }
-	@media (max-width: 860px) { .stat-row { grid-template-columns: repeat(2, 1fr); } .credits-grid { grid-template-columns: 1fr; } .ledger-panel { overflow-x: auto; } .ledger-table-head, .ledger-row { min-width: 720px; } }
+	@media (max-width: 860px) { .credits-grid { grid-template-columns: 1fr; } .ledger-panel { overflow-x: auto; } }
 </style>

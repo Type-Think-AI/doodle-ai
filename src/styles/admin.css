@@ -1,0 +1,220 @@
+/* Shared admin-surface primitives.
+ *
+ * WHY THIS FILE EXISTS
+ * The admin pages accumulated ~2,200 lines of per-page <style> in which the same
+ * handful of primitives were re-declared independently: `.empty-state` in 9
+ * files, `.panel` in 14, `.table-card` / `.table-head` / `.table-row` in 4 each.
+ * Nine copies of a rule is nine chances to drift, and they had — three surfaces
+ * rendered tabular data as a real <table> while others hand-rolled a CSS grid of
+ * <div>s, so column alignment, row height, header casing, horizontal scrolling
+ * and empty states did not match between pages.
+ *
+ * These declarations are the canonical versions, taken from the most complete
+ * existing implementation (OrgsPage) so adopting them changes consistency, not
+ * appearance.
+ *
+ * HOW TO USE IT
+ * Imported once by src/admin/layouts/AdminLayout.astro, so every admin page gets
+ * it. Astro's page-scoped <style> blocks compile to attribute selectors and
+ * therefore outrank these global rules — which makes migration safe and
+ * incremental: a page keeps its local copy until that copy is deleted, and only
+ * then falls through to here. Genuinely page-specific styling still belongs in
+ * the page.
+ *
+ * Prefer a real <table> for tabular data: it gives header association for screen
+ * readers for free, which a grid of <div>s cannot without extra ARIA.
+ */
+
+/* ---- Tabular data ---------------------------------------------------------- */
+
+.admin-table-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+/* Wrapper, not the table, owns horizontal scroll: the card keeps its rounded
+   border while wide columns scroll inside it. */
+.admin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table-wrap th {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dimmer);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.admin-table-wrap td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* No trailing rule against the card's own bottom edge. */
+.admin-table-wrap tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Numeric columns read far better right-aligned with tabular figures, so counts
+   line up on their digits instead of drifting. */
+.admin-table-wrap td.num,
+.admin-table-wrap th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Row affordance only where a row actually navigates somewhere. */
+.admin-table-wrap tr[data-href]:hover td,
+.admin-table-wrap tr.is-clickable:hover td {
+  background: var(--hover);
+  cursor: pointer;
+}
+
+/* ---- Stat cards ------------------------------------------------------------ */
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 17px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  min-width: 0;
+}
+
+.admin-stat-card span {
+  color: var(--text-dimmer);
+  font-size: 12px;
+}
+
+.admin-stat-card strong {
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-stat-card small {
+  color: var(--text-dimmer);
+  font-size: 11px;
+}
+
+/* ---- Empty state ----------------------------------------------------------- */
+
+.admin-empty {
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  padding: 52px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-dimmer);
+  text-align: center;
+}
+
+.admin-empty strong {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+/* ---- Panel ----------------------------------------------------------------- */
+
+.admin-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+.admin-panel-title {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.admin-panel-sub {
+  color: var(--text-dimmer);
+  font-size: 12px;
+  margin: 3px 0 0;
+}
+
+/* ---- Pills ----------------------------------------------------------------- */
+
+.admin-pill {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text-dimmer);
+}
+
+.admin-pill-info {
+  border-color: transparent;
+  background: var(--blue-faint);
+  color: var(--blue);
+}
+
+.admin-pill-good {
+  border-color: transparent;
+  background: var(--green-faint);
+  color: var(--green);
+}
+
+.admin-pill-bad {
+  border-color: transparent;
+  background: var(--red-faint);
+  color: var(--red);
+}
+
+/* ---- Responsive ------------------------------------------------------------ */
+
+@media (max-width: 860px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-stats-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-stat-card {
+    padding: 14px 16px;
+  }
+  .admin-stat-card strong {
+    font-size: 20px;
+  }
+  .admin-table-card {
+    border-radius: 10px;
+  }
+}

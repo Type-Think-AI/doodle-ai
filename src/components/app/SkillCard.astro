@@ -19,13 +19,12 @@ const imageCount = skill.runnable ? imageCountForSkill(skill.id) : 1;
   <div class="skill-card-thumb">
     {skill.thumbnailUrl ? <img src={skill.thumbnailUrl} alt={`${skill.name} sample output`} loading="lazy" /> : <Fragment set:html={thumb} />}
     {imageCount > 1 && (
-      <span class="skill-card-count" title={`Returns ${imageCount} separate images`}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="8" y="3" width="13" height="13" rx="2.4" stroke="currentColor" stroke-width="2"></rect>
-          <path d="M16 20.5H5.5A2 2 0 0 1 3.5 18.5V8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-        </svg>
-        {imageCount} images
-      </span>
+      <span
+        class="skill-card-count"
+        role="img"
+        aria-label={`Returns ${imageCount} separate images`}
+        title={`Returns ${imageCount} separate images`}
+      >{imageCount}</span>
     )}
     {!skill.runnable && <span class="skill-card-badge">Coming soon</span>}
   </div>
@@ -59,33 +58,40 @@ const imageCount = skill.runnable ? imageCountForSkill(skill.id) : 1;
   /* Touch/tap feedback so the card isn't silently inert on phones. */
   .skill-card:active .skill-card-thumb { border-color: var(--border3); transform: scale(0.98); }
   .skill-card:focus-visible { outline: 2px solid var(--border3); outline-offset: 3px; border-radius: 14px; }
-  .skill-card-thumb svg,
-  .skill-card-thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
-  .skill-card[data-runnable="false"] .skill-card-thumb svg,
-  .skill-card[data-runnable="false"] .skill-card-thumb img { opacity: 0.45; }
-  /* Multi-image count. Top-right so it never collides with the bottom-right
-     "Coming soon" badge, and light-on-dark regardless of the artwork beneath —
-     these thumbnails are mostly cream/warm-white, so a translucent dark pill is
-     the only treatment that stays legible across all of them. */
+  /* Direct children only: the thumbnail itself is a direct <svg>/<img> child,
+     whereas the overlay badges nest their own small icons. An unscoped
+     descendant selector here inflated a badge's 11px icon to fill the card. */
+  .skill-card-thumb > svg,
+  .skill-card-thumb > img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .skill-card[data-runnable="false"] .skill-card-thumb > svg,
+  .skill-card[data-runnable="false"] .skill-card-thumb > img { opacity: 0.45; }
+  /* Multi-image count — just the number, deliberately small. It is a glanceable
+     marker of which skills return a set, not a label to read; the full meaning
+     lives in the aria-label/title and on the skill page's spec row.
+     Top-right so it never collides with the bottom-right "Coming soon" badge,
+     and light-on-translucent-dark because these thumbnails are mostly
+     cream/warm-white and nothing else stays legible across all of them. */
   .skill-card-count {
     position: absolute;
-    right: 8px;
-    top: 8px;
+    right: 7px;
+    top: 7px;
+    min-width: 21px;
+    height: 21px;
+    padding: 0 5px;
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 9px 4px 8px;
+    justify-content: center;
     border-radius: 999px;
-    background: rgba(12, 12, 12, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(12, 12, 12, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     color: #fff;
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 11.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     line-height: 1;
-    white-space: nowrap;
     backdrop-filter: blur(6px);
   }
-  .skill-card-count svg { flex: 0 0 auto; opacity: 0.85; }
 
   .skill-card-badge {
     position: absolute;

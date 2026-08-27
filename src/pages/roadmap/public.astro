@@ -18,7 +18,7 @@ const resolved = hasSync ? await resolvePlatformRole(Astro as never) : null;
 const canSeed = !hasSync || resolved?.platformRole === 'admin';
 ---
 
-<AppShellLayout title="Roadmap — Doodle AI" active="roadmap"
+<AppShellLayout title="Roadmap — Doodle AI" active="roadmap" showFooter
   description="The Doodle AI public roadmap. See what's coming and drop your own feedback as a sticky note.">
   <div class="roadmap-page">
     <div class="roadmap-stage">
@@ -28,17 +28,30 @@ const canSeed = !hasSync || resolved?.platformRole === 'admin';
 </AppShellLayout>
 
 <style>
+  /* Unlike the team board at /roadmap, this page is public and indexable, so it
+     carries the site footer for nav and interlinking. That means the board can
+     no longer fill the shell: with `height: 100%` the canvas ate the whole
+     viewport and the footer sat below an unreachable fold. A bounded height
+     leaves the canvas fully usable and lets the column scroll to the footer.
+     The container stays visible and sized on first paint — tldraw never
+     initialises inside a zero-height or display:none box. */
   .roadmap-page {
     display: flex;
-    height: 100%;
     min-height: 0;
+    padding: 0;
   }
   .roadmap-stage {
     flex: 1;
-    min-height: 0;
     min-width: 0;
+    height: clamp(420px, 78dvh, 900px);
     position: relative;
     overflow: hidden;
+  }
+
+  @media (max-width: 860px) {
+    .roadmap-stage {
+      height: clamp(380px, 70dvh, 640px);
+    }
   }
 </style>
 

@@ -47,10 +47,25 @@ const IMAGES_PER_RUN: Record<GenerationMode, number> = {
   seasonal: 4,
   moods: 4,
   expressions: 9,
+  "style-roll": 4,
+  childhood: 4,
+  festival: 6,
+  webtoon: 4,
+  /* Single-image gifting skills. */
+  family: 1,
+  occupation: 1,
 };
 
-/** New account starter grant — signup bonus. */
-export const SIGNUP_GRANT_CREDITS = 5;
+/**
+ * New account starter grant — signup bonus.
+ *
+ * 10 rather than 5 because pricing is now per image: at 5 credits a new account
+ * could not run Expression Pack (9) at all and had only 1 credit left after any
+ * 4-image pack, so the pack skills — the thing that differentiates this
+ * catalogue — were unreachable on the free tier. 10 covers the largest pack with
+ * one credit to spare, or two 4-image packs.
+ */
+export const SIGNUP_GRANT_CREDITS = 10;
 
 /**
  * The skills that produce more than one image. Exported as a literal tuple so
@@ -59,7 +74,7 @@ export const SIGNUP_GRANT_CREDITS = 5;
  * than a silently empty registry that makes the skill fall through to the
  * generic single-image prompt at run time.
  */
-export const PACK_SKILL_IDS = ["moods", "seasonal", "expressions"] as const;
+export const PACK_SKILL_IDS = ["moods", "seasonal", "expressions", "style-roll", "childhood", "festival", "webtoon"] as const;
 export type PackSkillId = (typeof PACK_SKILL_IDS)[number];
 
 /* Keeps PACK_SKILL_IDS honest against the pricing table above: a pack id whose

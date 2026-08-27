@@ -1,5 +1,9 @@
 ---
 import '../../styles/app.css';
+/* Canonical admin table/panel/stat/empty primitives. Page-scoped <style> blocks
+   still outrank these, so pages migrate onto them one at a time — see the file
+   header for why they exist. */
+import '../../styles/admin.css';
 import { THEME_STORAGE_KEY } from '../../lib/theme';
 import Sidebar from '../components/Sidebar.astro';
 import AdminHeader from '../components/AdminHeader.astro';
@@ -36,7 +40,12 @@ const copy = ADMIN_PAGE_COPY[active] ?? ADMIN_PAGE_COPY.overview;
 					if (stored === 'light' || stored === 'dark') {
 						document.documentElement.setAttribute('data-theme', stored);
 					}
-				} catch {}
+				} catch {
+					/* localStorage throws in private-browsing / blocked-cookie modes.
+					   The stored theme is a preference, not state we need, so failing
+					   to read it should leave the default theme rather than break the
+					   inline script and flash an unstyled page. */
+				}
 			})();
 		</script>
 		<style>
