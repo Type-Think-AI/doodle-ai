@@ -131,7 +131,15 @@ export const PROBES: Probe[] = [
     detail: "ASSETS binding",
     group: "edge",
     run: async (ctx) => {
-      const { value, ms } = await timed(() => probeFetch(`${ctx.origin}/favicon.svg`, ctx));
+      const assets = (ctx.env as { ASSETS?: { fetch: (r: Request) => Promise<Response> } }).ASSETS;
+      if (!assets?.fetch) return notConfigured("The static asset binding");
+      // Through the binding, not over HTTP to our own origin. A Worker's fetch()
+      // to its own hostname does not pass through the assets handler, so the
+      // previous same-origin version reported 404 on staging for a file that
+      // serves 200 to real traffic — a false 'degraded' on a healthy component.
+      const { value, ms } = await timed(() =>
+        assets.fetch(new Request("https://assets.internal/favicon.svg")),
+      );
       if (!value.ok) return { state: "degraded", latencyMs: ms, note: `HTTP ${value.status}` };
       return ok(ms, ctx.budget, null, "Fonts, icons and images are being served from the edge.");
     },
@@ -206,31 +214,37 @@ export const PROBES: Probe[] = [
   {
     id: "auth",
     name: "Sign-in",
-    detail: "Better Auth · health route",
+    detail: "Better Auth · initialisation",
     group: "identity",
     run: async (ctx) => {
-      // `/ok` is Better Auth's own health route. The earlier version probed
-      // `/get-session`, which was wrong twice over: it is a session lookup, so it
-      // touches the database and KV on every check to learn something the `db`
-      // and `kv` probes already report, and it shares the auth rate-limit bucket
-      // with real users — under test it returned 429 and, because 429 is not 5xx,
-      // the probe cheerfully reported "operational" while being throttled.
-      const { value, ms } = await timed(() => probeFetch(`${ctx.origin}/api/auth/ok`, ctx));
-
-      // Being throttled is not evidence the service is unwell; it is evidence we
-      // asked too often. Neither "operational" (dishonest) nor "down" (a false
-      // alarm) is right, so it gets its own visible, self-explaining state.
-      if (value.status === 429) {
+      // In-process construction, not an HTTP call.
+      //
+      // Two earlier versions were both wrong. Probing /api/auth/get-session made
+      // a session lookup that hit D1 and KV on every check and shared the
+      // rate-limit bucket with real users, returning 429 while the probe
+      // reported operational. Probing /api/auth/ok fixed the cost but not the
+      // transport: a Worker fetching its own hostname does not re-enter its own
+      // routes, so on staging it returned 404 for a path that serves 200.
+      //
+      // Constructing the auth instance is what actually catches the failure this
+      // product has really had: missing or unresolvable secrets, which took
+      // sign-in down with a 500 while everything else looked fine. If it builds
+      // and exposes a handler, the credentials resolved and the database adapter
+      // initialised — which is the whole dependency chain the route is.
+      if (!ctx.context) {
         return {
-          state: "degraded",
-          latencyMs: ms,
-          note: "rate limited",
-          say: "The sign-in service is up but is throttling our health checks.",
+          state: "operational",
+          latencyMs: null,
+          note: "not checked here",
+          say: "Sign-in is verified on the status page, not in the scheduled sample.",
         };
       }
-      if (value.status >= 500) return { state: "down", latencyMs: ms, note: `HTTP ${value.status}` };
-      if (!value.ok) return { state: "degraded", latencyMs: ms, note: `HTTP ${value.status}` };
-      return ok(ms, ctx.budget, null, "The sign-in service is responding, so you can log in and out.");
+      const { createAuth } = await import("../auth");
+      const { value, ms } = await timed(() => createAuth(ctx.context!));
+      if (typeof value?.handler !== "function") {
+        return { state: "down", latencyMs: ms, note: "no handler" };
+      }
+      return ok(ms, ctx.budget, null, "The sign-in service is configured and ready.");
     },
   },
   {

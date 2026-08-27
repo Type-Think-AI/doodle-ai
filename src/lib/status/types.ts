@@ -1,6 +1,8 @@
 /* Shared vocabulary for /status — imported by the probes, the API route, the
    page, and the cron that records history. */
 
+import type { APIContext } from "astro";
+
 /**
  * What a component can be.
  *
@@ -86,12 +88,26 @@ export interface Probe {
 /** Everything a probe is allowed to touch. Never the raw secret values. */
 export interface ProbeContext {
   env: Env;
-  /** Absolute origin of the running deployment, for same-origin probes. */
+  /**
+   * Absolute origin of the running deployment.
+   *
+   * Informational only — do NOT use it to probe this app's own routes. A
+   * Worker's fetch() to its own hostname does not re-enter its own asset
+   * handler or routes, so a same-origin probe returns 404 for paths that serve
+   * 200 to real traffic. Two probes were reporting false 'degraded' on staging
+   * for exactly that reason. Use a binding or an in-process call instead.
+   */
   origin: string;
   /** Per-probe deadline. Every outbound fetch must pass this. */
   signal: AbortSignal;
   /** This probe's degraded-above latency budget, resolved by the runner. */
   budget: number;
+  /**
+   * The live request context, for probes that must exercise app code in-process
+   * rather than over HTTP (see `origin`). Absent in the cron sampler, which has
+   * no incoming request — probes that need it must degrade gracefully.
+   */
+  context?: APIContext;
 }
 
 /** One component's result, as served by /api/status. */

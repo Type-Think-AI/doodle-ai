@@ -56,10 +56,30 @@ const BRANCH_ENVIRONMENTS = { main: "production", dev: "staging" };
  */
 const ALLOWED_DATABASE = { production: "doodleai", staging: "doodleai-staging" };
 
-/** Where to smoke-test after the deploy lands. */
+/**
+ * Where to smoke-test after the deploy lands.
+ *
+ * `canonical` is the workers.dev URL, because that is the address the deploy
+ * itself creates and is therefore the only one that answers "did this deploy
+ * work". `domain` is the customer-facing custom domain, checked separately and
+ * reported as a WARNING rather than a failure.
+ *
+ * Splitting them is not pedantry: on the first real run of this script the
+ * staging deploy was completely healthy on workers.dev while dev.doodleai.art
+ * returned 404 on every path including '/', a Cloudflare routing fault entirely
+ * unrelated to the release. Verifying only the custom domain reported a good
+ * deploy as failed, which is the kind of false alarm that trains people to
+ * ignore the check.
+ */
 const HEALTH_ORIGIN = {
-  production: "https://doodleai.art",
-  staging: "https://dev.doodleai.art",
+  production: {
+    canonical: "https://doodleai-agent.yash-892.workers.dev",
+    domain: "https://doodleai.art",
+  },
+  staging: {
+    canonical: "https://doodleai-agent-staging.yash-892.workers.dev",
+    domain: "https://dev.doodleai.art",
+  },
 };
 
 const args = process.argv.slice(2);
@@ -176,25 +196,25 @@ function pinAccount(config) {
 }
 
 async function smokeTest(target) {
-  const origin = HEALTH_ORIGIN[target];
-  if (!origin) return;
+  const origins = HEALTH_ORIGIN[target];
+  if (!origins) return;
   if (flags.has("--dry-run")) {
-    console.log(`\n▸ Would verify ${origin}/api/status  (dry run — skipped)`);
+    console.log(`\n▸ Would verify ${origins.canonical}/api/status  (dry run — skipped)`);
     return;
   }
 
-  step(`Verifying ${origin}/api/status`);
+  step(`Verifying ${origins.canonical}/api/status`);
   // Give the new version a moment to become the one being served.
-  await new Promise((r) => setTimeout(r, 4000));
+  await new Promise((r) => setTimeout(r, 5000));
 
   let response;
   try {
-    response = await fetch(`${origin}/api/status`, {
+    response = await fetch(`${origins.canonical}/api/status`, {
       headers: { accept: "application/json", "user-agent": "doodleai-deploy/1.0" },
       signal: AbortSignal.timeout(25000),
     });
   } catch (error) {
-    fail(`Deployed, but ${origin}/api/status is unreachable: ${error.message}`);
+    fail(`Deployed, but ${origins.canonical}/api/status is unreachable: ${error.message}`);
   }
 
   // 503 is a valid, fully-formed answer from this endpoint: it means a component
@@ -209,19 +229,36 @@ async function smokeTest(target) {
     fail("Deployed, but /api/status did not return a recognisable payload");
   }
 
+  console.log(`  summary: ${payload.summary.state} — ${payload.summary.headline}`);
   const unhealthy = (payload.components ?? []).filter(
     (c) => c.state === "down" || c.state === "degraded",
   );
-  console.log(`  summary: ${payload.summary.state} — ${payload.summary.headline}`);
   if (unhealthy.length > 0) {
     // Reported loudly but NOT treated as a deploy failure: the code shipped fine,
     // and a dependency being unwell is not something re-running a deploy fixes.
-    // Exiting non-zero here would also make an unrelated third-party blip look
-    // like a broken release.
     console.warn(
       `  ⚠ ${unhealthy.length} component(s) not fully healthy: ` +
         unhealthy.map((c) => `${c.id}=${c.state}`).join(", "),
     );
+  }
+
+  // The custom domain is a separate concern from the release. A failure here is
+  // DNS or Workers routing, so it is surfaced without failing the deploy.
+  try {
+    const domainRes = await fetch(`${origins.domain}/api/status`, {
+      headers: { accept: "application/json", "user-agent": "doodleai-deploy/1.0" },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (domainRes.ok || domainRes.status === 503) {
+      console.log(`  ${origins.domain} → HTTP ${domainRes.status} ✓`);
+    } else {
+      console.warn(
+        `  ⚠ ${origins.domain} → HTTP ${domainRes.status}. The deploy is healthy on ` +
+          `${origins.canonical}, so this is the custom domain's routing, not the release.`,
+      );
+    }
+  } catch (error) {
+    console.warn(`  ⚠ ${origins.domain} unreachable: ${error.message} (deploy itself is fine)`);
   }
 }
 

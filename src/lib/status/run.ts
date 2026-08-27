@@ -6,6 +6,7 @@
  * indistinguishable from everything being fine.
  */
 
+import type { APIContext } from "astro";
 import { PROBES, PROBE_TIMEOUT_MS, SLOW_BINDING_MS } from "./probes";
 import {
   isObserved,
@@ -23,7 +24,12 @@ const REFRESH_AFTER_SECONDS = 30;
 /** Worst-first, so `reduce` can pick the summary state. */
 const SEVERITY: Record<ObservedState, number> = { down: 2, degraded: 1, operational: 0 };
 
-async function runOne(probe: Probe, env: Env, origin: string): Promise<ProbeOutcome> {
+async function runOne(
+  probe: Probe,
+  env: Env,
+  origin: string,
+  context?: APIContext,
+): Promise<ProbeOutcome> {
   if (probe.metered || !probe.run) {
     return { state: "metered", latencyMs: null, note: "not probed", say: probe.meteredReason };
   }
@@ -42,6 +48,7 @@ async function runOne(probe: Probe, env: Env, origin: string): Promise<ProbeOutc
         signal: controller.signal,
         // Registry value wins; bindings fall back to the tight default.
         budget: probe.slowMs ?? SLOW_BINDING_MS,
+        context,
       }),
       new Promise<ProbeOutcome>((resolve) =>
         setTimeout(
@@ -105,8 +112,9 @@ export async function collectStatus(
   env: Env,
   origin: string,
   history: Map<string, { states: ObservedState[]; uptime: number | null }> = new Map(),
+  context?: APIContext,
 ): Promise<StatusPayload> {
-  const outcomes = await Promise.all(PROBES.map((probe) => runOne(probe, env, origin)));
+  const outcomes = await Promise.all(PROBES.map((probe) => runOne(probe, env, origin, context)));
 
   const components: ComponentStatus[] = PROBES.map((probe, i) => {
     const recorded = history.get(probe.id);

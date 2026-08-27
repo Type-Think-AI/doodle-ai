@@ -64,7 +64,7 @@ export async function buildStatus(context: APIContext): Promise<StatusPayload> {
     console.error("status history unavailable:", error);
   }
 
-  const payload = await collectStatus(env, new URL(context.request.url).origin, history);
+  const payload = await collectStatus(env, new URL(context.request.url).origin, history, context);
 
   const colo = (context.request as { cf?: { colo?: string } }).cf?.colo;
   return { ...payload, colo: typeof colo === "string" ? colo : null };
