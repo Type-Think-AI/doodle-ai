@@ -240,7 +240,21 @@ async function main() {
     );
   }
 
-  const envFlag = target === "production" ? [] : ["--env", target];
+  /**
+   * Explicit environment flag for every wrangler call.
+   *
+   * Production passes `--env=""`, not nothing. wrangler.json defines a named
+   * `staging` environment, so a bare command warns:
+   *
+   *   ▲ Multiple environments are defined in the Wrangler configuration file,
+   *     but no target environment was specified for the deploy command.
+   *
+   * The empty string is wrangler's own documented way to say "the top-level
+   * environment, deliberately". Worth doing rather than muting: this is the
+   * exact ambiguity that lets a command land on the wrong environment, and it is
+   * the same class of mistake the ALLOWED_DATABASE check above guards against.
+   */
+  const envFlag = target === "production" ? ['--env='] : ["--env", target];
 
   console.log("──────────────────────────────────────────────");
   console.log(` target    ${target}   (from ${source})`);

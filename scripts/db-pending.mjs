@@ -54,7 +54,10 @@ execFileSync(
     "list",
     database,
     "--remote",
-    ...(target === "production" ? [] : ["--env", target]),
+    // `--env=` (empty) selects the top-level environment explicitly. A bare
+    // command warns, because wrangler.json also defines `staging`. Same
+    // reasoning as scripts/deploy.mjs.
+    ...(target === "production" ? ["--env="] : ["--env", target]),
   ],
   { cwd: ROOT, stdio: "inherit", env: process.env },
 );
