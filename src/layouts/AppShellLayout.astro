@@ -1,6 +1,7 @@
 ---
 import AppLayout from './AppLayout.astro';
 import Sidebar from '../components/app/Sidebar.astro';
+import Footer from '../components/Footer.astro';
 import MobileNav from '../components/mobile/MobileNav.astro';
 import AuthDialog from '../components/app/AuthDialog.astro';
 import FeedbackDialog from '../components/app/FeedbackDialog.astro';
@@ -30,6 +31,7 @@ const { title, description, image, active } = Astro.props;
       <div class="app-shell-content">
         <slot />
       </div>
+      <Footer />
     </div>
   </div>
 

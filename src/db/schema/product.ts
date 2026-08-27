@@ -121,6 +121,16 @@ export const generation = sqliteTable(
     sourceAssetUrl: text("source_asset_url"),
     refAssetUrl: text("ref_asset_url"),
     outputUrl: text("output_url"),
+    /**
+     * Every image this generation produced, as a JSON string array, for pack
+     * skills that emit several frames from one run (see IMAGES_PER_RUN in
+     * src/lib/credits/costs.ts). `outputUrl` above stays the FIRST frame so
+     * every existing reader — thread thumbnails, project assets, admin views —
+     * keeps working untouched; this column is purely additive.
+     *
+     * Null for single-image generations, where outputUrl alone says everything.
+     */
+    outputUrls: text("output_urls"),
     creditsCharged: integer("credits_charged").notNull(),
     /** 'pending' | 'ok' | 'failed' | 'refunded' */
     status: text("status").notNull(),

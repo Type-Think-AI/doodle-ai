@@ -1,45 +1,59 @@
 ---
 name: seasonal-pack
-description: 'Roadmap preview, not yet runnable. Would produce a Doodle Collage with a holiday or seasonal theme baked into the props, palette, and overlay doodles.'
+description: 'Use when the user wants their photo turned into a set of four seasonal doodle illustrations — one per season (Spring, Summer, Autumn, Winter) — showing the same character in season-matched clothing, palette, and doodle props.'
 license: MIT
-user-invocable: false
+user-invocable: true
 metadata:
   id: seasonal
   displayName: Seasonal Pack
-  tagline: Holiday and seasonal doodle collage themes
-  desc: 'Doodle Collage with a seasonal theme baked into the props, palette, and overlay doodles.'
-  longDesc: 'On the roadmap: a themed variant of Doodle Collage for holidays and seasons — the overlay doodles, palette, and small props in each panel shift to match (snowflakes in winter, blossoms in spring, and so on).'
-  category: collages
-  tags: [seasonal, collage, roadmap]
-  runnable: false
+  tagline: Four hand-drawn seasonal portraits from one photo
+  desc: 'Transforms a photo into four separate square doodle images — one per season — with matched clothing, colour palette, and overlay doodles.'
+  longDesc: 'Produces a four-image set (Spring, Summer, Autumn, Winter) from a single uploaded photo. Each image is its own standalone square doodle illustration keeping the person fully recognisable while changing only the seasonal layer: clothing, colour palette, background props, and hand-drawn overlay accents.'
+  category: packs
+  tags: [seasonal, pack, multi-image]
+  runnable: true
   requiresPhoto: true
-  aspectRatio: '3:2'
+  aspectRatio: '1:1'
   sampleIndex: 1
   thumbnailUrl: "https://cdn.picxstudio.com/api/generated/image_51fc5883-5be1-476f-a98d-1a57f40c7c5a.png"
   order: 6
 ---
 
-# Seasonal Pack (roadmap)
+# Seasonal Pack
 
-Not yet implemented. `runnable: false` keeps it out of the agent while
-still listing it in the catalog with honest copy.
+Turn one uploaded photo into four separate square doodle illustrations — one
+per season — of the same person in season-matched style.
 
-## Intended behaviour
+## When this is the right skill
 
-A themed variant of `doodle-collage`. Same 3x2 grid and the same rules from
-`../doodle-collage/references/grid-layout.md`, with a season driving three
-layers:
+Pick this skill when the user asks for seasonal portraits, a "four seasons"
+set, spring/summer/autumn/winter versions, or a multi-image seasonal pack.
+Also appropriate when the user wants a set of the same character in different
+seasonal moods, or asks for a seasonal gift set.
 
-| Season | Overlay doodles      | Palette                | Props                  |
-| ------ | -------------------- | ---------------------- | ---------------------- |
-| Winter | Snowflakes, steam    | Cool blues and white   | Scarves, mugs, mittens |
-| Spring | Blossoms, small buds | Fresh greens and pink  | Flowers, umbrellas     |
-| Summer | Sun rays, waves      | Bright warm brights    | Sunglasses, ice cream  |
-| Autumn | Falling leaves       | Rust, mustard, brown   | Sweaters, hot drinks   |
+## What to draw
 
-## Open questions before building
+Each of the four images keeps the person's face, hairstyle, skin tone, and
+expression fully recognisable as a naive marker-and-ink doodle character. Only
+the seasonal layer changes:
 
-- Is the season chosen by the user, or inferred from the current date?
-- Should specific holidays be supported separately from broad seasons?
-- Does it reuse the `collage` generation mode with an extra prompt layer,
-  or need its own mode in doodle-constants.ts?
+| Season | Palette                        | Clothing           | Doodle accents              |
+| ------ | ------------------------------ | ------------------ | --------------------------- |
+| Spring | Cherry-blossom pink, mint, cream | Light cardigan, pastel scarf | Petals, sprouts, butterflies |
+| Summer | Coral, golden yellow, sky-blue | Sleeveless top, sunglasses   | Sun rays, waves, splashes   |
+| Autumn | Amber, rust, mustard, burgundy | Chunky scarf, boots, beanie  | Falling leaves, acorns, steam |
+| Winter | Pale blue, silver, lavender-grey | Pom-pom beanie, puffy coat, mittens | Snowflakes, sparkles, breath clouds |
+
+The four images must look like one cohesive set of the same character.
+
+## How to run it
+
+1. Confirm a photo is attached. If none is available, ask the user to attach one.
+2. Call `generateDoodle` with `skill: "seasonal"` and the uploaded photo as `imageUrl`.
+3. The tool returns FOUR images (one per season: Spring, Summer, Autumn, Winter). Total cost is 4 credits — one per image.
+4. Report the results briefly; the app renders all four images.
+
+## Following up
+
+Offer to regenerate a single season with a different vibe, switch to a
+different pack skill (stickers, mini-me), or try a full six-panel collage.

@@ -1,17 +1,17 @@
 ---
 name: emotional-modes
-description: 'Roadmap preview, not yet runnable. Would redraw an avatar through a chosen emotional lens (cozy, chaotic, dreamy) instead of a fixed visual theme.'
+description: 'Use when the user wants their photo redrawn through multiple emotional moods at once — cozy, chaotic, dreamy, and moody — as a set of four distinct doodle images.'
 license: MIT
-user-invocable: false
+user-invocable: true
 metadata:
   id: moods
   displayName: Emotional Modes
-  tagline: 'Mood-driven doodle variations — cozy, chaotic, dreamy'
-  desc: 'Same avatar, redrawn through a chosen emotional lens instead of a fixed visual theme.'
-  longDesc: 'On the roadmap: instead of picking a fixed visual theme, describe a mood — cozy, chaotic, dreamy, moody — and the doodle avatar linework, palette, and composition shift to match it.'
+  tagline: Four moods, one face — a hand-drawn emotional spectrum
+  desc: 'Produces 4 separate square doodle images from one photo, each redrawn through a different emotional lens: Cozy, Chaotic, Dreamy, Moody.'
+  longDesc: 'Turns a single uploaded photo into a set of four distinct hand-drawn doodle portraits. Each image preserves the person''s recognisable features but shifts the linework energy, colour palette, composition and background marks to embody a different mood — warm and snug, frenetic and clashing, airy and floating, or dark and dramatic.'
   category: freeform
-  tags: [mood, style, roadmap]
-  runnable: false
+  tags: [mood, style, pack]
+  runnable: true
   requiresPhoto: true
   aspectRatio: '1:1'
   sampleIndex: 0
@@ -19,26 +19,35 @@ metadata:
   order: 5
 ---
 
-# Emotional Modes (roadmap)
+# Emotional Modes
 
-Not yet implemented. `runnable: false` keeps it out of the agent while
-still listing it in the catalog with honest copy.
+Turn one uploaded photo into four separate square doodle portraits — each redrawn through a different emotional lens.
 
-## Intended behaviour
+## When this is the right skill
 
-Today the visual style comes from a fixed theme picked in Settings. This
-skill would replace that with a described mood, and shift three things to
-match it:
+Pick this skill when the user wants a mood-driven set of images from a single photo: a cozy version, a chaotic version, a dreamy version, and a moody version. It's ideal for "draw me in different vibes", "mood board of my face", or "show me in four feelings". Do NOT pick this for a single themed doodle — use the standard avatar skill for that.
 
-| Mood    | Linework            | Palette                  | Composition           |
-| ------- | ------------------- | ------------------------ | --------------------- |
-| Cozy    | Soft, rounded       | Warm creams and rust     | Close, centered       |
-| Chaotic | Scratchy, uneven    | Clashing brights         | Off-center, crowded   |
-| Dreamy  | Light, broken       | Pale washes              | Floating, lots of air |
-| Moody   | Heavy, high contrast| Desaturated, cool        | Tight crop, shadowed  |
+## What to draw
 
-## Open questions before building
+Each image is a standalone naive marker-and-ink doodle portrait (not a panel on a shared sheet). The person stays recognisably the same across all four — same hairstyle, face shape, skin tone, accessories. What changes per mood:
 
-- Does mood replace the Settings theme, or layer on top of it?
-- Should free-text moods be accepted, or only a fixed set?
-- Is one mood per generation enough, or should it produce a comparison set?
+| Mood    | Linework              | Palette                    | Composition             |
+| ------- | --------------------- | -------------------------- | ----------------------- |
+| Cozy    | Soft, rounded, gentle | Warm ambers, cream, honey  | Close, centered, snug   |
+| Chaotic | Jittery, overshooting | Clashing saturated brights | Off-center, crowded     |
+| Dreamy  | Light, broken, floaty | Pale lavender, blush, gold | Airy, elevated, spacious|
+| Moody   | Heavy, thick ink      | Charcoal, slate, burgundy  | Tight crop, dramatic    |
+
+This skill deliberately ignores the user's selected visual theme — the emotional lens IS the style.
+
+## How to run it
+
+1. Confirm a photo is attached. If none is available, ask the user to attach one.
+2. Call `generateDoodle` with `skill: "moods"` and the uploaded photo as `imageUrl`.
+3. Pass the user's free-text description (if any) as `description` — it can nudge subject matter without overriding the four moods.
+4. The tool returns FOUR images (one per mood: Cozy, Chaotic, Dreamy, Moody). This costs 4 credits — one per image.
+5. Present all four together, labelling each by mood name.
+
+## Following up
+
+Offer to regenerate a single mood if one didn't land, suggest sending a favourite as a sticker, or offer the gift skill to turn the best mood into a greeting card.

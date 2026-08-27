@@ -120,6 +120,7 @@ function initSidebar(): void {
   // re-expand the sidebar, since the user may have manually collapsed it
   // before ever opening the whiteboard.
   window.addEventListener("doodleai:sidebar-collapse", () => setCollapsed(true));
+  window.addEventListener("doodleai:sidebar-expand", () => setCollapsed(false));
 
   /* ---- Resize ---- */
   try {

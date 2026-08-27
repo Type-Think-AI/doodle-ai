@@ -24,7 +24,7 @@
 import { GENERATION_MODES } from "./doodle-constants";
 import { parseSkillFile, type Frontmatter, type FrontmatterScalar } from "./skill-frontmatter";
 
-export type SkillCategory = "avatars" | "collages" | "freeform";
+export type SkillCategory = "avatars" | "collages" | "freeform" | "packs";
 
 export interface SkillDefinition {
   /* ---- Agent-facing (Agent Skills spec fields) ---- */
@@ -87,7 +87,7 @@ const REFERENCE_FILES = import.meta.glob("../mastra/skills/*/references/*.md", {
   eager: true,
 }) as Record<string, string>;
 
-const CATEGORIES: SkillCategory[] = ["avatars", "collages", "freeform"];
+const CATEGORIES: SkillCategory[] = ["avatars", "collages", "freeform", "packs"];
 const ASPECT_RATIOS = ["1:1", "3:2"] as const;
 
 function requireBlock(frontmatter: Frontmatter, key: string, path: string): Record<string, FrontmatterScalar> {

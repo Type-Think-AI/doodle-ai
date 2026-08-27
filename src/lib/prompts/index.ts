@@ -33,6 +33,34 @@ export interface PromptInput {
 export type PromptBuilder = (input: PromptInput) => string;
 
 /**
+ * One image inside a multi-image pack skill.
+ *
+ * A pack skill produces several SEPARATE images from a single user action —
+ * not one sheet containing several panels. That distinction is the whole point:
+ * a messaging sticker set, a seasonal set or an expression set is only usable
+ * if each frame is its own file, which a single composite image can never be.
+ */
+export interface PackVariant {
+  /**
+   * Short human label for this frame, e.g. "Autumn". Used for the image's alt
+   * text and for ordering; it is NOT automatically drawn into the image — a
+   * variant that wants visible lettering must say so in its own prompt.
+   */
+  label: string;
+  /** The complete instruction for this one image. */
+  prompt: string;
+}
+
+/**
+ * A pack skill's builder. Returns one entry per image, in display order.
+ *
+ * PicX exposes no `n` parameter (verified against its live OpenAPI), so
+ * generate-doodle.ts runs one call per variant, in parallel. Cost therefore
+ * scales with the array's length — see src/lib/credits/costs.ts.
+ */
+export type PackPromptBuilder = (input: PromptInput) => PackVariant[];
+
+/**
  * Words that indicate a pet photo also contains its owner. Deliberately
  * conservative: a false negative just yields a pet-only portrait (still a
  * correct, useful result), whereas a false positive asks the model to draw a
@@ -78,4 +106,19 @@ export const SKILL_PROMPT_BUILDERS: Record<string, PromptBuilder> = {
 
 export function promptBuilderFor(skillId: string): PromptBuilder | undefined {
   return SKILL_PROMPT_BUILDERS[skillId];
+}
+
+/**
+ * Pack prompt builders for multi-image skills (moods, seasonal, expressions).
+ * These return an array of PackVariant — one image is generated per variant.
+ * Keyed by the same id as GENERATION_MODES and the skill's metadata.id.
+ *
+ * TODO: Wire the actual prompt builders when the pack skills are fully authored.
+ * For now returns undefined so generate-doodle falls through to the legacy
+ * per-mode switch, which is how these shipped before the registry existed.
+ */
+export const SKILL_PACK_BUILDERS: Record<string, PackPromptBuilder> = {};
+
+export function packBuilderFor(skillId: string): PackPromptBuilder | undefined {
+  return SKILL_PACK_BUILDERS[skillId];
 }

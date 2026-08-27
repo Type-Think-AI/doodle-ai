@@ -147,9 +147,17 @@ export async function POST(context: APIContext) {
           } else if (chunk.type === "tool-result") {
             const payload = chunk.payload as { toolName?: string; result?: unknown };
             if (!isDoodleTool(payload.toolName)) continue;
-            const value = payload.result as { status?: string; url?: string } | undefined;
+            const value = payload.result as { status?: string; url?: string; urls?: string[] } | undefined;
             if (value?.status === "ok" && value.url) {
-              emit({ type: "image", url: value.url, skillId: lastSkillId });
+              // A pack skill returns several frames from one call. The client
+              // pushes each `image` event onto its list, so emitting one per
+              // frame renders the whole set with no client change. `urls`
+              // always contains `url` as its first entry; fall back to the
+              // scalar so an older tool response still renders.
+              const urls = value.urls?.length ? value.urls : [value.url];
+              for (const url of urls) {
+                emit({ type: "image", url, skillId: lastSkillId });
+              }
               // The tool already resolved its own db handle from this same
               // RequestContext, so re-reading the balance here is a cheap,
               // consistent way to tell the client what the spend just did —

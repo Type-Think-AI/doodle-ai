@@ -12,7 +12,7 @@ import { getDb } from "../../../../db/client";
 import { batchItem, batchJob } from "../../../../db/schema/product";
 import { apiError, apiJson, requireOrg } from "../../../../lib/auth/guards";
 import { intParam, newId, optStr, readJson } from "../../../../lib/api/body";
-import { creditCostForSkill } from "../../../../lib/credits/costs";
+import { creditCostForSkill, isPackSkill } from "../../../../lib/credits/costs";
 import { spend } from "../../../../lib/credits";
 import { isGenerationMode } from "../../../../lib/batch/prompt";
 import { runBatch } from "../../../../lib/batch/run";
@@ -94,6 +94,19 @@ export async function POST(context: APIContext): Promise<Response> {
 
   const skillId = optStr(body.skillId);
   if (!skillId || !isGenerationMode(skillId)) return apiError("bad_request", "Unknown `skillId`.", 400);
+  // The batch pipeline produces exactly ONE image per item (src/lib/batch/run.ts
+  // makes a single PicX call and stores a single output_url), whereas a pack
+  // skill's run cost covers several frames. Accepting one here would reserve the
+  // full pack price per item and then deliver a single image — an overcharge.
+  // Refused explicitly until batch items can fan out the way generate-doodle
+  // does.
+  if (isPackSkill(skillId)) {
+    return apiError(
+      "bad_request",
+      `\`${skillId}\` produces multiple images per run and is not supported in batches yet.`,
+      400,
+    );
+  }
 
   const variantCount = typeof body.variantCount === "number" ? Math.floor(body.variantCount) : NaN;
   if (!Number.isFinite(variantCount) || variantCount < MIN_VARIANTS || variantCount > MAX_VARIANTS) {

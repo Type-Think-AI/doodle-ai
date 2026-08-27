@@ -16,8 +16,8 @@ import {
   VIRAL_MOOD_WORDS,
 } from "../../lib/doodle-constants";
 import { refund, spend } from "../../lib/credits";
-import { promptBuilderFor } from "../../lib/prompts";
-import { creditCostForSkill } from "../../lib/credits/costs";
+import { packBuilderFor, promptBuilderFor, type PackVariant } from "../../lib/prompts";
+import { CREDITS_PER_IMAGE, creditCostForSkill, imageCountForSkill } from "../../lib/credits/costs";
 import { kvIncrement } from "../../lib/kv-counter";
 import type { Db } from "../../db/client";
 import { asset, generation } from "../../db/schema/product";
@@ -48,7 +48,17 @@ const inputSchema = z.object({
 });
 
 const outputSchema = z.union([
-  z.object({ status: z.literal("ok"), url: z.string() }),
+  z.object({
+    status: z.literal("ok"),
+    /** The first image. Kept as a scalar so existing callers keep working. */
+    url: z.string(),
+    /**
+     * Every image produced, in display order — one entry for a single-image
+     * skill, several for a pack. Shorter than the skill's nominal image count
+     * when some frames failed; the unproduced ones are refunded.
+     */
+    urls: z.array(z.string()),
+  }),
   z.object({ status: z.literal("needs-photo"), message: z.string() }),
   z.object({ status: z.literal("insufficient-credits"), message: z.string(), balance: z.number(), required: z.number() }),
   z.object({ status: z.literal("rate-limited"), message: z.string() }),
@@ -112,8 +122,11 @@ async function checkRateLimit(sessions: KVNamespace, key: string, limit: number)
 export const generateDoodleTool = createTool({
   id: "generate-doodle",
   description:
-    "Generates an actual doodle image for the given skill. Call this once you know which skill fits " +
-    "and (for photo skills) have an uploaded photo's imageUrl. Returns a hosted image URL on success.",
+    "Generates actual doodle image(s) for the given skill. Call this once you know which skill fits " +
+    "and (for photo skills) have an uploaded photo's imageUrl. Returns hosted image URLs in `urls` on " +
+    "success (`url` is the first of them). Most skills return exactly one image. The pack skills return " +
+    "several from a single call and cost one credit per image: 'moods' and 'seasonal' return 4, " +
+    "'expressions' returns 9. Call this ONCE for a pack — do not call it repeatedly to build up a set.",
   inputSchema,
   outputSchema,
   execute: async (input, toolContext) => {
@@ -174,51 +187,82 @@ export const generateDoodleTool = createTool({
     const styleId = requestContext?.get("styleId");
     const theme = THEMES.find((t) => t.id === styleId) || THEMES[0];
     const themeHint = `Apply this visual style distinctly: ${theme.styleHint}`;
-    let prompt: string;
+    /**
+     * Every image this run will produce, in display order. Single-image skills
+     * yield exactly one entry, so the fan-out below has no special case for
+     * them — a pack is just a longer list.
+     */
+    let variants: PackVariant[];
     let aspectRatio: "1:1" | "3:2";
-    // Skills authored as standalone prompt modules (src/lib/prompts/) resolve
-    // by id, so adding one doesn't mean growing this switch. Checked first;
-    // the switch below still owns the original seven.
-    const modularBuilder = promptBuilderFor(input.skill);
-    if (modularBuilder) {
-      prompt = modularBuilder({ themeHint, styleHint: theme.styleHint, description: input.description });
-      // Every modular skill is square today. A future 3:2 one must declare its
-      // aspect ratio next to its builder rather than have it assumed here.
+    const packBuilder = packBuilderFor(input.skill);
+    // Pack skills first: they own the multi-image path. Then single-image
+    // modular skills (src/lib/prompts/), then the original seven's switch.
+    if (packBuilder) {
+      variants = packBuilder({ themeHint, styleHint: theme.styleHint, description: input.description });
       aspectRatio = "1:1";
     } else {
-      switch (input.skill) {
-      case "collage":
-        prompt = buildCollagePrompt();
-        aspectRatio = "3:2";
-        break;
-      case "full-body":
-        prompt = buildFullBodyCollagePrompt();
-        aspectRatio = "3:2";
-        break;
-      case "stickers":
-        prompt = buildStickerPrompt();
+      const modularBuilder = promptBuilderFor(input.skill);
+      if (modularBuilder) {
+        variants = [
+          {
+            label: input.skill,
+            prompt: modularBuilder({ themeHint, styleHint: theme.styleHint, description: input.description }),
+          },
+        ];
+        // Every modular skill is square today. A future 3:2 one must declare its
+        // aspect ratio next to its builder rather than have it assumed here.
         aspectRatio = "1:1";
-        break;
-      case "mood-captions":
-        prompt = buildMoodCaptionPrompt(pickMany(VIRAL_MOOD_WORDS, 6));
-        aspectRatio = "3:2";
-        break;
-      case "gift":
-        prompt = buildGiftPrompt(input.description);
-        aspectRatio = "1:1";
-        break;
-      case "surprise": {
-        const desc = input.description?.trim() || pick(SURPRISE_PROMPTS);
-        prompt = `Create a naive doodle fashion-chibi avatar: ${desc}\n\nStyle: Bold graphic hair shapes, rough marker or dry-brush edges, restrained watercolor-like color, clean white or warm-white background, flat and expressive, fashion-forward. No photorealism, no 3D, no heavy shading, no text, no watermarks. Deliberately naive brushwork with playful asymmetry.\n\n${themeHint}`;
-        aspectRatio = "1:1";
-        break;
-      }
-      default:
-        prompt = buildDoodlePrompt(themeHint);
-        aspectRatio = "1:1";
+      } else {
+        let prompt: string;
+        switch (input.skill) {
+        case "collage":
+          prompt = buildCollagePrompt();
+          aspectRatio = "3:2";
+          break;
+        case "full-body":
+          prompt = buildFullBodyCollagePrompt();
+          aspectRatio = "3:2";
+          break;
+        case "stickers":
+          prompt = buildStickerPrompt();
+          aspectRatio = "1:1";
+          break;
+        case "mood-captions":
+          prompt = buildMoodCaptionPrompt(pickMany(VIRAL_MOOD_WORDS, 6));
+          aspectRatio = "3:2";
+          break;
+        case "gift":
+          prompt = buildGiftPrompt(input.description);
+          aspectRatio = "1:1";
+          break;
+        case "surprise": {
+          const desc = input.description?.trim() || pick(SURPRISE_PROMPTS);
+          prompt = `Create a naive doodle fashion-chibi avatar: ${desc}\n\nStyle: Bold graphic hair shapes, rough marker or dry-brush edges, restrained watercolor-like color, clean white or warm-white background, flat and expressive, fashion-forward. No photorealism, no 3D, no heavy shading, no text, no watermarks. Deliberately naive brushwork with playful asymmetry.\n\n${themeHint}`;
+          aspectRatio = "1:1";
+          break;
+        }
+        default:
+          prompt = buildDoodlePrompt(themeHint);
+          aspectRatio = "1:1";
+        }
+        variants = [{ label: input.skill, prompt }];
       }
     }
 
+    // The charge is derived from IMAGES_PER_RUN, not from the array length, so a
+    // builder that returned the wrong number of variants would otherwise
+    // silently over- or under-charge. Fail loudly instead of mischarging.
+    const expectedImages = imageCountForSkill(input.skill);
+    if (variants.length !== expectedImages) {
+      return {
+        status: "error" as const,
+        message: `Skill "${input.skill}" is priced for ${expectedImages} image(s) but produced ${variants.length}.`,
+      };
+    }
+
+    // Kept for the generation row + logs: the first frame's instruction is the
+    // representative one, and a pack's variants share their whole preamble.
+    const prompt = variants[0].prompt;
     const cost = creditCostForSkill(input.skill);
 
     // Hard monthly credit cap, if the org's owner set one (org_limits.
@@ -298,36 +342,84 @@ export const generateDoodleTool = createTool({
     });
 
     try {
-      const url =
+      const endpoint =
         requiresPhoto && input.imageUrl
           ? "https://api.picxstudio.com/v1/images/edit"
           : "https://api.picxstudio.com/v1/images/generate";
-      const payload =
-        requiresPhoto && input.imageUrl
-          ? {
-              model: "openai/gpt-image-2",
-              instruction: prompt,
-              image_urls: [input.imageUrl, input.refImageUrl].filter((u): u is string => Boolean(u)),
-              size: "1K",
-              aspect_ratio: aspectRatio,
-            }
-          : { prompt, size: "1K", aspect_ratio: aspectRatio };
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${platformKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = (await res.json().catch(() => ({}))) as { url?: string; detail?: string; message?: string };
-      if (!res.ok || !data.url) {
-        const message = data.detail || data.message || `PicX API error: ${res.status}`;
+      /**
+       * One PicX call per variant, all in flight together — PicX has no `n`
+       * parameter, so a pack is N independent calls. Settled rather than
+       * all-or-nothing: a 9-frame pack losing one frame should still deliver
+       * the other eight and refund only the frame that failed.
+       */
+      const settled = await Promise.all(
+        variants.map(async (variant): Promise<string | null> => {
+          const payload =
+            requiresPhoto && input.imageUrl
+              ? {
+                  model: "openai/gpt-image-2",
+                  instruction: variant.prompt,
+                  image_urls: [input.imageUrl, input.refImageUrl].filter((u): u is string => Boolean(u)),
+                  size: "1K",
+                  aspect_ratio: aspectRatio,
+                }
+              : { prompt: variant.prompt, size: "1K", aspect_ratio: aspectRatio };
+          try {
+            const res = await fetch(endpoint, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${platformKey}`, "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const data = (await res.json().catch(() => ({}))) as {
+              url?: string;
+              detail?: string;
+              message?: string;
+            };
+            if (!res.ok || !data.url) return null;
+            return data.url;
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      const urls = settled.filter((u): u is string => Boolean(u));
+
+      // Nothing came back — refund the whole run, exactly as the single-image
+      // path always did.
+      if (urls.length === 0) {
+        const message = `PicX returned no image for ${variants.length === 1 ? "this generation" : `any of the ${variants.length} frames`}.`;
         await refundGeneration(db, generationId, organizationId, userId, message);
         return { status: "error" as const, message };
       }
 
+      // Partial pack: credits were debited for every frame up front, so give
+      // back the ones that never produced an image. Distinct idempotency key
+      // from the full refund above, so the two can never collide — and safe to
+      // retry, since applyDelta is keyed.
+      const missing = variants.length - urls.length;
+      if (missing > 0) {
+        await refund(db, {
+          organizationId,
+          userId,
+          amount: missing * CREDITS_PER_IMAGE,
+          refId: generationId,
+          idempotencyKey: `refund:${generationId}:partial`,
+        });
+      }
+
       await db
         .update(generation)
-        .set({ status: "ok", outputUrl: data.url, completedAt: new Date() })
+        .set({
+          status: "ok",
+          // First frame stays in output_url so every existing reader is
+          // unaffected; the full set goes in output_urls (migration 0012).
+          outputUrl: urls[0],
+          outputUrls: variants.length > 1 ? JSON.stringify(urls) : null,
+          creditsCharged: cost - missing * CREDITS_PER_IMAGE,
+          completedAt: new Date(),
+        })
         .where(eq(generation.id, generationId));
       // When this generation belongs to a project, it's also a project
       // deliverable — file it as a draft asset. Not batched with the update
@@ -336,21 +428,24 @@ export const generateDoodleTool = createTool({
       // between the two statements leaves an approved generation without an
       // asset row rather than corrupting the ledger — recoverable by
       // re-adding it to the project manually, not a correctness bug.
+      // One row per frame, so a pack's frames are individually reviewable.
       if (projectId) {
-        await db.insert(asset).values({
-          id: crypto.randomUUID(),
-          organizationId,
-          projectId,
-          url: data.url,
-          kind: "generation",
-          generationId,
-          reviewState: "draft",
-          createdBy: userId,
-          createdAt: new Date(),
-        });
+        await db.insert(asset).values(
+          urls.map((url) => ({
+            id: crypto.randomUUID(),
+            organizationId,
+            projectId,
+            url,
+            kind: "generation" as const,
+            generationId,
+            reviewState: "draft" as const,
+            createdBy: userId,
+            createdAt: new Date(),
+          })),
+        );
       }
 
-      return { status: "ok" as const, url: data.url };
+      return { status: "ok" as const, url: urls[0], urls };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Generation failed";
       await refundGeneration(db, generationId, organizationId, userId, message);

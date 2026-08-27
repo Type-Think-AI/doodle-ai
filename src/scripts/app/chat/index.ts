@@ -164,7 +164,10 @@ function initChat(): void {
   if (splitHandle && chatSplit) initSplitResize(splitHandle, chatSplit, whiteboardState);
 
   /* ---- Canvas backfill on load (desktop, canvas already open in SSR) ---- */
-  if (whiteboardState.on) backfillCanvasOnLoad(threadId);
+  if (whiteboardState.on) {
+    backfillCanvasOnLoad(threadId);
+    window.dispatchEvent(new Event("doodleai:sidebar-collapse"));
+  }
 
   /* ---- Send & remix ---- */
   async function doSend(): Promise<void> {

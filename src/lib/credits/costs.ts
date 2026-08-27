@@ -11,12 +11,24 @@
 import { GENERATION_MODES, type GenerationMode } from "../doodle-constants";
 
 /**
- * Credits per generation — flat 1 credit regardless of skill, including
- * multi-image ones like stickers. Simpler pricing than metering by PicX call
- * count; revisit if a specific skill's PicX cost stops being covered by a
- * single credit (see docs/tech-stack.md § "Cost model").
+ * Credits charged per generated IMAGE.
+ *
+ * Pricing is metered per image rather than per user action because PicX bills
+ * per call and exposes no `n` parameter (verified against its live OpenAPI), so
+ * a pack skill genuinely costs one upstream call per frame. The previous flat
+ * 1-credit-per-run rate predicted its own end: it only held while every skill
+ * produced exactly one image.
  */
-const CREDIT_COSTS: Record<GenerationMode, number> = {
+export const CREDITS_PER_IMAGE = 1;
+
+/**
+ * How many images one run of each skill produces — i.e. how many PicX calls it
+ * makes. Single-image skills are 1; pack skills return a frame per variant and
+ * MUST match the length of the array their PackPromptBuilder returns
+ * (src/lib/prompts/index.ts). generate-doodle.ts asserts that agreement at run
+ * time, so the two can never silently drift into mischarging.
+ */
+const IMAGES_PER_RUN: Record<GenerationMode, number> = {
   normal: 1,
   collage: 1,
   "full-body": 1,
@@ -24,27 +36,52 @@ const CREDIT_COSTS: Record<GenerationMode, number> = {
   stickers: 1,
   "mood-captions": 1,
   gift: 1,
-  /* Aug 2026 additions. Each is still a single PicX call, so the flat rate
-     holds. The rate stops holding for the *pack* skills on the roadmap (a
-     9-up sticker sheet is 9 calls) — see the pricing question in
-     docs/skills-research-2026-08.md before adding one of those. */
   "mini-me": 1,
   crayon: 1,
   couple: 1,
   pet: 1,
   faceless: 1,
+  /* Pack skills — one separate image per variant, not one composite sheet.
+     A sheet cannot be cut into usable sticker/season files, which is the whole
+     reason these are packs (see docs/skills-research-2026-08.md). */
+  seasonal: 4,
+  moods: 4,
+  expressions: 9,
 };
 
 /** New account starter grant — signup bonus. */
 export const SIGNUP_GRANT_CREDITS = 5;
 
-export function creditCostForSkill(skillId: string): number {
-  if (!isGenerationMode(skillId)) {
-    throw new Error(`Unknown skill id "${skillId}" — not in GENERATION_MODES.`);
-  }
-  return CREDIT_COSTS[skillId];
+/** Images produced by one run of this skill. */
+export function imageCountForSkill(skillId: string): number {
+  assertGenerationMode(skillId);
+  return IMAGES_PER_RUN[skillId];
 }
 
-function isGenerationMode(value: string): value is GenerationMode {
-  return (GENERATION_MODES as readonly string[]).includes(value);
+/**
+ * True when one run of this skill produces more than one image.
+ *
+ * Callers that can only deliver a single image per unit of work must refuse
+ * these rather than charge the full run cost — the batch pipeline
+ * (src/lib/batch/run.ts) is exactly that case.
+ */
+export function isPackSkill(skillId: string): boolean {
+  return imageCountForSkill(skillId) > 1;
+}
+
+/**
+ * Total credits for one run of this skill: images x per-image rate.
+ *
+ * NOTE for batch callers: this is the cost of one COMPLETE run, so for a pack
+ * skill it already includes every frame. Treating it as "cost per batch item"
+ * stays correct only for skills where isPackSkill() is false.
+ */
+export function creditCostForSkill(skillId: string): number {
+  return imageCountForSkill(skillId) * CREDITS_PER_IMAGE;
+}
+
+function assertGenerationMode(value: string): asserts value is GenerationMode {
+  if (!(GENERATION_MODES as readonly string[]).includes(value)) {
+    throw new Error(`Unknown skill id "${value}" — not in GENERATION_MODES.`);
+  }
 }

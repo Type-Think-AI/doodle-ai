@@ -5,10 +5,13 @@
 	display: flex;
 	height: 100%;
 	min-height: 0;
+	background: #0f0f0f;
 }
 .chat-page {
 	max-width: 760px;
 	margin: 0 auto;
+	width: 100%;
+	flex: 1;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
@@ -143,6 +146,7 @@
 }
 
 @media (max-width: 860px) {
+	.whiteboard-toggle { display: none; }
 	.chat-split[data-whiteboard="true"] .chat-page { display: none; }
 	.chat-split[data-whiteboard="true"] .canvas-panel { flex: 1 1 auto; width: 100%; }
 	.chat-split[data-whiteboard="true"] .chat-split-handle { display: none; }

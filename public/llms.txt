@@ -8,16 +8,22 @@
 - Users do not enter a PicX API key. Generation uses Doodle AI's server-owned PicX connection.
 - Saved characters can be mentioned with @. Signed-in chats, characters, and moodboards sync across devices.
 
-## Runnable skills
-- [Doodle Avatar](https://doodleai.art/skills/normal/) — one 1:1 hand-drawn avatar from a photo.
-- [Doodle Collage](https://doodleai.art/skills/collage/) — six close-up poses in a 3x2 grid.
-- [Full-Body Action Collage](https://doodleai.art/skills/full-body/) — six full-body poses in a 3x2 grid.
-- [Surprise Me](https://doodleai.art/skills/surprise/) — a fictional doodle character, no photo required.
-- [Sticker Pack](https://doodleai.art/skills/stickers/) — a square die-cut sticker *sheet* image, not a WhatsApp/iMessage sticker pack.
-- [Mood Captions](https://doodleai.art/skills/mood-captions/) — a 3x2 collage with short hand-lettered captions.
-- [Gift Doodle](https://doodleai.art/skills/gift/) — a square greeting/gift image from a photo.
-
-Emotional Modes and Seasonal Pack are listed as coming soon and are not runnable.
+## Skills
+- [Doodle Avatar](https://doodleai.art/skills/normal/): One hand-drawn doodle avatar from your photo
+- [Doodle Collage](https://doodleai.art/skills/collage/): Six close-up doodle poses in one 3x2 grid
+- [Full-Body Action Collage](https://doodleai.art/skills/full-body/): Six full-body action poses in one 3x2 grid
+- [Surprise Me](https://doodleai.art/skills/surprise/): No photo needed — a random fictional doodle character
+- [Sticker Pack](https://doodleai.art/skills/stickers/): Die-cut sticker sheets from your doodles
+- [Mood Captions](https://doodleai.art/skills/mood-captions/): Shareable doodle moods with hand-lettered captions
+- [Gift Doodle](https://doodleai.art/skills/gift/): A hand-drawn greeting or gift image from your photo
+- [Pet Portrait](https://doodleai.art/skills/pet/): Your pet, illustrated exactly as they are
+- [Chibi Mini-Me](https://doodleai.art/skills/mini-me/): Tiny cartoon versions of you doodled over your real photo
+- [Couple Doodle](https://doodleai.art/skills/couple/): Turn a photo of two people into one illustrated couple portrait
+- [Crayon Self](https://doodleai.art/skills/crayon/): A 4-year-old drew you (on purpose)
+- [Faceless Portrait](https://doodleai.art/skills/faceless/): A portrait that carries identity without a face
+- [Seasonal Pack](https://doodleai.art/skills/seasonal/): Holiday and seasonal doodle collage themes
+- [Emotional Modes](https://doodleai.art/skills/moods/): Mood-driven doodle variations — cozy, chaotic, dreamy
+- [Expression Pack](https://doodleai.art/skills/expressions/): Expressive doodle reaction faces from your photo
 
 ## Technical flow
 1. The signed-in browser sends a chat turn to `/api/chat`.

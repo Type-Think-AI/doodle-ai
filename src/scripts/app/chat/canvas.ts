@@ -62,7 +62,6 @@ export function setWhiteboard(
   state.on = on;
   chatSplit?.setAttribute("data-whiteboard", String(on));
   whiteboardToggle?.setAttribute("aria-pressed", String(on));
-  if (canvasPanel) canvasPanel.hidden = !on;
   if (on) {
     window.dispatchEvent(new Event("doodleai:sidebar-collapse"));
     pushToCanvas(collectThreadImages(threadId));
@@ -70,6 +69,8 @@ export function setWhiteboard(
       window.dispatchEvent(new Event("doodleai:canvas-open"));
       window.dispatchEvent(new Event("resize"));
     });
+  } else {
+    window.dispatchEvent(new Event("doodleai:sidebar-expand"));
   }
 }
 
@@ -152,7 +153,6 @@ export function initMobileCanvas(
 ): void {
   if (chatSplit) {
     chatSplit.setAttribute("data-whiteboard", "false");
-    if (canvasPanel) canvasPanel.hidden = true;
     whiteboardToggle?.setAttribute("aria-pressed", "false");
   }
 }

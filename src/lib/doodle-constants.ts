@@ -22,6 +22,13 @@ export const GENERATION_MODES = [
   "couple",
   "pet",
   "faceless",
+  /* Pack skills (Aug 2026). Each produces SEVERAL separate images from one
+     run — one PicX call per variant, priced per image in
+     src/lib/credits/costs.ts. Their prompt builders return a PackVariant[]
+     and are registered in SKILL_PACK_BUILDERS, not SKILL_PROMPT_BUILDERS. */
+  "moods",
+  "seasonal",
+  "expressions",
 ] as const;
 export type GenerationMode = (typeof GENERATION_MODES)[number];
 

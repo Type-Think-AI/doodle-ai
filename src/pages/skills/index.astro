@@ -3,17 +3,47 @@ import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import SkillCard from '../../components/app/SkillCard.astro';
 import { SKILLS } from '../../lib/skills';
 import { OG_IMAGE } from '../../consts';
+
+const site = 'https://doodleai.art';
+const runnableSkills = SKILLS.filter((s) => s.runnable);
+
+const collectionSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'CollectionPage',
+	name: 'AI Doodle Skills — Doodle AI',
+	url: `${site}/skills/`,
+	description: 'Browse every AI doodle skill: photo-to-cartoon avatars, sticker sheets, collages, pet portraits, and more.',
+	mainEntity: {
+		'@type': 'ItemList',
+		numberOfItems: runnableSkills.length,
+		itemListElement: runnableSkills.map((skill, i) => ({
+			'@type': 'ListItem',
+			position: i + 1,
+			name: skill.name,
+			url: `${site}/skills/${skill.id}/`,
+		})),
+	},
+};
 ---
 
-<AppShellLayout title="Skills — Doodle AI" image={OG_IMAGE.skills} active="skills">
+<AppShellLayout
+	title="AI Doodle Skills — Doodle AI"
+	description="Browse every AI doodle skill: turn photos into cartoon avatars, sticker sheets, collages, pet portraits, gift cards, and more — all hand-drawn style, one credit each."
+	image={OG_IMAGE.skills}
+	active="skills"
+>
+	<script type="application/ld+json" is:inline set:html={JSON.stringify(collectionSchema)} />
+
 	<div class="skills-page">
 		<div class="skills-head">
-			<h1>Skills</h1>
+			<h1>AI Doodle Skills</h1>
 			<div class="skills-search">
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.4" stroke="var(--text-dim)" stroke-width="1.7"></circle><path d="m16 16 4 4" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round"></path></svg>
 				<input id="skillsSearch" type="text" placeholder="Search skills" autocomplete="off" />
 			</div>
 		</div>
+
+		<p class="skills-intro">Each skill turns a photo or idea into a specific hand-drawn style — avatars, collages, stickers, pet portraits, and gifts. Pick one to generate, or let the AI agent choose for you.</p>
 
 		<div class="skills-grid" id="skillsGrid">
 			{SKILLS.map((skill) => (
@@ -30,7 +60,7 @@ import { OG_IMAGE } from '../../consts';
 
 <style>
 	.skills-page { max-width: 1180px; margin: 0 auto; padding: 26px 40px 64px; }
-	.skills-head { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+	.skills-head { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
 	.skills-head h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); margin: 0; }
 	.skills-search {
 		margin-left: auto;
@@ -54,6 +84,7 @@ import { OG_IMAGE } from '../../consts';
 		font-size: 14px;
 		font-family: inherit;
 	}
+	.skills-intro { font-size: 15px; line-height: 1.6; color: var(--text-dim); margin: 0 0 26px; max-width: 640px; }
 	.skills-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 	.skills-grid-item[hidden] { display: none; }
 	.skills-empty { color: var(--text-dimmer); font-size: 14px; margin-top: 24px; }
