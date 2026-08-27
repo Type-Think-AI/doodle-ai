@@ -1,0 +1,359 @@
+---
+/**
+ * /status — public system status.
+ *
+ * Design brief: SYMBOLIC, NOT NARRATED. The first version explained every
+ * component in a full sentence, which turned a glanceable dashboard into three
+ * screens of reading. A status page is scanned, not read: the answer is "is the
+ * dot green", and the words are only there for the one row that is not.
+ *
+ * So: an icon per component, a state dot, a latency figure, an uptime bar. The
+ * plain-English sentence is kept but demoted to a `title` tooltip, and the
+ * long-form explanation is collapsed behind a <details>. Nothing is deleted —
+ * it stops competing with the signal.
+ *
+ * Server-rendered from the same `buildStatus` the API route uses, so the page is
+ * correct with JavaScript disabled and during the outages it exists to report.
+ */
+import AppShellLayout from "../layouts/AppShellLayout.astro";
+import { buildStatus } from "./api/status";
+import { GROUP_LABELS, GROUP_ORDER, type ComponentStatus, type ProbeGroup } from "../lib/status/types";
+import { WINDOW_DAYS } from "../lib/status/history";
+import { OG_IMAGE } from "../consts";
+
+export const prerender = false;
+
+const status = await buildStatus(Astro);
+
+const byGroup = new Map<ProbeGroup, ComponentStatus[]>();
+for (const c of status.components) {
+  byGroup.set(c.group, [...(byGroup.get(c.group) ?? []), c]);
+}
+
+/* One glyph per component. Geometric marks rather than emoji: emoji render at a
+   different size and colour on every platform, which is the opposite of what a
+   status grid needs. Each is decorative — the component name is the label. */
+const ICON: Record<string, string> = {
+  worker: "◉",
+  assets: "◫",
+  db: "▤",
+  kv: "⚿",
+  r2: "◰",
+  realtime: "⟳",
+  auth: "⚷",
+  google: "◈",
+  secrets: "🔒",
+  picx: "✦",
+  "picx-capacity": "◐",
+  openrouter: "⇄",
+  cdn: "☁",
+  "image-generation": "◇",
+  "video-generation": "▷",
+  "chat-inference": "❐",
+};
+
+const fmtLatency = (ms: number | null) => (ms === null ? "" : ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}`);
+const fmtUptime = (u: number | null) => (u === null ? null : `${(u * 100).toFixed(2)}%`);
+const checkedAt = new Date(status.checkedAt);
+
+const counts = {
+  ok: status.components.filter((c) => c.state === "operational").length,
+  warn: status.components.filter((c) => c.state === "degraded").length,
+  bad: status.components.filter((c) => c.state === "down").length,
+  metered: status.components.filter((c) => c.state === "metered").length,
+};
+---
+
+<AppShellLayout
+  title="System status — Doodle AI"
+  description="Live health of every Doodle AI service: database, storage, sign-in, realtime rooms and the drawing pipeline."
+  image={OG_IMAGE.home}
+  active="chat"
+  showFooter={true}
+>
+  <div class="st" data-refresh-after={status.refreshAfterSeconds}>
+    <header class="st-top">
+      <a class="st-back" href="/" aria-label="Back to Doodle AI">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+          ><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg
+        >
+      </a>
+      <h1>Status</h1>
+
+      <!-- The verdict, compressed to a dot + three words + a tally. -->
+      <div class={`st-verdict is-${status.summary.state}`} role="status" aria-live="polite">
+        <span class="st-beacon" aria-hidden="true"></span>
+        <strong id="stHeadline">{status.summary.headline}</strong>
+      </div>
+
+      <div class="st-tally" aria-label="Component tally">
+        {counts.ok > 0 && <span class="st-chip is-operational" title={`${counts.ok} operational`}><i></i>{counts.ok}</span>}
+        {counts.warn > 0 && <span class="st-chip is-degraded" title={`${counts.warn} degraded`}><i></i>{counts.warn}</span>}
+        {counts.bad > 0 && <span class="st-chip is-down" title={`${counts.bad} down`}><i></i>{counts.bad}</span>}
+        {counts.metered > 0 && <span class="st-chip is-metered" title={`${counts.metered} metered — never called`}>◈{counts.metered}</span>}
+      </div>
+
+      <time class="st-clock" id="stChecked" datetime={status.checkedAt} title="Last checked">
+        {checkedAt.toISOString().slice(11, 16)}Z
+      </time>
+    </header>
+
+    {
+      GROUP_ORDER.filter((g) => byGroup.has(g)).map((group) => (
+        <section class="st-grp">
+          <h2>{GROUP_LABELS[group].title}</h2>
+          <ul class="st-grid">
+            {byGroup.get(group)!.map((c) => (
+              <li
+                class={`st-cell is-${c.state}`}
+                data-component={c.id}
+                title={c.say ?? c.meteredReason ?? undefined}
+              >
+                <span class="st-icon" aria-hidden="true">{ICON[c.id] ?? "◦"}</span>
+
+                <span class="st-body">
+                  <span class="st-name">{c.name}</span>
+                  <span class="st-meta">
+                    {c.note && <span class="st-note-txt">{c.note}</span>}
+                  </span>
+                </span>
+
+                <span class="st-num">
+                  {c.latencyMs !== null && (
+                    <>
+                      <b>{fmtLatency(c.latencyMs)}</b><span class="st-unit">{c.latencyMs >= 1000 ? "" : "ms"}</span>
+                    </>
+                  )}
+                </span>
+
+                <span
+                  class={`st-bar${c.history.length === 0 ? " is-blank" : ""}`}
+                  aria-label={
+                    c.state === "metered"
+                      ? "Not measured"
+                      : fmtUptime(c.uptime90d)
+                        ? `${fmtUptime(c.uptime90d)} over ${WINDOW_DAYS} days`
+                        : "No history yet"
+                  }
+                  title={
+                    c.state === "metered"
+                      ? "Never called by monitoring"
+                      : (fmtUptime(c.uptime90d) ?? `Collecting — ${WINDOW_DAYS}-day history builds hourly`)
+                  }
+                >
+                  {/* A bar with no samples renders as one flat rule, not 28 grey
+                      segments. Segments read as data at a glance, which would make
+                      "we have measured nothing yet" look identical to "28 periods,
+                      all fine" — the exact confusion this page must not create. */}
+                  {c.history.length > 0
+                    ? c.history.slice(-28).map((s) => <i class={`is-${s}`} />)
+                    : <i class="is-empty" />}
+                </span>
+
+                <span class="st-led" aria-hidden="true"></span>
+                <span class="sr-only">{c.state}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    <details class="st-about">
+      <summary>How this is measured<span aria-hidden="true">›</span></summary>
+      <div class="st-about-body">
+        <p>
+          Every component is probed live on load. Checks call either a Cloudflare binding this app
+          already pays for while serving you, or a free third-party endpoint.
+        </p>
+        <p>
+          <strong>◈ marks the three components we never call.</strong> Image generation, video
+          generation and assistant replies cost real money per request — polling them would spend
+          credit to light a green dot. Their cheap failure modes (reachability, credentials) are
+          probed and shown above.
+        </p>
+        <p>
+          Bars show up to {WINDOW_DAYS} days, sampled hourly by a scheduled job. Faint bars mean no
+          samples yet. Machine-readable at <a href="/api/status">/api/status</a>, which returns 503
+          when anything probed is down.
+        </p>
+        <p class="st-report">
+          Broken for you but green here? <button type="button" id="stReport">Tell us</button> or
+          <a href="mailto:yash@typethink.ai?subject=Doodle%20AI%20status">email support</a>.
+        </p>
+      </div>
+    </details>
+  </div>
+</AppShellLayout>
+
+<script src="../scripts/app/status.ts"></script>
+
+<style>
+  .st { max-width: 940px; margin: 0 auto; padding: 20px 32px 56px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* ── Header: back, title, verdict, tally, clock — all on one line ── */
+  .st-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 1px solid var(--border2); }
+  .st-back { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; color: var(--text-dim); border: 1px solid var(--border2); }
+  .st-back:hover { color: var(--text); border-color: var(--border3); }
+  .st h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.015em; color: var(--text); }
+
+  .st-verdict { display: inline-flex; align-items: center; gap: 8px; padding: 5px 13px 5px 10px; border-radius: 999px; border: 1px solid var(--border2); }
+  .st-verdict strong { font-size: 12.5px; font-weight: 600; letter-spacing: -0.005em; }
+  .st-verdict.is-operational { color: var(--green); border-color: color-mix(in srgb, var(--green) 30%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
+  .st-verdict.is-degraded { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .st-verdict.is-down { color: var(--red); border-color: color-mix(in srgb, var(--red) 34%, transparent); background: color-mix(in srgb, var(--red) 8%, transparent); }
+  .st-beacon { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent); }
+
+  .st-tally { display: flex; gap: 5px; margin-left: auto; }
+  .st-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; border: 1px solid var(--border2); color: var(--text-dim); }
+  .st-chip i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .st-chip.is-operational { color: var(--green); }
+  .st-chip.is-degraded { color: var(--accent); }
+  .st-chip.is-down { color: var(--red); }
+  .st-chip.is-metered { color: var(--text-dimmer); }
+
+  .st-clock { font-family: var(--font-mono, ui-monospace, monospace); font-size: 11.5px; color: var(--text-dimmer); font-variant-numeric: tabular-nums; }
+
+  /* ── Groups ── */
+  .st-grp { margin-top: 26px; }
+  .st-grp h2 { margin: 0 0 6px; font-size: 10.5px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-dimmer); }
+  /* One service per row. The two-column version fit more on screen but made the
+     page scan as a table to be read rather than a list to be swept — and it
+     halved the width available to the name, note and history bar. */
+  .st-grid { list-style: none; margin: 0; padding: 0; }
+
+  /* icon · name+note · latency · history · state */
+  .st-cell {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 62px 168px 11px;
+    align-items: center; gap: 14px;
+    padding: 9px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .st-cell:last-child { border-bottom: 0; }
+
+  /* The glyph is now a tile, not loose text: at 13px it read as punctuation
+     next to the name. A bordered box the size of a touch target gives the row
+     an anchor and lets the state tint carry from the icon through to the LED. */
+  .st-icon {
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    border: 1px solid var(--border2);
+    background: color-mix(in srgb, var(--text) 3%, transparent);
+    font-size: 16px; line-height: 1;
+    color: var(--text-dimmer);
+  }
+  .is-operational .st-icon { color: var(--green); border-color: color-mix(in srgb, var(--green) 26%, transparent); background: color-mix(in srgb, var(--green) 7%, transparent); }
+  .is-degraded .st-icon { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .is-down .st-icon { color: var(--red); border-color: color-mix(in srgb, var(--red) 32%, transparent); background: color-mix(in srgb, var(--red) 8%, transparent); }
+  .is-metered .st-icon { opacity: 0.55; border-style: dashed; }
+
+  .st-body { min-width: 0; display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .st-name { font-size: 13.5px; font-weight: 500; color: var(--text); white-space: nowrap; }
+  .st-meta { min-width: 0; }
+  .st-note-txt { font-size: 11.5px; color: var(--text-dimmer); white-space: nowrap; }
+  .is-degraded .st-note-txt, .is-down .st-note-txt { color: var(--accent); }
+
+  .st-num { text-align: right; font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .st-num b { font-weight: 500; }
+  .st-unit { font-size: 10px; color: var(--text-dimmer); margin-left: 1px; }
+
+  .st-bar { display: flex; gap: 1.5px; align-items: stretch; height: 16px; }
+  .st-bar i { flex: 1; min-width: 1px; border-radius: 1.5px; background: var(--green); opacity: 0.5; }
+  .st-bar i.is-degraded { background: var(--accent); opacity: 0.95; }
+  .st-bar i.is-down { background: var(--red); opacity: 1; }
+  /* "No samples yet" must not resemble a full bar of green. One centred hairline
+     reads as absence; 28 segments read as data. */
+  .st-bar.is-blank { align-items: center; }
+  .st-bar.is-blank i { height: 2px; border-radius: 1px; background: var(--border2); opacity: 1; }
+  .is-metered .st-bar { opacity: 0.3; }
+
+  .st-led { width: 11px; height: 11px; border-radius: 50%; background: var(--border3); justify-self: end; }
+  .is-operational .st-led { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 14%, transparent); }
+  .is-degraded .st-led { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
+  .is-down .st-led { background: var(--red); box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 22%, transparent); }
+  .is-metered .st-led { background: transparent; box-shadow: inset 0 0 0 1.5px var(--border3); }
+
+  /* ── Collapsed explainer ── */
+  .st-about { margin-top: 28px; border-top: 1px solid var(--border2); padding-top: 14px; }
+  .st-about summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--text-dim); min-height: 32px; }
+  .st-about summary::-webkit-details-marker { display: none; }
+  .st-about summary span { transition: transform 0.2s ease; color: var(--text-dimmer); }
+  .st-about[open] summary span { transform: rotate(90deg); }
+  .st-about summary:hover { color: var(--text); }
+  .st-about-body { padding-top: 6px; }
+  .st-about-body p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.65; color: var(--text-dim); max-width: 76ch; }
+  .st-about-body strong { color: var(--text); font-weight: 600; }
+  .st-about-body a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+  .st-report button { background: none; border: 0; padding: 0; font: inherit; color: var(--text); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .st-report button:hover { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .st-about summary span { transition: none; }
+  }
+
+  /* ── Responsive ──
+     The row keeps its shape as long as every column earns its width, then sheds
+     columns in order of least value: the history bar first (it is the widest and
+     the least urgent), then the latency figure. The icon and the LED never go —
+     between them they answer the question the page exists for. */
+
+  /* Tablet / narrow desktop: shorten the history bar before dropping anything. */
+  @media (max-width: 900px) {
+    .st-cell { grid-template-columns: 34px minmax(0, 1fr) 58px 104px 11px; gap: 12px; }
+  }
+
+  @media (max-width: 680px) {
+    .st { padding: 16px 18px 52px; }
+    .st-top { gap: 9px; }
+    .st-tally { margin-left: 0; order: 3; }
+    .st-clock { order: 4; margin-left: auto; }
+
+    /* Every child gets an explicit area. Leaving one unassigned makes the grid
+       auto-place it into an implicit row, which silently pushed the latency
+       figure onto a line of its own below the icon. */
+    .st-cell {
+      grid-template-columns: 40px minmax(0, 1fr) auto 12px;
+      grid-template-areas: "icon body num led";
+      gap: 12px;
+      /* 52px keeps the whole row a comfortable touch target even though nothing
+         in it is tappable today — it is what makes a future tap-for-detail
+         interaction possible without a re-layout. */
+      min-height: 52px;
+      padding: 8px 2px;
+    }
+    .st-icon { grid-area: icon; width: 40px; height: 40px; border-radius: 12px; font-size: 18px; }
+    .st-num { grid-area: num; font-size: 11.5px; }
+    .st-led { grid-area: led; width: 12px; height: 12px; }
+
+    /* Name above note, so the name gets the full column width back — at 390px a
+       single line could not hold "Realtime rooms" and "not configured" without
+       truncating one of them. */
+    .st-body {
+      grid-area: body;
+      flex-direction: column; align-items: flex-start;
+      gap: 2px; flex-wrap: nowrap;
+    }
+    .st-name { font-size: 14px; white-space: normal; }
+    .st-note-txt { white-space: normal; }
+
+    /* Widest column, least urgent information — first to go. */
+    .st-bar { display: none; }
+  }
+
+  @media (max-width: 380px) {
+    .st-name { font-size: 13.5px; }
+    .st-icon { width: 36px; height: 36px; font-size: 17px; }
+    .st-cell { grid-template-columns: 36px minmax(0, 1fr) auto 12px; gap: 10px; }
+  }
+</style>
+
+<script>
+  /* Reuses the feedback dialog AppShellLayout already renders, rather than
+     shipping a second reporting form with its own storage and triage. */
+  document.getElementById("stReport")?.addEventListener("click", () => {
+    window.dispatchEvent(new Event("doodleai:open-feedback"));
+  });
+</script>

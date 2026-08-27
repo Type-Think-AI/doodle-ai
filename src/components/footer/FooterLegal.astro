@@ -4,6 +4,17 @@
  * The legal links are non-duplicative crawlable signals for Terms/Privacy
  * (already linked in the nav, but repeated here in the conventional
  * legal bar location crawlers expect).
+ *
+ * The status indicator is a LINK to /status, and its label is fetched from
+ * /api/status after load. It used to be a hardcoded <span> reading "All systems
+ * drawing", which meant it kept claiming everything was fine while the database
+ * was down — a status light that cannot report bad news is worse than no light,
+ * because visitors trust it.
+ *
+ * It renders optimistically as operational and is corrected within a second.
+ * That is the right trade for a footer: it appears on every page, so blocking
+ * server render on fifteen live probes to label one word would make every page
+ * pay for it. The /status page itself is server-rendered and authoritative.
  */
 const year = new Date().getFullYear();
 ---
@@ -15,8 +26,37 @@ const year = new Date().getFullYear();
 		<span class="db-legal-sep" aria-hidden="true">·</span>
 		<a href="/privacy-policy" class="db-legal-link">Privacy</a>
 	</span>
-	<span class="db-status" aria-label="System status: operational">
+	<a
+		href="/status"
+		class="db-status is-operational"
+		id="dbStatus"
+		aria-label="System status — view the status page"
+	>
 		<span class="db-dot-pulse db-dot-pulse-sm" aria-hidden="true"></span>
-		All systems drawing
-	</span>
+		<span id="dbStatusLabel">All systems drawing</span>
+	</a>
 </div>
+
+<script>
+	/* Correct the optimistic label from the real endpoint. Deliberately tiny and
+	   failure-silent: if the request does not land, the footer keeps its default
+	   rather than showing an error in a legal bar. The authoritative, always-
+	   correct view is /status, which this links to. */
+	const el = document.getElementById("dbStatus");
+	const label = document.getElementById("dbStatusLabel");
+	if (el && label) {
+		fetch("/api/status", { headers: { accept: "application/json" } })
+			.then((r) => (r.ok || r.status === 503 ? r.json() : Promise.reject(new Error("bad status"))))
+			.then((data: { summary?: { state?: string; headline?: string } }) => {
+				const state = data.summary?.state;
+				if (!state) return;
+				el.classList.remove("is-operational", "is-degraded", "is-down");
+				el.classList.add(`is-${state}`);
+				if (data.summary?.headline) label.textContent = data.summary.headline;
+				el.setAttribute("aria-label", `System status: ${data.summary?.headline ?? state} — view the status page`);
+			})
+			.catch(() => {
+				/* keep the default label */
+			});
+	}
+</script>

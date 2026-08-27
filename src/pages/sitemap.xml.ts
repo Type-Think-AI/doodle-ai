@@ -43,9 +43,16 @@ export async function GET(context: APIContext) {
     // "/" is now a personal chat landing page (client-rendered, per-browser
     // localStorage state) — no unique public content to index. /skills is
     // the app's real public content (the marketplace + each skill's page).
+    // /boards is excluded for the same reason as "/": it is account-scoped and
+    // renders a sign-in state to an anonymous crawler, so listing it would
+    // submit a thin page for indexing.
     { path: "/skills/", changefreq: "weekly", priority: "0.9" },
     { path: "/learn/", lastmod: newestArticle, changefreq: "weekly", priority: "0.8" },
     { path: "/about/", changefreq: "monthly", priority: "0.6" },
+    // Genuinely public content, and a page people look for by name ("is X
+    // down"). Daily rather than hourly: the page's *contents* change every
+    // check, but re-crawling it hourly would gain a search engine nothing.
+    { path: "/status/", changefreq: "daily", priority: "0.4" },
     { path: "/terms-of-service/", changefreq: "yearly", priority: "0.3" },
     { path: "/privacy-policy/", changefreq: "yearly", priority: "0.3" },
     ...SKILLS.filter((s) => s.runnable).map((skill) => ({

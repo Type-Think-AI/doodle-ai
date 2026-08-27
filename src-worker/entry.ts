@@ -20,6 +20,8 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../src/db/schema";
 import { reconcile } from "../src/lib/credits/reconcile";
 import { sweepBatches } from "../src/lib/batch/sweep";
+import { collectStatus } from "../src/lib/status/run";
+import { recordSamples } from "../src/lib/status/history";
 import astroWorker from "../dist/_worker.js/index.js";
 
 /**
@@ -30,6 +32,12 @@ import astroWorker from "../dist/_worker.js/index.js";
  * exports Astro's build cannot produce belong in this file.
  */
 export { RoadmapRoom } from "../src/roadmap/RoadmapRoom";
+
+/**
+ * Per-board tldraw sync server. Same pattern as RoadmapRoom: must be exported
+ * from the Worker entry for the `BOARD_ROOM` binding to resolve.
+ */
+export { BoardRoom } from "../src/boards/BoardRoom";
 
 type ExportedHandler = {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => Response | Promise<Response>;
@@ -63,6 +71,46 @@ export default {
       sweepBatches(db).then((report) => {
         console.log("Hourly batch sweep:", JSON.stringify(report));
       }),
+    );
+
+    /**
+     * Availability sample for /status.
+     *
+     * The cron is the only writer — see migrations/0015_status_history.sql for
+     * why the request path must not record samples. A fixed hourly cadence is
+     * also what makes the published uptime figure mean anything: it is taken
+     * whether or not anyone is looking, rather than being biased toward the
+     * moments the site had traffic.
+     *
+     * `origin` is the production hostname because a cron isolate has no
+     * incoming request to derive one from, and two probes (static assets and the
+     * auth endpoint) are same-origin.
+     */
+    ctx.waitUntil(
+      collectStatus(env, "https://doodleai.art")
+        .then((payload) => recordSamples(db, payload).then((n) => ({ payload, n })))
+        .then(({ payload, n }) => {
+          console.log(
+            `Hourly status sample: ${n} components recorded, summary=${payload.summary.state}`,
+          );
+          const unhealthy = payload.components.filter(
+            (c) => c.state === "down" || c.state === "degraded",
+          );
+          if (unhealthy.length > 0) {
+            // Same discipline as the reconciliation logging above: no alerting
+            // integration exists yet, so log it clearly rather than pretend
+            // someone was paged.
+            console.error(
+              "Status sample found unhealthy components:",
+              unhealthy.map((c) => `${c.id}=${c.state}${c.note ? ` (${c.note})` : ""}`).join(", "),
+            );
+          }
+        })
+        .catch((error) => {
+          // A failed sample must never fail the tick that also reconciles the
+          // credit ledger — that is the job with money attached.
+          console.error("Hourly status sample failed:", error);
+        }),
     );
   },
 };
