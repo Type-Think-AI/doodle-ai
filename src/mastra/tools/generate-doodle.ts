@@ -16,6 +16,7 @@ import {
   VIRAL_MOOD_WORDS,
 } from "../../lib/doodle-constants";
 import { refund, spend } from "../../lib/credits";
+import { promptBuilderFor } from "../../lib/prompts";
 import { creditCostForSkill } from "../../lib/credits/costs";
 import { kvIncrement } from "../../lib/kv-counter";
 import type { Db } from "../../db/client";
@@ -175,7 +176,17 @@ export const generateDoodleTool = createTool({
     const themeHint = `Apply this visual style distinctly: ${theme.styleHint}`;
     let prompt: string;
     let aspectRatio: "1:1" | "3:2";
-    switch (input.skill) {
+    // Skills authored as standalone prompt modules (src/lib/prompts/) resolve
+    // by id, so adding one doesn't mean growing this switch. Checked first;
+    // the switch below still owns the original seven.
+    const modularBuilder = promptBuilderFor(input.skill);
+    if (modularBuilder) {
+      prompt = modularBuilder({ themeHint, styleHint: theme.styleHint, description: input.description });
+      // Every modular skill is square today. A future 3:2 one must declare its
+      // aspect ratio next to its builder rather than have it assumed here.
+      aspectRatio = "1:1";
+    } else {
+      switch (input.skill) {
       case "collage":
         prompt = buildCollagePrompt();
         aspectRatio = "3:2";
@@ -205,6 +216,7 @@ export const generateDoodleTool = createTool({
       default:
         prompt = buildDoodlePrompt(themeHint);
         aspectRatio = "1:1";
+      }
     }
 
     const cost = creditCostForSkill(input.skill);

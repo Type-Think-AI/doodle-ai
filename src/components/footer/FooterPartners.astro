@@ -1,0 +1,169 @@
+---
+/**
+ * FooterPartners — Technology partner cards.
+ *
+ * Replaces an earlier text-only "Powered by" list, which read as a legal
+ * disclaimer rather than genuine credit.
+ *
+ * LOGO SOURCING — every mark here is the partner's own asset, normalised to a
+ * 128px PNG in `public/partners/`. Four are the partner's favicon/app icon
+ * fetched from their site; OpenAI's is the official Blossom mark from their
+ * published brand kit (`public/OpenAI-logos/`), composed onto a dark face so it
+ * sits at the same weight as the others.
+ *
+ * They are served first-party rather than hotlinked from a favicon proxy: a
+ * proxy leaks every visitor's page view to a third party and adds a runtime
+ * dependency to an otherwise fully static Cloudflare build.
+ *
+ * COLOUR — no per-brand accent is hardcoded anywhere. Marks are desaturated and
+ * dimmed at rest, then released to their real colours on hover, so the colour
+ * that appears is correct by construction rather than by a guessed hex value.
+ */
+
+interface Partner {
+	name: string;
+	role: string;
+	href: string;
+	/** Path under public/. Omit to render the typographic fallback. */
+	logo?: string;
+	/** Fallback monogram, used only when `logo` is absent. */
+	monogram?: string;
+}
+
+const partners: Partner[] = [
+	{
+		name: "Kiro",
+		role: "Agent tooling",
+		href: "https://kiro.dev/",
+		logo: "/partners/kiro.png",
+	},
+	{
+		name: "PicX Studio",
+		role: "Generation + CDN",
+		href: "https://picxstudio.com/",
+		logo: "/partners/picx.png",
+	},
+	{
+		name: "OpenRouter",
+		role: "Model routing",
+		href: "https://openrouter.ai/",
+		logo: "/partners/openrouter.png",
+	},
+	{
+		name: "OpenAI",
+		role: "GPT Image 2",
+		href: "https://openai.com/",
+		logo: "/partners/openai.png",
+	},
+	{
+		name: "Cloudflare",
+		role: "Workers + D1",
+		href: "https://www.cloudflare.com/",
+		logo: "/partners/cloudflare.png",
+	},
+];
+---
+
+<section class="db-partners" aria-labelledby="footer-partners-heading">
+	<div class="db-partners-head">
+		<span class="db-partners-title" id="footer-partners-heading">
+			<span class="db-col-dot" aria-hidden="true"></span>
+			Technology partners
+		</span>
+		<p class="db-partners-note">
+			Doodle AI is built on top of these. Thanks for the tools.
+		</p>
+	</div>
+
+	<ul class="db-partners-grid" role="list">
+		{partners.map((partner, index) => (
+			<li class="db-partner-item" style={`--db-partner-i:${index}`}>
+				<a
+					href={partner.href}
+					class="db-partner"
+					target="_blank"
+					rel="noopener"
+					aria-label={`${partner.name} — ${partner.role} (opens in a new tab)`}
+				>
+					<span class="db-partner-tile">
+						<span class="db-partner-sheen" aria-hidden="true"></span>
+						{partner.logo ? (
+							<img
+								class="db-partner-logo"
+								src={partner.logo}
+								alt=""
+								width="128"
+								height="128"
+								loading="lazy"
+								decoding="async"
+							/>
+						) : (
+							<span class="db-partner-monogram" aria-hidden="true">{partner.monogram}</span>
+						)}
+					</span>
+					<span class="db-partner-meta">
+						<span class="db-partner-name">{partner.name}</span>
+						<span class="db-partner-role">{partner.role}</span>
+					</span>
+				</a>
+			</li>
+		))}
+	</ul>
+</section>
+
+<script>
+	/**
+	 * Staggered entrance for the partner cards.
+	 *
+	 * The cards are visible by default in CSS. This script only *arms* the
+	 * animation, and only when the section starts below the fold — so:
+	 *   - if JS never runs, the cards are visible
+	 *   - if the observer never fires, the cards are visible
+	 *   - if the section is already on screen it is not animated at all, which
+	 *     also avoids a hide-then-reveal flash on short pages
+	 *
+	 * An earlier version made `opacity: 0` the CSS default and relied on the
+	 * observer to undo it. That left the entire row invisible whenever the
+	 * observer did not fire, which is exactly what happened at tall viewports.
+	 */
+	function initPartners() {
+		const section = document.querySelector<HTMLElement>(".db-partners");
+		if (!section || section.dataset.dbSeen === "true") return;
+
+		const canAnimate =
+			"IntersectionObserver" in window &&
+			!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		// Cards are already visible; leaving them alone is the correct fallback.
+		if (!canAnimate) return;
+
+		// Only animate what the user will actually watch arrive.
+		if (section.getBoundingClientRect().top < window.innerHeight) return;
+
+		section.dataset.dbAnim = "true";
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (!entry.isIntersecting) continue;
+					section.dataset.dbSeen = "true";
+					observer.disconnect();
+				}
+			},
+			{ threshold: 0.1 },
+		);
+
+		observer.observe(section);
+
+		// Backstop: reveal regardless after 3s rather than risk a blank row.
+		window.setTimeout(() => {
+			if (section.dataset.dbSeen !== "true") {
+				section.dataset.dbSeen = "true";
+				observer.disconnect();
+			}
+		}, 3000);
+	}
+
+	initPartners();
+	document.addEventListener("astro:page-load", initPartners);
+</script>

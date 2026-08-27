@@ -24,6 +24,15 @@ const CREDIT_COSTS: Record<GenerationMode, number> = {
   stickers: 1,
   "mood-captions": 1,
   gift: 1,
+  /* Aug 2026 additions. Each is still a single PicX call, so the flat rate
+     holds. The rate stops holding for the *pack* skills on the roadmap (a
+     9-up sticker sheet is 9 calls) — see the pricing question in
+     docs/skills-research-2026-08.md before adding one of those. */
+  "mini-me": 1,
+  crayon: 1,
+  couple: 1,
+  pet: 1,
+  faceless: 1,
 };
 
 /** New account starter grant — signup bonus. */

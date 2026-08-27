@@ -62,6 +62,15 @@ export interface SkillDefinition {
    * marketplace shows what the skill genuinely produces.
    */
   thumbnailUrl?: string;
+  /**
+   * The input photo `thumbnailUrl` was generated FROM, when it was produced by
+   * a photo skill. Lets a skill page show a real before/after pair instead of
+   * only the result — the most direct way to evidence likeness, which is the
+   * single loudest complaint about photo-to-cartoon tools (see
+   * docs/skills-research-2026-08.md). Must be the genuine source image for
+   * that thumbnail, never an unrelated stock photo.
+   */
+  sourceImageUrl?: string;
   /** Display order across the UI. */
   order: number;
 }
@@ -189,6 +198,7 @@ function loadSkillDefinitions(): SkillDefinition[] {
       aspectRatio: requireOneOf(metadata, "aspectRatio", ASPECT_RATIOS, path),
       sampleIndex: requireNumber(metadata, "sampleIndex", path),
       thumbnailUrl: optionalString(metadata, "thumbnailUrl", path),
+      sourceImageUrl: optionalString(metadata, "sourceImageUrl", path),
       order: requireNumber(metadata, "order", path),
     } satisfies SkillDefinition;
   });

@@ -64,4 +64,33 @@ const articles = defineCollection({
 	),
 });
 
-export const collections = { articles };
+/**
+ * Skill documentation collection.
+ *
+ * Renders the BODY of each `src/mastra/skills/<name>/SKILL.md` as HTML for the
+ * public skill pages, so the same file that instructs the agent is also the
+ * page users read. Nothing else is generated from here.
+ *
+ * IMPORTANT — this is deliberately NOT a second source of truth. All skill
+ * METADATA (id, names, category, thumbnail, runnable) stays owned by
+ * `src/lib/skill-loader.ts`, which parses the frontmatter itself and
+ * cross-validates it against GENERATION_MODES at build time. This collection
+ * exists only because Astro's markdown pipeline (including the rehype plugins
+ * in astro.config.mjs) is the cheapest correct way to turn the markdown body
+ * into HTML — writing a second markdown renderer would be worse. The schema is
+ * therefore intentionally permissive: validation belongs to skill-loader, and
+ * duplicating its rules here would just create two places to drift.
+ *
+ * `generateId` returns the package directory name (e.g. "chibi-mini-me"), which
+ * is the same value as a SkillDefinition's `name`, so a page can look up its
+ * doc without any extra mapping table.
+ */
+const skillDocs = defineCollection({
+	loader: glob({
+		base: "./src/mastra/skills",
+		pattern: "*/SKILL.md",
+		generateId: ({ entry }) => entry.split("/")[0],
+	}),
+});
+
+export const collections = { articles, skillDocs };

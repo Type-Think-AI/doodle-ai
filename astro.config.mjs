@@ -4,6 +4,7 @@ import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import { rehypeAutoLinks } from "./src/lib/rehype-auto-links.ts";
 import { rehypeLazyImages } from "./src/lib/rehype-lazy-images.ts";
+import { rehypeDemoteSkillHeadings } from "./src/lib/rehype-demote-skill-headings.ts";
 
 import cloudflare from "@astrojs/cloudflare";
 
@@ -22,7 +23,9 @@ export default defineConfig({
 	// that way — tldraw is React-only, so the canvas is rendered with
 	// client:only="react" and never touches the SSR/Worker bundle.
 	markdown: {
-		rehypePlugins: [rehypeAutoLinks, rehypeLazyImages],
+		// rehypeDemoteSkillHeadings only touches src/mastra/skills/*/SKILL.md, so
+		// that /skills/[id] can embed a skill file without ending up with two <h1>s.
+		rehypePlugins: [rehypeAutoLinks, rehypeLazyImages, rehypeDemoteSkillHeadings],
 	},
 	integrations: [mdx(), react()],
 	// `astro dev`'s own dev server (via platformProxy below) is NOT how this

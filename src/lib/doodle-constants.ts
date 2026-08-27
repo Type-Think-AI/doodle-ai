@@ -6,7 +6,23 @@
    contract between the skill packages (each src/mastra/skills/<name>/SKILL.md, whose
    `metadata.id` must be one of these) and the tool that runs them —
    src/lib/skill-loader.ts fails the build if the two ever drift apart. */
-export const GENERATION_MODES = ["normal", "collage", "full-body", "surprise", "stickers", "mood-captions", "gift"] as const;
+export const GENERATION_MODES = [
+  "normal",
+  "collage",
+  "full-body",
+  "surprise",
+  "stickers",
+  "mood-captions",
+  "gift",
+  /* Added Aug 2026 from the demand research in docs/skills-research-2026-08.md.
+     Their prompt builders live one-per-file under src/lib/prompts/ rather than
+     in this module, so skills can be authored in parallel. */
+  "mini-me",
+  "crayon",
+  "couple",
+  "pet",
+  "faceless",
+] as const;
 export type GenerationMode = (typeof GENERATION_MODES)[number];
 
 export interface Theme {

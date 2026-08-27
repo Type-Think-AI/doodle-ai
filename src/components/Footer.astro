@@ -14,6 +14,7 @@ import FooterCTA from "./footer/FooterCTA.astro";
 import FooterMarquee from "./footer/FooterMarquee.astro";
 import FooterBrand from "./footer/FooterBrand.astro";
 import FooterNav from "./footer/FooterNav.astro";
+import FooterPartners from "./footer/FooterPartners.astro";
 import FooterWordmark from "./footer/FooterWordmark.astro";
 import FooterLegal from "./footer/FooterLegal.astro";
 ---
@@ -34,6 +35,8 @@ import FooterLegal from "./footer/FooterLegal.astro";
 			<FooterNav />
 		</div>
 
+		<FooterPartners />
+
 		<FooterWordmark />
 		<FooterLegal />
 	</div>
@@ -45,7 +48,17 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		overflow: hidden;
 		background: var(--bg);
 		margin-top: 60px;
-		border-top: 1px solid var(--border);
+		border-top: none;
+	}
+	.db-footer::before {
+		content: "";
+		position: absolute;
+		top: -80px;
+		left: 0;
+		right: 0;
+		height: 80px;
+		background: linear-gradient(to bottom, transparent, var(--bg));
+		pointer-events: none;
 	}
 
 	.db-bg {
@@ -63,16 +76,16 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		width: 700px;
 		height: 700px;
 		left: -200px;
-		top: -300px;
-		background: radial-gradient(circle, rgba(250, 183, 0, 0.16), transparent 62%);
+		bottom: -400px;
+		background: radial-gradient(circle, rgba(250, 183, 0, 0.10), transparent 62%);
 		animation: dbDrift 19s ease-in-out infinite;
 	}
 	.db-glow-b {
 		width: 620px;
 		height: 620px;
 		right: -180px;
-		bottom: -260px;
-		background: radial-gradient(circle, rgba(250, 183, 0, 0.08), transparent 62%);
+		bottom: -360px;
+		background: radial-gradient(circle, rgba(250, 183, 0, 0.06), transparent 62%);
 		animation: dbDrift2 24s ease-in-out infinite;
 	}
 	.db-dots {
@@ -139,13 +152,13 @@ import FooterLegal from "./footer/FooterLegal.astro";
 			width: 400px;
 			height: 400px;
 			left: -100px;
-			top: -150px;
+			bottom: -200px;
 		}
 		.db-glow-b {
 			width: 350px;
 			height: 350px;
 			right: -100px;
-			bottom: -130px;
+			bottom: -180px;
 		}
 		.db-dots {
 			background-size: 22px 22px;
@@ -264,6 +277,7 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		flex: none;
 		border-radius: 16px;
 		border: 1px solid var(--border2);
+		object-fit: cover;
 		filter: saturate(0.85);
 		transition: transform 0.4s cubic-bezier(0.2, 0.85, 0.2, 1), filter 0.4s;
 	}
@@ -451,6 +465,211 @@ import FooterLegal from "./footer/FooterLegal.astro";
 	.db-link:hover::after {
 		transform: scaleX(1);
 		transform-origin: left;
+	}
+
+	/* ─── Technology partners ─── */
+	.db-partners {
+		margin-top: 48px;
+		padding-top: 26px;
+		border-top: 1px solid var(--border);
+	}
+	.db-partners-head {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 6px 14px;
+		margin-bottom: 20px;
+	}
+	.db-partners-title {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		flex: none;
+		font-size: 10.5px;
+		font-weight: 600;
+		letter-spacing: 1.3px;
+		text-transform: uppercase;
+		color: var(--text-dimmer);
+	}
+	.db-partners-note {
+		margin: 0;
+		font-size: 12.5px;
+		color: var(--text-dimmer);
+	}
+
+	.db-partners-grid {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 16px;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		max-width: 640px;
+	}
+	.db-partner-item {
+		margin: 0;
+		padding: 0;
+	}
+	/* Entrance animation is OPT-IN, armed by script only when the section starts
+	   below the fold. Visibility is therefore the CSS baseline: if the script
+	   never runs, or the observer never fires, the cards are simply visible.
+	   An earlier version had `opacity: 0` as the default and relied on the
+	   observer to reveal it, which left the whole row invisible whenever the
+	   observer did not fire. Content must not depend on JS to be seen. */
+	.db-partners[data-db-anim="true"] .db-partner-item {
+		opacity: 0;
+		transform: translateY(14px);
+		transition:
+			opacity 0.55s cubic-bezier(0.2, 0.85, 0.2, 1),
+			transform 0.55s cubic-bezier(0.2, 0.85, 0.2, 1);
+		transition-delay: calc(var(--db-partner-i, 0) * 70ms);
+	}
+	.db-partners[data-db-anim="true"][data-db-seen="true"] .db-partner-item {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.db-partner {
+		display: flex;
+		flex-direction: column;
+		gap: 9px;
+		color: inherit;
+		text-decoration: none;
+	}
+	.db-partner:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 4px;
+		border-radius: 16px;
+	}
+
+	.db-partner-tile {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		aspect-ratio: 1 / 1;
+		width: 100%;
+		overflow: hidden;
+		border-radius: 15px;
+		/* No background or border of its own. Each partner favicon is already a
+		   designed app-icon tile with its own fill, so putting a surface behind it
+		   produced a visible square-inside-a-square. The logo IS the tile; this
+		   element only supplies the radius, the clip, and the hover ring. */
+		box-shadow: inset 0 0 0 1px var(--border);
+		transition:
+			box-shadow 0.32s cubic-bezier(0.2, 0.85, 0.2, 1),
+			transform 0.32s cubic-bezier(0.2, 0.85, 0.2, 1);
+	}
+
+	.db-partner-logo {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		/* Rest: muted but still legible. Brightness is pulled down alongside the
+		   desaturation because some partners ship light-background app icons and
+		   some ship dark ones — untouched, the light tiles read as bright blocks
+		   against a near-black footer. This is a uniform rule, not per-brand
+		   special-casing, and hover releases all of it. */
+		filter: grayscale(0.9) brightness(0.82);
+		opacity: 0.7;
+		transition: filter 0.36s ease, opacity 0.36s ease, transform 0.36s cubic-bezier(0.2, 0.85, 0.2, 1);
+	}
+	/* The monogram has no artwork of its own, so it supplies its own face. */
+	.db-partner-monogram {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		background: var(--surface2);
+		font-size: 22px;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		color: var(--text-dim);
+		opacity: 0.75;
+		transition: color 0.36s ease, opacity 0.36s ease;
+	}
+
+	/* Sheen sweep, reusing the same gesture as the primary CTA button.
+	   z-index is required: the logo now fills the tile, so an unlayered sheen
+	   would be painted underneath it and never seen. */
+	.db-partner-sheen {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		background: linear-gradient(
+			105deg,
+			transparent 38%,
+			rgba(255, 255, 255, 0.11) 50%,
+			transparent 62%
+		);
+		background-size: 260% 100%;
+		background-position: 180% 0;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.db-partner:hover .db-partner-tile {
+			box-shadow:
+				inset 0 0 0 1px var(--accent),
+				0 14px 30px rgba(0, 0, 0, 0.42);
+			transform: translateY(-6px);
+		}
+		.db-partner:hover .db-partner-logo {
+			filter: grayscale(0) brightness(1);
+			opacity: 1;
+			transform: scale(1.06);
+		}
+		.db-partner:hover .db-partner-monogram {
+			color: var(--accent);
+			opacity: 1;
+		}
+		.db-partner:hover .db-partner-sheen {
+			opacity: 1;
+			animation: dbPartnerSheen 0.85s ease-out;
+		}
+		.db-partner:hover .db-partner-name {
+			color: var(--accent);
+		}
+	}
+
+	/* Touch devices get the same colour payoff without a hover state. */
+	.db-partner:active .db-partner-tile {
+		box-shadow: inset 0 0 0 1px var(--accent);
+		transform: scale(0.97);
+	}
+	.db-partner:active .db-partner-logo {
+		filter: grayscale(0) brightness(1);
+		opacity: 1;
+	}
+
+	.db-partner-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+	.db-partner-name {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text);
+		transition: color 0.25s ease;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.db-partner-role {
+		font-size: 11px;
+		line-height: 1.35;
+		color: var(--text-dimmer);
+	}
+
+	@keyframes dbPartnerSheen {
+		from { background-position: 180% 0; }
+		to { background-position: -80% 0; }
 	}
 
 	/* ─── Wordmark ─── */
@@ -649,10 +868,24 @@ import FooterLegal from "./footer/FooterLegal.astro";
 			width: 44px;
 			height: 44px;
 		}
+		.db-partners {
+			margin-top: 30px;
+			padding-top: 20px;
+		}
+		.db-partners-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 14px;
+			max-width: none;
+		}
+		.db-partner-name {
+			font-size: 12.5px;
+		}
+		.db-partner-role {
+			font-size: 10.5px;
+		}
 		.db-wordmark {
 			margin-top: 36px;
-		}
-		.db-word-base,
+		}		.db-word-base,
 		.db-word-lit {
 			font-size: clamp(36px, 13vw, 60px);
 		}
@@ -701,8 +934,27 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		.db-dot-pulse,
 		.db-col-dot,
 		.db-btn-primary,
-		.db-btn-primary svg {
+		.db-btn-primary svg,
+		.db-partner-sheen {
 			animation: none !important;
+		}
+		/* Cards are visible by default now, so this only needs to neutralise the
+		   armed state in case it was set before the preference was evaluated. */
+		.db-partners[data-db-anim="true"] .db-partner-item {
+			opacity: 1 !important;
+			transform: none !important;
+			transition: none !important;
+		}
+		.db-partner:hover .db-partner-tile,
+		.db-partner:active .db-partner-tile {
+			transform: none !important;
+		}
+		.db-partner:hover .db-partner-logo,
+		.db-partner:hover .db-partner-monogram {
+			transform: none !important;
+		}
+		.db-partner-sheen {
+			display: none;
 		}
 	}
 </style>

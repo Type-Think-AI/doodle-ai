@@ -40,6 +40,14 @@ export interface Skill {
   sampleIndex: number;
   /** A real generateDoodle output to show instead of the synthetic SVG preview, when set. */
   thumbnailUrl?: string;
+  /** The input photo `thumbnailUrl` was generated from, for a before/after pair. */
+  sourceImageUrl?: string;
+  /**
+   * The model-facing "Use when the user..." line from the SKILL.md frontmatter.
+   * Surfaced on the skill page because it is the most concrete statement of what
+   * the skill is for — and it is unique, non-boilerplate text per skill.
+   */
+  description: string;
   /** The agent-facing skill name (kebab-case), i.e. its SKILL.md directory. */
   packageName: string;
 }
@@ -57,11 +65,31 @@ export const SKILLS: Skill[] = SKILL_DEFINITIONS.map((definition) => ({
   aspectRatio: definition.aspectRatio,
   sampleIndex: definition.sampleIndex,
   thumbnailUrl: definition.thumbnailUrl,
+  sourceImageUrl: definition.sourceImageUrl,
+  description: definition.description,
   packageName: definition.name,
 }));
 
 export function getSkill(id: string): Skill | undefined {
   return SKILLS.find((s) => s.id === id);
+}
+
+/**
+ * Sibling skills to link from a skill page, nearest-first: same category before
+ * anything else, and runnable skills before roadmap previews so a click always
+ * lands somewhere useful.
+ *
+ * Computed rather than authored, so adding skill N+1 links it into the existing
+ * set without editing any of them — the same reason the editorial articles
+ * compute their related-reading block from a `cluster` field.
+ */
+export function relatedSkills(skill: Skill, limit = 4): Skill[] {
+  const rank = (candidate: Skill): number =>
+    (candidate.category === skill.category ? 0 : 2) + (candidate.runnable ? 0 : 1);
+
+  return SKILLS.filter((candidate) => candidate.id !== skill.id)
+    .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+    .slice(0, limit);
 }
 
 export const SKILL_CATEGORIES: { id: SkillCategory | "for-you"; label: string }[] = [
