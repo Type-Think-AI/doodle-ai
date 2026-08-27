@@ -65,7 +65,7 @@ const related = await getRelatedArticles(path, 3);
 				{
 					heroImage && (
 						<div class="post-hero">
-							<img src={heroImage} alt="" />
+							<img src={heroImage} alt={title} width="1200" height="630" fetchpriority="high" decoding="async" />
 						</div>
 					)
 				}

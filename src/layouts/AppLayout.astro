@@ -36,6 +36,11 @@ const jsonLd = {
 			name: 'Doodle AI',
 			url: site.href,
 			description: SITE_DESCRIPTION,
+			potentialAction: {
+				'@type': 'SearchAction',
+				target: { '@type': 'EntryPoint', urlTemplate: `${site.href}skills/?q={search_term_string}` },
+				'query-input': 'required name=search_term_string',
+			},
 		},
 		{
 			'@type': 'SoftwareApplication',
@@ -47,6 +52,20 @@ const jsonLd = {
 			description: SITE_DESCRIPTION,
 			image: ogImage.href,
 			isAccessibleForFree: true,
+			offers: {
+				'@type': 'Offer',
+				price: '0',
+				priceCurrency: 'USD',
+				description: '5 free credits on signup',
+			},
+		},
+		{
+			'@type': 'Organization',
+			'@id': `${site.href}#organization`,
+			name: 'Doodle AI',
+			url: site.href,
+			logo: { '@type': 'ImageObject', url: new URL('/favicon.svg', site).href },
+			sameAs: ['https://github.com/Type-Think-AI'],
 		},
 	],
 };
@@ -81,12 +100,20 @@ const jsonLd = {
 		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="theme-color" content="#fab700" />
 
+		<!-- Font preload + CDN -->
+		<link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
+		<link rel="preconnect" href="https://cdn.picxstudio.com" crossorigin />
+
 		<!-- Primary -->
 		<title>{title}</title>
 		<meta name="title" content={title} />
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical} />
-		{noindex && <meta name="robots" content="noindex, nofollow" />}
+		<link rel="alternate" hreflang="x-default" href={canonical} />
+		{noindex
+			? <meta name="robots" content="noindex, nofollow" />
+			: <meta name="robots" content="index, follow, max-image-preview:large" />
+		}
 
 		<!-- Open Graph -->
 		<meta property="og:type" content={ogType} />

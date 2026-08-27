@@ -57,3 +57,6 @@ Long-form guides live at keyword-first root URLs, not under a /blog/ prefix.
 - [Privacy](https://doodleai.art/privacy-policy/)
 - [Terms](https://doodleai.art/terms-of-service/)
 - [Sitemap](https://doodleai.art/sitemap.xml)
+
+## Full content
+- [Full text index](/llms-full.txt) -- all article titles, URLs, dates, and descriptions in one file.

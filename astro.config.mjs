@@ -2,6 +2,8 @@
 import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
+import { rehypeAutoLinks } from "./src/lib/rehype-auto-links.ts";
+import { rehypeLazyImages } from "./src/lib/rehype-lazy-images.ts";
 
 import cloudflare from "@astrojs/cloudflare";
 
@@ -19,6 +21,9 @@ export default defineConfig({
 	// other surface in this app is plain Astro + vanilla TS and should stay
 	// that way — tldraw is React-only, so the canvas is rendered with
 	// client:only="react" and never touches the SSR/Worker bundle.
+	markdown: {
+		rehypePlugins: [rehypeAutoLinks, rehypeLazyImages],
+	},
 	integrations: [mdx(), react()],
 	// `astro dev`'s own dev server (via platformProxy below) is NOT how this
 	// project develops against the database — see package.json's `dev`
