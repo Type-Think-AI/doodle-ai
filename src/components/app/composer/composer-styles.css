@@ -1,0 +1,563 @@
+/* Shared prompt composer styles — used on Home (hero) and /c/[id] (compact).
+   Global because both pages render this component's markup and each
+   page's own controller (home.ts / chat.ts / composer-mentions.ts) only
+   needs the ids to match; Astro's scoped-CSS attribute would otherwise
+   be duplicated per inclusion for no benefit.
+
+   Visual language ported from the "Prompt Composer v2" design (Claude
+   Design project 9960e6c3) — glass icon buttons, gradient send/skill
+   accents, resizable-look grabber cue, drag overlay sweep — remapped
+   onto this app's existing --accent/--border/--surface tokens so it
+   still adapts to the light theme instead of the design's dark-only
+   palette. */
+
+@keyframes composerRise { from { opacity: 0; transform: translateY(6px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes composerSweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+@keyframes composerFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ─── Skill chip ──────────────────────────────────────────────── */
+
+.composer-skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 8px 9px 0;
+  padding: 6px 10px 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+}
+.composer-skill-chip-icon { color: var(--text-dim); flex: 0 0 auto; }
+.composer-skill-chip span {
+  font-size: 12.5px;
+  color: var(--text);
+}
+.composer-skill-chip button {
+  border: 0;
+  background: none;
+  color: var(--text-dimmer);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px;
+}
+.composer-skill-chip button:hover { color: var(--text); }
+.composer-skill-chip[hidden] { display: none; }
+
+/* ─── Attach row ──────────────────────────────────────────────── */
+
+.composer-attach-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 8px 9px 0;
+  padding: 5px 12px 5px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+}
+.composer-attach-thumb-wrap {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+}
+.composer-attach-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  font-size: 0;
+  color: transparent;
+}
+.composer-attach-meta { font-size: 12.5px; color: var(--text-dim); }
+.composer-attach-remove { border: 0; background: none; color: var(--text-dimmer); font-size: 14px; line-height: 1; cursor: pointer; padding: 2px; }
+.composer-attach-remove:hover { color: var(--text); }
+.composer-attach-row[hidden] { display: none; }
+
+/* ─── Composer box ────────────────────────────────────────────── */
+
+.composer-box {
+  position: relative;
+  border-radius: 22px;
+  background: var(--card-hover);
+  border: 1px solid var(--border3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 28px rgba(0, 0, 0, 0.22);
+  padding: 24px 15px 12px;
+  transition: box-shadow .2s ease, border-color .2s ease, background .2s ease, top .2s ease, left .2s ease, transform .2s ease, width .2s ease, max-width .2s ease;
+}
+.composer-box:focus-within {
+  border-color: var(--text-dimmer);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.26);
+}
+.composer-compact .composer-box { border-radius: 18px; padding: 18px 12px 8px; }
+
+/* ─── Resize grabber ──────────────────────────────────────────── */
+
+.composer-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ns-resize;
+  touch-action: none;
+  z-index: 5;
+}
+.composer-compact .composer-resize-handle { display: none; }
+.composer-grabber {
+  width: 44px;
+  height: 3.5px;
+  border-radius: 4px;
+  background: var(--border3);
+  transition: background .15s;
+}
+.composer-resize-handle:hover .composer-grabber,
+.composer-resize-handle[data-active="true"] .composer-grabber { background: var(--text-dimmer); }
+
+/* ─── Expand / focus mode ─────────────────────────────────────── */
+
+.composer-expand-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: composerFade .18s ease;
+}
+.composer-expand-backdrop[hidden] { display: none; }
+
+.composer-box[data-expanded="true"] {
+  position: fixed;
+  z-index: 90;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(780px, 92vw);
+  max-width: none;
+  border-radius: 24px;
+  padding: 16px 18px 15px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: composerRise .2s ease;
+}
+.composer-box[data-expanded="true"] .composer-resize-handle { display: none; }
+.composer-box[data-expanded="true"] .composer-editable { min-height: 190px; max-height: 60vh; }
+
+.composer-focus-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.composer-focus-bar[hidden] { display: none; }
+.composer-focus-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+.composer-focus-left { display: flex; align-items: center; gap: 9px; }
+.composer-focus-label { font-size: 13px; font-weight: 500; color: var(--text); letter-spacing: -0.005em; }
+.composer-focus-hint { font-size: 11.5px; color: var(--text-dimmer); }
+.composer-focus-collapse { margin-left: auto; }
+
+/* ─── Drop overlay ────────────────────────────────────────────── */
+
+.composer-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  overflow: hidden;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: inherit;
+  border: 1.5px dashed var(--border3);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  pointer-events: none;
+}
+.composer-box[data-drag-over="true"] .composer-drop-overlay { display: flex; }
+.composer-drop-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  animation: composerSweep 1.3s linear infinite;
+}
+.composer-drop-icon {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--border3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+}
+.composer-drop-label { position: relative; font-size: 13.5px; font-weight: 600; color: var(--text); }
+.composer-drop-sub { position: relative; font-size: 11px; color: var(--text-dim); }
+
+/* ─── Editable area ───────────────────────────────────────────── */
+
+.composer-editable {
+  width: 100%;
+  min-height: 46px;
+  max-height: 200px;
+  overflow-y: auto;
+  outline: none;
+  color: var(--text);
+  caret-color: var(--accent);
+  font-size: 16px;
+  line-height: 24px;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  letter-spacing: -0.005em;
+}
+.composer-editable:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-dimmer);
+  pointer-events: none;
+}
+.composer-compact .composer-editable { font-size: 14.5px; line-height: 21px; min-height: 42px; max-height: 140px; }
+
+/* ─── Toolbar ─────────────────────────────────────────────────── */
+
+.composer-toolbar { display: flex; align-items: center; gap: 7px; margin-top: 11px; }
+.composer-compact .composer-toolbar { margin-top: 6px; }
+
+.composer-icon-btn {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.composer-compact .composer-icon-btn { width: 30px; height: 30px; flex-basis: 30px; border-radius: 50%; }
+.composer-icon-btn:hover { color: var(--text); border-color: var(--border3); background: color-mix(in srgb, var(--bg) 82%, var(--text) 18%); }
+
+.composer-mode-wrap { position: relative; margin-left: auto; }
+.composer-compact .composer-mode-wrap { display: none; }
+.composer-auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.composer-auto:hover { color: var(--text); border-color: var(--border3); background: color-mix(in srgb, var(--bg) 82%, var(--text) 18%); }
+.composer-auto-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  color: var(--text-dimmer);
+}
+
+.composer-mode-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 220px;
+  padding: 6px;
+  border-radius: 15px;
+  border: 1px solid var(--border2);
+  background: linear-gradient(180deg, var(--card-hover), var(--card));
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.4);
+  animation: composerRise .16s ease;
+}
+.composer-mode-menu[hidden] { display: none; }
+.composer-mode-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.composer-mode-item[data-active="true"],
+.composer-mode-item:hover { background: var(--hover); }
+.composer-mode-item-dot { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--text-dimmer); }
+.composer-mode-item-text { display: flex; flex-direction: column; gap: 2px; text-align: left; flex: 1; }
+.composer-mode-item-label { font-size: 13px; color: var(--text); }
+.composer-mode-item-sub { font-size: 11px; color: var(--text-dimmer); }
+.composer-mode-item-check { color: var(--text-dimmer); font-size: 12px; opacity: 0; }
+.composer-mode-item[data-active="true"] .composer-mode-item-check { opacity: 1; }
+
+/* ─── Send / Stop buttons ─────────────────────────────────────── */
+
+.composer-send {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.composer-send:hover:not(:disabled) { background: color-mix(in srgb, var(--bg) 82%, var(--text) 18%); border-color: var(--border3); }
+.composer-compact .composer-send { width: 30px; height: 30px; flex-basis: 30px; margin-left: auto; }
+.composer-send:disabled { opacity: 0.5; cursor: default; }
+.composer-send[hidden] { display: none; }
+
+.composer-stop {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  color: var(--red);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.composer-compact .composer-stop { width: 30px; height: 30px; flex-basis: 30px; margin-left: auto; }
+.composer-stop[hidden] { display: none; }
+
+/* ─── Hints ───────────────────────────────────────────────────── */
+
+.composer-hints {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 4px 0;
+  font-size: 11.5px;
+  color: var(--text-dimmer);
+}
+.composer-hint { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.composer-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 5px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 10.5px;
+  line-height: 1;
+}
+.composer-hint-sep { opacity: 0.5; }
+.composer-compact .composer-hints { display: none; }
+
+/* ─── Status ──────────────────────────────────────────────────── */
+
+.composer-status { text-align: center; font-size: 12.5px; color: var(--text-dim); margin: 8px 0 0; min-height: 16px; }
+.composer-status[data-err="true"] { color: var(--red); }
+
+/* ─── Camera dialog ───────────────────────────────────────────── */
+
+.camera-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+}
+.camera-dialog-backdrop[hidden] { display: none; }
+.camera-dialog-panel {
+  width: min(100%, 460px);
+  max-height: min(760px, calc(100dvh - 40px));
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--border2);
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--card), var(--prompt-bg));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  animation: composerRise .18s ease;
+}
+.camera-dialog-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.camera-dialog-head h2 { color: var(--text); font-size: 18px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+.camera-dialog-head p { color: var(--text-dimmer); font-size: 12.5px; line-height: 1.45; margin: 0; }
+.camera-dialog-close {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.camera-dialog-close:hover { color: var(--text); background: var(--hover); }
+.camera-stage {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  background: var(--stage);
+  border: 1px solid var(--border2);
+}
+.camera-stage video,
+.camera-stage img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.camera-dialog-status { min-height: 18px; margin: 10px 0 0; color: var(--text-dim); font-size: 12.5px; line-height: 1.45; }
+.camera-dialog-actions { display: flex; gap: 8px; margin-top: 14px; }
+.camera-dialog-actions button {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border3);
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.camera-dialog-actions button:hover { color: var(--text); background: var(--hover); }
+.camera-dialog-actions .camera-dialog-primary {
+  margin-left: auto;
+  border: 0;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+}
+.camera-dialog-actions .camera-dialog-primary:hover { background: var(--text); opacity: 0.9; }
+.camera-dialog-actions .camera-dialog-primary:disabled { opacity: 0.5; cursor: default; }
+
+/* ─── Mention pills & popover ─────────────────────────────────── */
+
+.mention-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 8px 1px 4px;
+  border-radius: 999px;
+  font-size: 0.92em;
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+}
+.mention-pill img {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  overflow: hidden;
+  font-size: 0;
+  color: transparent;
+}
+.mention-pill[data-mention-type="character"] { background: var(--accent-softer); color: var(--accent); }
+.mention-pill[data-mention-type="skill"] { background: var(--blue-faint); color: var(--blue); }
+.mention-pill[data-mention-type="ref"] { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border2); }
+
+.mention-popover {
+  position: absolute;
+  z-index: 30;
+  min-width: 226px;
+  max-width: 280px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--card), var(--prompt-bg));
+  border: 1px solid var(--border2);
+  border-radius: 15px;
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.35);
+  padding: 6px;
+  animation: composerRise .16s ease;
+}
+.mention-popover-empty { padding: 10px 12px; font-size: 12.5px; color: var(--text-dimmer); }
+.mention-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13.5px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mention-popover-item img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 22px;
+  overflow: hidden;
+  font-size: 0;
+  color: transparent;
+}
+.mention-popover-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mention-popover-item[data-active="true"],
+.mention-popover-item:hover { background: var(--hover); }
+
+/* ─── Responsive overrides ────────────────────────────────────── */
+
+/* iOS Safari zooms the page on focus of any input/contenteditable under
+   16px — the compact variant's 14.5px triggers it, so restore 16px. */
+@media (max-width: 860px) {
+  .composer-compact .composer-editable { font-size: 16px; line-height: 22px; }
+
+  .composer-compact .composer-toolbar { gap: 10px; }
+  .composer-compact .composer-icon-btn { width: 44px; height: 44px; flex-basis: 44px; border-radius: 12px; }
+  .composer-compact .composer-send { width: 44px; height: 44px; flex-basis: 44px; }
+
+  .composer-skill-chip button,
+  .composer-attach-remove { padding: 8px; margin: -6px; }
+
+  .camera-dialog-close { flex-basis: 44px; width: 44px; height: 44px; }
+  .camera-dialog-actions button { min-height: 44px; }
+
+  .composer-hints { display: none; }
+
+  .composer-mode-wrap { display: none; }
+}
+
+@media (max-width: 380px) {
+  .composer-icon-btn[id$="ExpandBtn"] { display: none; }
+}

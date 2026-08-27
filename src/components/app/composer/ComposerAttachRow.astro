@@ -1,0 +1,14 @@
+---
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+---
+
+<div class="composer-attach-row" id={`${id}AttachRow`} hidden>
+  <div class="composer-attach-thumb-wrap">
+    <img class="composer-attach-thumb" id={`${id}AttachPreview`} alt="Attached photo" />
+  </div>
+  <span class="composer-attach-meta" id={`${id}AttachMeta`}>Ready</span>
+  <button type="button" class="composer-attach-remove" id={`${id}AttachRemove`} aria-label="Remove attached photo">×</button>
+</div>

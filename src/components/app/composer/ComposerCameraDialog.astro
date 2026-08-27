@@ -1,0 +1,30 @@
+---
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+---
+
+<div class="camera-dialog-backdrop" id={`${id}CameraDialog`} role="dialog" aria-modal="true" aria-labelledby={`${id}CameraTitle`} aria-hidden="true" hidden>
+  <div class="camera-dialog-panel">
+    <div class="camera-dialog-head">
+      <div>
+        <h2 id={`${id}CameraTitle`}>Take a photo</h2>
+        <p>Allow camera access, frame your subject, and capture.</p>
+      </div>
+      <button type="button" class="camera-dialog-close" id={`${id}CameraClose`} aria-label="Close camera">×</button>
+    </div>
+    <div class="camera-stage">
+      <video id={`${id}CameraVideo`} autoplay playsinline muted></video>
+      <img id={`${id}CameraPreview`} alt="Captured photo preview" hidden />
+      <canvas id={`${id}CameraCanvas`} hidden></canvas>
+    </div>
+    <p class="camera-dialog-status" id={`${id}CameraStatus`} role="status" aria-live="polite"></p>
+    <div class="camera-dialog-actions">
+      <button type="button" class="camera-dialog-secondary" id={`${id}CameraCancel`}>Cancel</button>
+      <button type="button" class="camera-dialog-secondary" id={`${id}CameraRetake`} hidden>Retake</button>
+      <button type="button" class="camera-dialog-primary" id={`${id}CameraCapture`} disabled>Take photo</button>
+      <button type="button" class="camera-dialog-primary" id={`${id}CameraUse`} hidden>Use photo</button>
+    </div>
+  </div>
+</div>

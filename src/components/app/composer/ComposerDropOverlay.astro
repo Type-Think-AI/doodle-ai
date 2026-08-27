@@ -1,0 +1,14 @@
+---
+/**
+ * Drag-and-drop overlay shown inside the composer box when a file is
+ * dragged over. Toggled via [data-drag-over] set by media-picker.ts.
+ */
+---
+
+<div class="composer-drop-overlay" id={`${Astro.props.id}DropOverlay`}>
+  <div class="composer-drop-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V5m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+  </div>
+  <div class="composer-drop-label">Drop to attach</div>
+  <div class="composer-drop-sub">PNG · JPG · WEBP</div>
+</div>

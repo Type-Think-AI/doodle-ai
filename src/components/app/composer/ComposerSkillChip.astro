@@ -1,0 +1,12 @@
+---
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+---
+
+<div class="composer-skill-chip" id={`${id}SkillChip`} hidden>
+  <svg class="composer-skill-chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 1.9 4.6 4.6 1.9-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path><path d="M18.5 15.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1Z" fill="currentColor"></path></svg>
+  <span id={`${id}SkillChipLabel`}></span>
+  <button type="button" id={`${id}SkillChipClear`} aria-label="Unpin skill">×</button>
+</div>

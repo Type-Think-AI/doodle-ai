@@ -1,0 +1,17 @@
+---
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+---
+
+<div class="composer-focus-bar" id={`${id}FocusBar`} hidden>
+  <div class="composer-focus-left">
+    <span class="composer-focus-dot"></span>
+    <span class="composer-focus-label">Focus composer</span>
+    <span class="composer-focus-hint">Esc to collapse</span>
+  </div>
+  <button type="button" class="composer-icon-btn composer-focus-collapse" id={`${id}CollapseBtn`} aria-label="Collapse composer">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 4H4v6M14 20h6v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 4l6 6M20 20l-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+  </button>
+</div>
