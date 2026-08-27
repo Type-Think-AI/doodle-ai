@@ -44,6 +44,7 @@ import {
   initMobileCanvas,
   backfillCanvasOnLoad,
   pushToCanvas,
+  pushCanvasOps,
   collectThreadImages,
   invalidateThreadImagesCache,
 } from "./canvas";
@@ -137,6 +138,7 @@ function initChat(): void {
     onCredits: (balance) => {
       window.dispatchEvent(new CustomEvent("doodleai:credits", { detail: { balance } }));
     },
+    onCanvasOps: (ops, label) => pushCanvasOps(ops, label),
     onStatus: doSetStatus,
     onSendStateChange: doSyncSendState,
     invalidateImageCache: invalidateThreadImagesCache,

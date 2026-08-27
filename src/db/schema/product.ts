@@ -326,7 +326,20 @@ export const shareLink = sqliteTable(
       .references(() => organization.id, { onDelete: "cascade" }),
     projectId: text("project_id").references(() => project.id, { onDelete: "cascade" }),
     assetId: text("asset_id").references(() => asset.id, { onDelete: "cascade" }),
-    /** 'project' | 'asset' */
+    /**
+     * Board this link exposes, for `scope: 'board'`.
+     *
+     * Intentionally NOT a foreign key. `board` lives in ./boards.ts, which
+     * imports `character` and `generation` from this file — declaring
+     * `.references(() => board.id)` here would close an ESM import cycle whose
+     * only saving grace is drizzle's lazy callback, which is not a guarantee
+     * worth resting a migration on. Cascade on board deletion is done in
+     * application code (delete the board's share links in the same call), and
+     * migration 0006 already established that this schema does not rely on D1
+     * enforcing FKs.
+     */
+    boardId: text("board_id"),
+    /** 'project' | 'asset' | 'board' */
     scope: text("scope").notNull(),
     allowComments: integer("allow_comments", { mode: "boolean" }).notNull().default(false),
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }),

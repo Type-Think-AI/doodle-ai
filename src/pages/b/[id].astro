@@ -1,0 +1,112 @@
+---
+export const prerender = false;
+import AppShellLayout from '../../layouts/AppShellLayout.astro';
+import Lightbox from '../../components/app/Lightbox.astro';
+import BoardShareSheet from '../../components/app/BoardShareSheet.astro';
+/**
+ * The tldraw surface is shared with /roadmap rather than duplicated, and that is
+ * a hard build constraint, not a shortcut.
+ *
+ * A second island importing @tldraw/sync makes Rollup hoist the sync package's
+ * interop shim — which reaches `xxhash-wasm/workerd/xxhash.wasm`, a workerd-only
+ * artifact — into a SHARED CLIENT chunk. @astrojs/cloudflare's post-build hook
+ * then tries to rewrite that chunk's wasm import under `dist/_worker.js/` where
+ * it does not exist, and the whole build dies with:
+ *
+ *   ENOENT: dist/_worker.js/_astro/index.<hash>.js
+ *
+ * Keeping exactly ONE client importer of @tldraw/sync preserves the chunk
+ * topology that builds. The component name is roadmap-flavoured for historical
+ * reasons; it is a generic room-synced canvas (room + connectPath + canSeed).
+ */
+import RoadmapBoard from '../../components/app/RoadmapBoard.tsx';
+import '../../styles/boards.css';
+
+const { id } = Astro.params;
+
+/**
+ * Grid vs canvas is a URL state, not a toggled panel.
+ *
+ * tldraw cannot initialise inside a `display: none` container — onMount never
+ * fires, and ResizeObserver does not reliably recover once the container is
+ * revealed. Rendering one view OR the other server-side means the canvas is
+ * always visible on first paint, which sidesteps that class of bug entirely
+ * rather than trying to work around it on the client.
+ */
+const view = Astro.url.searchParams.get('view') === 'canvas' ? 'canvas' : 'grid';
+const boardId = id ?? '';
+---
+
+<!-- showFooter={false}: a tool surface with a pinned composer (grid) or a
+     full-bleed canvas. The marketing footer would sit under an element already
+     anchored to the bottom of the viewport. Same as /c/[id] and /roadmap. -->
+<AppShellLayout title="Board — Doodle AI" description="A board of doodles." active="boards" showFooter={false}>
+  <main class:list={['bd-detail', { 'bd-detail-canvas': view === 'canvas' }]} id="boardDetail" data-board-id={id} data-view={view}>
+    <header class="bd-dhead">
+      <a href="/boards" class="bd-back">&lsaquo; Boards</a>
+
+      <div class="bd-dtitle">
+        <h1 id="boardName">Loading…</h1>
+        <button type="button" class="bd-rename" id="renameBoardButton" aria-label="Rename this board" hidden>Rename</button>
+      </div>
+      <p class="bd-dmeta" id="boardMeta"></p>
+
+      <div class="bd-dactions">
+        <!-- Real links, not buttons: each view is its own URL, so it is
+             shareable, bookmarkable and survives a reload. -->
+        <div class="bd-viewswitch" role="group" aria-label="Board view">
+          <a href={`/b/${boardId}`} class="bd-viewopt" aria-current={view === 'grid' ? 'page' : undefined}>Grid</a>
+          <a href={`/b/${boardId}?view=canvas`} class="bd-viewopt" aria-current={view === 'canvas' ? 'page' : undefined}>Canvas</a>
+        </div>
+        <button type="button" class="bd-btn" id="shareBoardButton" hidden>Share</button>
+        <button type="button" class="bd-btn bd-btn-danger" id="deleteBoardButton" hidden>Delete board</button>
+      </div>
+    </header>
+
+    {view === 'grid' ? (
+      <>
+        <div class="bd-grid" id="boardGrid" aria-busy="true">
+          <p class="bd-status">Loading doodles…</p>
+        </div>
+
+        <!-- Pinned composer. Submitting hands off to the chat pipeline with this
+             board as the target (?board=<id>), so the generation lands back HERE.
+             Deliberately NOT a second generation implementation: the old
+             /projects batch panel forked the skill list and went stale in days. -->
+        <form class="bd-composer" id="boardComposer">
+          <label class="bd-sr" for="boardPrompt">Describe a doodle for this board</label>
+          <input
+            id="boardPrompt"
+            name="prompt"
+            type="text"
+            autocomplete="off"
+            placeholder="Make something for this board…"
+          />
+          <button type="submit" class="bd-send" aria-label="Generate for this board">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <path d="M5 12h13M12 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      </>
+    ) : (
+      <div class="bd-canvas-root">
+        <!-- canSeed={false} is essential: the shared component's seeding paths
+             draw ROADMAP columns and stickies, which must never appear on a
+             user's board. New generations reach this canvas server-side instead,
+             via src/boards/drop-item.ts calling updateStore on the room. -->
+        <RoadmapBoard
+          client:only="react"
+          room={boardId}
+          connectPath={`/api/boards/connect/${boardId}`}
+          canSeed={false}
+        />
+      </div>
+    )}
+  </main>
+
+  <Lightbox />
+  <BoardShareSheet />
+</AppShellLayout>
+
+<script src="../../scripts/app/board-detail.ts"></script>

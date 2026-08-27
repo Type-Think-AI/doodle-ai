@@ -4,6 +4,7 @@
 import { setImageSrc } from "../dom-utils";
 import { openLightbox } from "../lightbox";
 import { addToMoodboard } from "../moodboard";
+import { landOnBoard } from "../board-target";
 import type { ChatMessage } from "../chat-store";
 
 export const REFINE_PLACEHOLDER = "Ask for a change — thicker outline, warmer paper…";
@@ -139,7 +140,15 @@ export function renderMessage(
 
     bubble.appendChild(actions);
 
-    msg.images.forEach((url) => addToMoodboard(url));
+    // Dual-write, deliberately. addToMoodboard keeps the localStorage mirror
+    // that signed-out users and @mention autocomplete read from; landOnBoard
+    // puts the image on a real board (the Inbox, or the board this chat was
+    // opened from) so it is findable, movable and shareable. The legacy
+    // moodboard_item table is retained for one release, so both run.
+    msg.images.forEach((url) => {
+      addToMoodboard(url);
+      landOnBoard(url);
+    });
   }
 
   wrap.appendChild(bubble);

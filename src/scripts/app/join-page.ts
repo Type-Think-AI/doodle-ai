@@ -77,7 +77,7 @@ async function initJoinPage(): Promise<void> {
       if (description) description.textContent = "Your shared workspace is ready.";
       action.textContent = "Open workspace";
       action.disabled = false;
-      action.onclick = () => { window.location.href = "/team"; };
+      action.onclick = () => { window.location.href = "/boards"; };
     } catch (err) {
       if (error) {
         error.textContent = err instanceof Error ? err.message : "Couldn't join this team.";

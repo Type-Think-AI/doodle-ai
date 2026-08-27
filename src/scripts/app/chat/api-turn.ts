@@ -12,6 +12,7 @@ import { MAX_IMAGE_BYTES } from "../../../lib/doodle-constants";
 import { setImageSrc } from "../dom-utils";
 import type { AttachmentState, SendState, SkillPinState } from "./state";
 import { getStyleId, pinSkill } from "./state";
+import type { CanvasOp } from "../../../lib/canvas/ops";
 
 /* ---- Types ---- */
 
@@ -20,6 +21,7 @@ export interface TurnCallbacks {
   onAssistantMessage: (msg: ChatMessage, precedingUserMessage: ChatMessage | null) => void;
   onImage: (url: string, skillId: string | undefined) => void;
   onCredits: (balance: number) => void;
+  onCanvasOps: (ops: CanvasOp[], label?: string) => void;
   onStatus: (msg: string, err?: boolean) => void;
   onSendStateChange: () => void;
   invalidateImageCache: () => void;
@@ -73,6 +75,7 @@ export async function requestAssistantReply(
       body: JSON.stringify({
         messages: toApiMessages(history, skillPinState.pinnedSkillId),
         styleId: getStyleId(),
+        canvas: window.__doodleCanvasDigest,
       }),
       signal: abortController.signal,
     });
@@ -103,12 +106,16 @@ export async function requestAssistantReply(
           phase?: string;
           balance?: number;
           skillId?: string;
+          ops?: CanvasOp[];
+          label?: string;
         };
         if (event.type === "text" && event.text) {
           text += event.text;
           thinking.setText(text);
         } else if (event.type === "status" && event.phase === "drawing") {
           thinking.setDrawing();
+        } else if (event.type === "canvas" && event.ops?.length) {
+          callbacks.onCanvasOps(event.ops, event.label);
         } else if (event.type === "image" && event.url) {
           images.push(event.url);
           callbacks.onImage(event.url, event.skillId ?? skillPinState.pinnedSkillId);

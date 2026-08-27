@@ -3,6 +3,7 @@
    __doodleCanvasQueue backlog array. No network IO. */
 
 import { loadThread, type ChatMessage } from "../chat-store";
+import type { CanvasOp, CanvasDigest } from "../../../lib/canvas/ops";
 
 /* ---- Thread image collection ---- */
 
@@ -28,6 +29,12 @@ export function invalidateThreadImagesCache(): void {
 declare global {
   interface Window {
     __doodleCanvasQueue?: string[];
+    /** Ops backlog for pre-hydration delivery — mirrors __doodleCanvasQueue's
+     *  role for images. The React island drains this on mount. */
+    __doodleCanvasOpsQueue?: CanvasOp[];
+    /** Latest canvas digest, written by the digest builder in DoodleCanvas.tsx
+     *  and read by api-turn.ts to send up with each chat request. */
+    __doodleCanvasDigest?: CanvasDigest;
   }
 }
 
@@ -38,6 +45,17 @@ export function pushToCanvas(urls: string[]): void {
   window.dispatchEvent(new CustomEvent("doodleai:canvas-add", { detail: { urls } }));
   const hint = document.getElementById("canvasEmptyHint");
   if (hint) hint.hidden = true;
+}
+
+/** Forward agent canvas ops to the React island. Both channels are needed:
+ *  - The backlog covers the pre-hydration window (~1MB island loads AFTER the
+ *    first stream events arrive — this exact bug already happened with images).
+ *  - The event covers the hot path once the island is mounted. */
+export function pushCanvasOps(ops: CanvasOp[], label?: string): void {
+  if (!ops.length) return;
+  const queue = (window.__doodleCanvasOpsQueue ??= []);
+  queue.push(...ops);
+  window.dispatchEvent(new CustomEvent("doodleai:canvas-ops", { detail: { ops, label } }));
 }
 
 /* ---- Whiteboard state ---- */

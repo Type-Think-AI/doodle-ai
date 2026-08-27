@@ -1,4 +1,4 @@
-/* App shell chrome shared by Home, Skills, Create, Moodboards, Settings.
+/* App shell chrome shared by Home, Skills, Create, Boards, Settings.
    Per-page content styling lives with each page; this file only owns the
    sidebar+content grid and its responsive collapse to a bottom tab bar.
    Component-level styles (Sidebar, MobileNav) live in their own .astro
@@ -37,8 +37,8 @@ body {
   overflow: auto;
 }
 
-/* Pages that append the marketing footer (skills, moodboards, characters,
-   projects, team) need the WHOLE column to scroll, not just the content pane.
+/* Pages that append the marketing footer (skills, boards, characters,
+   settings) need the WHOLE column to scroll, not just the content pane.
    .app-shell is a fixed 100dvh overflow:hidden box, so with a tall footer as a
    sibling the rules above let the footer take its natural height and shrink
    .app-shell-content toward zero — which clipped the page's real content to a
@@ -58,12 +58,45 @@ body {
   /* Sticky-footer floor. `flex-grow: 1` alone does nothing here: the footer is
      taller than the viewport, so the column's free space is already negative
      and there is nothing for the content pane to grow into. Without this floor
-     a sparse page (Characters with no characters, Moodboards with no doodles)
+     a sparse page (Characters with no characters, Boards with no items)
      rendered ~200px of content and then handed the rest of the first screen to
      the marketing footer — landing on Characters showed a CTA hero. One
      viewport of floor keeps the page's own content in the fold and moves the
      footer to where a footer belongs: below it. */
   min-height: 100dvh;
+}
+
+/* Keep the footer at its natural height. This is load-bearing, not a tidy-up:
+   without it the footer rendered at EXACTLY 0px on every app-shell page
+   (/, /skills, /characters, /boards) — present in the DOM, display:block,
+   visibility:visible, and completely invisible.
+
+   Why it collapsed: .app-shell-main is a 100dvh flex column, and the rule above
+   gives .app-shell-content `flex-shrink: 0`. The column's free space is
+   therefore deeply negative (one viewport of container vs. a viewport of
+   content plus a ~1450px footer), and since the content pane refuses to shrink,
+   the flex algorithm takes the entire overflow out of the only sibling that
+   can shrink — the footer. A flex item is normally protected from this by its
+   automatic minimum size (`min-height: auto` resolving to min-content), but
+   that protection is switched off for scroll containers, and .db-footer sets
+   `overflow: hidden` for its glow/dot background layers. Nothing was left to
+   stop it reaching zero.
+
+   `flex-shrink: 0` opts the footer out of shrinking; .app-shell-main is
+   `overflow-y: auto`, so the resulting overflow becomes scroll, which is
+   exactly what the has-footer layout wants. */
+.app-shell-main.has-footer > .db-footer {
+  flex: 0 0 auto;
+  /* Match the column the footer scrolls inside. .app-shell-main is --surface
+     (#141414 dark / #f7f7f7 light) while the footer's own default is --bg
+     (#0f0f0f / #ffffff), so without this the footer read as a darker slab with
+     a hard horizontal seam where the page ended — uniform on /learn, which has
+     no app shell, and visibly mismatched on the homepage and /skills. Also
+     retints the footer's top fade-in gradient, which references the same
+     property. */
+  --db-footer-bg: var(--surface);
+  /* Keep the marquee band a visible step above the retinted footer. */
+  --db-strip-bg: var(--card);
 }
 
 @media (max-width: 860px) {

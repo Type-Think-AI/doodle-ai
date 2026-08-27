@@ -31,6 +31,11 @@ import {
 } from "tldraw";
 import "tldraw/tldraw.css";
 
+import type { CanvasOp } from "../../lib/canvas/ops";
+import { applyCanvasOps } from "./canvas/apply-ops";
+import { publishDigest } from "./canvas/digest";
+import { assignRef, autoRef } from "./canvas/refs";
+
 /* Chrome we deliberately remove from tldraw's default UI.
  *
  * Defined at module scope because tldraw requires this object to be stable —
@@ -83,11 +88,6 @@ interface DoodleCanvasProps {
  * drains it on mount. Declared on window (not a shared module) so the vanilla
  * controller never has to import anything from the React side.
  */
-declare global {
-  interface Window {
-    __doodleCanvasQueue?: string[];
-  }
-}
 
 /* Layout of newly-placed images. tldraw has no auto-layout, so we flow shapes
    ourselves: fixed-width cells, wrapping after COLUMNS, which keeps a batch of
@@ -151,6 +151,9 @@ export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanva
   /* URLs that arrived before tldraw handed us an editor. Held here and flushed
      in onMount — dropping them was the bug that left the canvas blank. */
   const pendingRef = useRef<string[]>([]);
+  /* Ops batches that arrived before tldraw handed us an editor. Same pattern
+     as pendingRef — hold and drain on mount so the first agent edit is never dropped. */
+  const pendingOpsRef = useRef<CanvasOp[]>([]);
   /* Next free slot index, tracked outside React state — placement is an
      imperative canvas side effect, and putting it in state would re-render
      the whole canvas on every image. */
@@ -271,6 +274,7 @@ export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanva
         x: col * (CELL_W + GAP) + (CELL_W - w) / 2,
         y: row * (CELL_H + GAP) + (CELL_H - h) / 2,
         props: { assetId, w, h },
+        meta: { ref: autoRef(editor, "image"), author: "user" },
       });
     });
 
@@ -280,6 +284,19 @@ export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanva
       // Frame the new batch, but keep surrounding context visible rather than
       // filling the viewport with a single result.
       editor.zoomToSelection({ animation: { duration: 320 } });
+    }
+  }, []);
+
+  /** Apply agent canvas ops. Buffers if editor not ready, same as placeUrls. */
+  const applyOps = useCallback((ops: CanvasOp[]) => {
+    const editor = editorRef.current;
+    if (!editor) {
+      pendingOpsRef.current.push(...ops);
+      return;
+    }
+    const { skipped } = applyCanvasOps(editor, ops);
+    if (skipped.length > 0) {
+      console.warn("[DoodleCanvas] ops skipped:", skipped);
     }
   }, []);
 
@@ -341,6 +358,40 @@ export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanva
       if (window.__doodleCanvasQueue) window.__doodleCanvasQueue.length = 0;
 
       if (backlog.length) void placeUrls(backlog);
+
+      /* Drain any ops that arrived before the editor was ready — same pattern
+         as the image backlog above. Without this, the first agent edit of a
+         session is silently dropped. */
+      const opsBacklog = [
+        ...(window.__doodleCanvasOpsQueue ?? []),
+        ...pendingOpsRef.current,
+      ];
+      pendingOpsRef.current = [];
+      if (window.__doodleCanvasOpsQueue) window.__doodleCanvasOpsQueue.length = 0;
+
+      if (opsBacklog.length > 0) {
+        const { skipped } = applyCanvasOps(editor, opsBacklog);
+        if (skipped.length > 0) console.warn("[DoodleCanvas] mount ops skipped:", skipped);
+      }
+
+      /* Assign refs to existing image shapes that lack them, so the agent can
+         address images placed before the ref system existed. */
+      for (const shape of editor.getCurrentPageShapes()) {
+        if (shape.type === "image") {
+          const meta = shape.meta as Record<string, unknown>;
+          if (!meta?.ref) {
+            const ref = autoRef(editor, "image");
+            assignRef(editor, shape.id, ref);
+          }
+        }
+      }
+
+      /* Publish the initial digest and subscribe to store changes. */
+      publishDigest(editor);
+      editor.store.listen(() => publishDigest(editor), {
+        scope: "document",
+        source: "all",
+      });
     },
     [initialUrls, placeUrls],
   );
@@ -351,8 +402,18 @@ export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanva
       if (detail?.urls?.length) void placeUrls(detail.urls);
     };
     window.addEventListener("doodleai:canvas-add", onAdd);
-    return () => window.removeEventListener("doodleai:canvas-add", onAdd);
-  }, [placeUrls]);
+
+    const onOps = (event: Event) => {
+      const detail = (event as CustomEvent<{ ops: CanvasOp[] }>).detail;
+      if (detail?.ops?.length) applyOps(detail.ops);
+    };
+    window.addEventListener("doodleai:canvas-ops", onOps);
+
+    return () => {
+      window.removeEventListener("doodleai:canvas-add", onAdd);
+      window.removeEventListener("doodleai:canvas-ops", onOps);
+    };
+  }, [placeUrls, applyOps]);
 
   return (
     /* Sizing lives HERE, not in the parent page's CSS. tldraw measures its

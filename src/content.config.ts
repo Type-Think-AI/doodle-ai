@@ -18,7 +18,7 @@ import { z } from "astro/zod";
  * Every article is rendered by the single catch-all `src/pages/[...path].astro`,
  * which strips a trailing `/index` so a folder's `index.md` becomes the hub root.
  * That route also enforces `src/lib/content/reserved-routes.ts` at build time so
- * an article can never shadow a product route such as `/skills/` or `/team/`.
+ * an article can never shadow a product route such as `/skills/` or `/boards/`.
  */
 const articles = defineCollection({
 	loader: glob({ base: "./src/content/articles", pattern: "**/*.{md,mdx}" }),

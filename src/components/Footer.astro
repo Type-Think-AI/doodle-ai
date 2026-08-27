@@ -46,7 +46,16 @@ import FooterLegal from "./footer/FooterLegal.astro";
 	.db-footer {
 		position: relative;
 		overflow: hidden;
-		background: var(--bg);
+		/* Indirection, not decoration: this footer sits on two different
+		   surfaces. On the marketing pages (/learn, the articles) the page
+		   behind it is --bg, but inside the app shell the scrolling column is
+		   --surface, which is a different colour in both themes (#0f0f0f vs
+		   #141414 dark, #ffffff vs #f7f7f7 light). Hardcoding --bg here painted
+		   the footer as a visibly darker slab with a hard seam across the
+		   homepage and every other app-shell page. app-shell.css overrides this
+		   one property so the footer always matches whatever it is sitting on. */
+		--db-footer-bg: var(--bg);
+		background: var(--db-footer-bg);
 		margin-top: 60px;
 		border-top: none;
 		/* Named so the sub-component styles in the global block below can query
@@ -60,7 +69,7 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		left: 0;
 		right: 0;
 		height: 80px;
-		background: linear-gradient(to bottom, transparent, var(--bg));
+		background: linear-gradient(to bottom, transparent, var(--db-footer-bg));
 		pointer-events: none;
 	}
 
@@ -111,10 +120,17 @@ import FooterLegal from "./footer/FooterLegal.astro";
 	}
 
 	/* ─── Main columns ─── */
+	/* The nav side takes the larger share AND a hard 600px floor. The floor is
+	   the important half: with only an fr ratio, the brand column's intrinsic
+	   content width won out at desktop widths inside the app shell (a 1182px
+	   footer next to the 258px sidebar), leaving the four link columns 116px
+	   each and wrapping eight labels onto two lines. 690px is the width at which
+	   four 150px tracks plus three 24px gaps still fit, so the nav keeps all
+	   four columns on one row instead of orphaning the last one. */
 	.db-top {
 		display: grid;
-		grid-template-columns: minmax(260px, 1.05fr) minmax(340px, 1fr);
-		gap: 64px;
+		grid-template-columns: minmax(230px, 0.62fr) minmax(690px, 1.85fr);
+		gap: 48px;
 		align-items: start;
 		padding: 52px 0 0;
 	}
@@ -307,7 +323,12 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		overflow: hidden;
 		border-top: 1px solid var(--border);
 		border-bottom: 1px solid var(--border);
-		background: var(--surface);
+		/* One step lighter than whatever the footer itself is painted, so the
+		   ticker reads as a band rather than as bare rules. Needs the same
+		   indirection as --db-footer-bg: --surface is a step up from --bg on the
+		   marketing pages, but IS the footer colour inside the app shell, where
+		   this would otherwise flatten into the background. */
+		background: var(--db-strip-bg, var(--surface));
 	}
 	.db-marquee {
 		display: flex;
@@ -412,9 +433,16 @@ import FooterLegal from "./footer/FooterLegal.astro";
 	}
 
 	/* ─── Nav columns ─── */
+	/* auto-fit, not a fixed count: this grid's own width varies far more than
+	   the footer's does (the .db-top split hands it a different share depending
+	   on whether .db-top has stacked yet), so a hard `repeat(4, …)` either
+	   crammed four 116px columns or left a 2-column layout with room for four.
+	   A 150px track floor keeps every label on one line and lets the count fall
+	   to 3, then 2, on its own. The 720px override below still forces the
+	   single-column mobile stack. */
 	.db-cols {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 		gap: 38px 24px;
 	}
 	.db-col {
@@ -767,7 +795,19 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		gap: 7px;
 		font-size: 12px;
 		color: var(--text-dim);
+		text-decoration: none;
+		transition: color 0.2s ease;
 	}
+	.db-status:hover { color: var(--text); }
+	.db-status:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+	/* The pulsing dot carries the state. Colour is set per-state rather than
+	   always-green so the indicator can actually report bad news — see the note
+	   in FooterLegal.astro. */
+	.db-status.is-operational .db-dot-pulse { background: var(--green); }
+	.db-status.is-degraded .db-dot-pulse { background: var(--accent); }
+	.db-status.is-down .db-dot-pulse { background: var(--red); }
+	.db-status.is-degraded { color: var(--accent); }
+	.db-status.is-down { color: var(--red); }
 
 	/* ─── Keyframes ─── */
 	@keyframes dbMarquee {

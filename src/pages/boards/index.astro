@@ -1,0 +1,40 @@
+---
+export const prerender = false;
+import AppShellLayout from '../../layouts/AppShellLayout.astro';
+import Lightbox from '../../components/app/Lightbox.astro';
+import '../../styles/boards.css';
+---
+
+<AppShellLayout
+  title="Boards — Doodle AI"
+  description="Every doodle you make lands on a board. Name them, arrange them, share them."
+  active="boards"
+>
+  <main class="bd-page" id="boardsPage">
+    <header class="bd-head">
+      <div>
+        <h1>Boards</h1>
+        <p>Where your doodles live.</p>
+      </div>
+      <button type="button" class="bd-btn bd-btn-primary" id="newBoardButton">New board</button>
+    </header>
+
+    <!-- Inline create row rather than a modal: making a board is a one-field
+         action, and a dialog for one text input is a interruption, not a form. -->
+    <form class="bd-newrow" id="newBoardForm" hidden>
+      <label class="bd-sr" for="newBoardName">Board name</label>
+      <input id="newBoardName" name="name" maxlength="120" placeholder="Name this board…" autocomplete="off" />
+      <button type="submit" class="bd-btn bd-btn-primary">Create</button>
+      <button type="button" class="bd-btn" id="cancelBoardButton">Cancel</button>
+    </form>
+    <p class="bd-error" id="newBoardError" role="alert" hidden></p>
+
+    <div class="bd-list" id="boardsList" aria-busy="true">
+      <p class="bd-status">Loading boards…</p>
+    </div>
+  </main>
+
+  <Lightbox />
+</AppShellLayout>
+
+<script src="../../scripts/app/boards-page.ts"></script>

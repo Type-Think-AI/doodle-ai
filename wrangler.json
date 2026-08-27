@@ -28,6 +28,10 @@
       {
         "name": "ROADMAP_ROOM",
         "class_name": "RoadmapRoom"
+      },
+      {
+        "name": "BOARD_ROOM",
+        "class_name": "BoardRoom"
       }
     ]
   },
@@ -36,6 +40,12 @@
       "tag": "v1",
       "new_sqlite_classes": [
         "RoadmapRoom"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "BoardRoom"
       ]
     }
   ],
@@ -116,6 +126,10 @@
           {
             "name": "ROADMAP_ROOM",
             "class_name": "RoadmapRoom"
+          },
+          {
+            "name": "BOARD_ROOM",
+            "class_name": "BoardRoom"
           }
         ]
       },

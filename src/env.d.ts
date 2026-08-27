@@ -42,6 +42,11 @@ interface Env {
    */
   ROADMAP_ROOM: DurableObjectNamespace<import("./roadmap/RoadmapRoom").RoadmapRoom>;
   /**
+   * One tldraw sync room per user board (src/boards/BoardRoom.ts).
+   * SQLite-backed. The DO id is derived from `idFromName(boardId)`.
+   */
+  BOARD_ROOM: DurableObjectNamespace<import("./boards/BoardRoom").BoardRoom>;
+  /**
    * Images, screenshots and video pasted onto the roadmap board. R2 rather than
    * D1 or the DO's SQLite: these are large binaries, and a screenshot with an
    * arrow drawn on it is the single most useful piece of feedback an artist can

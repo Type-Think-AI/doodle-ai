@@ -153,7 +153,19 @@
 }
 
 @media (max-width: 860px) {
-	.whiteboard-toggle { display: none; }
+	/* The toggle MUST stay visible here. It used to be display:none, which left
+	   mobile with no way to open the canvas at all: initMobileCanvas() force-
+	   closes the panel on small screens, and the only other control (.canvas-close)
+	   lives inside that hidden panel. The result was that tldraw never mounted for
+	   any phone user and the app's headline feature was unreachable.
+	   Open/close now pairs correctly: this pill opens it, and because
+	   .chat-page is hidden while the canvas is open the pill gets out of the way,
+	   leaving the 44px .canvas-close X to dismiss it. */
+	.whiteboard-toggle {
+		min-height: 44px;
+		padding: 10px 16px;
+		font-size: 14px;
+	}
 	.chat-split[data-whiteboard="true"] .chat-page { display: none; }
 	.chat-split[data-whiteboard="true"] .canvas-panel { flex: 1 1 auto; width: 100%; }
 	.chat-split[data-whiteboard="true"] .chat-split-handle { display: none; }

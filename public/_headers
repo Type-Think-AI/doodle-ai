@@ -5,5 +5,7 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
 
-/fonts/*
+# No /fonts/* rule: the site uses the system font stack and ships no font files.
+# Astro's own hashed output under /_astro/* is already immutable by filename.
+/_astro/*
   Cache-Control: public, max-age=31536000, immutable

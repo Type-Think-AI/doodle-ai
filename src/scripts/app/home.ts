@@ -47,6 +47,8 @@ function initHome(): void {
   let uploading = false;
   const sending = false;
   let pendingSkillId: string | undefined;
+  /** Board this composer is generating FOR, when arrived from /b/:id. */
+  let pendingBoardId: string | undefined;
 
   function setStatus(msg: string, err = false): void {
     statusEl!.textContent = msg;
@@ -165,7 +167,14 @@ function initHome(): void {
     const threadId = createThread();
     if (pendingSkillId) setThreadSkill(threadId, pendingSkillId);
     appendMessage(threadId, userMessage);
-    window.location.href = `/c/${threadId}`;
+    // Carry the board target across the navigation. Without this the target is
+    // lost at /c/:threadId and the result silently falls back to the Inbox,
+    // which is the kind of quiet wrong-place bug that made the old feature
+    // feel broken.
+    const dest = pendingBoardId
+      ? `/c/${threadId}?board=${encodeURIComponent(pendingBoardId)}`
+      : `/c/${threadId}`;
+    window.location.href = dest;
   }
 
   /* ---- Wire events ---- */
@@ -227,10 +236,45 @@ function initHome(): void {
   // Arriving here from a skill's detail page ("Use this skill") pre-pins
   // that skill, same as picking it via / in the composer — but nothing is
   // created yet; a thread only exists once you actually send.
-  const skillFromUrl = new URLSearchParams(window.location.search).get("skill");
+  const params = new URLSearchParams(window.location.search);
+  const skillFromUrl = params.get("skill");
   if (skillFromUrl && getSkill(skillFromUrl)) {
     pendingSkillId = skillFromUrl;
     syncSkillChip();
+  }
+
+  // Arriving from a board (/b/:id) — its pinned composer hands the prompt and
+  // any "use as reference" image over here rather than forking a second
+  // generation implementation. The board id is remembered so the result lands
+  // back on that board instead of the Inbox.
+  const boardFromUrl = params.get("board")?.trim();
+  if (boardFromUrl) pendingBoardId = boardFromUrl;
+
+  const promptFromUrl = params.get("prompt");
+  if (promptFromUrl) {
+    // The composer is contenteditable; textContent is the plain-text path and
+    // avoids injecting markup from a URL.
+    input.textContent = promptFromUrl;
+    input.focus();
+    const range = document.createRange();
+    range.selectNodeContents(input);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  }
+
+  const refFromUrl = params.get("ref");
+  if (refFromUrl && /^https:\/\//.test(refFromUrl)) {
+    // Already a hosted URL, so no upload step — just show it as attached.
+    attachedUrl = refFromUrl;
+    setImageSrc(attachPreview!, refFromUrl);
+    attachMeta!.textContent = "Reference";
+    attachRow!.hidden = false;
+  }
+
+  if (skillFromUrl || boardFromUrl || promptFromUrl || refFromUrl) {
+    // Keep the URL clean, but only AFTER the values are captured in state.
     window.history.replaceState(null, "", "/");
   }
 }

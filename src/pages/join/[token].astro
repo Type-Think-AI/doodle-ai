@@ -5,7 +5,7 @@ import AuthDialog from '../../components/app/AuthDialog.astro';
 const { token } = Astro.params;
 ---
 
-<AppLayout title="Join a team — Doodle AI" description="Join a Doodle AI production workspace." noindex>
+<AppLayout title="Join a workspace — Doodle AI" description="Join a Doodle AI shared workspace." noindex>
   <main class="join-page" id="joinPage" data-token={token}>
     <a href="/" class="join-brand"><span class="join-mark">〰</span> Doodle AI</a>
     <section class="join-card"><span class="team-kicker">Team invitation</span><div class="join-avatar" id="joinAvatar">?</div><h1 id="joinTitle">Checking your invite…</h1><p id="joinDescription">One moment.</p><p id="joinError" class="join-error" hidden></p><button type="button" class="join-button" id="joinAction" disabled>Continue</button><a href="/" class="join-cancel">Back to Doodle AI</a></section>

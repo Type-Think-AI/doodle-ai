@@ -18,7 +18,7 @@ interface Props {
   description?: string;
   /** Open Graph image. Forwarded to AppLayout so shell pages can set a social card. */
   image?: string;
-  active: 'chat' | 'skills' | 'moodboards' | 'characters' | 'projects' | 'team' | 'settings' | 'roadmap';
+  active: 'chat' | 'skills' | 'boards' | 'characters' | 'settings' | 'roadmap';
   /**
    * Override the footer decision for this page.
    *
@@ -33,11 +33,15 @@ interface Props {
 }
 const { title, description, image, active, showFooter: showFooterProp } = Astro.props;
 // The marketing footer (CTA hero, marquee, partner grid) belongs on the
-// content-browsing pages (skills, moodboards, characters, projects, team) —
-// it was added there deliberately. "chat" and "roadmap" are live tool
-// surfaces with a sticky composer / full-bleed canvas; appending a full
-// marketing footer under them pushes the shell past 100dvh and becomes
-// scrollable-into on mobile, replacing the tool with a landing page.
+// content-browsing pages (skills, boards index, characters) — it was added
+// there deliberately. "chat" and "roadmap" are live tool surfaces with a
+// sticky composer / full-bleed canvas; appending a full marketing footer
+// under them pushes the shell past 100dvh and becomes scrollable-into on
+// mobile, replacing the tool with a landing page.
+//
+// A board DETAIL page (/b/:id) is also a tool surface — it has a pinned
+// composer — but shares active="boards" with the browsable index, so it
+// cannot be distinguished here. It passes showFooter={false} explicitly.
 const showFooter = showFooterProp ?? (active !== 'chat' && active !== 'roadmap');
 ---
 

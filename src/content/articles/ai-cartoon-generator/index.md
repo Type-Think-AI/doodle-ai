@@ -322,7 +322,7 @@ Keep this list next to the four-job map.
 - It does not accept a PicX key from you.
 - It does not provide Stripe checkout or subscriptions today.
 
-**Partial foundation language, on purpose.** Organization roles exist. Pooled credits exist. Moodboards and references exist as organization-scoped data. Projects, assets, share links, batches, and review states are foundations without a verified complete public workflow on this page. That is the accurate sentence. “Studio workspace” would be the inaccurate one.
+**Partial foundation language, on purpose.** Organization roles exist. Pooled credits exist. Boards and references exist as organization-scoped data, and every generation lands on a board without you filing it. Board share links and batches are foundations without a verified complete public workflow on this page. That is the accurate sentence. “Studio workspace” would be the inaccurate one.
 
 ## Visual plan: four jobs, one honest still
 

@@ -7,10 +7,8 @@
 export type NavKey =
   | "chat"
   | "characters"
-  | "moodboards"
+  | "boards"
   | "skills"
-  | "projects"
-  | "team"
   | "settings"
   | "roadmap";
 
@@ -39,19 +37,21 @@ export const NEW_CHAT_ITEM: NavItem = {
 
 export const NAV_ITEMS: NavItem[] = [
   {
+    key: "boards",
+    href: "/boards",
+    label: "Boards",
+    shortLabel: "Boards",
+    section: "Library",
+    // Two stacked rectangles reading as a set of boards, not a single photo —
+    // the old Moodboards icon was a picture frame, which described one image.
+    icon: '<rect x="3.5" y="4.5" width="10" height="8" rx="2" stroke="currentColor" stroke-width="1.6"/><rect x="10.5" y="11.5" width="10" height="8" rx="2" stroke="currentColor" stroke-width="1.6"/>',
+  },
+  {
     key: "characters",
     href: "/characters",
     label: "Characters",
     shortLabel: "Characters",
-    section: "Library",
     icon: '<circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.6"/><path d="M5 20c1.3-3.8 4.3-5.8 7-5.8s5.7 2 7 5.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-  },
-  {
-    key: "moodboards",
-    href: "/moodboards",
-    label: "Moodboards",
-    shortLabel: "Boards",
-    icon: '<rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 15l4.2-3.6L12 15l3-2.4 5.5 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   {
     key: "skills",
@@ -59,23 +59,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Skills",
     shortLabel: "Skills",
     icon: '<circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="16" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 13.6 13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-  },
-  {
-    key: "projects",
-    href: "/projects",
-    label: "Projects",
-    shortLabel: "Projects",
-    mobile: false,
-    section: "Workspace",
-    icon: '<rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 5V3.5h8V5M3.5 10h17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-  },
-  {
-    key: "team",
-    href: "/team",
-    label: "Team",
-    shortLabel: "Team",
-    mobile: false,
-    icon: '<circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 20c.8-3.5 3-5.4 5.5-5.4s4.7 1.9 5.5 5.4M14 15.2c2.8-.2 5 1.4 6 4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   {
     key: "roadmap",

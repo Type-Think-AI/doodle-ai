@@ -100,8 +100,11 @@ const jsonLd = {
 		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="theme-color" content="#fab700" />
 
-		<!-- Font preload + CDN -->
-		<link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
+		<!-- CDN preconnect. No font preload: this site renders in the system UI
+		     font stack (see src/styles/app.css) and declares no @font-face at
+		     all, so the Atkinson preload inherited from the Astro starter was
+		     downloading ~23 KB on every page load and discarding it — the browser
+		     reported it as "preloaded but not used within a few seconds". -->
 		<link rel="preconnect" href="https://cdn.picxstudio.com" crossorigin />
 
 		<!-- Primary -->

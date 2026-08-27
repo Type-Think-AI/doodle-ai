@@ -4,6 +4,12 @@ import SkillCard from '../components/app/SkillCard.astro';
 import PromptComposer from '../components/app/PromptComposer.astro';
 import { SKILLS } from '../lib/skills';
 import { OG_IMAGE } from '../consts';
+
+/* The homepage shows the catalogue almost in full — 20 of 21 — so a visitor can
+   see the range without a second click, with the trailing "See all" row as the
+   handoff to /skills for the remainder. */
+const HOME_SKILL_COUNT = 20;
+const featuredSkills = SKILLS.slice(0, HOME_SKILL_COUNT);
 ---
 
 <AppShellLayout
@@ -11,6 +17,7 @@ import { OG_IMAGE } from '../consts';
 	description="Turn your photo into a playful hand-drawn doodle avatar with Doodle AI, powered by PicX AI."
 	image={OG_IMAGE.home}
 	active="chat"
+	showFooter={true}
 >
 	<div class="home-page">
 		<div class="home-hero">
@@ -22,13 +29,17 @@ import { OG_IMAGE } from '../consts';
 		<div class="home-skills">
 			<div class="home-skills-head">
 				<h2>Skills</h2>
-				<a href="/skills">Browse all
+				<a href="/skills">Browse all {SKILLS.length}
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
 				</a>
 			</div>
 			<div class="home-skills-grid">
-				{SKILLS.map((skill) => <SkillCard skill={skill} />)}
+				{featuredSkills.map((skill) => <SkillCard skill={skill} />)}
 			</div>
+			<a class="home-skills-more" href="/skills">
+				See all {SKILLS.length} skills
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
+			</a>
 		</div>
 	</div>
 </AppShellLayout>
@@ -46,6 +57,27 @@ import { OG_IMAGE } from '../consts';
 	.home-skills-head h2 { font-size: 18px; font-weight: 600; color: var(--text); margin: 0; }
 	.home-skills-head a { margin-left: auto; display: flex; align-items: center; gap: 6px; min-height: 44px; color: var(--text); font-size: 13.5px; }
 	.home-skills-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+
+	/* Second, wider handoff to /skills below the grid. The header link is easy
+	   to miss once you have scrolled past it, and this is the point at which a
+	   visitor has just looked at eight cards and wants the rest. Flat row with a
+	   thin rule, not a card. */
+	.home-skills-more {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		min-height: 48px;
+		margin-top: 22px;
+		border: 1px solid var(--border2);
+		border-radius: 999px;
+		color: var(--text-dim);
+		font-size: 13.5px;
+		font-weight: 500;
+		transition: border-color 0.2s ease, color 0.2s ease;
+	}
+	.home-skills-more:hover { border-color: var(--border3); color: var(--text); }
+	.home-skills-more:focus-visible { outline: 2px solid var(--border3); outline-offset: 3px; }
 
 	@media (max-width: 980px) {
 		.home-skills-grid { grid-template-columns: repeat(3, 1fr); }

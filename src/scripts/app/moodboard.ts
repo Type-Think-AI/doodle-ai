@@ -4,7 +4,7 @@
  * because a moodboard shares the origin's few megabytes with the entire chat
  * history, not because 24 is a product decision. Signed in, the board lives
  * in D1 with no cap and localStorage is just the local mirror (see
- * api-client.ts). Used by the chat result view (adds) and /moodboards (reads,
+ * api-client.ts). Used by the chat result view (adds) and /boards (reads,
  * removes). */
 
 import {

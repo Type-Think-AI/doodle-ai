@@ -3,6 +3,14 @@
  * FooterNav — Crawlable navigation link groups.
  * Uses semantic <nav> with aria-label per group for screen-readers
  * and clean internal link signals for search engines.
+ *
+ * The "Guides" column lists the keyword-first editorial pages that live at the
+ * site root (/photo-to-cartoon/, /cartoon-pet-portrait/, …). Those pages are
+ * this product's only marketing channel, and the footer is the one surface on
+ * every page — so listing them here is what actually distributes internal
+ * links to them from the app pages, not just from /learn. Labels are the short
+ * keyword form rather than each article's full <title>, which is far too long
+ * for a footer link and would wrap three lines.
  */
 
 interface NavColumn {
@@ -21,10 +29,25 @@ const columns: NavColumn[] = [
 		],
 	},
 	{
+		title: "Guides",
+		links: [
+			{ label: "Photo to cartoon", href: "/photo-to-cartoon" },
+			{ label: "AI cartoon generator", href: "/ai-cartoon-generator" },
+			{ label: "Cartoon prompt library", href: "/ai-cartoon-generator/prompts" },
+			{ label: "Cartoon profile picture", href: "/cartoon-profile-picture" },
+			{ label: "Cartoon pet portrait", href: "/cartoon-pet-portrait" },
+			{ label: "Photo to sticker", href: "/photo-to-sticker" },
+			{ label: "Mood-caption collage", href: "/mood-caption-collage" },
+			{ label: "Doodle gifts", href: "/doodle-gift" },
+		],
+	},
+	{
 		title: "Product",
 		links: [
 			{ label: "Doodle AI App", href: "/" },
 			{ label: "For studios", href: "/for-studios" },
+			{ label: "AI filmmaker stills", href: "/for-studios/ai-filmmaker-stills" },
+			{ label: "Animation concepts", href: "/for-studios/animation-concept-sprint" },
 			{ label: "Learn", href: "/learn" },
 			{ label: "Team", href: "/team" },
 		],

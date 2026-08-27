@@ -14,6 +14,8 @@
 export const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([
 	// Product + marketing pages
 	"about",
+	"boards",
+	"b",
 	"characters",
 	"moodboards",
 	"projects",

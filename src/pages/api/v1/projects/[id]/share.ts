@@ -41,6 +41,7 @@ export async function POST(context: APIContext): Promise<Response> {
     allowComments: body?.allowComments === true,
     expiresAt: expiryFromDays(body?.expiresInDays),
     revokedAt: null,
+    boardId: null,
     createdBy: org.user.id,
     createdAt: new Date(),
   } satisfies typeof shareLink.$inferInsert;

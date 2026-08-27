@@ -241,7 +241,7 @@ After a successful Gift generation, the image is hosted by PicX and shown in the
 ![Birthday card downloading into chat app, printer and shipping box crossed out](https://cdn.picxstudio.com/api/generated/image_5ff1a6c8-0166-4904-9740-9bc8737f7875.png)
 
 - **Download.** The chat result includes a Download button. The app requests the image and saves it with the filename `doodleai-doodle.png`. If that fetch cannot complete, the fallback opens the image URL in a new tab so you can save it from the browser. That is the current download path. This article does not invent a PDF, a transparent PNG pack, a print ICC profile, or a 300 dpi poster file.
-- **Save to moodboard.** There is a Save to moodboard control. Generated images are also auto-saved to the moodboard so they appear there even if you never click Save. Moodboards are organization-scoped in the API. They are a place for you to find the still again, not a gift-delivery product.
+- **It lands on a board by itself.** There is no Save control to remember. Every generated image is added to your Inbox board automatically, and you can move it onto a named board afterwards. Boards are organization-scoped in the API. They are a place for you to find the still again, not a gift-delivery product.
 - **Remix.** If there is a preceding user message, Remix re-sends that message. Budget it as another attempt.
 - **Keep talking.** You can ask for a different occasion or a simpler avatar in the same thread. Each new generation still costs 1 credit if it runs.
 

@@ -3,6 +3,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "../../../db/client";
 import { organization } from "../../../db/schema/auth";
 import { asset, project, shareLink } from "../../../db/schema/product";
+import { board, boardItem } from "../../../db/schema/boards";
 import { apiError, apiJson, requireOrg } from "../../../lib/auth/guards";
 import { kvIncrement } from "../../../lib/kv-counter";
 import { isReviewState } from "../../../lib/api/asset-dto";
@@ -64,6 +65,44 @@ export async function GET(context: APIContext): Promise<Response> {
     .where(eq(organization.id, link.organizationId))
     .limit(1);
   const orgName = orgs[0]?.name ?? "";
+
+  if (link.scope === "board") {
+    if (!link.boardId) return gone();
+    const boardRows = await db
+      .select({ id: board.id, name: board.name, archivedAt: board.archivedAt })
+      .from(board)
+      .where(eq(board.id, link.boardId))
+      .limit(1);
+    const boardRow = boardRows[0];
+    if (!boardRow) return gone();
+    // Archived boards still resolve — the owner archived it, the link was not revoked.
+
+    const items = await db
+      .select({
+        id: boardItem.id,
+        url: boardItem.url,
+        note: boardItem.note,
+        width: boardItem.width,
+        height: boardItem.height,
+      })
+      .from(boardItem)
+      .where(eq(boardItem.boardId, link.boardId))
+      .orderBy(desc(boardItem.createdAt));
+
+    return apiJson({
+      scope: "board",
+      boardName: boardRow.name,
+      orgName,
+      allowComments: link.allowComments,
+      items: items.map((i) => ({
+        id: i.id,
+        url: i.url,
+        note: i.note,
+        width: i.width,
+        height: i.height,
+      })),
+    });
+  }
 
   if (link.scope === "asset") {
     if (!link.assetId) return gone();

@@ -5,6 +5,12 @@ import { readSecret } from "../../lib/secrets";
 import { getDb } from "../../db/client";
 import { requireOrg } from "../../lib/auth/guards";
 import { getBalance } from "../../lib/credits";
+import {
+  canvasDigestSchema,
+  EMPTY_DIGEST,
+  type CanvasDigest,
+  type CanvasOp,
+} from "../../lib/canvas/ops";
 
 export const prerender = false;
 
@@ -18,6 +24,7 @@ type StreamEvent =
   | { type: "status"; phase: "drawing" }
   | { type: "image"; url: string; skillId?: string }
   | { type: "credits"; balance: number; orgId?: string }
+  | { type: "canvas"; ops: CanvasOp[]; label?: string }
   | { type: "done" }
   | { type: "error"; message: string };
 
@@ -37,15 +44,20 @@ export async function POST(context: APIContext) {
   let messages: ChatMessage[];
   let styleId: string | undefined;
   let projectId: string | undefined;
+  let canvasDigest: CanvasDigest;
   try {
     const body = await context.request.json().catch(() => ({}));
-    const parsed = body as { messages?: unknown; styleId?: string; projectId?: string };
+    const parsed = body as { messages?: unknown; styleId?: string; projectId?: string; canvas?: unknown };
     if (!Array.isArray(parsed.messages) || parsed.messages.length === 0) {
       return json({ error: "messages is required" }, 400);
     }
     messages = parsed.messages as ChatMessage[];
     styleId = parsed.styleId;
     projectId = parsed.projectId;
+    // Graceful: a malformed or missing digest degrades to empty board, never 400s.
+    // The user's chat must not break because the canvas bridge lagged or errored.
+    const digestResult = canvasDigestSchema.safeParse(parsed.canvas);
+    canvasDigest = digestResult.success ? digestResult.data : EMPTY_DIGEST;
   } catch {
     return json({ error: "Invalid chat request" }, 400);
   }
@@ -64,6 +76,7 @@ export async function POST(context: APIContext) {
     userId: string;
     organizationId: string;
     projectId?: string;
+    canvasDigest?: CanvasDigest;
     db: ReturnType<typeof getDb>;
     sessions?: KVNamespace;
   }>([
@@ -72,6 +85,7 @@ export async function POST(context: APIContext) {
     ["userId", authedUser.id],
     ["organizationId", orgId],
     ["projectId", projectId],
+    ["canvasDigest", canvasDigest],
     ["db", getDb(context)],
     // Same SESSIONS KV binding Better Auth uses as secondaryStorage — passed
     // through so generate-doodle.ts can rate-limit generations per user and
@@ -146,25 +160,33 @@ export async function POST(context: APIContext) {
             }
           } else if (chunk.type === "tool-result") {
             const payload = chunk.payload as { toolName?: string; result?: unknown };
-            if (!isDoodleTool(payload.toolName)) continue;
-            const value = payload.result as { status?: string; url?: string; urls?: string[] } | undefined;
-            if (value?.status === "ok" && value.url) {
-              // A pack skill returns several frames from one call. The client
-              // pushes each `image` event onto its list, so emitting one per
-              // frame renders the whole set with no client change. `urls`
-              // always contains `url` as its first entry; fall back to the
-              // scalar so an older tool response still renders.
-              const urls = value.urls?.length ? value.urls : [value.url];
-              for (const url of urls) {
-                emit({ type: "image", url, skillId: lastSkillId });
+            if (isCanvasEditTool(payload.toolName)) {
+              // Canvas edit tool returns validated ops — forward them to the
+              // client so the browser interpreter can apply them to tldraw.
+              const value = payload.result as { status?: string; ops?: CanvasOp[]; label?: string } | undefined;
+              if (value?.status === "ok" && value.ops?.length) {
+                emit({ type: "canvas", ops: value.ops, label: value.label });
               }
-              // The tool already resolved its own db handle from this same
-              // RequestContext, so re-reading the balance here is a cheap,
-              // consistent way to tell the client what the spend just did —
-              // no separate round trip through /api/v1/me needed.
-              {
-                const db = getDb(context);
-                emit({ type: "credits", balance: await getBalance(db, orgId), orgId });
+            } else if (isDoodleTool(payload.toolName)) {
+              const value = payload.result as { status?: string; url?: string; urls?: string[] } | undefined;
+              if (value?.status === "ok" && value.url) {
+                // A pack skill returns several frames from one call. The client
+                // pushes each `image` event onto its list, so emitting one per
+                // frame renders the whole set with no client change. `urls`
+                // always contains `url` as its first entry; fall back to the
+                // scalar so an older tool response still renders.
+                const urls = value.urls?.length ? value.urls : [value.url];
+                for (const url of urls) {
+                  emit({ type: "image", url, skillId: lastSkillId });
+                }
+                // The tool already resolved its own db handle from this same
+                // RequestContext, so re-reading the balance here is a cheap,
+                // consistent way to tell the client what the spend just did —
+                // no separate round trip through /api/v1/me needed.
+                {
+                  const db = getDb(context);
+                  emit({ type: "credits", balance: await getBalance(db, orgId), orgId });
+                }
               }
             }
           } else if (chunk.type === "error") {
@@ -204,6 +226,12 @@ export async function POST(context: APIContext) {
 
 function isDoodleTool(name: string | undefined): boolean {
   return name === "generateDoodle" || name === "generate-doodle";
+}
+
+/** Matches both naming conventions for the canvas edit tool — the camelCase
+ *  name used by the Mastra tool definition and the kebab-case alias. */
+function isCanvasEditTool(name: string | undefined): boolean {
+  return name === "editCanvas" || name === "canvas-edit";
 }
 
 function json(data: unknown, status = 200): Response {

@@ -1,0 +1,369 @@
+---
+/**
+ * Board sharing dialog — the single sharing surface for boards.
+ *
+ * CONTRACT: renders a native <dialog id="boardShareSheet">. The companion
+ * script (board-share.ts) self-initialises on DOMContentLoaded and listens
+ * on `window` for a CustomEvent named 'board:share' whose detail is
+ * { boardId: string, boardName: string }. On that event it opens the dialog
+ * and loads state for that board. No other wiring required.
+ *
+ * Design: FLAT surfaces, no cards/shadows, thin 1px rules, neutral palette.
+ * Mobile <=720px: bottom sheet. Desktop: centred dialog.
+ */
+---
+
+<dialog id="boardShareSheet" class="bss-dialog" aria-labelledby="bssTitle">
+  <div class="bss-sheet">
+    <!-- Header -->
+    <header class="bss-header">
+      <h2 id="bssTitle" class="bss-title">Share board</h2>
+      <button type="button" class="bss-close" id="bssClose" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+
+    <!-- Create link section -->
+    <section class="bss-section">
+      <h3 class="bss-section-label">Share link</h3>
+      <div class="bss-link-row">
+        <select id="bssRoleSelect" class="bss-select" aria-label="Link role">
+          <option value="view">View only</option>
+          <option value="comment">Can comment</option>
+        </select>
+        <button type="button" class="bss-btn bss-btn-primary" id="bssCreateLink">Create link</button>
+      </div>
+      <p class="bss-role-note">Edit access requires inviting someone as a board member.</p>
+    </section>
+
+    <hr class="bss-rule" />
+
+    <!-- Active links list -->
+    <section class="bss-section">
+      <h3 class="bss-section-label">Active links</h3>
+      <div id="bssLinksList" class="bss-links-list">
+        <p class="bss-empty" id="bssLinksEmpty">No active links.</p>
+      </div>
+    </section>
+
+    <hr class="bss-rule" />
+
+    <!-- Members section -->
+    <section class="bss-section">
+      <h3 class="bss-section-label">Collaborators</h3>
+      <div class="bss-invite-row">
+        <input
+          type="email"
+          id="bssInviteInput"
+          class="bss-input"
+          placeholder="Email address…"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          inputmode="email"
+          aria-label="Email address of the person to invite"
+        />
+        <select id="bssInviteRole" class="bss-select bss-select-sm" aria-label="Invite role">
+          <option value="view">View</option>
+          <option value="comment">Comment</option>
+          <option value="edit">Edit</option>
+        </select>
+        <button type="button" class="bss-btn" id="bssInviteBtn">Invite</button>
+      </div>
+      <div id="bssMembersList" class="bss-members-list">
+        <p class="bss-empty" id="bssMembersEmpty">No collaborators yet.</p>
+      </div>
+    </section>
+
+    <hr class="bss-rule" />
+
+    <!-- Disclosure -->
+    <p class="bss-disclosure">
+      Revoking a link stops it from resolving. This does <strong>not</strong> un-publish
+      PicX CDN image URLs — those remain publicly accessible by design.
+    </p>
+
+    <!-- Status message -->
+    <p class="bss-status" id="bssStatus" hidden></p>
+  </div>
+</dialog>
+
+<script src="../../scripts/app/board-share.ts"></script>
+
+<style>
+  .bss-dialog {
+    padding: 0;
+    border: none;
+    background: transparent;
+    max-width: 100vw;
+    max-height: 100dvh;
+  }
+  .bss-dialog::backdrop {
+    background: rgba(6, 6, 6, 0.6);
+    backdrop-filter: blur(3px);
+  }
+  /* Desktop: centred */
+  @media (min-width: 721px) {
+    .bss-dialog[open] {
+      display: flex;
+      margin: auto;
+    }
+    .bss-sheet {
+      width: 440px;
+      max-height: 80vh;
+      overflow-y: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+    }
+  }
+  /* Mobile: bottom sheet */
+  @media (max-width: 720px) {
+    .bss-dialog[open] {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      width: 100vw;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+    }
+    .bss-sheet {
+      width: 100%;
+      max-height: 85dvh;
+      overflow-y: auto;
+      border-radius: 14px 14px 0 0;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+  }
+
+  .bss-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .bss-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .bss-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .bss-close:hover { color: var(--text); background: var(--hover); }
+  .bss-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .bss-section {
+    padding: 14px 20px;
+  }
+  .bss-section-label {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dimmer);
+  }
+
+  .bss-rule {
+    margin: 0;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .bss-link-row,
+  .bss-invite-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .bss-select {
+    height: 44px;
+    min-width: 120px;
+    padding: 0 12px;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+    appearance: auto;
+  }
+  .bss-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .bss-select-sm { min-width: 90px; }
+
+  .bss-input {
+    flex: 1;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+  }
+  .bss-input::placeholder { color: var(--text-dimmer); }
+  .bss-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .bss-btn {
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .bss-btn:hover { background: var(--hover); }
+  .bss-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .bss-btn:disabled { opacity: 0.5; cursor: default; }
+  .bss-btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+  .bss-btn-primary:hover { filter: brightness(1.1); background: var(--accent); }
+
+  .bss-role-note {
+    margin: 8px 0 0;
+    font-size: 11px;
+    color: var(--text-dimmer);
+    line-height: 1.4;
+  }
+
+  .bss-links-list,
+  .bss-members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .bss-empty {
+    font-size: 12px;
+    color: var(--text-dimmer);
+    margin: 0;
+  }
+
+  .bss-link-item,
+  .bss-member-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .bss-link-item:last-child,
+  .bss-member-item:last-child { border-bottom: none; }
+
+  .bss-link-url {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-dim);
+    font-family: monospace;
+    font-size: 11px;
+  }
+  .bss-link-role {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dimmer);
+    flex-shrink: 0;
+  }
+
+  .bss-btn-sm {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+  .bss-btn-sm:hover { color: var(--text); background: var(--hover); }
+  .bss-btn-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .bss-member-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .bss-member-name {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .bss-member-email {
+    font-size: 11px;
+    color: var(--text-dimmer);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bss-member-role {
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .bss-disclosure {
+    padding: 14px 20px 18px;
+    font-size: 11px;
+    color: var(--text-dimmer);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .bss-disclosure strong { color: var(--text-dim); }
+
+  .bss-status {
+    padding: 0 20px 14px;
+    font-size: 11px;
+    margin: 0;
+  }
+  .bss-status[data-type="error"] { color: var(--red); }
+  .bss-status[data-type="success"] { color: var(--accent); }
+
+  /* `hidden` is only a UA `display: none` and loses to the author `display`
+     rules above, so the lists must opt out explicitly — otherwise an empty
+     members list still renders when the script marks it hidden. */
+  .bss-members-list[hidden],
+  .bss-links-list[hidden],
+  .bss-empty[hidden],
+  .bss-status[hidden] {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bss-dialog, .bss-sheet { animation: none !important; transition: none !important; }
+  }
+</style>
