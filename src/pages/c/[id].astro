@@ -19,8 +19,13 @@ const threadId = Astro.params.id ?? 'new';
 	     onMount, never accepts an image), so the canvas must be visible on
 	     first paint. The toggle still closes/reopens it; by then the editor
 	     already exists and only needs a re-measure. -->
-	<div class="chat-split" id="chatSplit" data-whiteboard="true">
-		<div class="chat-page" id="chatPage">
+	<div
+		class="chat-split"
+		id="chatSplit"
+		data-whiteboard="true"
+		style="--bg:#0f0f0f;--stage:#0a0a0a;--surface:#141414;--surface2:#141414;--card:#1a1a1a;--card-hover:#1f1f1f;--prompt-bg:#1c1c1e;--icon-hover:#2a2a2d;--border:#262626;--border2:#292929;--border3:#3a3a3a;--hover:#1f1f1f;--text:#dddddd;--text-dim:#999999;--text-dimmer:#666666;background:#0a0a0a;color:#dddddd;"
+	>
+		<div class="chat-page" id="chatPage" style="background:#0f0f0f;color:#dddddd;">
 			<button type="button" class="whiteboard-toggle" id="whiteboardToggle" aria-pressed="true">
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M9 9v9" stroke="currentColor" stroke-width="1.6"/></svg>
 				<span>Canvas</span>
