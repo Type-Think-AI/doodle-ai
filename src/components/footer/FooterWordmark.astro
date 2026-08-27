@@ -1,0 +1,32 @@
+---
+/**
+ * FooterWordmark — Large decorative wordmark with mouse-spotlight effect.
+ * Purely visual/decorative — all text is aria-hidden, interaction is enhancement.
+ */
+---
+
+<div class="db-wordmark" id="dbWordmark">
+	<div class="db-word-base" aria-hidden="true">DOODLE AI</div>
+	<div class="db-word-lit" aria-hidden="true">DOODLE AI</div>
+	<span class="db-word-hint" id="dbWordHint">move your cursor across the name</span>
+</div>
+
+<script>
+	const wordmark = document.getElementById("dbWordmark");
+	const hint = document.getElementById("dbWordHint");
+	if (wordmark && hint) {
+		wordmark.addEventListener("mousemove", (e) => {
+			const r = wordmark.getBoundingClientRect();
+			const mx = (((e as MouseEvent).clientX - r.left) / r.width * 100).toFixed(1);
+			const my = (((e as MouseEvent).clientY - r.top) / r.height * 100).toFixed(1);
+			wordmark.style.setProperty("--mx", `${mx}%`);
+			wordmark.style.setProperty("--my", `${my}%`);
+			wordmark.classList.add("db-hot");
+			hint.textContent = "keep moving";
+		});
+		wordmark.addEventListener("mouseleave", () => {
+			wordmark.classList.remove("db-hot");
+			hint.textContent = "move your cursor across the name";
+		});
+	}
+</script>

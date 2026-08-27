@@ -1,0 +1,66 @@
+---
+/**
+ * FooterNav — Crawlable navigation link groups.
+ * Uses semantic <nav> with aria-label per group for screen-readers
+ * and clean internal link signals for search engines.
+ */
+
+interface NavColumn {
+	title: string;
+	links: { label: string; href: string }[];
+}
+
+const columns: NavColumn[] = [
+	{
+		title: "Studio",
+		links: [
+			{ label: "Characters", href: "/characters" },
+			{ label: "Moodboards", href: "/moodboards" },
+			{ label: "Projects", href: "/projects" },
+			{ label: "Skill gallery", href: "/skills" },
+		],
+	},
+	{
+		title: "Product",
+		links: [
+			{ label: "Doodle AI App", href: "/" },
+			{ label: "For studios", href: "/for-studios" },
+			{ label: "Learn", href: "/learn" },
+			{ label: "Team", href: "/team" },
+		],
+	},
+	{
+		title: "Company",
+		links: [
+			{ label: "About Doodle AI", href: "/about" },
+			{ label: "Terms of service", href: "/terms-of-service" },
+			{ label: "Privacy policy", href: "/privacy-policy" },
+			{ label: "Support (email)", href: "mailto:yash@typethink.ai" },
+		],
+	},
+];
+---
+
+<nav aria-label="Footer navigation" class="db-cols">
+	{columns.map((col) => (
+		<div class="db-col" role="group" aria-labelledby={`footer-heading-${col.title.toLowerCase()}`}>
+			<span class="db-col-title" id={`footer-heading-${col.title.toLowerCase()}`}>
+				<span class="db-col-dot" aria-hidden="true"></span>
+				{col.title}
+			</span>
+			<ul class="db-col-links" role="list">
+				{col.links.map((l) => (
+					<li>
+						<a
+							href={l.href}
+							class="db-link"
+							{...(l.href.startsWith("mailto:") ? { rel: "noopener" } : {})}
+						>
+							{l.label}
+						</a>
+					</li>
+				))}
+			</ul>
+		</div>
+	))}
+</nav>

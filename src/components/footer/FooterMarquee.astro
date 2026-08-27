@@ -1,0 +1,31 @@
+---
+/**
+ * FooterMarquee — Scrolling ticker strip with product value propositions.
+ * Decorative; duplicated track is aria-hidden.
+ */
+const ticker = [
+	"Prompt to picture in seconds",
+	"◆",
+	"Characters that stay on-model",
+	"◆",
+	"Moodboards that build themselves",
+	"◆",
+	"Akku watches your canvas",
+	"◆",
+];
+---
+
+<div class="db-strip" role="marquee" aria-label="Product highlights">
+	<div class="db-marquee">
+		<div class="db-marquee-track">
+			{ticker.map((t) => (
+				<span class:list={["db-tick", { "db-tick-diamond": t === "◆" }]} aria-hidden={t === "◆" ? "true" : undefined}>{t}</span>
+			))}
+		</div>
+		<div class="db-marquee-track" aria-hidden="true">
+			{ticker.map((t) => (
+				<span class:list={["db-tick", { "db-tick-diamond": t === "◆" }]}>{t}</span>
+			))}
+		</div>
+	</div>
+</div>

@@ -1,0 +1,22 @@
+---
+/**
+ * FooterLegal — Copyright, status indicator, and legal page links.
+ * The legal links are non-duplicative crawlable signals for Terms/Privacy
+ * (already linked in the nav, but repeated here in the conventional
+ * legal bar location crawlers expect).
+ */
+const year = new Date().getFullYear();
+---
+
+<div class="db-legal">
+	<small class="db-copy">&copy; {year} Doodle AI Labs. All rights reserved.</small>
+	<span class="db-legal-links">
+		<a href="/terms-of-service" class="db-legal-link">Terms</a>
+		<span class="db-legal-sep" aria-hidden="true">·</span>
+		<a href="/privacy-policy" class="db-legal-link">Privacy</a>
+	</span>
+	<span class="db-status" aria-label="System status: operational">
+		<span class="db-dot-pulse db-dot-pulse-sm" aria-hidden="true"></span>
+		All systems drawing
+	</span>
+</div>

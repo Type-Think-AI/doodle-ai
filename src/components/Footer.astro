@@ -1,49 +1,24 @@
 ---
-const year = new Date().getFullYear();
-
-const columns = [
-	{
-		title: "Studio",
-		links: [
-			{ label: "Characters", href: "/characters" },
-			{ label: "Moodboards", href: "/moodboards" },
-			{ label: "Projects", href: "/projects" },
-			{ label: "Skill gallery", href: "/skills" },
-		],
-	},
-	{
-		title: "Product",
-		links: [
-			{ label: "App", href: "/" },
-			{ label: "For studios", href: "/for-studios" },
-			{ label: "Learn", href: "/learn" },
-			{ label: "Team", href: "/team" },
-		],
-	},
-	{
-		title: "Company",
-		links: [
-			{ label: "About", href: "/about" },
-			{ label: "Terms", href: "/terms-of-service" },
-			{ label: "Privacy", href: "/privacy-policy" },
-			{ label: "Support", href: "mailto:yash@typethink.ai" },
-		],
-	},
-];
-
-const ticker = [
-	"Prompt to picture in seconds",
-	"◆",
-	"Characters that stay on-model",
-	"◆",
-	"Moodboards that build themselves",
-	"◆",
-	"Akku watches your canvas",
-	"◆",
-];
+/**
+ * Footer — Site-wide footer composed from semantic sub-components.
+ *
+ * SEO/AEO improvements:
+ * - Uses <footer> landmark with role="contentinfo"
+ * - Nav links in semantic <nav> with aria-label per group
+ * - Brand mark is now a crawlable link to homepage
+ * - Link labels are descriptive ("Doodle AI App", "About Doodle AI")
+ * - Legal links repeated in conventional footer-legal bar
+ * - All existing URLs, tokens, animations, and responsive behavior preserved
+ */
+import FooterCTA from "./footer/FooterCTA.astro";
+import FooterMarquee from "./footer/FooterMarquee.astro";
+import FooterBrand from "./footer/FooterBrand.astro";
+import FooterNav from "./footer/FooterNav.astro";
+import FooterWordmark from "./footer/FooterWordmark.astro";
+import FooterLegal from "./footer/FooterLegal.astro";
 ---
 
-<footer class="db-footer">
+<footer class="db-footer" role="contentinfo" aria-label="Site footer">
 	<div class="db-bg" aria-hidden="true">
 		<div class="db-glow db-glow-a"></div>
 		<div class="db-glow db-glow-b"></div>
@@ -51,103 +26,16 @@ const ticker = [
 	</div>
 
 	<div class="db-shell">
-		<div class="db-cta">
-			<div class="db-cta-copy">
-				<span class="db-badge">
-					<span class="db-dot-pulse"></span>
-					Studio is live
-				</span>
-				<h2 class="db-headline">Your next character is<br />one prompt away.</h2>
-				<div class="db-cta-actions">
-					<a href="/" class="db-btn db-btn-primary">
-						Start doodling free
-						<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<path d="M5 12h13M12 6l6 6-6 6"></path>
-						</svg>
-					</a>
-					<a href="/for-studios" class="db-btn db-btn-ghost">For studios</a>
-				</div>
-			</div>
-
-			<div class="db-tiles" aria-hidden="true">
-				<span class="db-tile" style="background:linear-gradient(148deg,var(--accent),var(--accent-soft)); transform:rotate(-3deg);"></span>
-				<span class="db-tile" style="background:linear-gradient(148deg,var(--card-hover),var(--accent-softer)); transform:rotate(3deg);"></span>
-				<span class="db-tile" style="background:linear-gradient(148deg,var(--surface2),var(--card-hover)); transform:rotate(-3deg);"></span>
-				<span class="db-tile" style="background:linear-gradient(148deg,var(--accent-soft),var(--accent)); transform:rotate(3deg);"></span>
-			</div>
-		</div>
-
-		<div class="db-strip">
-			<div class="db-marquee">
-				<div class="db-marquee-track">
-					{ticker.map((t) => (
-						<span class:list={["db-tick", { "db-tick-diamond": t === "◆" }]}>{t}</span>
-					))}
-				</div>
-				<div class="db-marquee-track" aria-hidden="true">
-					{ticker.map((t) => (
-						<span class:list={["db-tick", { "db-tick-diamond": t === "◆" }]}>{t}</span>
-					))}
-				</div>
-			</div>
-		</div>
+		<FooterCTA />
+		<FooterMarquee />
 
 		<div class="db-top">
-			<div class="db-brand-col">
-				<div class="db-brand">
-					<span class="db-mark">
-						<svg viewBox="0 0 64 64" width="52" height="52" fill="none" aria-hidden="true">
-							<circle cx="32" cy="32" r="27" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="9 13" class="db-mark-ring"></circle>
-							<path d="M20 40c3-13 8-19 12-19s5 7 2 12-8 5-6-2 7-11 14-9" stroke="var(--text)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" class="db-mark-path"></path>
-						</svg>
-					</span>
-					<span class="db-brand-text">
-						<span class="db-brand-name">Doodle AI</span>
-						<span class="db-brand-tag">Draw a thought. Ship a world.</span>
-					</span>
-				</div>
-
-				<p class="db-blurb">An agentic studio where characters, moodboards and finished frames come out of one prompt — and stay yours.</p>
-
-				<div class="db-social">
-					<a href="https://x.com/yash__patidar_" target="_blank" rel="noopener noreferrer" class="db-social-link" aria-label="Doodle AI on X">
-						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-							<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-						</svg>
-					</a>
-				</div>
-			</div>
-
-			<div class="db-cols">
-				{columns.map((col) => (
-					<div class="db-col">
-						<span class="db-col-title">
-							<span class="db-col-dot"></span>
-							{col.title}
-						</span>
-						<div class="db-col-links">
-							{col.links.map((l) => (
-								<a href={l.href} class="db-link">{l.label}</a>
-							))}
-						</div>
-					</div>
-				))}
-			</div>
+			<FooterBrand />
+			<FooterNav />
 		</div>
 
-		<div class="db-wordmark" id="dbWordmark">
-			<div class="db-word-base" aria-hidden="true">DOODLE AI</div>
-			<div class="db-word-lit" aria-hidden="true">DOODLE AI</div>
-			<span class="db-word-hint" id="dbWordHint">move your cursor across the name</span>
-		</div>
-
-		<div class="db-legal">
-			<span class="db-copy">&copy; {year} Doodle AI Labs</span>
-			<span class="db-status">
-				<span class="db-dot-pulse db-dot-pulse-sm"></span>
-				All systems drawing
-			</span>
-		</div>
+		<FooterWordmark />
+		<FooterLegal />
 	</div>
 </footer>
 
@@ -206,7 +94,79 @@ const ticker = [
 		width: 100%;
 	}
 
-	/* CTA */
+	/* ─── Main columns ─── */
+	.db-top {
+		display: grid;
+		grid-template-columns: minmax(260px, 1.05fr) minmax(340px, 1fr);
+		gap: 64px;
+		align-items: start;
+		padding: 52px 0 0;
+	}
+
+	@keyframes dbDrift {
+		0% { transform: translate3d(0, 0, 0) scale(1); }
+		50% { transform: translate3d(5%, -7%, 0) scale(1.14); }
+		100% { transform: translate3d(0, 0, 0) scale(1); }
+	}
+	@keyframes dbDrift2 {
+		0% { transform: translate3d(0, 0, 0) scale(1.06); }
+		50% { transform: translate3d(-7%, 6%, 0) scale(0.9); }
+		100% { transform: translate3d(0, 0, 0) scale(1.06); }
+	}
+
+	/* ─── Tablet ─── */
+	@media (max-width: 1080px) {
+		.db-top {
+			grid-template-columns: 1fr;
+			gap: 48px;
+		}
+	}
+
+	/* ─── Mobile ─── */
+	@media (max-width: 720px) {
+		.db-footer {
+			margin-top: 40px;
+		}
+		.db-shell {
+			padding: 32px 20px 0;
+		}
+		.db-top {
+			grid-template-columns: 1fr;
+			gap: 32px;
+			padding: 36px 0 0;
+		}
+		.db-glow-a {
+			width: 400px;
+			height: 400px;
+			left: -100px;
+			top: -150px;
+		}
+		.db-glow-b {
+			width: 350px;
+			height: 350px;
+			right: -100px;
+			bottom: -130px;
+		}
+		.db-dots {
+			background-size: 22px 22px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.db-glow-a,
+		.db-glow-b {
+			animation: none !important;
+		}
+	}
+</style>
+
+<style is:global>
+	/* ═══════════════════════════════════════════════
+	   Footer sub-component styles
+	   (global because Astro scopes per-file)
+	   ═══════════════════════════════════════════════ */
+
+	/* ─── CTA ─── */
 	.db-cta {
 		display: flex;
 		align-items: flex-end;
@@ -294,7 +254,6 @@ const ticker = [
 		border-color: var(--accent);
 		color: var(--accent);
 	}
-
 	.db-tiles {
 		display: flex;
 		gap: 10px;
@@ -313,7 +272,7 @@ const ticker = [
 		filter: saturate(1.25);
 	}
 
-	/* Marquee strip */
+	/* ─── Marquee strip ─── */
 	.db-strip {
 		position: relative;
 		overflow: hidden;
@@ -345,14 +304,7 @@ const ticker = [
 		color: var(--accent);
 	}
 
-	/* Main columns */
-	.db-top {
-		display: grid;
-		grid-template-columns: minmax(260px, 1.05fr) minmax(340px, 1fr);
-		gap: 64px;
-		align-items: start;
-		padding: 52px 0 0;
-	}
+	/* ─── Brand ─── */
 	.db-brand-col {
 		display: flex;
 		flex-direction: column;
@@ -362,6 +314,11 @@ const ticker = [
 		display: flex;
 		align-items: center;
 		gap: 13px;
+		text-decoration: none;
+		color: inherit;
+	}
+	.db-brand:hover .db-brand-name {
+		color: var(--accent);
 	}
 	.db-mark {
 		position: relative;
@@ -389,6 +346,7 @@ const ticker = [
 		font-weight: 700;
 		letter-spacing: -0.2px;
 		color: var(--text);
+		transition: color 0.25s;
 	}
 	.db-brand-tag {
 		font-size: 12px;
@@ -424,6 +382,7 @@ const ticker = [
 		transform: translateY(-3px) rotate(-7deg);
 	}
 
+	/* ─── Nav columns ─── */
 	.db-cols {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -456,6 +415,13 @@ const ticker = [
 		flex-direction: column;
 		gap: 11px;
 		align-items: flex-start;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.db-col-links li {
+		margin: 0;
+		padding: 0;
 	}
 	.db-link {
 		position: relative;
@@ -487,7 +453,7 @@ const ticker = [
 		transform-origin: left;
 	}
 
-	/* Big wordmark with spotlight */
+	/* ─── Wordmark ─── */
 	.db-wordmark {
 		position: relative;
 		margin-top: 56px;
@@ -532,6 +498,7 @@ const ticker = [
 		white-space: nowrap;
 	}
 
+	/* ─── Legal ─── */
 	.db-legal {
 		position: relative;
 		display: flex;
@@ -546,6 +513,23 @@ const ticker = [
 		font-size: 12px;
 		color: var(--text-dimmer);
 	}
+	.db-legal-links {
+		display: inline-flex;
+		gap: 8px;
+		align-items: center;
+	}
+	.db-legal-link {
+		font-size: 12px;
+		color: var(--text-dimmer);
+		transition: color 0.25s;
+	}
+	.db-legal-link:hover {
+		color: var(--text);
+	}
+	.db-legal-sep {
+		color: var(--text-dimmer);
+		font-size: 10px;
+	}
 	.db-status {
 		display: flex;
 		align-items: center;
@@ -554,16 +538,7 @@ const ticker = [
 		color: var(--text-dim);
 	}
 
-	@keyframes dbDrift {
-		0% { transform: translate3d(0, 0, 0) scale(1); }
-		50% { transform: translate3d(5%, -7%, 0) scale(1.14); }
-		100% { transform: translate3d(0, 0, 0) scale(1); }
-	}
-	@keyframes dbDrift2 {
-		0% { transform: translate3d(0, 0, 0) scale(1.06); }
-		50% { transform: translate3d(-7%, 6%, 0) scale(0.9); }
-		100% { transform: translate3d(0, 0, 0) scale(1.06); }
-	}
+	/* ─── Keyframes ─── */
 	@keyframes dbMarquee {
 		from { transform: translateX(0); }
 		to { transform: translateX(-50%); }
@@ -593,24 +568,8 @@ const ticker = [
 		50% { transform: translateX(4px); }
 	}
 
-	/* ─── Tablet ─── */
-	@media (max-width: 1080px) {
-		.db-top {
-			grid-template-columns: 1fr;
-			gap: 48px;
-		}
-	}
-
-	/* ─── Mobile ─── */
+	/* ─── Mobile overrides for sub-components ─── */
 	@media (max-width: 720px) {
-		.db-footer {
-			margin-top: 40px;
-		}
-		.db-shell {
-			padding: 32px 20px 0;
-		}
-
-		/* CTA: stack vertically, reduce headline */
 		.db-cta {
 			flex-direction: column;
 			align-items: flex-start;
@@ -637,8 +596,6 @@ const ticker = [
 		.db-tiles {
 			display: none;
 		}
-
-		/* Marquee: smaller text */
 		.db-marquee-track {
 			padding: 10px 12px;
 			gap: 20px;
@@ -646,13 +603,6 @@ const ticker = [
 		.db-tick {
 			font-size: 10px;
 			letter-spacing: 0.6px;
-		}
-
-		/* Columns: single column, accordion-style compact stacking */
-		.db-top {
-			grid-template-columns: 1fr;
-			gap: 32px;
-			padding: 36px 0 0;
 		}
 		.db-cols {
 			grid-template-columns: 1fr;
@@ -677,8 +627,6 @@ const ticker = [
 			min-height: 36px;
 			align-items: center;
 		}
-
-		/* Brand section: tighter spacing */
 		.db-brand-col {
 			gap: 14px;
 		}
@@ -701,8 +649,6 @@ const ticker = [
 			width: 44px;
 			height: 44px;
 		}
-
-		/* Wordmark: static on mobile, no cursor interaction */
 		.db-wordmark {
 			margin-top: 36px;
 		}
@@ -713,14 +659,11 @@ const ticker = [
 		.db-word-hint {
 			display: none;
 		}
-		/* Show a subtle static version since touch can't track cursor */
 		.db-word-lit {
 			opacity: 0.25;
 			mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 0%, transparent 78%);
 			-webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 0%, transparent 78%);
 		}
-
-		/* Legal: stacked */
 		.db-legal {
 			flex-direction: column;
 			align-items: flex-start;
@@ -728,26 +671,8 @@ const ticker = [
 			margin-top: 28px;
 			padding: 16px 0 env(safe-area-inset-bottom, 20px);
 		}
-
-		/* Background effects: reduce cost */
-		.db-glow-a {
-			width: 400px;
-			height: 400px;
-			left: -100px;
-			top: -150px;
-		}
-		.db-glow-b {
-			width: 350px;
-			height: 350px;
-			right: -100px;
-			bottom: -130px;
-		}
-		.db-dots {
-			background-size: 22px 22px;
-		}
 	}
 
-	/* ─── Small phones (iPhone SE, 375px) ─── */
 	@media (max-width: 390px) {
 		.db-headline {
 			font-size: 21px;
@@ -769,8 +694,6 @@ const ticker = [
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.db-glow-a,
-		.db-glow-b,
 		.db-marquee,
 		.db-mark,
 		.db-mark-ring,
@@ -783,23 +706,3 @@ const ticker = [
 		}
 	}
 </style>
-
-<script>
-	const wordmark = document.getElementById("dbWordmark");
-	const hint = document.getElementById("dbWordHint");
-	if (wordmark && hint) {
-		wordmark.addEventListener("mousemove", (e) => {
-			const r = wordmark.getBoundingClientRect();
-			const mx = (((e as MouseEvent).clientX - r.left) / r.width * 100).toFixed(1);
-			const my = (((e as MouseEvent).clientY - r.top) / r.height * 100).toFixed(1);
-			wordmark.style.setProperty("--mx", `${mx}%`);
-			wordmark.style.setProperty("--my", `${my}%`);
-			wordmark.classList.add("db-hot");
-			hint.textContent = "keep moving";
-		});
-		wordmark.addEventListener("mouseleave", () => {
-			wordmark.classList.remove("db-hot");
-			hint.textContent = "move your cursor across the name";
-		});
-	}
-</script>
