@@ -16,7 +16,7 @@ const { id } = Astro.props;
     </div>
     <div class="camera-stage">
       <video id={`${id}CameraVideo`} autoplay playsinline muted></video>
-      <img id={`${id}CameraPreview`} alt="Captured photo preview" hidden />
+      <img id={`${id}CameraPreview`} alt="Captured photo preview" width="460" height="345" hidden />
       <canvas id={`${id}CameraCanvas`} hidden></canvas>
     </div>
     <p class="camera-dialog-status" id={`${id}CameraStatus`} role="status" aria-live="polite"></p>

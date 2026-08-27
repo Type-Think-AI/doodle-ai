@@ -1,0 +1,135 @@
+---
+interface Props {
+	mixSlices: { label: string; geometryPct: number; offset: number; color: string; pct: number }[];
+	totalGenerations: string;
+}
+
+const { mixSlices, totalGenerations } = Astro.props;
+---
+
+<div class="panel">
+	<span class="panel-title">Skill mix</span>
+	<p class="panel-sub">Share of successful generations</p>
+	<div class="donut-wrap">
+		<svg viewBox="0 0 100 100" class="donut-svg" role="img" aria-label="Skill mix of successful generations">
+			{mixSlices.length > 0 ? (
+				mixSlices.map((slice) => (
+					<circle
+						cx="50"
+						cy="50"
+						r="37"
+						pathLength="100"
+						fill="none"
+						stroke={slice.color}
+						stroke-width="16"
+						stroke-dasharray={`${slice.geometryPct} ${100 - slice.geometryPct}`}
+						stroke-dashoffset={-slice.offset}
+						transform="rotate(-90 50 50)"
+					/>
+				))
+			) : (
+				<circle cx="50" cy="50" r="37" fill="none" stroke="var(--surface2)" stroke-width="16" />
+			)}
+		</svg>
+		<div class="donut-center">
+			<strong>{totalGenerations}</strong>
+			<span>doodles</span>
+		</div>
+	</div>
+	{mixSlices.length > 0 ? (
+		<div class="skill-legend">
+			{mixSlices.map((slice) => (
+				<div class="skill-legend-row">
+					<span class="legend-item"><span class="legend-swatch" style={`background:${slice.color};`} />{slice.label}</span>
+					<span class="skill-legend-pct">{slice.pct}%</span>
+				</div>
+			))}
+		</div>
+	) : (
+		<p class="empty-state">No successful generations yet.</p>
+	)}
+</div>
+
+<style>
+	.panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 18px 20px;
+	}
+	.panel-title {
+		font-size: 13.5px;
+		font-weight: 600;
+		color: var(--text);
+	}
+	.panel-sub {
+		font-size: 11.5px;
+		color: var(--text-dimmer);
+		margin: 5px 0 16px;
+	}
+	.donut-wrap {
+		position: relative;
+		width: 166px;
+		height: 166px;
+		margin: 3px auto 12px;
+	}
+	.donut-svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+	.donut-center {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+	}
+	.donut-center strong {
+		font-size: 23px;
+		line-height: 1.1;
+		color: var(--text);
+	}
+	.donut-center span {
+		font-size: 10.5px;
+		color: var(--text-dimmer);
+		margin-top: 3px;
+	}
+	.skill-legend {
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+	}
+	.skill-legend-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 11.5px;
+		color: var(--text-dim);
+	}
+	.skill-legend-pct {
+		color: var(--text-dimmer);
+		font-variant-numeric: tabular-nums;
+	}
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 11.5px;
+		color: var(--text-dim);
+	}
+	.legend-swatch {
+		width: 8px;
+		height: 8px;
+		border-radius: 2px;
+		flex: 0 0 8px;
+	}
+	.empty-state {
+		font-size: 12px;
+		color: var(--text-dimmer);
+		padding: 16px 0 4px;
+		text-align: center;
+	}
+</style>

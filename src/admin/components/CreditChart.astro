@@ -1,0 +1,77 @@
+---
+interface Props {
+	creditBars: { issuedX: number; usedX: number; issuedY: number; usedY: number; issuedHeight: number; usedHeight: number }[];
+	creditBarWidth: number;
+	creditUtilPct: number;
+}
+
+const { creditBars, creditBarWidth, creditUtilPct } = Astro.props;
+---
+
+<div class="panel">
+	<span class="panel-title">Credits issued vs used</span>
+	<p class="panel-sub">Weekly</p>
+	<svg viewBox="0 0 280 150" class="credit-svg" role="img" aria-label="Credits issued and used by week">
+		{creditBars.length > 0 ? (
+			creditBars.map((bar) => (
+				<>
+					<rect x={bar.issuedX} y={bar.issuedY} width={creditBarWidth} height={bar.issuedHeight} rx="2" fill="var(--blue)" opacity="0.85" />
+					<rect x={bar.usedX} y={bar.usedY} width={creditBarWidth} height={bar.usedHeight} rx="2" fill="var(--accent)" />
+				</>
+			))
+		) : (
+			<text x="140" y="78" text-anchor="middle" fill="var(--text-dimmer)" font-size="11">No credit ledger data yet</text>
+		)}
+	</svg>
+	<div class="credit-legend">
+		<span class="legend-item"><span class="legend-swatch" style="background:var(--blue);" />Issued</span>
+		<span class="legend-item"><span class="legend-swatch" style="background:var(--accent);" />Used</span>
+		<span class="legend-util">{creditUtilPct}% utilised</span>
+	</div>
+</div>
+
+<style>
+	.panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 18px 20px;
+	}
+	.panel-title {
+		font-size: 13.5px;
+		font-weight: 600;
+		color: var(--text);
+	}
+	.panel-sub {
+		font-size: 11.5px;
+		color: var(--text-dimmer);
+		margin: 5px 0 16px;
+	}
+	.credit-svg {
+		width: 100%;
+		height: 150px;
+	}
+	.credit-legend {
+		display: flex;
+		gap: 14px;
+		margin-top: 12px;
+	}
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 11.5px;
+		color: var(--text-dim);
+	}
+	.legend-swatch {
+		width: 8px;
+		height: 8px;
+		border-radius: 2px;
+		flex: 0 0 8px;
+	}
+	.legend-util {
+		margin-left: auto;
+		font-size: 11.5px;
+		color: var(--text-dimmer);
+	}
+</style>

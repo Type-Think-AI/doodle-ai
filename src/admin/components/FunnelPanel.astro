@@ -1,0 +1,91 @@
+---
+interface Props {
+	funnelRows: { label: string; value: number; pct: number; barWidth: number; color: string; drop: string }[];
+}
+
+const { funnelRows } = Astro.props;
+---
+
+<div class="panel">
+	<span class="panel-title">Activation funnel</span>
+	<p class="panel-sub">Signup to paid, all users</p>
+	<div class="funnel-list">
+		{funnelRows.map((stage) => (
+			<div class="funnel-row">
+				<div class="funnel-top">
+					<span class="funnel-label">{stage.label}</span>
+					<span class="funnel-value">{stage.value}</span>
+					<span class="funnel-pct">{stage.pct}%</span>
+				</div>
+				<div class="funnel-track">
+					<div class="funnel-bar" style={`width:${stage.barWidth}%; background:${stage.color};`} />
+				</div>
+				{stage.drop && <span class="funnel-drop">{stage.drop}</span>}
+			</div>
+		))}
+	</div>
+</div>
+
+<style>
+	.panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 18px 20px;
+	}
+	.panel-title {
+		font-size: 13.5px;
+		font-weight: 600;
+		color: var(--text);
+	}
+	.panel-sub {
+		font-size: 11.5px;
+		color: var(--text-dimmer);
+		margin: 5px 0 16px;
+	}
+	.funnel-list {
+		display: flex;
+		flex-direction: column;
+		gap: 11px;
+	}
+	.funnel-row {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.funnel-top {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+	}
+	.funnel-label {
+		font-size: 12.5px;
+		color: var(--text);
+	}
+	.funnel-value {
+		margin-left: auto;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text);
+	}
+	.funnel-pct {
+		font-size: 11px;
+		color: var(--text-dimmer);
+		width: 38px;
+		text-align: right;
+	}
+	.funnel-track {
+		height: 8px;
+		border-radius: 5px;
+		background: var(--surface2);
+		overflow: hidden;
+	}
+	.funnel-bar {
+		height: 100%;
+		border-radius: 5px;
+	}
+	.funnel-drop {
+		font-size: 10.5px;
+		color: var(--red);
+	}
+</style>

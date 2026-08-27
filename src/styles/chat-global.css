@@ -1,0 +1,108 @@
+/* ---- tldraw canvas theming ----
+   tldraw's classes are generated inside a client:only island, so Astro's
+   scoped-CSS attribute never reaches them — these have to be global, and
+   are namespaced under .canvas-stage so they can't leak to another board.
+   Both are tldraw's own documented custom properties rather than element
+   overrides, so tldraw keeps full control of layout and only the palette
+   changes: a near-black plane with a low-contrast dot grid. */
+.canvas-stage .tl-container,
+.canvas-stage .tl-theme__dark {
+	--tl-color-background: var(--stage);
+	--tl-color-grid: hsl(0, 0%, 38%);
+}
+
+/* tldraw's bottom cluster (zoom control bottom-left, tool row bottom-centre)
+   carries no padding of its own — it expects the host to leave room. The
+   canvas stage runs to the exact viewport bottom, so the row landed flush
+   on the edge and its icons read as sliced off. This is the clearance
+   tldraw assumes, applied here rather than by shrinking the stage, so the
+   board itself still uses the full height. */
+.canvas-stage .tlui-layout__bottom { padding-bottom: 10px; }
+
+/* The placeholder has to sit ABOVE the board, not behind it: tldraw paints
+   an opaque background over the full stage, so a hint at z-index 0 is
+   invisible on an empty canvas. pointer-events stays none, so it never
+   intercepts a drag — and tldraw's own UI layer is z-index 300, well clear
+   of this, so the toolbar is unaffected. */
+.canvas-stage .canvas-empty-hint { z-index: 2; }
+
+/* Message bubbles are built client-side by chat.ts, so this block is
+   global — Astro's scoped-CSS attribute never reaches elements created
+   after the initial render. */
+.chat-msg { display: flex; content-visibility: auto; contain-intrinsic-size: auto 120px; }
+.chat-msg-user { justify-content: flex-end; }
+.chat-bubble {
+	max-width: 84%;
+	padding: 11px 14px;
+	border-radius: 16px;
+	font-size: 14.5px;
+	line-height: 1.55;
+	white-space: pre-wrap;
+}
+.chat-msg-user .chat-bubble { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+.chat-msg-assistant .chat-bubble { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+.chat-bubble-photo { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; display: block; overflow: hidden; font-size: 0; color: transparent; }
+.chat-bubble-thinking { display: flex; align-items: center; gap: 9px; color: var(--text-dimmer); }
+.chat-thinking-spinner {
+	width: 15px;
+	height: 15px;
+	flex: 0 0 15px;
+	border-radius: 50%;
+	border: 2px solid var(--border3);
+	border-top-color: var(--text-dim);
+	animation: chat-thinking-spin 0.7s linear infinite;
+}
+@keyframes chat-thinking-spin { to { transform: rotate(360deg); } }
+.chat-bubble-streaming::after {
+	content: "";
+	display: inline-block;
+	width: 7px;
+	height: 14px;
+	margin-left: 2px;
+	vertical-align: text-bottom;
+	background: var(--text-dimmer);
+	animation: chat-streaming-caret 0.8s ease-in-out infinite;
+}
+@keyframes chat-streaming-caret { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+.chat-bubble-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 10px; }
+.chat-bubble-image-wrap { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border2); cursor: zoom-in; }
+.chat-bubble-image-wrap img { width: 100%; display: block; aspect-ratio: 1 / 1; object-fit: cover; overflow: hidden; font-size: 0; color: transparent; }
+.chat-bubble-image-source { cursor: default; }
+.chat-bubble-image-tag {
+	position: absolute;
+	left: 8px;
+	bottom: 8px;
+	padding: 3px 9px;
+	border-radius: 999px;
+	background: rgba(15, 15, 15, 0.72);
+	color: #fff;
+	font-size: 11px;
+}
+.chat-bubble-actions { display: flex; gap: 8px; margin-top: 8px; }
+.chat-bubble-actions button {
+	height: 30px;
+	padding: 0 12px;
+	border-radius: 999px;
+	border: 1px solid var(--border3);
+	background: transparent;
+	color: var(--text-dim);
+	font-size: 12px;
+	cursor: pointer;
+	font-family: inherit;
+}
+.chat-bubble-actions button:hover { color: var(--text); background: var(--hover); }
+
+/* Remix/Save/Download are plain-text buttons at 30px tall on desktop,
+   sized for mouse precision — too small for the 44px touch-target
+   convention this app uses elsewhere on mobile. Bump their height and
+   let the row wrap instead of overflow, since the three labels
+   ("Remix", "Save to moodboard", "Download") don't reliably fit on one
+   line inside the 84%-wide bubble at 320-375px. */
+@media (max-width: 860px) {
+	.chat-bubble-actions { flex-wrap: wrap; gap: 10px; }
+	.chat-bubble-actions button {
+		height: 44px;
+		padding: 0 14px;
+		font-size: 13px;
+	}
+}
