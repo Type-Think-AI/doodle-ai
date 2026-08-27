@@ -1,13 +1,40 @@
 ---
 /**
- * FooterWordmark — Large decorative wordmark with mouse-spotlight effect.
- * Purely visual/decorative — all text is aria-hidden, interaction is enhancement.
+ * FooterWordmark — Large doodle-art wordmark with a cursor-spotlight reveal.
+ *
+ * The mark is a hand-drawn "DOODLE AI" lettering asset generated with the
+ * product itself (PicX), keyed to transparency so it sits on any footer
+ * background. Two stacked copies: a base layer at rest, and a saturated
+ * layer revealed through a radial mask that tracks the cursor.
+ *
+ * Purely decorative — alt is empty and both layers are aria-hidden, since
+ * FooterBrand already announces the product name to assistive tech.
  */
 ---
 
 <div class="db-wordmark" id="dbWordmark">
-	<div class="db-word-base" aria-hidden="true">DOODLE AI</div>
-	<div class="db-word-lit" aria-hidden="true">DOODLE AI</div>
+	<img
+		class="db-word-base"
+		src="/brand/doodle-ai-wordmark.webp"
+		alt=""
+		aria-hidden="true"
+		width="1240"
+		height="460"
+		loading="lazy"
+		decoding="async"
+		draggable="false"
+	/>
+	<img
+		class="db-word-lit"
+		src="/brand/doodle-ai-wordmark.webp"
+		alt=""
+		aria-hidden="true"
+		width="1240"
+		height="460"
+		loading="lazy"
+		decoding="async"
+		draggable="false"
+	/>
 	<span class="db-word-hint" id="dbWordHint">move your cursor across the name</span>
 </div>
 

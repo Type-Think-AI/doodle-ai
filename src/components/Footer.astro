@@ -677,22 +677,22 @@ import FooterLegal from "./footer/FooterLegal.astro";
 	}
 	.db-word-base,
 	.db-word-lit {
-		font-size: clamp(40px, 11vw, 150px);
-		font-weight: 700;
-		letter-spacing: -0.05em;
-		line-height: 0.82;
-		text-align: center;
+		display: block;
+		width: 100%;
+		max-width: 1000px;
+		height: auto;
+		margin: 0 auto;
 		user-select: none;
-		white-space: nowrap;
 	}
 	.db-word-base {
-		color: var(--border2);
+		/* pulled back a touch so the hover reveal has somewhere to go */
+		opacity: 0.88;
 	}
 	.db-word-lit {
 		position: absolute;
 		inset: 0;
-		color: var(--accent);
 		opacity: 0;
+		filter: saturate(1.4) brightness(1.18);
 		transition: opacity 0.35s;
 		pointer-events: none;
 		mask-image: radial-gradient(circle 150px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0, 0, 0, 0.55) 55%, transparent 78%);
@@ -704,7 +704,7 @@ import FooterLegal from "./footer/FooterLegal.astro";
 	.db-word-hint {
 		position: absolute;
 		left: 50%;
-		bottom: -2px;
+		bottom: -14px;
 		transform: translateX(-50%);
 		font-size: 10.5px;
 		letter-spacing: 1.4px;
@@ -882,17 +882,20 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		}
 		.db-wordmark {
 			margin-top: 36px;
-		}		.db-word-base,
+		}
+		.db-word-base,
 		.db-word-lit {
-			font-size: clamp(36px, 13vw, 60px);
+			max-width: 100%;
+		}
+		.db-word-base {
+			opacity: 1;
 		}
 		.db-word-hint {
 			display: none;
 		}
 		.db-word-lit {
-			opacity: 0.25;
-			mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 0%, transparent 78%);
-			-webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 0%, transparent 78%);
+			/* no cursor on touch — hide the reveal layer entirely */
+			display: none;
 		}
 		.db-legal {
 			flex-direction: column;
@@ -952,6 +955,13 @@ import FooterLegal from "./footer/FooterLegal.astro";
 		}
 		.db-partner-sheen {
 			display: none;
+		}
+		/* Wordmark: show the mark at full strength, drop the cursor reveal. */
+		.db-word-base {
+			opacity: 1 !important;
+		}
+		.db-word-lit {
+			display: none !important;
 		}
 	}
 </style>

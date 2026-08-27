@@ -19,6 +19,10 @@ import { buildCrayonPrompt } from "./crayon-self";
 import { buildCouplePrompt } from "./couple-doodle";
 import { buildPetPortraitPrompt } from "./pet-portrait";
 import { buildFacelessPortraitPrompt } from "./faceless-portrait";
+import { buildSeasonalPack } from "./seasonal-pack";
+import { buildEmotionalModes } from "./emotional-modes";
+import { buildExpressionSheet } from "./expression-sheet";
+import type { PackSkillId } from "../credits/costs";
 
 /** Everything a prompt builder is allowed to see. Never credentials. */
 export interface PromptInput {
@@ -117,8 +121,25 @@ export function promptBuilderFor(skillId: string): PromptBuilder | undefined {
  * For now returns undefined so generate-doodle falls through to the legacy
  * per-mode switch, which is how these shipped before the registry existed.
  */
-export const SKILL_PACK_BUILDERS: Record<string, PackPromptBuilder> = {};
+/**
+ * Prompt builders for the PACK skills — the ones that produce several separate
+ * images from a single run.
+ *
+ * Keyed with `Record<PackSkillId, PackPromptBuilder>` on purpose: PackSkillId
+ * comes from the pricing table (src/lib/credits/costs.ts), so a skill priced
+ * for N images with no builder registered here fails `tsc` with a missing
+ * property. This registry shipped empty once, which `tsc` could not catch while
+ * it was typed `Record<string, ...>` — every pack skill silently fell through to
+ * the generic single-image prompt.
+ */
+export const SKILL_PACK_BUILDERS: Record<PackSkillId, PackPromptBuilder> = {
+  seasonal: (input) => buildSeasonalPack(input),
+  // Deliberately ignores the visual theme: the mood IS this skill's product,
+  // and a loud theme fights the emotional lens. Same reasoning as `faceless`.
+  moods: (input) => buildEmotionalModes(input),
+  expressions: (input) => buildExpressionSheet(input),
+};
 
 export function packBuilderFor(skillId: string): PackPromptBuilder | undefined {
-  return SKILL_PACK_BUILDERS[skillId];
+  return SKILL_PACK_BUILDERS[skillId as PackSkillId];
 }

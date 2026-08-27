@@ -9,7 +9,7 @@ metadata:
   tagline: Four moods, one face — a hand-drawn emotional spectrum
   desc: 'Produces 4 separate square doodle images from one photo, each redrawn through a different emotional lens: Cozy, Chaotic, Dreamy, Moody.'
   longDesc: 'Turns a single uploaded photo into a set of four distinct hand-drawn doodle portraits. Each image preserves the person''s recognisable features but shifts the linework energy, colour palette, composition and background marks to embody a different mood — warm and snug, frenetic and clashing, airy and floating, or dark and dramatic.'
-  category: freeform
+  category: packs
   tags: [mood, style, pack]
   runnable: true
   requiresPhoto: true

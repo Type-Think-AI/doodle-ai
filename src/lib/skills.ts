@@ -92,9 +92,13 @@ export function relatedSkills(skill: Skill, limit = 4): Skill[] {
     .slice(0, limit);
 }
 
+/* Filter chips for the Skills marketplace. Hand-authored because each entry
+   needs a display label, but every SkillCategory in skill-loader.ts MUST appear
+   here — a category with skills and no chip is unreachable in the UI. */
 export const SKILL_CATEGORIES: { id: SkillCategory | "for-you"; label: string }[] = [
   { id: "for-you", label: "For you" },
   { id: "avatars", label: "Avatars" },
   { id: "collages", label: "Collages" },
+  { id: "packs", label: "Packs" },
   { id: "freeform", label: "Freeform" },
 ];

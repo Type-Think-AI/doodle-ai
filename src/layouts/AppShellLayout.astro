@@ -21,17 +21,24 @@ interface Props {
   active: 'chat' | 'skills' | 'moodboards' | 'characters' | 'projects' | 'team' | 'settings' | 'roadmap';
 }
 const { title, description, image, active } = Astro.props;
+// The marketing footer (CTA hero, marquee, partner grid) belongs on the
+// content-browsing pages (skills, moodboards, characters, projects, team) —
+// it was added there deliberately. "chat" and "roadmap" are live tool
+// surfaces with a sticky composer / full-bleed canvas; appending a full
+// marketing footer under them pushes the shell past 100dvh and becomes
+// scrollable-into on mobile, replacing the tool with a landing page.
+const showFooter = active !== 'chat' && active !== 'roadmap';
 ---
 
 <AppLayout title={title} description={description} image={image}>
   <div class="app-shell">
     <Sidebar active={active} />
 
-    <div class="app-shell-main">
+    <div class:list={['app-shell-main', { 'has-footer': showFooter }]}>
       <div class="app-shell-content">
         <slot />
       </div>
-      <Footer />
+      {showFooter && <Footer />}
     </div>
   </div>
 

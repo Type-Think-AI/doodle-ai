@@ -37,6 +37,26 @@ body {
   overflow: auto;
 }
 
+/* Pages that append the marketing footer (skills, moodboards, characters,
+   projects, team) need the WHOLE column to scroll, not just the content pane.
+   .app-shell is a fixed 100dvh overflow:hidden box, so with a tall footer as a
+   sibling the rules above let the footer take its natural height and shrink
+   .app-shell-content toward zero — which clipped the page's real content to a
+   sliver and left the footer filling the screen.
+   `flex: 1 0 auto` keeps the content at its natural height (never shrinking)
+   while still filling the viewport when the page is short. The scroll moves up
+   to .app-shell-main so content and footer scroll as one document.
+   Canvas surfaces (chat, roadmap) do not get this class, so the min-height: 0
+   behaviour they depend on is untouched. */
+.app-shell-main.has-footer {
+  overflow-y: auto;
+}
+
+.app-shell-main.has-footer > .app-shell-content {
+  flex: 1 0 auto;
+  overflow: visible;
+}
+
 @media (max-width: 860px) {
   .app-shell { height: auto; overflow: visible; }
   /* --mobile-nav-h is set by mobile-nav-height.ts from the bottom nav's

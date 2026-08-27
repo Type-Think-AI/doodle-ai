@@ -1,16 +1,32 @@
 ---
 import { buildSkillThumbnail, type Skill } from '../../lib/skills';
+import { imageCountForSkill } from '../../lib/credits/costs';
 
 interface Props {
   skill: Skill;
 }
 const { skill } = Astro.props;
 const thumb = buildSkillThumbnail(skill);
+/* Pack skills return several separate images from one run. Surfacing the count
+   on the card matters because it is the thing that differentiates this
+   catalogue — and because it is also what the run costs (1 credit per image),
+   so a user should see "9" before clicking, not after being charged. Roadmap
+   skills have no price to look up, hence the runnable guard. */
+const imageCount = skill.runnable ? imageCountForSkill(skill.id) : 1;
 ---
 
 <a class="skill-card" href={`/skills/${skill.id}`} data-runnable={skill.runnable ? "true" : "false"}>
   <div class="skill-card-thumb">
     {skill.thumbnailUrl ? <img src={skill.thumbnailUrl} alt={`${skill.name} sample output`} loading="lazy" /> : <Fragment set:html={thumb} />}
+    {imageCount > 1 && (
+      <span class="skill-card-count" title={`Returns ${imageCount} separate images`}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="8" y="3" width="13" height="13" rx="2.4" stroke="currentColor" stroke-width="2"></rect>
+          <path d="M16 20.5H5.5A2 2 0 0 1 3.5 18.5V8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+        {imageCount} images
+      </span>
+    )}
     {!skill.runnable && <span class="skill-card-badge">Coming soon</span>}
   </div>
   <div class="skill-card-meta">
@@ -47,6 +63,30 @@ const thumb = buildSkillThumbnail(skill);
   .skill-card-thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .skill-card[data-runnable="false"] .skill-card-thumb svg,
   .skill-card[data-runnable="false"] .skill-card-thumb img { opacity: 0.45; }
+  /* Multi-image count. Top-right so it never collides with the bottom-right
+     "Coming soon" badge, and light-on-dark regardless of the artwork beneath —
+     these thumbnails are mostly cream/warm-white, so a translucent dark pill is
+     the only treatment that stays legible across all of them. */
+  .skill-card-count {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px 4px 8px;
+    border-radius: 999px;
+    background: rgba(12, 12, 12, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    backdrop-filter: blur(6px);
+  }
+  .skill-card-count svg { flex: 0 0 auto; opacity: 0.85; }
+
   .skill-card-badge {
     position: absolute;
     right: 8px;

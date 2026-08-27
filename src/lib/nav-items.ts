@@ -43,6 +43,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/characters",
     label: "Characters",
     shortLabel: "Characters",
+    section: "Library",
     icon: '<circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.6"/><path d="M5 20c1.3-3.8 4.3-5.8 7-5.8s5.7 2 7 5.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   {

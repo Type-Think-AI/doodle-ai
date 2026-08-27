@@ -1,11 +1,17 @@
 /* Chat page layout — extracted from src/pages/c/[id].astro scoped styles.
    Imported there so the page template stays focused on markup. */
 
+/* Canvas OFF: the shell must match the chat column exactly, otherwise the
+   760px-wide column reads as a floating panel with a visible gap either side.
+   Canvas ON: the [data-whiteboard="true"] rule below switches this to
+   var(--stage), which is the intended darker backdrop for the split view.
+   This lives in CSS, not an inline style on the element — an inline
+   background would win over both rules and pin one colour to both states. */
 .chat-split {
 	display: flex;
 	height: 100%;
 	min-height: 0;
-	background: #0f0f0f;
+	background: var(--bg);
 }
 .chat-page {
 	max-width: 760px;
@@ -17,6 +23,7 @@
 	flex-direction: column;
 	padding: 0 20px;
 	min-width: 0;
+	background: var(--bg);
 	transition: flex-basis 0.18s ease;
 }
 .chat-split[data-whiteboard="true"] .chat-page {

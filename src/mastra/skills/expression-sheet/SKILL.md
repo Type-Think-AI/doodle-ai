@@ -9,12 +9,14 @@ metadata:
   tagline: 9 expressive reaction stickers from one photo
   desc: 'Turns a photo into 9 separate doodle stickers of the same character, each showing a different expression — ready to use as messaging reactions.'
   longDesc: 'Creates nine individual square doodle stickers from a single photo. Each sticker shows the same recognizable character in a different expression (happy, laughing, love, sad, angry, shocked, thinking, sleepy, thumbs up) with matching die-cut borders, designed for use as a custom messaging sticker set.'
-  category: collages
+  category: packs
   tags: [expressions, reactions, sticker-set]
   runnable: true
   requiresPhoto: true
   aspectRatio: '1:1'
   sampleIndex: 2
+  thumbnailUrl: 'https://cdn.picxstudio.com/api/edited/image_c7bb01b8-f435-47c0-b52c-a31ab3686a87.png'
+  sourceImageUrl: 'https://cdn.picxstudio.com/api/generated/image_2448ea08-f6d9-4096-bb0e-c1bcba04172e.png'
   order: 14
 ---
 

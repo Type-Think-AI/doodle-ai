@@ -23,6 +23,7 @@ import { getCollection, render } from 'astro:content';
 import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import SkillCard from '../../components/app/SkillCard.astro';
 import { SKILLS, buildSkillThumbnail, relatedSkills } from '../../lib/skills';
+import { creditCostForSkill, imageCountForSkill } from '../../lib/credits/costs';
 
 export async function getStaticPaths() {
 	const docs = await getCollection('skillDocs');
@@ -47,11 +48,20 @@ const site = Astro.site?.origin ?? 'https://doodleai.art';
 const canonical = `${site}/skills/${skill.id}/`;
 const heroImage = skill.thumbnailUrl;
 
+/* Cost and frame count come from the real pricing table rather than being
+   restated here, so a pack skill's page can never advertise the wrong price.
+   Roadmap skills aren't in GENERATION_MODES yet, so they have no price to
+   look up — guarded rather than defaulted to a number that would be a guess. */
+const imageCount = skill.runnable ? imageCountForSkill(skill.id) : 1;
+const cost = skill.runnable ? creditCostForSkill(skill.id) : 1;
+const ratioLabel = skill.aspectRatio === '1:1' ? 'square 1:1' : 'landscape 3:2';
+const outputLabel = imageCount > 1 ? `${imageCount} images, ${ratioLabel}` : `Single ${ratioLabel}`;
+
 const specs: { label: string; value: string }[] = [
 	{ label: 'Your photo', value: skill.requiresPhoto ? 'Required' : 'Not needed' },
-	{ label: 'Output', value: skill.aspectRatio === '1:1' ? 'Square 1:1' : 'Landscape 3:2' },
+	{ label: 'Output', value: outputLabel },
 	{ label: 'Category', value: skill.category },
-	{ label: 'Cost', value: '1 credit' },
+	{ label: 'Cost', value: `${cost} credit${cost === 1 ? '' : 's'}` },
 ];
 
 const breadcrumbSchema = {

@@ -1,10 +1,29 @@
 ---
-import { NAV_ITEMS, NEW_CHAT_ITEM, type NavKey } from "../../lib/nav-items";
+import { NAV_ITEMS, NEW_CHAT_ITEM, type NavItem, type NavKey } from "../../lib/nav-items";
 
 interface Props {
   active: NavKey;
 }
 const { active } = Astro.props;
+
+/* Nav is grouped rather than rendered as one flat list so each named section
+   can collapse independently. An item declaring `section` opens a new group;
+   the items after it belong to that group until the next one declares its
+   own. This keeps nav-items.ts as the single source of truth (MobileNav
+   ignores `section` entirely, so grouping here can't affect the tab bar). */
+interface NavGroup {
+  section: string | null;
+  items: NavItem[];
+}
+const groups = NAV_ITEMS.reduce<NavGroup[]>((acc, item) => {
+  const last = acc[acc.length - 1];
+  if (item.section || !last) acc.push({ section: item.section ?? null, items: [item] });
+  else last.items.push(item);
+  return acc;
+}, []);
+
+/** Stable per-group storage key for the persisted collapse state. */
+const groupKey = (section: string) => section.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 ---
 
 <aside class="sidebar" id="sidebar">
@@ -24,23 +43,61 @@ const { active } = Astro.props;
   </a>
 
   <nav class="sidebar-nav" aria-label="Main">
-    {NAV_ITEMS.map((item) => (
-      <>
-        {item.section && (
-          <div class="sidebar-section-label">
-            <span class="sidebar-label">{item.section}</span>
+    {groups.map((group) => (
+      group.section ? (
+        <div class="sidebar-group" data-group={groupKey(group.section)} data-collapsed="false">
+          <!-- A real <button> with aria-expanded, not a styled div: this is a
+               disclosure control, so it has to be keyboard-reachable and
+               announce its state. The chevron is decorative and rotates via
+               CSS off the group's data-collapsed. -->
+          <button
+            type="button"
+            class="sidebar-group-header"
+            data-group-toggle={groupKey(group.section)}
+            aria-expanded="true"
+            aria-controls={`sidebarGroup-${groupKey(group.section)}`}
+          >
+            <span class="sidebar-label">{group.section}</span>
+            <svg class="sidebar-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="sidebar-group-body" id={`sidebarGroup-${groupKey(group.section)}`}>
+            <div class="sidebar-group-inner">
+              {group.items.map((item) => (
+                <a href={item.href} class="sidebar-link" aria-current={active === item.key ? "page" : undefined} data-active={active === item.key ? "true" : "false"}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" set:html={item.icon} />
+                  <span class="sidebar-label">{item.label}</span>
+                </a>
+              ))}
+            </div>
           </div>
-        )}
-        <a href={item.href} class="sidebar-link" aria-current={active === item.key ? "page" : undefined} data-active={active === item.key ? "true" : "false"}>
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" set:html={item.icon} />
-          <span class="sidebar-label">{item.label}</span>
-        </a>
-      </>
+        </div>
+      ) : (
+        <div class="sidebar-group-inner">
+          {group.items.map((item) => (
+            <a href={item.href} class="sidebar-link" aria-current={active === item.key ? "page" : undefined} data-active={active === item.key ? "true" : "false"}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" set:html={item.icon} />
+              <span class="sidebar-label">{item.label}</span>
+            </a>
+          ))}
+        </div>
+      )
     ))}
   </nav>
 
-  <div class="sidebar-chats" id="sidebarChats">
-    <div class="sidebar-chats-title sidebar-label">Recents</div>
+  <div class="sidebar-chats sidebar-group" id="sidebarChats" data-group="recents" data-collapsed="false">
+    <button
+      type="button"
+      class="sidebar-group-header"
+      data-group-toggle="recents"
+      aria-expanded="true"
+      aria-controls="sidebarChatsList"
+    >
+      <span class="sidebar-label">Recents</span>
+      <!-- Count is filled by sidebar.ts once the thread list is known, so a
+           collapsed group still tells you how much is hidden inside it. -->
+      <span class="sidebar-count" id="sidebarChatsCount" hidden></span>
+      <svg class="sidebar-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <div class="sidebar-chats-list" id="sidebarChatsList"></div>
   </div>
 
@@ -70,7 +127,6 @@ const { active } = Astro.props;
             <span class="sidebar-auth-name" id="sidebarAuthName"></span>
             <span class="sidebar-auth-plan" id="sidebarCreditsBalance">…</span>
           </span>
-          <span class="sidebar-auth-email" id="sidebarAuthEmail"></span>
           <span class="sidebar-credits-hint" id="sidebarCreditsHint" hidden>Out of credits — more ways to get them are coming soon.</span>
         </span>
         <button class="sidebar-auth-signout" id="sidebarSignOut" type="button" aria-label="Sign out">
@@ -98,8 +154,11 @@ const { active } = Astro.props;
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding: 16px 12px 12px;
-    gap: 20px;
+    padding: 14px 12px 12px;
+    /* Was 20px. The named groups now carry their own top padding, so a 20px
+       shell gap stacked on top of that and pushed Recents needlessly far
+       down the rail. */
+    gap: 12px;
     transition: width 0.15s ease;
   }
   .sidebar.resizing { transition: none; }
@@ -136,6 +195,14 @@ const { active } = Astro.props;
     justify-content: center;
     flex: 0 0 34px;
   }
+  /* Doodle-theme touch: the mark is a hand-drawn squiggle, so it gets a small
+     wobble when the header is hovered. Restrained on purpose — one playful
+     beat in the chrome, not a moving sidebar. */
+  .sidebar-mark svg {
+    transition: transform 0.3s cubic-bezier(0.2, 0.85, 0.2, 1);
+    transform-origin: 50% 60%;
+  }
+  .sidebar-top:hover .sidebar-mark svg { transform: rotate(-7deg) scale(1.08); }
   .sidebar-word {
     font-size: 16px;
     font-weight: 600;
@@ -184,27 +251,91 @@ const { active } = Astro.props;
   .sidebar-primary-action svg { flex: 0 0 auto; }
   .sidebar.collapsed .sidebar-primary-action { justify-content: center; padding: 10px; }
 
-  .sidebar-nav { display: flex; flex-direction: column; gap: 3px; }
-  .sidebar-section-label {
+  .sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+
+  /* ---- Collapsible groups ---- */
+  .sidebar-group { display: flex; flex-direction: column; }
+  .sidebar-group-inner { display: flex; flex-direction: column; gap: 2px; }
+
+  .sidebar-group-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 12px 4px;
+    gap: 7px;
+    width: 100%;
+    padding: 9px 12px 5px;
+    border: 0;
+    background: none;
+    font-family: inherit;
     font-size: 10.5px;
     font-weight: 650;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-dimmer);
+    cursor: pointer;
+    text-align: left;
   }
-  .sidebar-section-label::before {
+  .sidebar-group-header:hover { color: var(--text-dim); }
+  .sidebar-group-header:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    border-radius: 8px;
+  }
+  /* Chevron sits at the far right of the same row the label is on — the
+     request was explicitly "return to the same row and show the up and down
+     arrow", not a second row. */
+  .sidebar-chevron {
+    margin-left: auto;
+    flex: 0 0 12px;
+    color: var(--text-dimmer);
+    transition: transform 0.18s ease;
+  }
+  .sidebar-group-header:hover .sidebar-chevron { color: var(--text-dim); }
+  .sidebar-group[data-collapsed="true"] .sidebar-chevron { transform: rotate(-90deg); }
+
+  .sidebar-count {
+    flex: 0 0 auto;
+    min-width: 17px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: var(--hover);
+    color: var(--text-dimmer);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-align: center;
+  }
+  .sidebar-count[hidden] { display: none; }
+
+  /* grid-template-rows 1fr -> 0fr animates a collapse without needing a
+     measured pixel height. The inner wrapper must carry min-height: 0 and
+     overflow: hidden or the row refuses to shrink below its content. */
+  .sidebar-group-body {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.18s ease;
+  }
+  .sidebar-group-body > .sidebar-group-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .sidebar-group[data-collapsed="true"] .sidebar-group-body { grid-template-rows: 0fr; }
+
+  /* Collapsed rail: labels and chevrons go, so a header would be an empty
+     row — show a thin rule as the group separator instead, matching what the
+     old .sidebar-section-label did. */
+  .sidebar.collapsed .sidebar-group-header { padding: 8px 12px 4px; justify-content: center; }
+  .sidebar.collapsed .sidebar-chevron,
+  .sidebar.collapsed .sidebar-count { display: none; }
+  .sidebar.collapsed .sidebar-group-header::before {
     content: "";
     flex: 1;
     height: 1px;
     background: var(--border);
-    display: none;
   }
-  .sidebar.collapsed .sidebar-section-label span { display: none; }
-  .sidebar.collapsed .sidebar-section-label::before { display: block; }
+  /* A collapsed rail must never hide nav icons behind a collapsed group — the
+     icons are the only affordance left, so force every group open there. */
+  .sidebar.collapsed .sidebar-group-body { grid-template-rows: 1fr !important; }
+
   .sidebar-link {
     display: flex;
     align-items: center;
@@ -229,21 +360,22 @@ const { active } = Astro.props;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
-  .sidebar-chats-title {
-    padding: 4px 12px 4px;
-    font-size: 12px;
-    letter-spacing: 0;
-    color: var(--text-dimmer);
-    text-transform: none;
-  }
+  /* Collapsed, the group must stop claiming the free row — otherwise it holds
+     a tall empty gap open and the collapse saves no space at all, which was
+     the whole point. */
+  .sidebar-chats[data-collapsed="true"] { flex: 0 0 auto; }
+  .sidebar-chats[data-collapsed="true"] .sidebar-chats-list { display: none; }
   .sidebar-chats-list {
     display: flex;
     flex-direction: column;
     gap: 2px;
     overflow: auto;
     min-height: 0;
+    /* Thin scrollbar so a long thread list doesn't put a chunky native bar
+       inside a 258px rail. */
+    scrollbar-width: thin;
   }
   /* :global() below is load-bearing, not decoration: every element in the
      chats list (.sidebar-chat-link, its thumb/title, .sidebar-chats-empty)
@@ -371,13 +503,14 @@ const { active } = Astro.props;
     gap: 6px;
     min-width: 0;
   }
-  .sidebar-auth-name,
-  .sidebar-auth-email {
+  .sidebar-auth-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .sidebar-auth-name { color: var(--text); min-width: 0; }
+  /* The card is a single line now (no email row), so the name can carry a
+     touch more weight without making the rail feel heavy. */
+  .sidebar-auth-name { color: var(--text); min-width: 0; font-size: 13.5px; font-weight: 550; }
   .sidebar-auth-plan {
     flex: 0 0 auto;
     padding: 1px 7px;
@@ -393,7 +526,6 @@ const { active } = Astro.props;
     background: var(--accent-softer, var(--accent-soft));
     color: var(--accent);
   }
-  .sidebar-auth-email { font-size: 11px; color: var(--text-dimmer); }
   .sidebar.collapsed .sidebar-auth-plan { display: none; }
   .sidebar-auth-user-clickable { cursor: pointer; }
   .sidebar-auth-user-clickable:hover { background: var(--hover); color: var(--text); }
@@ -452,6 +584,15 @@ const { active } = Astro.props;
     background: var(--accent);
   }
   .sidebar.collapsed .sidebar-resize-handle { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .sidebar-mark svg,
+    .sidebar-chevron,
+    .sidebar-group-body,
+    .sidebar-collapse { transition: none !important; }
+    .sidebar-top:hover .sidebar-mark svg { transform: none; }
+  }
 
   @media (max-width: 860px) {
     .sidebar,

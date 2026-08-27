@@ -8,8 +8,68 @@ import { identifyUser, resetIdentity, trackSignUp } from "./mixpanel";
 
 const SIDEBAR_COLLAPSED_KEY = "doodleai-sidebar-collapsed";
 const SIDEBAR_WIDTH_KEY = "doodleai-sidebar-width";
+const SIDEBAR_GROUP_KEY = "doodleai-sidebar-groups";
 const SIDEBAR_MIN_WIDTH = 200;
 const SIDEBAR_MAX_WIDTH = 420;
+
+/**
+ * Per-group collapse state for the sidebar's named sections (Library,
+ * Workspace, Recents), persisted as one JSON object rather than a key per
+ * group so adding a section later needs no migration. A group missing from
+ * the map defaults to expanded — the rail should never open with content
+ * hidden that the user did not choose to hide.
+ */
+type GroupState = Record<string, boolean>;
+
+function readGroupState(): GroupState {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_GROUP_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    // Only keep genuine booleans — a hand-edited or version-skewed value must
+    // not be able to put a group into an undefined third state.
+    return Object.fromEntries(
+      Object.entries(parsed as Record<string, unknown>).filter(([, v]) => typeof v === "boolean"),
+    ) as GroupState;
+  } catch {
+    return {};
+  }
+}
+
+function writeGroupState(state: GroupState): void {
+  try {
+    localStorage.setItem(SIDEBAR_GROUP_KEY, JSON.stringify(state));
+  } catch {
+    /* storage unavailable — collapse state stays session-only */
+  }
+}
+
+/** Wires every [data-group-toggle] header to its group, restoring saved state. */
+function initGroupToggles(): void {
+  const state = readGroupState();
+
+  document.querySelectorAll<HTMLElement>("[data-group]").forEach((group) => {
+    const key = group.dataset.group;
+    if (!key) return;
+    const toggle = group.querySelector<HTMLButtonElement>(`[data-group-toggle="${key}"]`);
+    if (!toggle) return;
+
+    const apply = (collapsed: boolean): void => {
+      group.dataset.collapsed = String(collapsed);
+      toggle.setAttribute("aria-expanded", String(!collapsed));
+    };
+
+    apply(state[key] === true);
+
+    toggle.addEventListener("click", () => {
+      const collapsed = group.dataset.collapsed !== "true";
+      apply(collapsed);
+      state[key] = collapsed;
+      writeGroupState(state);
+    });
+  });
+}
 
 /** Playful placeholders for a chat with no doodle yet — on-brand, not a generic chat-bubble icon. */
 const PLACEHOLDER_EMOJI = ["🎨", "✏️", "🖍️", "🐱", "🌟", "🦄", "🎭", "🐶"];
@@ -46,6 +106,16 @@ function initSidebar(): void {
     // local mirror needs the same filter applied optimistically.
     const threads = listThreads().filter((t) => loadThread(t.id).length > 0);
     const activeId = window.location.pathname.match(/\/c\/([^/]+)/)?.[1];
+
+    // Count badge on the Recents header, so a collapsed group still reports
+    // how many threads are folded away inside it.
+    const countEl = document.getElementById("sidebarChatsCount");
+    if (countEl) {
+      const shown = Math.min(threads.length, 20);
+      countEl.textContent = String(shown);
+      countEl.hidden = shown === 0;
+    }
+
     if (threads.length === 0) {
       const empty = document.createElement("div");
       empty.className = "sidebar-chats-empty";
@@ -89,6 +159,11 @@ function initSidebar(): void {
   }
 
   /* ---- Sidebar ready ---- */
+
+  /* ---- Collapsible groups ---- */
+  // After the chats list is built, so the Recents count is already in the DOM
+  // when its group restores a collapsed state.
+  initGroupToggles();
 
   /* ---- Collapse ---- */
   let collapsed = false;
@@ -200,15 +275,19 @@ async function renderAuthSlot(): Promise<void> {
 
   const avatar = document.getElementById("sidebarAuthAvatar");
   const nameEl = document.getElementById("sidebarAuthName");
-  const emailEl = document.getElementById("sidebarAuthEmail");
   const signOutBtn = document.getElementById("sidebarSignOut");
 
-  const displayName = user.name || user.email;
-  if (nameEl) nameEl.textContent = displayName;
-  if (emailEl) emailEl.textContent = user.email;
+  // First name only. The full name was truncating to "Yash P…" in a 258px
+  // rail, which reads worse than just "Yash" — and the row now carries the
+  // credits pill beside it, so the space is better spent there. The email
+  // moved out of the rail entirely; it's still shown on /settings.
+  // Falls back to the email's local part for accounts with no name set.
+  const fullName = user.name || user.email;
+  const firstName = fullName.split(/[\s@]/)[0] || fullName;
+  if (nameEl) nameEl.textContent = firstName;
   if (avatar) {
     if (user.image) avatar.style.backgroundImage = `url("${user.image}")`;
-    else avatar.textContent = displayName.charAt(0).toUpperCase();
+    else avatar.textContent = firstName.charAt(0).toUpperCase();
   }
 
   // Clicking this row opens the team switcher (account-menu.ts binds its own

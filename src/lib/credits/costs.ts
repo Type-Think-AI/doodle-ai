@@ -52,6 +52,31 @@ const IMAGES_PER_RUN: Record<GenerationMode, number> = {
 /** New account starter grant — signup bonus. */
 export const SIGNUP_GRANT_CREDITS = 5;
 
+/**
+ * The skills that produce more than one image. Exported as a literal tuple so
+ * src/lib/prompts/index.ts can key its pack-builder registry on it: an id
+ * listed here with no registered PackPromptBuilder is then a `tsc` error rather
+ * than a silently empty registry that makes the skill fall through to the
+ * generic single-image prompt at run time.
+ */
+export const PACK_SKILL_IDS = ["moods", "seasonal", "expressions"] as const;
+export type PackSkillId = (typeof PACK_SKILL_IDS)[number];
+
+/* Keeps PACK_SKILL_IDS honest against the pricing table above: a pack id whose
+   IMAGES_PER_RUN is 1 (or a >1 entry missing from the list) is a contradiction
+   between "charges for N images" and "produces N images", so fail at import
+   rather than mischarge. Cheap enough to run unconditionally at module load. */
+for (const id of PACK_SKILL_IDS) {
+  if (IMAGES_PER_RUN[id] <= 1) {
+    throw new Error(`"${id}" is listed in PACK_SKILL_IDS but priced for a single image.`);
+  }
+}
+for (const [id, count] of Object.entries(IMAGES_PER_RUN)) {
+  if (count > 1 && !(PACK_SKILL_IDS as readonly string[]).includes(id)) {
+    throw new Error(`"${id}" is priced for ${count} images but missing from PACK_SKILL_IDS.`);
+  }
+}
+
 /** Images produced by one run of this skill. */
 export function imageCountForSkill(skillId: string): number {
   assertGenerationMode(skillId);
