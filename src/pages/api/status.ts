@@ -1,3 +1,4 @@
+// deploy-loop check: 2026-08-28 — verify dev→staging auto-deploy (safe to remove)
 /**
  * GET /api/status — machine-readable system status.
  *
