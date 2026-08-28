@@ -10,7 +10,8 @@ import '../../styles/boards.css';
   description="Every doodle you make lands on a board. Name them, arrange them, share them."
   active="boards"
 >
-  <main class="bd-page" id="boardsPage">
+  <!-- div, not <main>: AppShellLayout already emits this page's <main> landmark. -->
+  <div class="bd-page" id="boardsPage">
     <header class="bd-head">
       <div>
         <h1>Boards</h1>
@@ -32,7 +33,7 @@ import '../../styles/boards.css';
     <div class="bd-list" id="boardsList" aria-busy="true">
       <p class="bd-status">Loading boards…</p>
     </div>
-  </main>
+  </div>
 
   <Lightbox />
 </AppShellLayout>

@@ -28,6 +28,18 @@ export default defineConfig({
 		rehypePlugins: [rehypeAutoLinks, rehypeLazyImages, rehypeDemoteSkillHeadings],
 	},
 	integrations: [mdx(), react()],
+	build: {
+		/* The 2026-08-28 audit found four render-blocking stylesheets on the
+		   homepage (the `_id_.*.css` chunks — Astro names shared CSS bundles after
+		   one of the pages importing them, so these are shared app styles, not the
+		   chat route's CSS leaking in) totalling 15.9 KiB. On Slow 4G that is four
+		   serial round trips ahead of first paint. Astro's default 'auto' only
+		   inlines chunks under 4 kB, which leaves all four as separate requests;
+		   'always' folds them into the HTML. Worth it at this total size — revisit
+		   if shared CSS grows past ~30 KiB, where the added HTML weight on every
+		   navigation starts to outweigh the saved round trips. */
+		inlineStylesheets: 'always',
+	},
 	// `astro dev`'s own dev server (via platformProxy below) is NOT how this
 	// project develops against the database — see package.json's `dev`
 	// script. Wrangler's mixed-mode "remote bindings" (one binding proxied to

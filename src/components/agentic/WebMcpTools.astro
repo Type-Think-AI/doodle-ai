@@ -1,0 +1,268 @@
+---
+/**
+ * WebMcpTools — exposes Doodle AI's read-only capabilities to AI agents via WebMCP.
+ *
+ * WebMCP lets a page hand an agentic browser a set of callable tools instead of
+ * making it scrape the DOM or drive the UI from screenshots. Lighthouse's
+ * Agentic Browsing category audits three things about it: that tools are
+ * registered, that their schemas are valid, and that forms carry annotations.
+ * Before this component existed all three came back "not applicable" — there was
+ * nothing to evaluate.
+ *
+ * ## Two API details that are easy to get wrong
+ *
+ * 1. The entry point is `document.modelContext`. `navigator.modelContext` was the
+ *    original shape and is DEPRECATED as of Chrome 150 — code written against it
+ *    alone silently registers nothing on current builds. Both are probed here,
+ *    newest first, because the origin trial shipped against `navigator`.
+ * 2. `registerTool()` returns a promise and accepts `{ signal }`, so
+ *    unregistering is an `AbortController.abort()`.
+ *
+ * ## What is exposed, and what deliberately is not
+ *
+ * Read-only, unauthenticated, no-cost things only:
+ *   - the skill catalogue (build-time data, already public on /skills/)
+ *   - the site overview and full text (/llms.txt, /llms-full.txt)
+ *   - live service status (/api/status is public and unmetered)
+ *   - navigation to a public page
+ *
+ * NOT exposed: generation, upload, or anything that reads account state. Every
+ * runnable skill reserves at least one credit per image, so a generation tool
+ * would let whatever is driving the browser bill the signed-in user's balance
+ * from a tool call. The composer is therefore reachable only by navigation, so a
+ * human presses the send button. This mirrors the same decision made in the
+ * sibling picx-ai console.
+ *
+ * Every tool is annotated `readOnlyHint: true` and returns text, never HTML.
+ */
+import { SKILLS } from '../../lib/skills';
+import { imageCountForSkill } from '../../lib/credits/costs';
+
+/* Serialised at build time rather than fetched, so the catalogue tool answers
+   without a network round trip and cannot disagree with the rendered page. */
+const skillCatalogue = SKILLS.filter((s) => s.runnable).map((skill) => ({
+  id: skill.id,
+  name: skill.name,
+  tagline: skill.tagline,
+  url: `/skills/${skill.id}/`,
+  requiresPhoto: skill.requiresPhoto,
+  aspectRatio: skill.aspectRatio,
+  imagesReturned: imageCountForSkill(skill.id),
+  creditCost: imageCountForSkill(skill.id),
+}));
+---
+
+<script type="application/json" id="webmcpSkillCatalogue" set:html={JSON.stringify(skillCatalogue)}></script>
+
+<script>
+  interface CatalogueEntry {
+    id: string;
+    name: string;
+    tagline: string;
+    url: string;
+    requiresPhoto: boolean;
+    aspectRatio: string;
+    imagesReturned: number;
+    creditCost: number;
+  }
+
+  interface WebMcpTool {
+    name: string;
+    description: string;
+    inputSchema: Record<string, unknown>;
+    execute: (args: Record<string, unknown>) => Promise<string>;
+    annotations?: { readOnlyHint?: boolean; untrustedContentHint?: boolean };
+  }
+
+  interface ModelContext {
+    registerTool: (tool: WebMcpTool, options?: { signal?: AbortSignal }) => Promise<unknown>;
+  }
+
+  /* Chrome 150+ moved this to `document`; `navigator` is the deprecated origin-trial
+     shape. Probe newest first, and do NOT polyfill when absent — the audits check
+     for real registration and a stub object would only lie about it. */
+  function resolveModelContext(): ModelContext | null {
+    const fromDocument = (document as unknown as { modelContext?: ModelContext }).modelContext;
+    if (typeof fromDocument?.registerTool === 'function') return fromDocument;
+
+    const fromNavigator = (navigator as unknown as { modelContext?: ModelContext }).modelContext;
+    if (typeof fromNavigator?.registerTool === 'function') return fromNavigator;
+
+    return null;
+  }
+
+  function readCatalogue(): CatalogueEntry[] {
+    const node = document.getElementById('webmcpSkillCatalogue');
+    if (!node?.textContent) return [];
+    try {
+      return JSON.parse(node.textContent) as CatalogueEntry[];
+    } catch {
+      return [];
+    }
+  }
+
+  async function fetchText(path: string): Promise<string> {
+    const response = await fetch(path, { headers: { Accept: 'text/plain' } });
+    if (!response.ok) throw new Error(`${path} returned ${response.status}`);
+    return response.text();
+  }
+
+  function initWebMcp(): void {
+    const modelContext = resolveModelContext();
+    if (!modelContext) return;
+
+    /* Guard against double registration across a bfcache restore or an Astro
+       view transition re-running this module. */
+    const flag = window as unknown as { __doodleWebMcpReady?: boolean };
+    if (flag.__doodleWebMcpReady) return;
+    flag.__doodleWebMcpReady = true;
+
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+
+    /* Every schema is a complete JSON Schema object: `type`, `properties` and an
+       explicit `required`. The "WebMCP schemas are valid" audit fails on a bare
+       `{}` or a missing `type`. */
+    const tools: WebMcpTool[] = [
+      {
+        name: 'list_doodle_skills',
+        description:
+          'List every runnable Doodle AI skill: its id, what it produces, whether it needs a ' +
+          'photo, how many images it returns, and its credit cost. Call this before suggesting ' +
+          'a skill to a user, so the suggestion names a skill that actually exists.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            requiresPhoto: {
+              type: 'boolean',
+              description:
+                'Filter to skills that need an input photo (true) or that generate from a ' +
+                'text description alone (false). Omit for all skills.',
+            },
+          },
+          required: [],
+        },
+        annotations: { readOnlyHint: true, untrustedContentHint: false },
+        execute: async (args) => {
+          const wanted = (args as { requiresPhoto?: boolean }).requiresPhoto;
+          const list =
+            typeof wanted === 'boolean'
+              ? readCatalogue().filter((s) => s.requiresPhoto === wanted)
+              : readCatalogue();
+          if (list.length === 0) return 'No matching skills.';
+          return list
+            .map(
+              (s) =>
+                `${s.name} (id: ${s.id}) — ${s.tagline}. ` +
+                `${s.requiresPhoto ? 'Needs a photo' : 'No photo needed'}; ` +
+                `returns ${s.imagesReturned} image${s.imagesReturned === 1 ? '' : 's'} ` +
+                `at ${s.aspectRatio}; costs ${s.creditCost} credit${s.creditCost === 1 ? '' : 's'}. ` +
+                `Page: https://doodleai.art${s.url}`,
+            )
+            .join('\n');
+        },
+      },
+      {
+        name: 'get_doodle_overview',
+        description:
+          'Return the Doodle AI site overview as Markdown: what the product does, how credits ' +
+          'and sign-in work, the full skill list, and the generation flow. Read this before ' +
+          'answering any question about how Doodle AI works.',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+        annotations: { readOnlyHint: true, untrustedContentHint: false },
+        execute: async () => fetchText('/llms.txt'),
+      },
+      {
+        name: 'get_doodle_full_docs',
+        description:
+          'Return every public Doodle AI page as one Markdown document, including the full text ' +
+          'of all guides and explainers. Larger than get_doodle_overview — use it when the ' +
+          'overview does not contain the answer.',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+        annotations: { readOnlyHint: true, untrustedContentHint: false },
+        execute: async () => fetchText('/llms-full.txt'),
+      },
+      {
+        name: 'get_doodle_service_status',
+        description:
+          'Return the live operational status of Doodle AI and the upstream services it depends ' +
+          'on. Public and unmetered. Use this before telling a user something is broken.',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+        annotations: { readOnlyHint: true, untrustedContentHint: false },
+        execute: async () => {
+          const response = await fetch('/api/status', { headers: { Accept: 'application/json' } });
+          if (!response.ok) throw new Error(`/api/status returned ${response.status}`);
+          return JSON.stringify(await response.json(), null, 2);
+        },
+      },
+      {
+        name: 'open_doodle_page',
+        description:
+          'Navigate this browser tab to a public Doodle AI page. Use this to put a human in ' +
+          'front of the composer or a skill page. It only navigates — it never generates an ' +
+          'image and never spends a credit; a person still has to press the send button.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            page: {
+              type: 'string',
+              enum: ['home', 'skills', 'learn', 'about', 'status'],
+              description:
+                "Which page to open. 'home' is the composer where a doodle is created.",
+            },
+            skillId: {
+              type: 'string',
+              description:
+                "Optional skill id from list_doodle_skills. When set, opens that skill's page " +
+                "and the 'page' value is ignored.",
+            },
+          },
+          required: ['page'],
+        },
+        annotations: { readOnlyHint: true, untrustedContentHint: false },
+        execute: async (args) => {
+          const { page, skillId } = args as { page?: string; skillId?: string };
+
+          if (skillId) {
+            /* Resolve against the catalogue rather than interpolating the argument
+               into a path, so an arbitrary string cannot become a navigation. */
+            const match = readCatalogue().find((s) => s.id === skillId);
+            if (!match) return `No skill with id "${skillId}". Call list_doodle_skills first.`;
+            window.location.assign(match.url);
+            return `Opening the ${match.name} skill page.`;
+          }
+
+          const routes: Record<string, string> = {
+            home: '/',
+            skills: '/skills/',
+            learn: '/learn/',
+            about: '/about/',
+            status: '/status/',
+          };
+          const target = page ? routes[page] : undefined;
+          if (!target) return `Unknown page "${page}". Valid: ${Object.keys(routes).join(', ')}.`;
+          window.location.assign(target);
+          return `Opening ${target}.`;
+        },
+      },
+    ];
+
+    for (const tool of tools) {
+      void modelContext.registerTool(tool, options).catch(() => {
+        /* A browser that exposes modelContext but rejects a tool should not take
+           the page down with it. */
+      });
+    }
+
+    window.addEventListener(
+      'pagehide',
+      () => {
+        controller.abort();
+        flag.__doodleWebMcpReady = false;
+      },
+      { once: true },
+    );
+  }
+
+  initWebMcp();
+</script>

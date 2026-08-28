@@ -43,6 +43,20 @@
 - Better Auth sessions and Cloudflare D1/KV back the account and credit experience.
 - Provider credentials remain server-side and are never accepted from the browser.
 - User images are processed through PicX managed assets and generated media is hosted by PicX.
+
+## Guides
+- [Learn index](https://doodleai.art/learn/): every explainer and guide, newest first
+- [About Doodle AI](https://doodleai.art/about/): what the product is and who builds it
+- [Status](https://doodleai.art/status/): live health of the app and its upstream services
+- [For studios](https://doodleai.art/for-studios/): commercial and higher-volume use
+
+## Optional
+- [Full text of every page](https://doodleai.art/llms-full.txt): the complete site as one
+  Markdown document, generated at build time. Prefer this over crawling individual pages —
+  it is always current, and it is the only export that includes the full article bodies.
+- [Privacy policy](https://doodleai.art/privacy-policy/)
+- [Terms of service](https://doodleai.art/terms-of-service/)
+
 - Stripe checkout is not implemented. There is no paid credit pack yet.
 - API routes, account settings, characters, moodboards, and private chats should not be treated as public documentation.
 - Doodle AI is not doodleai.fun, InstaDoodle, LazyAvatar, or cartoonize.ai.

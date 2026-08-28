@@ -43,18 +43,29 @@ const { title, description, image, active, showFooter: showFooterProp } = Astro.
 // composer — but shares active="boards" with the browsable index, so it
 // cannot be distinguished here. It passes showFooter={false} explicitly.
 const showFooter = showFooterProp ?? (active !== 'chat' && active !== 'roadmap');
+
+/* The wrapper below is <main>, not a div: it is this page's single main landmark.
+   The 2026-08-28 audit failed "Document does not have a main landmark" because
+   every shell page (home, skills, chat, characters, boards, roadmap, status)
+   rendered only divs here, while the standalone pages outside this shell already
+   had their own <main>.
+
+   A page nested inside this layout must therefore NOT add a second <main> —
+   /boards and /b/[id] were converted to divs when this landed. Kept as a
+   frontmatter comment rather than an HTML comment so the rationale does not ship
+   to every client on every page. */
 ---
 
 <AppLayout title={title} description={description} image={image}>
   <div class="app-shell">
     <Sidebar active={active} />
 
-    <div class:list={['app-shell-main', { 'has-footer': showFooter }]}>
+    <main class:list={['app-shell-main', { 'has-footer': showFooter }]}>
       <div class="app-shell-content">
         <slot />
       </div>
       {showFooter && <Footer />}
-    </div>
+    </main>
   </div>
 
   <MobileNav active={active} />

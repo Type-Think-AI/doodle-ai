@@ -27,7 +27,7 @@ const { threadId } = Astro.props;
 	class="chat-split"
 	id="chatSplit"
 	data-whiteboard="true"
-	style="--bg:#0f0f0f;--stage:#0a0a0a;--surface:#141414;--surface2:#141414;--card:#1a1a1a;--card-hover:#1f1f1f;--prompt-bg:#1c1c1e;--icon-hover:#2a2a2d;--border:#262626;--border2:#292929;--border3:#3a3a3a;--hover:#1f1f1f;--text:#dddddd;--text-dim:#999999;--text-dimmer:#666666;background:#0a0a0a;color:#dddddd;"
+	style="--bg:#141414;--stage:#0a0a0a;--surface:#141414;--surface2:#141414;--card:#1a1a1a;--card-hover:#1f1f1f;--prompt-bg:#1c1c1e;--icon-hover:#2a2a2d;--border:#262626;--border2:#292929;--border3:#3a3a3a;--hover:#1f1f1f;--text:#dddddd;--text-dim:#999999;--text-dimmer:#8a8a8a;background:#0a0a0a;color:#dddddd;"
 >
 	<div class="chat-page" id="chatPage" style="background:#0f0f0f;color:#dddddd;">
 		<button type="button" class="whiteboard-toggle" id="whiteboardToggle" aria-pressed="true">
@@ -100,7 +100,7 @@ const { threadId } = Astro.props;
 	.chat-split[data-resizing="true"] { cursor: col-resize; user-select: none; }
 
 	.chat-split[data-whiteboard="true"] {
-		--bg: #0f0f0f;
+		--bg: #141414;
 		--stage: #0a0a0a;
 		--surface: #141414;
 		--surface2: #141414;
@@ -114,7 +114,7 @@ const { threadId } = Astro.props;
 		--hover: #1f1f1f;
 		--text: #dddddd;
 		--text-dim: #999999;
-		--text-dimmer: #666666;
+		--text-dimmer: #8a8a8a;
 		background: var(--stage);
 		color: var(--text);
 	}

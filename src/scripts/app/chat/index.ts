@@ -283,7 +283,10 @@ function initChat(): void {
     }
   });
 
-  window.addEventListener("beforeunload", () => {
+  // 'pagehide' instead of 'beforeunload': this handler only revokes an object
+  // URL (pure cleanup, no confirmation prompt), and beforeunload disqualifies
+  // the page from the back/forward cache. pagehide fires on navigation too.
+  window.addEventListener("pagehide", () => {
     if (attachState.attachedPreviewUrl) URL.revokeObjectURL(attachState.attachedPreviewUrl);
   });
 

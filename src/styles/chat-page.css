@@ -36,7 +36,7 @@
 .chat-split[data-resizing="true"] { cursor: col-resize; user-select: none; }
 
 .chat-split[data-whiteboard="true"] {
-	--bg: #0f0f0f;
+	--bg: #141414;
 	--stage: #0a0a0a;
 	--surface: #141414;
 	--surface2: #141414;
@@ -50,7 +50,9 @@
 	--hover: #1f1f1f;
 	--text: #dddddd;
 	--text-dim: #999999;
-	--text-dimmer: #666666;
+	/* Keep in sync with src/styles/app.css — #666666 was 3.34:1 on #0f0f0f and
+	   failed WCAG 2.2 AA; #8a8a8a is 5.56:1. */
+	--text-dimmer: #8a8a8a;
 	background: var(--stage);
 	color: var(--text);
 }

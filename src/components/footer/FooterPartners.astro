@@ -20,6 +20,14 @@
  * that appears is correct by construction rather than by a guessed hex value.
  */
 
+import { resizedCdnImage } from '../../lib/cdn-image';
+
+/* Rendered at 128x128. Some of these logos resolve to PicX CDN URLs rather than
+   local files under public/partners/, and those arrived as 1024px originals;
+   240px covers the box past 1.8x DPR. resizedCdnImage() passes local paths
+   through unchanged, so the first-party assets described above are unaffected. */
+const PARTNER_LOGO_WIDTH = 240;
+
 interface Partner {
 	name: string;
 	role: string;
@@ -90,7 +98,7 @@ const partners: Partner[] = [
 						{partner.logo ? (
 							<img
 								class="db-partner-logo"
-								src={partner.logo}
+								src={resizedCdnImage(partner.logo, PARTNER_LOGO_WIDTH)}
 								alt=""
 								width="128"
 								height="128"

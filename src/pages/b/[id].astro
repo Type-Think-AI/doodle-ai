@@ -41,7 +41,8 @@ const boardId = id ?? '';
      full-bleed canvas. The marketing footer would sit under an element already
      anchored to the bottom of the viewport. Same as /c/[id] and /roadmap. -->
 <AppShellLayout title="Board — Doodle AI" description="A board of doodles." active="boards" showFooter={false}>
-  <main class:list={['bd-detail', { 'bd-detail-canvas': view === 'canvas' }]} id="boardDetail" data-board-id={id} data-view={view}>
+  <!-- div, not <main>: AppShellLayout already emits this page's <main> landmark. -->
+  <div class:list={['bd-detail', { 'bd-detail-canvas': view === 'canvas' }]} id="boardDetail" data-board-id={id} data-view={view}>
     <header class="bd-dhead">
       <a href="/boards" class="bd-back">&lsaquo; Boards</a>
 
@@ -103,7 +104,7 @@ const boardId = id ?? '';
         />
       </div>
     )}
-  </main>
+  </div>
 
   <Lightbox />
   <BoardShareSheet />

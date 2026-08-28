@@ -40,12 +40,18 @@ export async function GET(context: APIContext) {
     .sort((a, b) => b.getTime() - a.getTime())[0];
 
   const entries: Entry[] = [
-    // "/" is now a personal chat landing page (client-rendered, per-browser
-    // localStorage state) — no unique public content to index. /skills is
-    // the app's real public content (the marketplace + each skill's page).
-    // /boards is excluded for the same reason as "/": it is account-scoped and
-    // renders a sign-in state to an anonymous crawler, so listing it would
-    // submit a thin page for indexing.
+    /* "/" IS listed. An earlier revision excluded it on the grounds that the
+       homepage is a per-browser chat surface with no unique public content, but
+       that reasoning does not hold: the page server-renders an H1, the 20-card
+       skill grid, and the full marketing footer, and it is the URL that earns
+       the site name and every brand query. Google indexes it regardless via
+       internal links, so omitting it from our own sitemap only discards a signal
+       we control.
+       /boards is still excluded, and that exclusion IS correct — it is
+       account-scoped and renders a sign-in state to an anonymous crawler, so
+       listing it would submit a thin page for indexing. Same for /c/[id] and
+       /b/[id], which robots.txt also disallows. */
+    { path: "/", changefreq: "weekly", priority: "1.0" },
     { path: "/skills/", changefreq: "weekly", priority: "0.9" },
     { path: "/learn/", lastmod: newestArticle, changefreq: "weekly", priority: "0.8" },
     { path: "/about/", changefreq: "monthly", priority: "0.6" },

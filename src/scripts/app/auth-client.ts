@@ -68,6 +68,9 @@ function toUser(value: unknown): AuthUser | null {
 
 export async function signOut(): Promise<AuthResult<null>> {
   const res = await post<unknown>("/sign-out", {});
+  // A signed-out user must never be served the pre-sign-out session, so drop
+  // the cache immediately regardless of whether the request itself succeeded.
+  invalidateSession();
   return res.ok ? { ok: true, data: null } : res;
 }
 
@@ -89,8 +92,44 @@ export async function signInWithGoogle(callbackURL = "/"): Promise<AuthResult<nu
 /**
  * The current user, or null when signed out. Signed-out is the normal case
  * for this app until Phase 6, so it is not modelled as an error.
+ *
+ * Caching: a Lighthouse trace showed three callers (sidebar, auth-dialog,
+ * api-client) each firing an identical /get-session request during page load,
+ * serialising into the longest chain on the critical path. Two guards fix that
+ * without changing the signature:
+ *
+ *   1. In-flight dedup — while one request is outstanding, concurrent callers
+ *      await the SAME promise, so one page load makes one network request.
+ *   2. Short TTL cache — a resolved result is reused for a few seconds so
+ *      near-simultaneous (but not literally concurrent) callers also share it.
+ *      A signed-in result is cached for SESSION_TTL_MS; a null/failure result
+ *      is cached for only NULL_TTL_MS so an anonymous visitor who signs in is
+ *      not stuck seeing signed-out state.
+ *
+ * invalidateSession() clears both and is called from signOut() above.
  */
-export async function getSession(): Promise<AuthUser | null> {
+const SESSION_TTL_MS = 30_000;
+const NULL_TTL_MS = 2_000;
+
+let inFlight: Promise<AuthUser | null> | null = null;
+let cachedUser: AuthUser | null = null;
+let cachedAt = 0; // epoch ms of the last resolved fetch; 0 = nothing cached
+/* Bumped by invalidateSession(). A fetch that was already in flight when
+   invalidation happened carries a stale generation and is therefore allowed to
+   resolve its callers but NOT to write the cache — otherwise signing out while a
+   getSession() was outstanding would repopulate the cache with the signed-in
+   user a moment after sign-out. */
+let generation = 0;
+
+/** Drop any cached/in-flight session so the next getSession() refetches. */
+export function invalidateSession(): void {
+  generation += 1;
+  inFlight = null;
+  cachedUser = null;
+  cachedAt = 0;
+}
+
+async function fetchSession(): Promise<AuthUser | null> {
   try {
     const res = await fetch(`${BASE}/get-session`, { credentials: "include" });
     if (!res.ok) return null;
@@ -100,4 +139,31 @@ export async function getSession(): Promise<AuthUser | null> {
   } catch {
     return null;
   }
+}
+
+export async function getSession(): Promise<AuthUser | null> {
+  // Reuse a still-fresh cached result. A signed-in user gets the long TTL; a
+  // null result gets a much shorter one so sign-in is reflected promptly.
+  if (cachedAt !== 0) {
+    const ttl = cachedUser ? SESSION_TTL_MS : NULL_TTL_MS;
+    if (Date.now() - cachedAt < ttl) return cachedUser;
+  }
+
+  // Share a single outstanding request across concurrent callers.
+  if (inFlight) return inFlight;
+
+  const startedAt = generation;
+  inFlight = fetchSession().then((user) => {
+    // Only the newest request may populate the cache. If invalidateSession() ran
+    // while this was in flight, hand the result to this caller but leave the
+    // cache empty so the next call refetches.
+    if (startedAt === generation) {
+      cachedUser = user;
+      cachedAt = Date.now();
+      inFlight = null;
+    }
+    return user;
+  });
+
+  return inFlight;
 }

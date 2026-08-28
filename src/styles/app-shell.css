@@ -17,12 +17,27 @@ body {
   overflow: hidden;
 }
 
+/* This element is a <main> (it is the page's landmark — see AppShellLayout.astro),
+   which means it matches the global `main, .page, .admin-wrap, .shell` rule in
+   app.css that owns horizontal page geometry. That rule is right for a content
+   column and wrong for the app shell: it clamped this element to
+   --shell-max (920px) and centred it with margin-inline:auto, so the shell
+   stopped being full-bleed and the canvas showed as bands down both edges.
+   These three resets opt the shell out of page measure. They win on specificity
+   (.app-shell-main = class, the global rule = element), so file order does not
+   matter.
+
+   No `background` here on purpose: the canvas is painted once on html+body in
+   app.css and inherited. Re-declaring it at this level is what created the
+   two-colour seam in the first place. */
 .app-shell-main {
   flex: 1;
   min-width: 0;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
 }
 
 .app-shell-content {
@@ -87,15 +102,12 @@ body {
    exactly what the has-footer layout wants. */
 .app-shell-main.has-footer > .db-footer {
   flex: 0 0 auto;
-  /* Match the column the footer scrolls inside. .app-shell-main is --surface
-     (#141414 dark / #f7f7f7 light) while the footer's own default is --bg
-     (#0f0f0f / #ffffff), so without this the footer read as a darker slab with
-     a hard horizontal seam where the page ended — uniform on /learn, which has
-     no app shell, and visibly mismatched on the homepage and /skills. Also
-     retints the footer's top fade-in gradient, which references the same
-     property. */
-  --db-footer-bg: var(--surface);
-  /* Keep the marquee band a visible step above the retinted footer. */
+  /* No --db-footer-bg override any more. It used to be forced to --surface
+     because .app-shell-main painted itself --surface (#141414) while the
+     footer's own default was --bg (#0f0f0f), producing a hard horizontal seam
+     where the page ended. --bg and the shell are now the same single canvas, so
+     the footer's default already matches and the override would be a no-op.
+     Keep the marquee band a visible step above the canvas. */
   --db-strip-bg: var(--card);
 }
 

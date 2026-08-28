@@ -4,7 +4,14 @@
    src/lib/theme.ts, applied without a flash by the inline snippet in
    AppLayout.astro's <head>. */
 :root {
-  --bg: #0f0f0f;
+  /* --bg is THE page canvas for the whole project. It is painted once on
+     html+body (see below) and every surface inherits it — no page, layout or
+     component should re-declare a background just to fill its own box.
+     Was #0f0f0f while .app-shell-main separately painted itself --surface
+     (#141414); that split meant the app shell and the page canvas were two
+     different colours, and any moment the shell was not exactly full-bleed the
+     seam became visible. One value removes the failure mode. */
+  --bg: #141414;
   --stage: #0a0a0a;
   --surface: #141414;
   --surface2: #141414;
@@ -20,7 +27,12 @@
 
   --text: #dddddd;
   --text-dim: #999999;
-  --text-dimmer: #666666;
+  /* #666666 on --bg #0f0f0f is 3.34:1 and fails WCAG 2.2 AA (4.5:1 for text
+     under 18px). The 2026-08-28 audit flagged ~20 elements using it: .home-sub
+     at 14px, every .skill-card-tagline at 12.5px, and .mobile-nav-link labels at
+     10.5px. On this background the AA floor is about #7c7c7c; #8a8a8a gives
+     5.56:1, leaving headroom if the background is ever lightened. */
+  --text-dimmer: #8a8a8a;
 
   --accent: #fab700;
   --accent-soft: #5a4200;
@@ -44,7 +56,9 @@
 }
 
 :root[data-theme="light"] {
-  --bg: #ffffff;
+  /* Light counterpart of the dark canvas above: was #ffffff while the shell
+     painted --surface (#f7f7f7). Same single-value rule applies. */
+  --bg: #f7f7f7;
   --stage: #f0f0f0;
   --surface: #f7f7f7;
   --surface2: #ffffff;
@@ -130,6 +144,12 @@ body > footer {
 
 html {
   scroll-behavior: smooth;
+  /* Painted on html as well as body, not redundantly: body is a flex column
+     with its own height, so on short pages and during iOS rubber-band
+     overscroll the area outside body is painted by html — which showed the UA
+     default white/black instead of the canvas. Setting it here makes the canvas
+     genuinely global, edge to edge, on every route. */
+  background: var(--bg);
 }
 
 a { color: inherit; text-decoration: none; }

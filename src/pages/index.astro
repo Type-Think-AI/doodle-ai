@@ -10,6 +10,13 @@ import { OG_IMAGE } from '../consts';
    handoff to /skills for the remainder. */
 const HOME_SKILL_COUNT = 20;
 const featuredSkills = SKILLS.slice(0, HOME_SKILL_COUNT);
+
+/* The first grid row is above the fold and holds the LCP candidate, so those
+   cards load eagerly with fetchpriority=high; the other 16 stay lazy. Four
+   covers the widest (desktop 4-up) row — at the 3-up and 2-up breakpoints this
+   eagerly loads at most two extra cards, which is a cheaper trade than a
+   lazy-loaded LCP image. */
+const PRIORITY_SKILL_COUNT = 4;
 ---
 
 <AppShellLayout
@@ -34,7 +41,7 @@ const featuredSkills = SKILLS.slice(0, HOME_SKILL_COUNT);
 				</a>
 			</div>
 			<div class="home-skills-grid">
-				{featuredSkills.map((skill) => <SkillCard skill={skill} />)}
+				{featuredSkills.map((skill, i) => <SkillCard skill={skill} priority={i < PRIORITY_SKILL_COUNT} />)}
 			</div>
 			<a class="home-skills-more" href="/skills">
 				See all {SKILLS.length} skills

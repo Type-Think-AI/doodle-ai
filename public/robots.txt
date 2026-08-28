@@ -2,24 +2,85 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /c/
+Disallow: /b/
+Disallow: /boards
 Disallow: /join/
 Disallow: /s/
 Disallow: /settings
-Disallow: /projects
-Disallow: /team
 
 # Sitemap
 Sitemap: https://doodleai.art/sitemap.xml
 
-# AI crawlers
+# ---------------------------------------------------------------------------
+# AI crawlers and answer engines.
+#
+# The blanket `User-agent: *` block above already allows all of these, so these
+# groups are not what grants access — they are here so that allowing or blocking
+# any single agent later is a one-line edit against a named group, instead of a
+# guess about which token that vendor reads.
+#
+# Two of these are training-scope controls rather than crawlers, and are named
+# explicitly because their default is the opposite of the others:
+#   Google-Extended   — Gemini training / grounding. Does not affect Search.
+#   Applebot-Extended — Apple Intelligence training. Does not affect Siri/Spotlight.
+#
+# Each group repeats the Disallow list, because a robots.txt group does NOT
+# inherit rules from `*` — an agent matching its own group ignores `*` entirely,
+# so omitting these lines here would expose /api/ and the account-scoped routes
+# to every agent named below.
+# ---------------------------------------------------------------------------
+
+# OpenAI — search, live browsing, training
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
 User-agent: GPTBot
 Allow: /
+Disallow: /api/
+Disallow: /c/
+Disallow: /b/
+Disallow: /boards
+Disallow: /join/
+Disallow: /s/
+Disallow: /settings
 
-User-agent: ChatGPT-User
+# Anthropic
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
 Allow: /
+Disallow: /api/
+Disallow: /c/
+Disallow: /b/
+Disallow: /boards
+Disallow: /join/
+Disallow: /s/
+Disallow: /settings
 
+# Perplexity
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+Allow: /
+Disallow: /api/
+Disallow: /c/
+Disallow: /b/
+Disallow: /boards
+Disallow: /join/
+Disallow: /s/
+Disallow: /settings
+
+# Google, Apple, Microsoft, Amazon, Meta, DuckDuckGo, Common Crawl
 User-agent: Google-Extended
+User-agent: Google-CloudVertexBot
+User-agent: Applebot-Extended
+User-agent: Amazonbot
+User-agent: meta-externalagent
+User-agent: DuckAssistBot
+User-agent: CCBot
 Allow: /
-
-User-agent: OAI-SearchBot
-Allow: /
+Disallow: /api/
+Disallow: /c/
+Disallow: /b/
+Disallow: /boards
+Disallow: /join/
+Disallow: /s/
+Disallow: /settings

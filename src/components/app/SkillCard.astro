@@ -1,11 +1,19 @@
 ---
 import { buildSkillThumbnail, type Skill } from '../../lib/skills';
+import { cdnImageSrcset, resizedCdnImage } from '../../lib/cdn-image';
 import { imageCountForSkill } from '../../lib/credits/costs';
 
 interface Props {
   skill: Skill;
+  /**
+   * Set on the cards in the first visible row. Those are the LCP candidates, so
+   * they must load eagerly — a lazy LCP image is what produced the 13,190 ms
+   * "element render delay" in the 2026-08-28 audit. Everything below the fold
+   * stays lazy.
+   */
+  priority?: boolean;
 }
-const { skill } = Astro.props;
+const { skill, priority = false } = Astro.props;
 const thumb = buildSkillThumbnail(skill);
 /* Pack skills return several separate images from one run. Surfacing the count
    on the card matters because it is the thing that differentiates this
@@ -13,11 +21,32 @@ const thumb = buildSkillThumbnail(skill);
    so a user should see "9" before clicking, not after being charged. Roadmap
    skills have no price to look up, hence the runnable guard. */
 const imageCount = skill.runnable ? imageCountForSkill(skill.id) : 1;
+
+/* Card widths: 226px in the 4-up desktop grid (1000px container), ~30vw at the
+   3-up breakpoint, ~45vw at the 2-up phone breakpoint. `sizes` has to describe
+   that or the browser picks the largest candidate and the srcset buys nothing. */
+const THUMB_SIZES = '(max-width: 720px) 45vw, (max-width: 980px) 30vw, 226px';
+const srcset = skill.thumbnailUrl ? cdnImageSrcset(skill.thumbnailUrl) : null;
+/* Fallback `src` is a resized variant too, so a browser that ignores srcset
+   still never downloads the 1024px original. */
+const src = skill.thumbnailUrl ? resizedCdnImage(skill.thumbnailUrl, 440) : undefined;
 ---
 
 <a class="skill-card" href={`/skills/${skill.id}`} data-runnable={skill.runnable ? "true" : "false"}>
   <div class="skill-card-thumb">
-    {skill.thumbnailUrl ? <img src={skill.thumbnailUrl} alt={`${skill.name} sample output`} loading="lazy" /> : <Fragment set:html={thumb} />}
+    {skill.thumbnailUrl ? (
+      <img
+        src={src}
+        srcset={srcset ?? undefined}
+        sizes={srcset ? THUMB_SIZES : undefined}
+        alt={`${skill.name} sample output`}
+        width="440"
+        height="440"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchpriority={priority ? 'high' : 'auto'}
+        decoding={priority ? 'sync' : 'async'}
+      />
+    ) : <Fragment set:html={thumb} />}
     {imageCount > 1 && (
       <span
         class="skill-card-count"

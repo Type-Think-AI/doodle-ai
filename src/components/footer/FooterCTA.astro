@@ -2,6 +2,19 @@
 /**
  * FooterCTA — Primary call-to-action block with headline and action buttons.
  */
+import { resizedCdnImage } from '../../lib/cdn-image';
+
+/* These four tiles are purely decorative (aria-hidden, empty alt) and render at
+   86x106 CSS px, but they were being served as 1024px PicX originals — roughly
+   1.3 MB each, on every page carrying the footer. 240px covers the box to ~2.8x
+   DPR. They are also below the fold on every page, so all four are lazy. */
+const TILE_WIDTH = 240;
+const tiles = [
+	{ url: 'https://cdn.picxstudio.com/api/generated/image_8e49ae56-a6d9-42f5-ae26-011e03e1b5c9.png', rotate: '-3deg' },
+	{ url: 'https://cdn.picxstudio.com/api/generated/image_af9449aa-7e1e-481b-9711-f45eca01e5ae.png', rotate: '3deg' },
+	{ url: 'https://cdn.picxstudio.com/api/generated/image_b991b561-8c11-4541-8869-145eac6070f6.png', rotate: '-2deg' },
+	{ url: 'https://cdn.picxstudio.com/api/generated/image_fbca2637-7236-4565-a6c7-e909110cf472.png', rotate: '3deg' },
+];
 ---
 
 <div class="db-cta">
@@ -23,9 +36,17 @@
 	</div>
 
 	<div class="db-tiles" aria-hidden="true">
-		<img class="db-tile" src="https://cdn.picxstudio.com/api/generated/image_8e49ae56-a6d9-42f5-ae26-011e03e1b5c9.png" alt="" style="transform:rotate(-3deg);" />
-		<img class="db-tile" src="https://cdn.picxstudio.com/api/generated/image_af9449aa-7e1e-481b-9711-f45eca01e5ae.png" alt="" style="transform:rotate(3deg);" />
-		<img class="db-tile" src="https://cdn.picxstudio.com/api/generated/image_b991b561-8c11-4541-8869-145eac6070f6.png" alt="" style="transform:rotate(-2deg);" />
-		<img class="db-tile" src="https://cdn.picxstudio.com/api/generated/image_fbca2637-7236-4565-a6c7-e909110cf472.png" alt="" style="transform:rotate(3deg);" />
+		{tiles.map((tile) => (
+			<img
+				class="db-tile"
+				src={resizedCdnImage(tile.url, TILE_WIDTH)}
+				alt=""
+				width="86"
+				height="106"
+				loading="lazy"
+				decoding="async"
+				style={`transform:rotate(${tile.rotate});`}
+			/>
+		))}
 	</div>
 </div>

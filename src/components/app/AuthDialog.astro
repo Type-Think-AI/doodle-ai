@@ -1,6 +1,14 @@
 ---
 // A compact visual-first sign-in dialog mounted once in AppShellLayout.astro.
 import { AUTH_AVATARS } from '../../consts';
+import { resizedCdnImage } from '../../lib/cdn-image';
+
+/* The art renders at `min(100%, 305px)` square, but these were served as 1024px
+   PicX originals (~1.3 MB each) with the first one `loading="eager"` — inside a
+   <dialog> that is closed until a user clicks sign in, so that was over a
+   megabyte downloaded on every page load for something nobody had asked to see.
+   640px covers 305 CSS px past 2x DPR, and all three are now lazy. */
+const AUTH_ART_WIDTH = 640;
 ---
 
 <dialog id="authDialog" class="auth-dialog" aria-labelledby="authDialogTitle" aria-describedby="authDialogDescription">
@@ -13,15 +21,15 @@ import { AUTH_AVATARS } from '../../consts';
 			{
 				AUTH_AVATARS.map((avatar, index) => (
 					<img
-						src={avatar.src}
+						src={resizedCdnImage(avatar.src, AUTH_ART_WIDTH)}
 						alt={index === 0 ? avatar.alt : ''}
 						class="auth-dialog-slide"
 						data-active={index === 0 ? 'true' : 'false'}
 						data-name={avatar.name}
 						data-alt={avatar.alt}
-						width="1024"
-						height="1024"
-						loading={index === 0 ? 'eager' : 'lazy'}
+						width="640"
+						height="640"
+						loading="lazy"
 						decoding="async"
 					/>
 				))

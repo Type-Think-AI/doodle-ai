@@ -4,6 +4,66 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://datafa.st https://cdn.mxpnl.com https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdn.picxstudio.com https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self' wss: https://api.picxstudio.com https://api-js.mixpanel.com https://www.google-analytics.com https://datafa.st https://cloudflareinsights.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+# ---------------------------------------------------------------------------
+# Why these two headers look the way they do
+#
+# Cross-Origin-Opener-Policy — the 2026-08-28 audit rated "No COOP header found"
+# High. `same-origin-allow-popups` rather than plain `same-origin` on purpose:
+# `same-origin` severs window.opener for popups, and while Better Auth's Google
+# sign-in currently uses a full redirect (auth-client.ts sets
+# window.location.href), a popup-based flow is a plausible future change and this
+# value satisfies the audit either way.
+#
+# Content-Security-Policy — REPORT-ONLY, deliberately. The audit rated "No CSP
+# found in enforcement mode" High, but shipping an enforcing CSP straight to
+# production on a site with inline scripts breaks it instantly. Report-Only
+# collects violations while changing nothing.
+#
+#   Origins allowed above, and what each is for:
+#     datafa.st                   DataFast pageview script
+#     cdn.mxpnl.com               Mixpanel library
+#     api-js.mixpanel.com         Mixpanel event ingest
+#     www.googletagmanager.com    GA4 (gtag.js)
+#     www.google-analytics.com    GA4 collect endpoint
+#     static.cloudflareinsights.com / cloudflareinsights.com   CF Web Analytics
+#     cdn.picxstudio.com          all generated + skill-card imagery
+#     lh3.googleusercontent.com   Google account avatars after OAuth sign-in
+#     api.picxstudio.com          generation + managed asset uploads
+#     wss:                        @tldraw/sync WebSocket to the RoadmapRoom /
+#                                 BoardRoom Durable Objects
+#
+# BEFORE THIS CAN BE PROMOTED TO ENFORCEMENT, two things must change:
+#
+#   1. `script-src 'unsafe-inline'` has to go, and it is load-bearing today:
+#      AppLayout.astro has two `is:inline` scripts (the pre-paint theme setter,
+#      which must stay synchronous and inline to avoid a light-mode flash, and
+#      the Mixpanel loader stub). Replace with per-request nonces or SHA-256
+#      hashes — not by deleting the scripts.
+#   2. `style-src 'unsafe-inline'` is required by Astro's scoped <style> blocks
+#      and by build.inlineStylesheets: 'always' in astro.config.mjs. Astro has no
+#      nonce story for these yet, so this one may have to stay; that is an
+#      accepted, documented residual risk rather than an oversight.
+#
+# There is no report-uri/report-to endpoint, so violations currently surface only
+# in the browser console. Wiring a collector is a prerequisite for promotion —
+# otherwise "the reports are clean" is unfalsifiable. Owner: Nema (policy) / Kai
+# (rollout).
+#
+# NOT ADDED — HSTS `preload`. The audit rated its absence Medium. Adding it is
+# effectively irreversible: submission to the browser preload list pins HTTPS for
+# the max-age window (one year here) across doodleai.art AND every subdomain via
+# includeSubDomains, so any future subdomain that cannot serve valid TLS becomes
+# unreachable with no quick rollback. That needs an explicit decision, not an
+# agent's.
+#
+# Trusted Types (`require-trusted-types-for 'script'`) is also still missing and
+# was rated High. It is a larger change than a header line — every DOM sink in
+# src/scripts/app/ that assigns innerHTML would need a policy — so it is tracked
+# separately rather than half-added here.
+# ---------------------------------------------------------------------------
 
 # No /fonts/* rule: the site uses the system font stack and ships no font files.
 # Astro's own hashed output under /_astro/* is already immutable by filename.

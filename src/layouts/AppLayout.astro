@@ -13,6 +13,7 @@ interface Props {
 
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 import { THEME_STORAGE_KEY } from '../lib/theme';
+import WebMcpTools from '../components/agentic/WebMcpTools.astro';
 import '../styles/app.css';
 
 const {
@@ -230,5 +231,9 @@ const jsonLd = {
 	</head>
 	<body>
 		<slot />
+		<!-- Registers read-only WebMCP tools when the browser exposes
+		     document.modelContext. Renders no markup; see the component for why
+		     nothing that spends a credit is exposed. -->
+		<WebMcpTools />
 	</body>
 </html>

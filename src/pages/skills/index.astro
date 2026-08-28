@@ -7,6 +7,11 @@ import { OG_IMAGE } from '../../consts';
 const site = 'https://doodleai.art';
 const runnableSkills = SKILLS.filter((s) => s.runnable);
 
+/* First grid row is above the fold and holds the LCP candidate — see the same
+   constant in src/pages/index.astro. This grid is wider (1180px container), but
+   four still lands inside the first row at every breakpoint. */
+const PRIORITY_SKILL_COUNT = 4;
+
 const collectionSchema = {
 	'@context': 'https://schema.org',
 	'@type': 'CollectionPage',
@@ -46,9 +51,9 @@ const collectionSchema = {
 		<p class="skills-intro">Each skill turns a photo or idea into a specific hand-drawn style — avatars, collages, stickers, pet portraits, and gifts. Pick one to generate, or let the AI agent choose for you.</p>
 
 		<div class="skills-grid" id="skillsGrid">
-			{SKILLS.map((skill) => (
+			{SKILLS.map((skill, i) => (
 				<div class="skills-grid-item" data-search={`${skill.name} ${skill.desc}`.toLowerCase()}>
-					<SkillCard skill={skill} />
+					<SkillCard skill={skill} priority={i < PRIORITY_SKILL_COUNT} />
 				</div>
 			))}
 		</div>
