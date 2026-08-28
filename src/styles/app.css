@@ -153,3 +153,29 @@ html {
 }
 
 a { color: inherit; text-decoration: none; }
+
+/* ---------------------------------------------------------------------------
+   WEBMCP AGENT-DRIVING AFFORDANCE
+   Chrome applies :tool-form-active to a <form> and :tool-submit-active to its
+   submit control while a page-embedded agent is driving that form. We surface
+   it with the project's amber accent (var(--accent)) instead of Chrome's
+   default blue/cyan, as a thin outline in keeping with the flat, no-shadow
+   house style — no fill, no elevation. Appended only; touches no existing rule.
+   --------------------------------------------------------------------------- */
+form:tool-form-active {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:tool-submit-active {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  form:tool-form-active,
+  button:tool-submit-active {
+    transition: outline-color 0.15s ease;
+  }
+}

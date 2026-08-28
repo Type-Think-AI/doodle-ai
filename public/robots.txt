@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+# The agent index mirrors the (public) sitemap in a machine-readable shape and
+# is meant to be fetched. A more-specific Allow overrides the /api/ Disallow
+# under RFC 9309 longest-match, so only this one endpoint is re-opened.
+Allow: /api/agent-index.json
 Disallow: /c/
 Disallow: /b/
 Disallow: /boards
@@ -36,6 +40,7 @@ User-agent: ChatGPT-User
 User-agent: GPTBot
 Allow: /
 Disallow: /api/
+Allow: /api/agent-index.json
 Disallow: /c/
 Disallow: /b/
 Disallow: /boards
@@ -49,6 +54,7 @@ User-agent: Claude-User
 User-agent: Claude-SearchBot
 Allow: /
 Disallow: /api/
+Allow: /api/agent-index.json
 Disallow: /c/
 Disallow: /b/
 Disallow: /boards
@@ -61,6 +67,7 @@ User-agent: PerplexityBot
 User-agent: Perplexity-User
 Allow: /
 Disallow: /api/
+Allow: /api/agent-index.json
 Disallow: /c/
 Disallow: /b/
 Disallow: /boards
@@ -78,6 +85,7 @@ User-agent: DuckAssistBot
 User-agent: CCBot
 Allow: /
 Disallow: /api/
+Allow: /api/agent-index.json
 Disallow: /c/
 Disallow: /b/
 Disallow: /boards

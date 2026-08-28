@@ -10,6 +10,23 @@
 //      column, so it's immediately visible to maintainers on the board.
 //
 // Opened via `window.dispatchEvent(new Event("doodleai:open-feedback"))`.
+//
+// WEBMCP — the note contents are wrapped in a real <form> with declarative
+// annotations so Lighthouse's form-coverage audit can see them. Submission is a
+// standards-compliant native submit flow, handled in
+// scripts/app/feedback-dialog.ts: the button is type="submit", so a pointer
+// click, an Enter keypress, and an agent-invoked declarative submission all
+// raise exactly ONE `submit` event. The controller preventDefault()s that event
+// (no navigation/reload) and runs the async POST once, guarded so the same note
+// can never be sent twice. The handler still reads #feedbackDialogText by id, so
+// wrapping the fields changed nothing at runtime.
+//
+// The declarative attributes are intentionally BARE (no data- prefix): the
+// browser reads the bare form in plain HTML, and the data- prefix is only a
+// React/JSX TypeScript workaround that does not apply to an Astro template.
+// Deliberately NO auto-submit annotation: feedback POSTs to D1 and creates a
+// roadmap note, an irreversible write, so it stays human-confirmed — an agent
+// caller fills the field and submits, but only on explicit intent.
 ---
 
 <dialog id="feedbackDialog" class="fb-dialog" aria-labelledby="fbTitle">
@@ -21,14 +38,29 @@
 		<h2 id="fbTitle" class="fb-title">Drop a note</h2>
 		<p class="fb-sub">It lands on the roadmap board for the team to see.</p>
 
-		<textarea id="feedbackDialogText" class="fb-textarea" placeholder="What's on your mind?" maxlength="500" rows="4"></textarea>
+		<form
+			id="feedbackForm"
+			class="fb-form"
+			toolname="submit_doodle_feedback"
+			tooldescription="File a short product feedback note for Doodle AI. It is saved and posted to the team's public roadmap board. Use when someone wants to report a bug, request a feature, or share an opinion about the product. Does not spend credits and does not read account data. The user presses the button to send — do not auto-submit."
+		>
+			<textarea
+				id="feedbackDialogText"
+				name="text"
+				class="fb-textarea"
+				placeholder="What's on your mind?"
+				maxlength="500"
+				rows="4"
+				toolparamdescription="The feedback message to file, up to 500 characters. Plain prose describing a bug, feature request, or opinion."
+			></textarea>
 
-		<p class="fb-error" id="feedbackDialogError" hidden></p>
+			<p class="fb-error" id="feedbackDialogError" hidden></p>
 
-		<button type="button" class="fb-submit" id="feedbackDialogSubmit">
-			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-			Stick it
-		</button>
+			<button type="submit" class="fb-submit" id="feedbackDialogSubmit">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				Stick it
+			</button>
+		</form>
 	</div>
 </dialog>
 

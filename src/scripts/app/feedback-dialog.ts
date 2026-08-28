@@ -6,11 +6,26 @@
  *     component listens for this and creates the note directly on the canvas.
  *     This is what makes feedback visible in local mode (no DO) and also gives
  *     instant feedback in multiplayer mode even if the RPC hasn't propagated yet.
+ *
+ * Submission is driven by the form's native `submit` event, which is the single
+ * choke point every entry path funnels through: a pointer click on the submit
+ * button, an Enter keypress inside the textarea's implicit-submit, and an
+ * agent-invoked declarative WebMCP submission all raise exactly one `submit`.
+ * We call preventDefault() so the browser never navigates or reloads, then run
+ * the async POST once. A re-entrancy guard (`submitting`) plus disabling the
+ * button means the same note can never be sent twice.
  */
 
 const OPEN_EVENT = "doodleai:open-feedback";
 const ADDED_EVENT = "doodleai:feedback-added";
 const AUTO_CLOSE_MS = 1800;
+
+/** A SubmitEvent that MAY carry the experimental WebMCP respondWith API. We
+ *  feature-detect it at runtime rather than depending on a lib type, so this
+ *  stays TypeScript-safe on toolchains whose DOM lib predates the proposal. */
+type MaybeAgentSubmitEvent = SubmitEvent & {
+  respondWith?: (result: unknown) => void;
+};
 
 function initFeedbackDialog(): void {
   const dialog = document.getElementById("feedbackDialog") as HTMLDialogElement | null;
@@ -41,23 +56,43 @@ function initFeedbackDialog(): void {
     const textarea = document.getElementById("feedbackDialogText") as HTMLTextAreaElement | null;
     const errorEl = document.getElementById("feedbackDialogError");
     const submitBtn = document.getElementById("feedbackDialogSubmit") as HTMLButtonElement | null;
+    const form = document.getElementById("feedbackForm") as HTMLFormElement | null;
 
     closeBtn?.addEventListener("click", close);
 
-    submitBtn?.addEventListener("click", async () => {
+    if (!form) return;
+
+    // Re-entrancy guard: a submit already in flight must not start a second POST,
+    // regardless of which entry path (click / Enter / agent) fired.
+    let submitting = false;
+
+    const showError = (message: string): void => {
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.hidden = false;
+      }
+    };
+
+    /** Runs the actual async submission exactly once. Returns a machine-readable
+     *  result an agent caller can consume; also drives the human UI. */
+    const runSubmit = async (): Promise<{ ok: boolean; message: string }> => {
       const text = textarea?.value.trim() ?? "";
       if (errorEl) errorEl.hidden = true;
 
       if (!text) {
-        if (errorEl) {
-          errorEl.textContent = "Write something first.";
-          errorEl.hidden = false;
-        }
-        return;
+        showError("Write something first.");
+        return { ok: false, message: "Feedback text is empty." };
       }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Sticking…";
+      if (submitting) {
+        return { ok: false, message: "A submission is already in progress." };
+      }
+      submitting = true;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sticking…";
+      }
 
       try {
         const res = await fetch("/api/v1/feedback", {
@@ -75,13 +110,37 @@ function initFeedbackDialog(): void {
         window.dispatchEvent(new CustomEvent(ADDED_EVENT, { detail: { text } }));
 
         showThanks();
+        return { ok: true, message: "Feedback filed and posted to the roadmap board." };
       } catch (err) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Stick it";
-        if (errorEl) {
-          errorEl.textContent = err instanceof Error ? err.message : "Couldn't stick that. Try again.";
-          errorEl.hidden = false;
+        const message = err instanceof Error ? err.message : "Couldn't stick that. Try again.";
+        // Re-enable so the human (or agent) can retry; the DOM still holds the form.
+        submitting = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Stick it";
         }
+        showError(message);
+        return { ok: false, message };
+      }
+    };
+
+    // The single submission choke point. Every path — pointer click on the
+    // type="submit" button, Enter inside the textarea's implicit submit, and an
+    // agent-invoked declarative WebMCP submission — raises exactly one `submit`.
+    form.addEventListener("submit", (e) => {
+      // Stop native navigation/reload in all cases, including agent-invoked.
+      e.preventDefault();
+
+      const agentEvent = e as MaybeAgentSubmitEvent;
+      const promise = runSubmit();
+
+      // If the runtime exposes the experimental WebMCP respondWith API, hand the
+      // caller a concise result. Feature-detected so TS/older DOMs stay safe, and
+      // the same runSubmit() promise is reused — no second send.
+      if (typeof agentEvent.respondWith === "function") {
+        agentEvent.respondWith(
+          promise.then((r) => (r.ok ? r.message : `Not filed: ${r.message}`)),
+        );
       }
     });
   };

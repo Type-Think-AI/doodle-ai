@@ -114,6 +114,17 @@ const jsonLd = {
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical} />
 		<link rel="alternate" hreflang="x-default" href={canonical} />
+		<!-- Machine-readable discovery hint. A rel="alternate" with a JSON type
+		     is the standard alternate-representation pattern (same mechanism as
+		     the RSS alternate); it lets an agent find the article index from any
+		     page's <head> without crawling. Mirrors the public sitemap; robots.txt
+		     Allows the path. No account data, no secrets. -->
+		<link
+			rel="alternate"
+			type="application/json"
+			href={new URL('/api/agent-index.json', site)}
+			title="Doodle AI article index (machine-readable)"
+		/>
 		{noindex
 			? <meta name="robots" content="noindex, nofollow" />
 			: <meta name="robots" content="index, follow, max-image-preview:large" />

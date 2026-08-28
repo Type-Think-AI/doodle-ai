@@ -3,6 +3,17 @@ export const prerender = false;
 import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import Lightbox from '../../components/app/Lightbox.astro';
 import '../../styles/boards.css';
+
+/* AppShellLayout emits this page's <main> landmark, so the wrapper below is a div.
+ *
+ * WEBMCP — declarative annotations (toolname + tooldescription) are safe on the
+ * create-board form and deliberately ABSENT from the board composer in
+ * /b/[id].astro: creating a board is free, so an agent submitting this form
+ * cannot bill anyone, whereas the composer navigates into the credit-spending
+ * generation flow. The attributes are intentionally BARE, not data-prefixed —
+ * Lighthouse matches `toolname`/`tooldescription` literally, so `data-toolname`
+ * is invisible to it. Astro passes unknown HTML attributes straight through, so
+ * no data- escape hatch is needed. */
 ---
 
 <AppShellLayout
@@ -10,7 +21,6 @@ import '../../styles/boards.css';
   description="Every doodle you make lands on a board. Name them, arrange them, share them."
   active="boards"
 >
-  <!-- div, not <main>: AppShellLayout already emits this page's <main> landmark. -->
   <div class="bd-page" id="boardsPage">
     <header class="bd-head">
       <div>
@@ -22,9 +32,22 @@ import '../../styles/boards.css';
 
     <!-- Inline create row rather than a modal: making a board is a one-field
          action, and a dialog for one text input is a interruption, not a form. -->
-    <form class="bd-newrow" id="newBoardForm" hidden>
+    <form
+      class="bd-newrow"
+      id="newBoardForm"
+      toolname="create_doodle_board"
+      tooldescription="Create a new empty board to group generated doodles. Creating a board is free and never spends a credit. Use this when someone wants a place to collect images before generating them."
+      hidden
+    >
       <label class="bd-sr" for="newBoardName">Board name</label>
-      <input id="newBoardName" name="name" maxlength="120" placeholder="Name this board…" autocomplete="off" />
+      <input
+        id="newBoardName"
+        name="name"
+        maxlength="120"
+        placeholder="Name this board…"
+        autocomplete="off"
+        toolparamdescription="A short human-readable name for the board, for example 'Pet portraits' or 'Holiday cards'. Maximum 120 characters."
+      />
       <button type="submit" class="bd-btn bd-btn-primary">Create</button>
       <button type="button" class="bd-btn" id="cancelBoardButton">Cancel</button>
     </form>

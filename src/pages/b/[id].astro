@@ -73,7 +73,17 @@ const boardId = id ?? '';
         <!-- Pinned composer. Submitting hands off to the chat pipeline with this
              board as the target (?board=<id>), so the generation lands back HERE.
              Deliberately NOT a second generation implementation: the old
-             /projects batch panel forked the skill list and went stale in days. -->
+             /projects batch panel forked the skill list and went stale in days.
+
+             NO declarative WebMCP here, on purpose. Submitting this form starts a
+             generation, and every runnable skill reserves at least one credit, so
+             `toolname`/`tooldescription` would hand a browser agent the ability to
+             spend a signed-in user's balance without them pressing anything.
+             Lighthouse's "forms missing declarative WebMCP" audit is
+             informational and issues no warning, so leaving this bare costs no
+             score. Agents reach generation through the WebMCP `open_doodle_page`
+             tool instead, which only navigates and leaves the send button to a
+             human. Do not "fix" this audit by annotating this form. -->
         <form class="bd-composer" id="boardComposer">
           <label class="bd-sr" for="boardPrompt">Describe a doodle for this board</label>
           <input

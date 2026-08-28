@@ -86,3 +86,4 @@ Long-form guides live at keyword-first root URLs, not under a /blog/ prefix.
 
 ## Full content
 - [Full text index](/llms-full.txt) -- all article titles, URLs, dates, and descriptions in one file.
+- [Article index (JSON)](/api/agent-index.json) -- the same articles as a compact machine-readable list (url, title, description, category, dates, excerpt), for filtering without crawling.
