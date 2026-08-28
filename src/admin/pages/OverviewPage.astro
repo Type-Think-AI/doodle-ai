@@ -19,7 +19,7 @@ import GenerationsChart from '../components/GenerationsChart.astro';
 import ActivationFunnel from '../components/ActivationFunnel.astro';
 import ActivityFeed from '../components/ActivityFeed.astro';
 
-const db = getDb(Astro as any);
+const db = getDb(Astro);
 const requestedDays = Number(Astro.url.searchParams.get('days') ?? 14);
 const chartDays = [7, 14, 30].includes(requestedDays) ? requestedDays : 14;
 const [totals, byDay, byWeek, funnel, mix, activity, attention] = await Promise.all([

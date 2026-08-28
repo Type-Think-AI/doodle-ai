@@ -7,10 +7,9 @@
  *   - listBoards: single round-trip using a window function for the 4-newest
  *     cover items, avoiding N+1.
  */
-import { and, count, desc, eq, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import type { Db } from "../../db/client";
 import { board, boardItem, boardMember } from "../../db/schema/boards";
-import { newId } from "../api/body";
 
 // ─── DTOs ────────────────────────────────────────────────────────────────────
 

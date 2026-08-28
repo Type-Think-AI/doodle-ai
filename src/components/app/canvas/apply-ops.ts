@@ -75,7 +75,7 @@ function resolveAnchor(
  * Find a free slot near existing content when no anchor is provided.
  * Places to the right of the rightmost shape on the page.
  */
-function findFreeSlot(editor: Editor, w: number, h: number): { x: number; y: number } {
+function findFreeSlot(editor: Editor): { x: number; y: number } {
   const shapes = editor.getCurrentPageShapes();
   if (shapes.length === 0) return { x: 100, y: 100 };
 
@@ -153,7 +153,7 @@ function applySingleOp(
   switch (op.op) {
     case "addText": {
       const shapeId = createShapeId();
-      const pos = resolveAnchor(editor, op.at, 200, 40) ?? findFreeSlot(editor, 200, 40);
+      const pos = resolveAnchor(editor, op.at, 200, 40) ?? findFreeSlot(editor);
       const ref = op.ref ?? autoRef(editor, "text");
 
       editor.createShape({
@@ -173,7 +173,7 @@ function applySingleOp(
 
     case "addNote": {
       const shapeId = createShapeId();
-      const pos = resolveAnchor(editor, op.at, 200, 200) ?? findFreeSlot(editor, 200, 200);
+      const pos = resolveAnchor(editor, op.at, 200, 200) ?? findFreeSlot(editor);
       const ref = op.ref ?? autoRef(editor, "note");
 
       editor.createShape({
@@ -243,7 +243,7 @@ function applySingleOp(
       const shapeId = createShapeId();
       const w = op.w ?? 120;
       const h = op.h ?? 120;
-      const pos = resolveAnchor(editor, op.at, w, h) ?? findFreeSlot(editor, w, h);
+      const pos = resolveAnchor(editor, op.at, w, h) ?? findFreeSlot(editor);
       const ref = op.ref ?? autoRef(editor, "geo");
 
       editor.createShape({
@@ -303,7 +303,7 @@ function applySingleOp(
         editor.reparentShapes(childIds, shapeId);
       } else {
         // Empty frame at a free slot
-        const pos = findFreeSlot(editor, 400, 300);
+        const pos = findFreeSlot(editor);
         editor.createShape({
           id: shapeId,
           type: "frame",
@@ -453,7 +453,7 @@ function applySingleOp(
         if (!shape) continue;
         editor.updateShape({
           id: ids[i]!,
-          type: shape.type as any,
+          type: shape.type,
           x: startX + col * (cellW + gap),
           y: startY + row * (cellH + gap),
         });
@@ -509,7 +509,6 @@ function applySingleOp(
         }
       } else {
         // Direct dimension update — works for geo, image, frame shapes
-        const props = shape.props as Record<string, unknown>;
         const updates: Record<string, unknown> = {};
         if (op.w !== undefined) updates.w = op.w;
         if (op.h !== undefined) updates.h = op.h;

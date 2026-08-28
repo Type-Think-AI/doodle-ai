@@ -1,5 +1,5 @@
 import type { APIContext } from "astro";
-import { and, desc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../../db/client";
 import { board, boardItem, boardMember } from "../../../../../db/schema/boards";
 import { apiError, apiJson, requireOrg } from "../../../../../lib/auth/guards";

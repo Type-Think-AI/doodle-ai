@@ -1,7 +1,7 @@
 /**
  * Admin feedback queries — list, counts, triage status.
  */
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { count, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../../db/client";
 import { organization, user } from "../../db/schema/auth";
 import { feedback } from "../../db/schema/product";

@@ -1,11 +1,10 @@
 /**
  * Admin overview queries — totals, charts, funnel, activity feed, attention items.
  */
-import { and, count, countDistinct, desc, eq, gte, isNotNull, lt, sql, sum } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gte, lt, sql, sum } from "drizzle-orm";
 import type { Db } from "../../db/client";
 import { user } from "../../db/schema/auth";
 import {
-  creditBalanceOrg,
   creditLedger,
   purchase,
   subscription,

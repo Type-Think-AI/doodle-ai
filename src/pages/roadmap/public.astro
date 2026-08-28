@@ -12,7 +12,8 @@ import { resolvePlatformRole } from '../../lib/auth/admin-guard';
 
 const ROOM = 'public-v6';
 
-const env = (Astro.locals as { runtime?: { env?: Env } })?.runtime?.env;
+type RoadmapEnv = { ROADMAP_ROOM?: unknown };
+const env = (Astro.locals as { runtime?: { env?: RoadmapEnv } })?.runtime?.env;
 const hasSync = !!env?.ROADMAP_ROOM;
 const resolved = hasSync ? await resolvePlatformRole(Astro as never) : null;
 const canSeed = !hasSync || resolved?.platformRole === 'admin';

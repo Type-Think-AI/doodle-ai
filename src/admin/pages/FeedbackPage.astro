@@ -4,7 +4,7 @@ import { listFeedback, relativeTime, formatDate } from '../../lib/admin/queries'
 import GradientAvatar from '../components/GradientAvatar.astro';
 import StatusPill from '../components/StatusPill.astro';
 
-const db = getDb(Astro as any);
+const db = getDb(Astro);
 const requestedStatus = Astro.url.searchParams.get('status') ?? 'new';
 const status = ['all', 'new', 'reviewing', 'resolved', 'wont_fix'].includes(requestedStatus)
 	? requestedStatus

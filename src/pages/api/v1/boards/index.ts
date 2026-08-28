@@ -4,7 +4,7 @@ import { board } from "../../../../db/schema/boards";
 import { apiError, apiJson, requireOrg } from "../../../../lib/auth/guards";
 import { newId, optStr, readJson } from "../../../../lib/api/body";
 import { getOrCreateInbox, listBoards, toBoardDetail } from "../../../../lib/boards/queries";
-import { BOARD_KINDS, BOARD_VIEW_MODES } from "../../../../db/schema/boards";
+import { BOARD_VIEW_MODES, type BoardViewMode } from "../../../../db/schema/boards";
 
 export const prerender = false;
 
@@ -44,7 +44,7 @@ export async function POST(context: APIContext): Promise<Response> {
   if (!name) return apiError("bad_request", "`name` is required.", 400);
 
   const viewMode = body?.viewMode;
-  if (viewMode && !BOARD_VIEW_MODES.includes(viewMode as any)) {
+  if (viewMode && !BOARD_VIEW_MODES.includes(viewMode as BoardViewMode)) {
     return apiError("bad_request", "`viewMode` must be 'grid' or 'canvas'.", 400);
   }
 

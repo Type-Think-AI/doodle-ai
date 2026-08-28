@@ -6,7 +6,7 @@ import { SKILLS as SKILL_CATALOG } from '../../lib/skills';
 import GradientAvatar from '../components/GradientAvatar.astro';
 import StatusPill from '../components/StatusPill.astro';
 
-const db = getDb(Astro as any);
+const db = getDb(Astro);
 const [stats, stateRows] = await Promise.all([
 	getSkillStats(db),
 	db.select({ skillId: skillState.skillId, state: skillState.state, featured: skillState.featured, note: skillState.note }).from(skillState),

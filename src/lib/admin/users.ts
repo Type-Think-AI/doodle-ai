@@ -1,7 +1,7 @@
 /**
  * Admin user queries — list, detail, segments.
  */
-import { and, count, countDistinct, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, lt, sql } from "drizzle-orm";
 import type { Db } from "../../db/client";
 import { member, organization, user } from "../../db/schema/auth";
 import {

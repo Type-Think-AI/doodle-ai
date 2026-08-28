@@ -24,7 +24,8 @@ import {
   type SessionStateSnapshot,
   TLSocketRoom,
 } from "@tldraw/sync-core";
-import type { TLRecord } from "@tldraw/tlschema";
+import type { TLNoteShape, TLPageId, TLRecord, TLShapeId } from "@tldraw/tlschema";
+import { toRichText } from "@tldraw/tlschema";
 import { DurableObject } from "cloudflare:workers";
 import type { RoadmapSessionMeta } from "./access";
 import { roadmapAuthorizers } from "./authorize";
@@ -209,23 +210,24 @@ export class RoadmapRoom extends DurableObject<Env> {
    */
   async addFeedbackNote(text: string, authorName: string): Promise<void> {
     const room = this.getRoom();
-    const id = `shape:feedback-${Date.now().toString(36)}` as `shape:${string}`;
+    const id = `shape:feedback-${Date.now().toString(36)}` as TLShapeId;
     const y = 800 + Math.floor(Math.random() * 40);
+    const pageId = "page:page" as TLPageId;
 
     await room.updateStore((store) => {
-      store.put({
+      const note = {
         id,
         typeName: "shape",
         type: "note",
         x: 0,
         y,
         rotation: 0,
-        index: "aZ" as any,
-        parentId: "page:page" as any,
+        index: "aZ" as TLNoteShape["index"],
+        parentId: pageId,
         isLocked: false,
         opacity: 1,
         props: {
-          richText: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: `${text}\n— ${authorName}` }] }] },
+          richText: toRichText(`${text}\n— ${authorName}`),
           color: "orange",
           size: "m",
           font: "sans",
@@ -239,7 +241,8 @@ export class RoadmapRoom extends DurableObject<Env> {
           textLastEditedBy: null,
         },
         meta: { feedbackNote: true },
-      } as any);
+      } satisfies TLNoteShape;
+      store.put(note);
     });
   }
 }

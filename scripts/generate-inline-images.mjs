@@ -110,7 +110,6 @@ async function main() {
   let generated = 0;
   let skipped = 0;
   let failed = 0;
-  let totalCredits = 0;
 
   for (const article of manifest) {
     if (articleFilter && article.article !== articleFilter) continue;
@@ -146,7 +145,6 @@ async function main() {
           generatedAt: new Date().toISOString(),
         };
         saveResults(results); // Save after each success (resumable)
-        totalCredits += result.credits || 53;
         console.log(`   ✅ CDN: ${result.url}`);
         generated++;
 

@@ -2,7 +2,7 @@
 import { getDb } from '../../db/client';
 import { listOrgs, thousands, formatDate } from '../../lib/admin/queries';
 
-const db = getDb(Astro as any);
+const db = getDb(Astro);
 const rows = await listOrgs(db, 50, 0);
 const personal = rows.filter((row) => row.isPersonal).length;
 const shared = rows.length - personal;

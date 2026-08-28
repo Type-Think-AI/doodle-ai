@@ -4,7 +4,6 @@
 import { and, count, countDistinct, desc, eq, isNotNull, sql } from "drizzle-orm";
 import type { Db } from "../../db/client";
 import { organization, user } from "../../db/schema/auth";
-import { subscription } from "../../db/schema/billing";
 import {
   asset,
   batchItem,

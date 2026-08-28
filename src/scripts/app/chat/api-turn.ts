@@ -11,7 +11,7 @@ import { trackDoodleGenerated } from "../mixpanel";
 import { MAX_IMAGE_BYTES } from "../../../lib/doodle-constants";
 import { setImageSrc } from "../dom-utils";
 import type { AttachmentState, SendState, SkillPinState } from "./state";
-import { getStyleId, pinSkill } from "./state";
+import { getStyleId } from "./state";
 import type { CanvasOp } from "../../../lib/canvas/ops";
 
 /* ---- Types ---- */

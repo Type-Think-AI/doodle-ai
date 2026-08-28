@@ -129,7 +129,7 @@ function initChat(): void {
       if (msg.role === "user") lastUserMessage = msg;
       pushToCanvas(collectThreadImages(threadId!));
     },
-    onImage: (url, _skillId) => {
+    onImage: (url) => {
       pushToCanvas([url]);
       if (!whiteboardState.on && !whiteboardState.dismissed) {
         setWhiteboard(whiteboardState, true, chatSplit, canvasPanel, whiteboardToggle, threadId!);

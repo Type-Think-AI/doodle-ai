@@ -2,7 +2,7 @@
    Communicates with the React island via CustomEvents on window and the
    __doodleCanvasQueue backlog array. No network IO. */
 
-import { loadThread, type ChatMessage } from "../chat-store";
+import { loadThread } from "../chat-store";
 import type { CanvasOp, CanvasDigest } from "../../../lib/canvas/ops";
 
 /* ---- Thread image collection ---- */

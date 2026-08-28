@@ -3,7 +3,7 @@ import { getDb } from '../../db/client';
 import { listBatches, relativeTime, formatDate, thousands } from '../../lib/admin/queries';
 import StatusPill from '../components/StatusPill.astro';
 
-const db = getDb(Astro as any);
+const db = getDb(Astro);
 const requestedStatus = Astro.url.searchParams.get('status') ?? 'all';
 const statuses = ['all', 'queued', 'running', 'done', 'failed', 'canceled'];
 const status = statuses.includes(requestedStatus) ? requestedStatus : 'all';

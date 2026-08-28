@@ -6,7 +6,7 @@ import { apiError, apiJson, requireOrg, type OrgContext } from "../../../../../l
 import { optStr, readJson } from "../../../../../lib/api/body";
 import { toBoardDetail } from "../../../../../lib/boards/queries";
 import { resolveBoardRole, hasTier, REQUIRED_TIER, type BoardTier } from "../../../../../lib/boards/access";
-import { BOARD_VIEW_MODES } from "../../../../../db/schema/boards";
+import { BOARD_VIEW_MODES, type BoardViewMode } from "../../../../../db/schema/boards";
 
 export const prerender = false;
 
@@ -95,7 +95,7 @@ export async function PATCH(context: APIContext): Promise<Response> {
   }
 
   if ("viewMode" in body) {
-    if (!BOARD_VIEW_MODES.includes(body.viewMode as any)) {
+    if (!BOARD_VIEW_MODES.includes(body.viewMode as BoardViewMode)) {
       return apiError("bad_request", "`viewMode` must be 'grid' or 'canvas'.", 400);
     }
     patch.viewMode = body.viewMode as string;

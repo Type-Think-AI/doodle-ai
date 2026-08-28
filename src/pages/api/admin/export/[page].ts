@@ -35,7 +35,7 @@ function toCsv(headers: string[], rows: CsvField[][]): string {
     let field = String(value);
     if (/^[=+\-@\t\r]/.test(field)) field = `'${field}`;
 
-    if (/[\",\n\r]/.test(field)) return `"${field.replace(/"/g, '""')}"`;
+    if (/[",\n\r]/.test(field)) return `"${field.replace(/"/g, '""')}"`;
     return field;
   };
 

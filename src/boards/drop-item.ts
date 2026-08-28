@@ -18,9 +18,11 @@
  * route) need R2.
  */
 
+import type { BoardRoom } from "./BoardRoom";
+
 interface DropImageParams {
   /** The BOARD_ROOM DurableObjectNamespace binding from env. */
-  boardRoomNs: DurableObjectNamespace;
+  boardRoomNs: DurableObjectNamespace<BoardRoom>;
   /** The board's id — used as the DO name to derive the instance id. */
   boardId: string;
   /** PicX CDN URL of the generated image. */
@@ -50,5 +52,5 @@ export async function dropImageOnBoard(params: DropImageParams): Promise<void> {
 
   // RPC call to the DO — see BoardRoom.dropImage().
   // Type assertion: Cloudflare's typed stubs expose class methods as RPC.
-  await (stub as any).dropImage(url, width, height, assetId);
+  await stub.dropImage(url, width, height, assetId);
 }

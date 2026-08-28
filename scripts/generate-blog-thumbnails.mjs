@@ -231,7 +231,7 @@ async function generate(apiKey, prompt, { model, size, aspectRatio = ASPECT_RATI
     body: JSON.stringify({ model, prompt, size, aspect_ratio: aspectRatio }),
   });
   const text = await res.text();
-  let data = {};
+  let data;
   try {
     data = JSON.parse(text);
   } catch {

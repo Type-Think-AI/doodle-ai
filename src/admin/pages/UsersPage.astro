@@ -9,7 +9,7 @@ import {
 import UsersTable from '../components/UsersTable.astro';
 import UserDrawer from '../components/UserDrawer.astro';
 
-const db = getDb(Astro as any);
+const db = getDb(Astro);
 const params = Astro.url.searchParams;
 const segmentValues: UserSegment[] = ['all', 'pro', 'free', 'power', 'low_credits', 'admins'];
 const sortValues: UserSort[] = ['doodles', 'credits', 'newest'];

@@ -16,7 +16,7 @@ import {
   type SessionStateSnapshot,
   TLSocketRoom,
 } from "@tldraw/sync-core";
-import type { TLRecord } from "@tldraw/tlschema";
+import type { TLAsset, TLImageShape, TLPageId, TLRecord, TLShapeId } from "@tldraw/tlschema";
 import { DurableObject } from "cloudflare:workers";
 import type { BoardSessionMeta } from "./access";
 import { boardAuthorizers } from "./authorize";
@@ -171,12 +171,13 @@ export class BoardRoom extends DurableObject<Env> {
     const x = 100 + offset;
     const y = 100 + Math.floor(Math.random() * 200);
 
-    const shapeId = `shape:board-img-${Date.now().toString(36)}` as `shape:${string}`;
-    const tldrawAssetId = `asset:${assetId}` as `asset:${string}`;
+    const shapeId = `shape:board-img-${Date.now().toString(36)}` as TLShapeId;
+    const tldrawAssetId = `asset:${assetId}` as TLAsset["id"];
+    const pageId = "page:page" as TLPageId;
 
     await room.updateStore((store) => {
       // Create the asset record (image metadata pointing at the CDN URL).
-      store.put({
+      const assetRecord = {
         id: tldrawAssetId,
         typeName: "asset",
         type: "image",
@@ -190,18 +191,19 @@ export class BoardRoom extends DurableObject<Env> {
           fileSize: -1, // Unknown for CDN URLs; tldraw tolerates -1.
         },
         meta: {},
-      } as any);
+      } satisfies TLAsset;
+      store.put(assetRecord);
 
       // Create the image shape referencing the asset.
-      store.put({
+      const imageShape = {
         id: shapeId,
         typeName: "shape",
         type: "image",
         x,
         y,
         rotation: 0,
-        index: "aZ" as any,
-        parentId: "page:page" as any,
+        index: "aZ" as TLImageShape["index"],
+        parentId: pageId,
         isLocked: false,
         opacity: 1,
         props: {
@@ -213,9 +215,11 @@ export class BoardRoom extends DurableObject<Env> {
           crop: null,
           flipX: false,
           flipY: false,
+          altText: "",
         },
         meta: {},
-      } as any);
+      } satisfies TLImageShape;
+      store.put(imageShape);
     });
   }
 }
