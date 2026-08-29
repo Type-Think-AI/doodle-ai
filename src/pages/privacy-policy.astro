@@ -4,9 +4,10 @@ import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import '../styles/app.css';
 import '../styles/page.css';
+import { SUPPORT_EMAIL } from '../lib/contact';
 
 const updated = 'August 2026';
-const supportEmail = 'yash@typethink.ai';
+const supportEmail = SUPPORT_EMAIL;
 ---
 
 <AppLayout
@@ -77,7 +78,7 @@ const supportEmail = 'yash@typethink.ai';
 				<li><b>PicX</b> — processes image-generation requests, manages uploaded assets, and hosts generated media through Doodle AI's platform account.</li>
 				<li><b>OpenRouter</b> — routes chat requests to the language model used by the Doodle AI agent.</li>
 				<li><b>DataFast</b> — provides website analytics about visits, referrals, pages, and general device, browser, and country-level information.</li>
-				<li><b>Mixpanel</b> — provides product event analytics (sign-up, generation, skill usage) and user profiles. See <a href="https://mixpanel.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Mixpanel's privacy policy</a>.</li>
+				<li><b>Mixpanel</b> — provides product event analytics (sign-up, generation, skill usage), user profiles, and session replay (a playback of your on-screen activity, used to diagnose bugs and confusing steps). See <a href="https://mixpanel.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Mixpanel's privacy policy</a>.</li>
 				<li><b>Google Analytics</b> — provides traffic analysis, session measurement, and audience insights. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</li>
 			</ul>
 
@@ -95,6 +96,22 @@ const supportEmail = 'yash@typethink.ai';
 				block or clear analytics cookies in your browser settings; the site should continue to work without
 				them. See each provider's privacy policy linked above for their processing details.
 			</p>
+
+			<h2>Session replay</h2>
+			<p>
+				While Doodle AI is in beta we record <b>session replays</b> through Mixpanel. A replay is a
+				reconstruction of what happened in your browser — the pages you moved through, where you clicked
+				and scrolled, the prompts and skills you chose, the doodles that came back, and any error messages
+				you saw. We watch these to find steps where people get stuck or where generation fails, and to fix
+				them.
+			</p>
+			<ul>
+				<li><b>What is recorded</b> — page structure and on-screen content, mouse and touch interaction, browser console messages, and the timing and status of requests our own app makes.</li>
+				<li><b>What is never recorded</b> — password, email, telephone and hidden form fields, and any field your browser treats as autofill, are masked by Mixpanel and cannot be revealed by our configuration. We do not record the contents (bodies) or authentication headers of network requests, so your session cookie and access tokens are not captured.</li>
+				<li><b>Where it is stored</b> — with Mixpanel, and deleted automatically 30 days after it is recorded. Short-lived recording data is held in your browser's IndexedDB under keys prefixed <code>__mprec_</code> until it uploads.</li>
+				<li><b>Who can watch it</b> — only signed-in members of the Doodle AI Mixpanel project.</li>
+				<li><b>Opting out</b> — replays are not captured if your browser sends a Do Not Track signal, and blocking Mixpanel (via browser settings or an extension) stops recording without affecting the rest of the site.</li>
+			</ul>
 
 			<h2>Server logs and security</h2>
 			<p>

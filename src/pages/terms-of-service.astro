@@ -4,9 +4,10 @@ import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import '../styles/app.css';
 import '../styles/page.css';
+import { SUPPORT_EMAIL } from '../lib/contact';
 
 const updated = 'August 2026';
-const supportEmail = 'yash@typethink.ai';
+const supportEmail = SUPPORT_EMAIL;
 ---
 
 <AppLayout
@@ -103,7 +104,7 @@ const supportEmail = 'yash@typethink.ai';
 			<p>
 				Doodle AI depends on third-party services, including Cloudflare for hosting and infrastructure, Google
 				for optional sign-in and analytics, PicX for image generation and asset hosting, OpenRouter for model routing,
-				DataFast for pageview analytics, Mixpanel for product event analytics, and Google Analytics for traffic
+				DataFast for pageview analytics, Mixpanel for product event analytics and session replay, and Google Analytics for traffic
 				measurement. Your use of those services through Doodle AI is also subject to their own
 				terms, privacy policies, availability, and usage limits. We are not responsible for a third party's
 				service outage, policy change, account action, or data handling.

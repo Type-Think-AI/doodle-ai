@@ -34,8 +34,12 @@
 #
 #   Origins allowed above, and what each is for:
 #     datafa.st                   DataFast pageview script
-#     cdn.mxpnl.com               Mixpanel library
-#     api-js.mixpanel.com         Mixpanel event ingest
+#     cdn.mxpnl.com               Mixpanel library + the lazily-injected Session
+#                                 Replay recorder bundle (added as a <script>, so
+#                                 script-src covers it — no connect-src entry needed)
+#     api-js.mixpanel.com         Mixpanel event ingest AND replay data upload
+#                                 (Session Replay reuses api_host; there is no
+#                                 separate replay endpoint)
 #     www.googletagmanager.com    GA4 (gtag.js)
 #     www.google-analytics.com    GA4 collect endpoint
 #     static.cloudflareinsights.com / cloudflareinsights.com   CF Web Analytics
@@ -47,11 +51,13 @@
 #
 # BEFORE THIS CAN BE PROMOTED TO ENFORCEMENT, two things must change:
 #
-#   1. `script-src 'unsafe-inline'` has to go, and it is load-bearing today:
-#      AppLayout.astro has two `is:inline` scripts (the pre-paint theme setter,
-#      which must stay synchronous and inline to avoid a light-mode flash, and
-#      the Mixpanel loader stub). Replace with per-request nonces or SHA-256
-#      hashes — not by deleting the scripts.
+#   1. `script-src 'unsafe-inline'` has to go. As of the Session Replay migration
+#      there is exactly ONE inline script left in AppLayout.astro — the pre-paint
+#      theme setter, which must stay synchronous and inline to avoid a light-mode
+#      flash — plus the GA4 gtag bootstrap. (The Mixpanel loader stub that used to
+#      be the other blocker is gone: Mixpanel is now a bundled npm module, see
+#      src/scripts/app/analytics-boot.ts.) Replace the remaining two with
+#      per-request nonces or SHA-256 hashes — not by deleting the scripts.
 #   2. `style-src 'unsafe-inline'` is required by Astro's scoped <style> blocks
 #      and by build.inlineStylesheets: 'always' in astro.config.mjs. Astro has no
 #      nonce story for these yet, so this one may have to stay; that is an
