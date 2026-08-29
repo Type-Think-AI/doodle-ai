@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "WebMCP Agent Tester",
+  "version": "1.0.0",
+  "description": "Acts as a real OpenAI-compatible agent against a page's WebMCP (document.modelContext) tools. Testing harness only.",
+  "minimum_chrome_version": "128",
+  "permissions": ["sidePanel", "storage", "scripting", "activeTab", "tabs", "downloads"],
+  "host_permissions": [],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Open WebMCP Agent Tester"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
+}

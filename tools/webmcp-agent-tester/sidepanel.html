@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WebMCP Agent Tester</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">WebMCP Agent Tester</div>
+    <div class="conn">
+      <span id="probe-dot" class="dot dot-idle" title="WebMCP availability"></span>
+      <span id="probe-text" class="probe-text">not checked</span>
+      <button id="btn-probe" class="btn btn-ghost" type="button">Detect tools</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab tab-active" data-tab="chat" role="tab">Agent</button>
+    <button class="tab" data-tab="tools" role="tab">Tools</button>
+    <button class="tab" data-tab="invoke" role="tab">Invoke</button>
+    <button class="tab" data-tab="settings" role="tab">Settings</button>
+  </nav>
+
+  <main class="content">
+
+    <!-- ===== SETTINGS ===== -->
+    <section id="panel-settings" class="panel" hidden>
+      <h2>LLM endpoint</h2>
+      <p class="muted">OpenAI-compatible. The API key is stored only in <code>chrome.storage.local</code> and is sent only to the Base URL you configure — never logged, never sent anywhere else.</p>
+      <label class="field">
+        <span>Base URL</span>
+        <input id="cfg-baseurl" type="text" placeholder="https://api.openai.com/v1" autocomplete="off" spellcheck="false" />
+      </label>
+      <label class="field">
+        <span>Model</span>
+        <input id="cfg-model" type="text" placeholder="gpt-4o-mini" autocomplete="off" spellcheck="false" />
+      </label>
+      <label class="field">
+        <span>API key</span>
+        <input id="cfg-apikey" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false" />
+      </label>
+      <label class="field">
+        <span>Max agent steps</span>
+        <input id="cfg-maxsteps" type="number" min="1" max="25" value="8" />
+      </label>
+      <div class="row">
+        <button id="btn-save" class="btn btn-primary" type="button">Save</button>
+        <button id="btn-test" class="btn" type="button">Test connection</button>
+        <span id="save-status" class="muted"></span>
+      </div>
+      <div id="test-result" class="test-result" hidden></div>
+
+      <h2 class="mt">Host permissions note</h2>
+      <p class="muted" id="host-note">
+        If your Base URL is not <code>api.openai.com</code>, Chrome may block the
+        fetch with a CORS/host error. Add the base URL's origin under
+        <code>host_permissions</code> in <code>manifest.json</code> and reload the
+        extension. See the README.
+      </p>
+    </section>
+
+    <!-- ===== TOOLS ===== -->
+    <section id="panel-tools" class="panel" hidden>
+      <div class="row spread">
+        <h2>Registered tools <span id="tools-count" class="pill">0</span></h2>
+        <button id="btn-refresh-tools" class="btn btn-ghost" type="button">Refresh</button>
+      </div>
+      <div id="tools-list" class="tools-list">
+        <p class="muted">Open a WebMCP page and click “Detect tools”.</p>
+      </div>
+    </section>
+
+    <!-- ===== INVOKE ===== -->
+    <section id="panel-invoke" class="panel" hidden>
+      <h2>Manual invoke</h2>
+      <label class="field">
+        <span>Tool</span>
+        <select id="invoke-tool"></select>
+      </label>
+      <div id="invoke-hints" class="hints"></div>
+      <label class="field">
+        <span>Arguments (JSON object)</span>
+        <textarea id="invoke-args" rows="6" spellcheck="false"></textarea>
+      </label>
+      <div class="row">
+        <button id="btn-invoke" class="btn btn-primary" type="button">Run tool</button>
+        <span id="invoke-status" class="muted"></span>
+      </div>
+      <div id="invoke-result-wrap" class="result-wrap" hidden>
+        <div class="row spread">
+          <strong>Result</strong>
+          <span id="invoke-budget" class="budget"></span>
+        </div>
+        <pre id="invoke-result" class="result"></pre>
+      </div>
+    </section>
+
+    <!-- ===== AGENT / CHAT ===== -->
+    <section id="panel-chat" class="panel">
+      <div class="row spread guard-row">
+        <label class="switch">
+          <input id="cfg-readonly" type="checkbox" checked />
+          <span>Read-only mode</span>
+        </label>
+        <span class="muted tiny">Blocks non-readOnly & mutating tools</span>
+      </div>
+      <div id="transcript" class="transcript">
+        <p class="muted">Configure the endpoint in Settings, detect tools, then describe a task.</p>
+      </div>
+      <div class="composer">
+        <textarea id="task-input" rows="2" placeholder="e.g. What skills does Doodle AI offer? Summarize the top 3." spellcheck="false"></textarea>
+        <div class="row">
+          <button id="btn-run-agent" class="btn btn-primary" type="button">Run agent</button>
+          <button id="btn-stop-agent" class="btn" type="button" hidden>Stop</button>
+          <span class="spacer"></span>
+          <button id="btn-export-json" class="btn btn-ghost" type="button">Export JSON</button>
+          <button id="btn-export-md" class="btn btn-ghost" type="button">Export MD</button>
+        </div>
+        <div id="agent-status" class="muted tiny"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

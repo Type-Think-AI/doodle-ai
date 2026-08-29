@@ -1,0 +1,65 @@
+{
+  "$schema": "Doodle AI WebMCP agent-eval scenarios. Each scenario is a natural-language task graded ONLY against WebMCP tool metadata + returned tool output — the agent never sees page HTML, DOM text, or API URLs. Assertions are deliberately grounded in fields the tools provably emit (see src/components/agentic/WebMcpTools.astro and tools-content.ts), not brittle exact numbers. requiredSubstrings/forbiddenSubstrings are matched case-INSENSITIVELY against the FINAL assistant answer. expectedTools lists tools that SHOULD be exercised (at least one, unless expectedToolsMode is 'all').",
+  "scenarios": [
+    {
+      "id": "surprise-no-photo",
+      "title": "Recommend a skill that needs no photo",
+      "prompt": "I don't want to upload a photo of myself. Which Doodle AI skill can still make me a doodle from just a text description? Name the exact skill id and confirm no photo is required.",
+      "expectedTools": ["list_doodle_skills", "get_doodle_skill"],
+      "expectedToolsMode": "any",
+      "requiredSubstrings": ["surprise", "no photo"],
+      "forbiddenSubstrings": ["requires a photo", "upload a photo first"],
+      "note": "The 'surprise' skill has requiresPhoto:false; list_doodle_skills accepts requiresPhoto:false and get_doodle_skill emits 'no photo needed'."
+    },
+    {
+      "id": "find-sticker-guide",
+      "title": "Find the sticker-sheet guide article",
+      "prompt": "I want to read a guide about making a doodle sticker sheet. Find me the relevant Doodle AI article and give me its title and URL path.",
+      "expectedTools": ["search_doodle_articles"],
+      "expectedToolsMode": "any",
+      "requiredSubstrings": ["sticker"],
+      "forbiddenSubstrings": ["i couldn't find anything", "no such tool"],
+      "note": "search_doodle_articles matches 'sticker' across title/description/category and returns title + /path. This is a discovery scenario; the concrete article must come from the tool, not invented."
+    },
+    {
+      "id": "operational-status",
+      "title": "Report current operational status",
+      "prompt": "Is Doodle AI up right now? Tell me the current operational status and, if anything is degraded, which component.",
+      "expectedTools": ["get_doodle_status"],
+      "expectedToolsMode": "any",
+      "requiredSubstrings": ["operational"],
+      "forbiddenSubstrings": ["i cannot check", "i don't have access to real-time"],
+      "note": "get_doodle_status always emits 'X/Y operational' plus either 'All components healthy' or 'Not healthy — ...'. untrustedContentHint:true — its output entered the model context, so injection exposure is flagged in the report."
+    },
+    {
+      "id": "compare-two-skills",
+      "title": "Compare two skills",
+      "prompt": "What's the difference between the 'stickers' skill and the 'crayon' skill on Doodle AI? Compare what each produces and whether each needs a photo.",
+      "expectedTools": ["get_doodle_skill", "list_doodle_skills"],
+      "expectedToolsMode": "any",
+      "requiredSubstrings": ["stickers", "crayon"],
+      "forbiddenSubstrings": ["as an ai language model", "i cannot compare"],
+      "note": "A well-behaved agent calls get_doodle_skill twice (or list once) and grounds the comparison in returned taglines/photo flags. Both ids exist in GENERATION_MODES."
+    },
+    {
+      "id": "credit-cost",
+      "title": "Credit cost of a skill",
+      "prompt": "How many credits does one run of the 'normal' doodle avatar skill cost on Doodle AI?",
+      "expectedTools": ["get_doodle_skill", "list_doodle_skills"],
+      "expectedToolsMode": "any",
+      "requiredSubstrings": ["credit", "normal"],
+      "forbiddenSubstrings": ["i'm not sure how much", "pricing is not available"],
+      "note": "get_doodle_skill emits 'N credit(s)' for the skill. Cost is dynamic (images x 1 credit) so the assertion checks the word 'credit' is grounded in tool output, NOT a hardcoded number, which would break when pricing changes."
+    },
+    {
+      "id": "invalid-input-recovery",
+      "title": "Graceful recovery from an invalid skill id",
+      "prompt": "Tell me everything about the Doodle AI skill with id 'quantum-banana-9000'.",
+      "expectedTools": ["get_doodle_skill"],
+      "expectedToolsMode": "any",
+      "requiredSubstrings": ["no skill", "quantum-banana-9000"],
+      "forbiddenSubstrings": ["quantum-banana-9000 produces", "this skill generates", "it makes"],
+      "note": "get_doodle_skill returns the guidance string 'No skill with id \"quantum-banana-9000\". Call list_doodle_skills first...' rather than throwing. The scenario proves the harness surfaces graceful recovery AND that the agent does not hallucinate a description for a non-existent skill. This scenario expects executionSucceeded even though the id is invalid — the tool RETURNS a string, it does not reject."
+    }
+  ]
+}

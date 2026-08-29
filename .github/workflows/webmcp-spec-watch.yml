@@ -1,0 +1,135 @@
+# WebMCP upstream spec watcher (LANE C).
+#
+# WHAT THIS DOES: once a day, fetch the state of the upstream WebMCP standard
+# (webmachinelearning/webmcp), diff it against a committed baseline, and — only
+# when something changed — open or update ONE deduplicated GitHub issue that
+# proposes a review. It advances the baseline by committing a single state file.
+#
+# WHAT THIS DELIBERATELY DOES NOT DO: it never builds, never deploys, never
+# rewrites application code, and never merges anything. Deploys are owned by
+# Cloudflare Workers Builds (git-triggered, configured in the Cloudflare
+# dashboard) and MUST NOT be duplicated here — adding a deploy step would create
+# a second, conflicting pipeline. This job only watches upstream and reports.
+
+name: webmcp-spec-watch
+
+on:
+  schedule:
+    # 06:15 UTC daily. Chosen because it is a low-traffic hour for this repo
+    # (well outside US/EU working hours and off the top-of-hour spike when most
+    # crons fire), and upstream's own activity clusters during US daytime, so a
+    # morning-UTC read reliably captures the previous day's commits. The :15
+    # offset avoids the GitHub-wide scheduler congestion at :00.
+    - cron: '15 6 * * *'
+  workflow_dispatch: {}
+
+# Minimum permissions: read the tree, write issues. Nothing else.
+permissions:
+  contents: write   # required only to commit the advanced baseline state file
+  issues: write     # required to open/update the dedup issue
+
+concurrency:
+  group: webmcp-spec-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run watcher (writes state, emits JSON report)
+        id: watch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # --write-state advances the baseline; --json gives a machine report.
+          node scripts/webmcp-spec-watch.mjs --json --write-state > report.json
+          # Human-readable copy to the run log for quick scanning.
+          node scripts/webmcp-spec-watch.mjs 2>/dev/null || true
+          echo "should_file=$(node -e 'console.log(require("./report.json").shouldFileIssue===true)')" >> "$GITHUB_OUTPUT"
+          echo "status=$(node -e 'console.log(require("./report.json").status)')" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the deduplicated issue
+        if: steps.watch.outputs.should_file == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('report.json', 'utf8'));
+            const body = report.markdown;
+            // Dedup by a stable title PREFIX so repeated runs update one issue
+            // rather than spamming new ones. The exact status is appended, but
+            // we match on the prefix.
+            const PREFIX = '[webmcp-watch]';
+            const title = report.issueTitle; // already begins with the prefix
+
+            // Find an existing OPEN issue whose title starts with the prefix.
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const match = existing.find(
+              (i) => !i.pull_request && typeof i.title === 'string' && i.title.startsWith(PREFIX),
+            );
+
+            const stamp = `\n\n<sub>Updated by webmcp-spec-watch on ${new Date().toISOString()} · run ${context.runId}</sub>`;
+
+            if (match) {
+              // Update the body in place and add a comment marking the new run.
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                title,
+                body: body + stamp,
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `New upstream change detected — status **${report.status}**. Body refreshed above.` + stamp,
+              });
+              core.info(`Updated existing issue #${match.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: body + stamp,
+                labels: ['webmcp-watch'],
+              });
+              core.info(`Opened issue #${created.data.number}`);
+            }
+
+      - name: Commit advanced baseline (guarded, never on forks)
+        # Only commit the single state file, only on the canonical repo (never a
+        # fork PR — forked runs get a read-only token and no push rights), and
+        # only when the file actually changed.
+        if: >-
+          github.event_name == 'schedule' &&
+          github.repository == 'Type-Think-AI/doodle-ai'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- docs/webmcp-upstream/upstream-state.json; then
+            echo "Baseline unchanged — nothing to commit."
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Stage ONLY the state file — this job owns nothing else.
+          git add docs/webmcp-upstream/upstream-state.json
+          git commit -m "chore(webmcp-watch): advance upstream baseline [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

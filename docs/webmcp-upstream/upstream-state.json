@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "upstream": "webmachinelearning/webmcp",
+  "fetched_at": "2026-08-29T04:30:55.935Z",
+  "latestCommit": {
+    "sha": "41d12f057167ccf5954dbcf49d99502cb6c84491",
+    "message": "Clarify sentence regarding origins and `exposedTo` (#260)",
+    "date": "2026-08-26T20:22:29Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/41d12f057167ccf5954dbcf49d99502cb6c84491"
+  },
+  "files": {
+    "index.bs": {
+      "hash": "48b076e033e510017fb9609bd38a8ed4161b71aeb456889adea45d32c0069cad",
+      "exists": true,
+      "bytes": 79561
+    },
+    "README.md": {
+      "hash": "6502112d59a47da0b55f267c5e62ffe6d2238e3b948d80bcee78b0fbc5c8eea7",
+      "exists": true,
+      "bytes": 31867
+    },
+    "declarative-api-explainer.md": {
+      "hash": "adc121fff82e357471e9eb578fdd6427204eb03f475ec43cdf6bce21f0fa436c",
+      "exists": true,
+      "bytes": 10411
+    },
+    "implementation-status.md": {
+      "hash": "41956527ccd39a4dad7751a652988777c1f7050b3f9a2a20c47c5d735625250f",
+      "exists": true,
+      "bytes": 2229
+    },
+    "security-privacy-questionnaire.md": {
+      "hash": "33907b97fc85fe2277f47eca8f72f5c0522b0444ebfd2be9b65b0110c475a247",
+      "exists": true,
+      "bytes": 9237
+    },
+    "docs/service-workers.md": {
+      "hash": "f56085fecc1b01a8ece4da1845785b66e7ce29c4ea7016f5d21a181fa5a7191a",
+      "exists": true,
+      "bytes": 21815
+    }
+  },
+  "idlNames": [
+    "Document",
+    "ModelContext",
+    "ModelContextExecuteToolOptions",
+    "ModelContextGetToolOptions",
+    "ModelContextRegisterToolOptions",
+    "ModelContextTool",
+    "RegisteredTool",
+    "ToolAnnotations",
+    "ToolExecuteCallback",
+    "ToolExecuteCallbackOptions",
+    "annotations",
+    "description",
+    "execute",
+    "executeTool",
+    "exposedTo",
+    "fromOrigins",
+    "getTools",
+    "inputSchema",
+    "modelContext",
+    "name",
+    "ontoolchange",
+    "origin",
+    "readOnlyHint",
+    "registerTool",
+    "signal",
+    "title",
+    "toolchange",
+    "untrustedContentHint",
+    "window"
+  ],
+  "latestTag": null,
+  "releaseCount": 0,
+  "releases": [],
+  "openIssuesCount": 108,
+  "openPRsCount": 8
+}
