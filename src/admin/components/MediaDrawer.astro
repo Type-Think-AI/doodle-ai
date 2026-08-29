@@ -1,0 +1,428 @@
+---
+import type { AdminMediaDetail } from "../../lib/admin/media";
+import { formatDuration } from "../../lib/admin/media";
+import { formatDate, thousands } from "../../lib/admin/queries";
+import { resizedCdnImage } from "../../lib/cdn-image";
+import GradientAvatar from "./GradientAvatar.astro";
+
+interface Props {
+	detail: AdminMediaDetail;
+}
+
+const { detail } = Astro.props;
+
+// Same close pattern as UserDrawer: drop the drawer param, keep every filter.
+const closeUrl = new URL(Astro.url);
+closeUrl.searchParams.delete("media");
+
+const statusLabel: Record<string, string> = {
+	ok: "Successful",
+	failed: "Failed",
+	refunded: "Refunded",
+	pending: "Pending",
+};
+
+// The hero image is the largest thing on the page; a full-size 1024px CDN
+// original is exactly what the perf note warns against, so request a bounded
+// 640px variant. It is not an OG image, so transforming it is correct.
+const heroSrc = detail.outputUrl ? resizedCdnImage(detail.outputUrl, 640) : null;
+const sourceSrc = detail.sourceAssetUrl ? resizedCdnImage(detail.sourceAssetUrl, 240) : null;
+const refSrc = detail.refAssetUrl ? resizedCdnImage(detail.refAssetUrl, 240) : null;
+// Extra pack frames beyond the first (outputUrl already shows frame 1).
+const extraFrames = detail.outputUrls.filter((u) => u !== detail.outputUrl);
+
+/* Mirrors grad() in ./GradientAvatar.astro — the lightbox paints its own
+   avatar from this data attribute, so the drawer has to hand it the same
+   value the grid does. */
+function avatarGradient(seed: string): string {
+	let h = 0;
+	for (let i = 0; i < seed.length; i++) {
+		h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+	}
+	const a = h % 360;
+	const b = (a + 38 + ((h >> 8) % 56)) % 360;
+	return `linear-gradient(118deg, hsl(${a},64%,58%), hsl(${b},70%,42%))`;
+}
+---
+
+<aside class="drawer" aria-label={`Details for ${detail.skillId} generation`}>
+	<div class="drawer-header">
+		<div>
+			<h2>{detail.skillId}</h2>
+			<p>{detail.styleId ? `Style: ${detail.styleId}` : "No style"}</p>
+			<span>{formatDate(detail.createdAt)}</span>
+		</div>
+		<a class="close" href={closeUrl.pathname + closeUrl.search} aria-label="Close generation details">×</a>
+	</div>
+
+	<div class="hero">
+		{heroSrc && detail.outputUrl ? (
+			<button
+				class="hero-open"
+				type="button"
+				data-preview-full={resizedCdnImage(detail.outputUrl, 1200)}
+				data-preview-raw={detail.outputUrl}
+				data-preview-skill={detail.skillId}
+				data-preview-meta={`${detail.userName || detail.userEmail} · ${formatDate(detail.createdAt)}`}
+				data-preview-caption={detail.prompt}
+				data-preview-avatar={avatarGradient(detail.userEmail)}
+				aria-label={`Preview ${detail.skillId} doodle full size`}
+			>
+				<img src={heroSrc} width="600" height="600" loading="lazy" decoding="async" alt={`Generated ${detail.skillId} doodle`} />
+				<span class="hero-zoom" aria-hidden="true">
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+						<path d="M10 4H4v6M14 20h6v-6M4 4l6.5 6.5M20 20l-6.5-6.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+					<span>Full size</span>
+				</span>
+			</button>
+		) : (
+			<div class="hero-placeholder">
+				<span class:list={["pill", detail.status]}>{statusLabel[detail.status] ?? detail.status}</span>
+				<p>No output image{detail.status === "failed" || detail.status === "refunded" ? " — this generation did not complete." : "."}</p>
+			</div>
+		)}
+	</div>
+
+	{extraFrames.length > 0 && (
+		<section class="section">
+			<div class="section-heading"><h3>All frames</h3><span>{detail.outputUrls.length}</span></div>
+			<div class="frames">
+				{extraFrames.map((url, i) => (
+					<img src={resizedCdnImage(url, 240)} width="90" height="90" loading="lazy" decoding="async" alt={`${detail.skillId} frame ${i + 2}`} />
+				))}
+			</div>
+		</section>
+	)}
+
+	<div class="stats" aria-label="Generation facts">
+		<div><strong class:list={["status-strong", detail.status]}>{statusLabel[detail.status] ?? detail.status}</strong><span>Status</span></div>
+		<div><strong>{thousands(detail.creditsCharged)}</strong><span>Credits</span></div>
+		<div><strong>{formatDuration(detail.durationMs)}</strong><span>Duration</span></div>
+	</div>
+
+	{detail.errorCode && (
+		<section class="section error-section">
+			<div class="section-heading"><h3>Error</h3></div>
+			<code class="error-code">{detail.errorCode}</code>
+		</section>
+	)}
+
+	<section class="section">
+		<div class="section-heading"><h3>Prompt</h3></div>
+		<p class="prompt">{detail.prompt}</p>
+	</section>
+
+	{(sourceSrc || refSrc) && (
+		<section class="section">
+			<div class="section-heading"><h3>Inputs</h3></div>
+			<div class="inputs">
+				{sourceSrc && (
+					<figure>
+						<img src={sourceSrc} width="120" height="120" loading="lazy" decoding="async" alt="Source subject photo" />
+						<figcaption>Source photo</figcaption>
+					</figure>
+				)}
+				{refSrc && (
+					<figure>
+						<img src={refSrc} width="120" height="120" loading="lazy" decoding="async" alt="Reference image" />
+						<figcaption>Reference</figcaption>
+					</figure>
+				)}
+			</div>
+		</section>
+	)}
+
+	<section class="section">
+		<div class="section-heading"><h3>Generated by</h3></div>
+		<a class="user-row" href={`/admin/users?user=${encodeURIComponent(detail.userId)}`}>
+			<GradientAvatar seed={detail.userEmail} size={36} />
+			<div>
+				<strong>{detail.userName}</strong>
+				<span>{detail.userEmail}</span>
+			</div>
+		</a>
+	</section>
+</aside>
+
+<style>
+	.drawer {
+		position: fixed;
+		top: 0;
+		right: 0;
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		width: min(440px, 100vw);
+		height: 100vh;
+		overflow-y: auto;
+		padding: 24px;
+		background: var(--surface);
+		border-left: 1px solid var(--border);
+		font-family: inherit;
+	}
+	.drawer-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 16px;
+		padding-bottom: 20px;
+		border-bottom: 1px solid var(--border);
+	}
+	.drawer-header h2 {
+		margin: 0;
+		font-size: 17px;
+		color: var(--text);
+	}
+	.drawer-header p,
+	.drawer-header > div > span {
+		display: block;
+		margin: 3px 0 0;
+		font-size: 11px;
+		color: var(--text-dimmer);
+	}
+	.close {
+		font-size: 26px;
+		line-height: 1;
+		color: var(--text-dimmer);
+		text-decoration: none;
+	}
+	.close:hover {
+		color: var(--text);
+	}
+	.hero {
+		margin: 18px 0;
+	}
+	/* The hero is a button now — clicking the image is the most obvious way to
+	   ask for it full size, so that is what it does. Reset the UA button chrome
+	   so it still reads as a plate, not a control. */
+	.hero-open {
+		position: relative;
+		display: block;
+		width: 100%;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		font: inherit;
+		color: inherit;
+	}
+	.hero-open:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+		border-radius: 12px;
+	}
+	.hero-zoom {
+		position: absolute;
+		bottom: 10px;
+		right: 10px;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 5px 10px;
+		border-radius: 999px;
+		background: rgba(0, 0, 0, 0.6);
+		color: #fff;
+		font-size: 11px;
+		opacity: 0;
+		transition: opacity 0.15s;
+	}
+	.hero-open:hover .hero-zoom,
+	.hero-open:focus-visible .hero-zoom {
+		opacity: 1;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.hero-zoom {
+			transition: none;
+		}
+	}
+	/* Touch has no hover, so the affordance is always visible there. */
+	@media (hover: none) {
+		.hero-zoom {
+			opacity: 1;
+		}
+	}
+	.hero img {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 1 / 1;
+		object-fit: cover;
+		border-radius: 12px;
+		border: 1px solid var(--border2);
+		background: var(--surface2);
+	}
+	.hero-placeholder {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		aspect-ratio: 1 / 1;
+		border: 1px dashed var(--border2);
+		border-radius: 12px;
+		background: var(--surface2);
+		padding: 20px;
+		text-align: center;
+	}
+	.hero-placeholder p {
+		margin: 0;
+		font-size: 12px;
+		color: var(--text-dimmer);
+		max-width: 260px;
+	}
+	.pill {
+		font-size: 11px;
+		padding: 3px 10px;
+		border-radius: 999px;
+		background: var(--card);
+		color: var(--text-dim);
+		border: 1px solid var(--border2);
+	}
+	.pill.ok { color: var(--green, var(--text)); }
+	.pill.failed,
+	.pill.refunded { color: var(--red, var(--text-dim)); }
+	.frames {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.frames img {
+		width: 90px;
+		height: 90px;
+		object-fit: cover;
+		border-radius: 8px;
+		border: 1px solid var(--border2);
+		background: var(--surface2);
+	}
+	.stats {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 10px;
+		padding: 18px 0;
+		border-top: 1px solid var(--border);
+		border-bottom: 1px solid var(--border);
+	}
+	.stats div { min-width: 0; }
+	.stats strong,
+	.stats span {
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.stats strong { font-size: 14px; color: var(--text); }
+	.stats span { margin-top: 3px; font-size: 10px; color: var(--text-dimmer); }
+	.status-strong.ok { color: var(--green, var(--text)); }
+	.status-strong.failed,
+	.status-strong.refunded { color: var(--red, var(--text)); }
+	.section {
+		padding: 18px 0;
+		border-bottom: 1px solid var(--border);
+	}
+	.section-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 10px;
+	}
+	.section-heading h3 {
+		margin: 0;
+		font-size: 12px;
+		letter-spacing: 0.02em;
+		color: var(--text);
+	}
+	.section-heading > span {
+		font-size: 11px;
+		color: var(--text-dimmer);
+	}
+	.prompt {
+		margin: 0;
+		font-size: 12.5px;
+		line-height: 1.6;
+		color: var(--text-dim);
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+	.error-code {
+		display: inline-block;
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+		font-size: 12px;
+		color: var(--red, var(--text));
+		background: var(--surface2);
+		border: 1px solid var(--border2);
+		padding: 4px 8px;
+		border-radius: 6px;
+		word-break: break-all;
+	}
+	.inputs {
+		display: flex;
+		gap: 14px;
+		flex-wrap: wrap;
+	}
+	.inputs figure {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.inputs img {
+		width: 120px;
+		height: 120px;
+		object-fit: cover;
+		border-radius: 10px;
+		border: 1px solid var(--border2);
+		background: var(--surface2);
+	}
+	.inputs figcaption {
+		font-size: 10.5px;
+		color: var(--text-dimmer);
+	}
+	.user-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		text-decoration: none;
+		min-width: 0;
+	}
+	.user-row div {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+	.user-row strong {
+		font-size: 13px;
+		color: var(--text);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.user-row span {
+		margin-top: 2px;
+		font-size: 11px;
+		color: var(--text-dimmer);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.user-row:hover strong { color: var(--accent); }
+
+	@media (max-width: 650px) {
+		.drawer {
+			width: 100vw;
+			padding: 20px 16px;
+			border-left: none;
+		}
+		.close {
+			min-width: 44px;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 28px;
+		}
+		.stats { gap: 8px; }
+		.inputs img { width: 96px; height: 96px; }
+		.user-row { min-height: 44px; }
+	}
+</style>

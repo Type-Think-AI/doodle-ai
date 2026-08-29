@@ -1,0 +1,446 @@
+---
+/* Full-screen image preview for the admin Media page.
+ *
+ * WHY A CLIENT-SIDE OVERLAY AND NOT A ?preview= QUERYSTRING
+ *
+ * Every other admin surface here is a server-rendered querystring drawer, and
+ * that is the right default for a *detail record*. Image preview is a
+ * different interaction: the point is to flick through generations quickly and
+ * judge them, so a full page round-trip per image would make the feature feel
+ * broken. The images are already in the DOM, so the overlay is pure
+ * presentation over data the page has — no new request, no new route.
+ *
+ * HOW IT FINDS ITS IMAGES
+ *
+ * It does not know about the grid. Any element on the page carrying
+ * `data-preview-full` opts in, in DOM order, and becomes one frame in the
+ * prev/next sequence. That is what lets the grid tiles AND the drawer's hero
+ * image feed the same viewer without either component importing this one.
+ *
+ * TEXT IS ASSIGNED WITH textContent, NEVER innerHTML — the caption carries a
+ * user's display name and a prompt, both user-supplied.
+ */
+---
+
+<div class="lightbox" id="mediaLightbox" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="Image preview">
+	<div class="lb-backdrop" data-lb-close></div>
+
+	<header class="lb-bar">
+		<div class="lb-who">
+			<span class="lb-avatar" id="lbAvatar" aria-hidden="true"></span>
+			<span class="lb-who-text">
+				<strong id="lbSkill"></strong>
+				<span id="lbMeta"></span>
+			</span>
+		</div>
+		<div class="lb-actions">
+			<a class="lb-btn" id="lbRaw" href="#" target="_blank" rel="noreferrer noopener">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+				<span>Original</span>
+			</a>
+			<a class="lb-btn" id="lbDetails" href="#">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path d="M12 8.5h.01M11 12h1v4h1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+					<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/>
+				</svg>
+				<span>Details</span>
+			</a>
+			<button class="lb-btn lb-icon" id="lbClose" type="button" aria-label="Close preview" data-lb-close>
+				<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+				</svg>
+			</button>
+		</div>
+	</header>
+
+	<button class="lb-nav prev" id="lbPrev" type="button" aria-label="Previous image">
+		<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+			<path d="M14.5 5.5 8 12l6.5 6.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+		</svg>
+	</button>
+
+	<figure class="lb-stage">
+		<img id="lbImage" alt="" />
+		<figcaption id="lbCaption"></figcaption>
+	</figure>
+
+	<button class="lb-nav next" id="lbNext" type="button" aria-label="Next image">
+		<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+			<path d="M9.5 5.5 16 12l-6.5 6.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+		</svg>
+	</button>
+
+	<span class="lb-count" id="lbCount"></span>
+</div>
+
+<style>
+	.lightbox {
+		position: fixed;
+		inset: 0;
+		z-index: 80;
+		display: grid;
+		grid-template-columns: 64px 1fr 64px;
+		grid-template-rows: auto 1fr auto;
+		align-items: center;
+	}
+	.lightbox[hidden] {
+		display: none;
+	}
+	.lb-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.93);
+		border: 0;
+		padding: 0;
+	}
+	/* Bar, nav and stage all sit above the backdrop. */
+	.lb-bar,
+	.lb-nav,
+	.lb-stage,
+	.lb-count {
+		position: relative;
+		z-index: 1;
+	}
+	.lb-bar {
+		grid-column: 1 / -1;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 14px;
+		padding: 14px 16px;
+	}
+	.lb-who {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-width: 0;
+	}
+	.lb-avatar {
+		width: 28px;
+		height: 28px;
+		flex: 0 0 28px;
+		border-radius: 50%;
+		background: var(--surface2);
+	}
+	.lb-who-text {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+	.lb-who-text strong {
+		font-size: 13px;
+		color: var(--text);
+		text-transform: capitalize;
+	}
+	.lb-who-text span {
+		font-size: 11.5px;
+		color: var(--text-dimmer);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.lb-actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex: 0 0 auto;
+	}
+	.lb-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		height: 34px;
+		padding: 0 12px;
+		border-radius: 999px;
+		border: 1px solid var(--border2);
+		background: transparent;
+		color: var(--text-dim);
+		font: inherit;
+		font-size: 12px;
+		text-decoration: none;
+		cursor: pointer;
+	}
+	.lb-btn:hover {
+		color: var(--text);
+		border-color: var(--border3);
+		background: var(--hover);
+	}
+	.lb-btn:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.lb-icon {
+		width: 34px;
+		padding: 0;
+		justify-content: center;
+	}
+	.lb-stage {
+		grid-column: 2;
+		grid-row: 2;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
+		min-height: 0;
+	}
+	.lb-stage img {
+		display: block;
+		max-width: 100%;
+		max-height: 76vh;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+		border-radius: 10px;
+		background: var(--surface2);
+	}
+	.lb-stage figcaption {
+		max-width: min(760px, 100%);
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--text-dim);
+		text-align: center;
+		/* Prompts are long; two lines then clamp keeps the image the subject. */
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	.lb-nav {
+		grid-row: 2;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		margin: 0 auto;
+		border-radius: 50%;
+		border: 1px solid var(--border2);
+		background: transparent;
+		color: var(--text-dim);
+		cursor: pointer;
+	}
+	.lb-nav.prev {
+		grid-column: 1;
+	}
+	.lb-nav.next {
+		grid-column: 3;
+	}
+	.lb-nav:hover {
+		color: var(--text);
+		border-color: var(--border3);
+		background: var(--hover);
+	}
+	.lb-nav:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.lb-nav[disabled] {
+		opacity: 0.3;
+		cursor: default;
+	}
+	.lb-count {
+		grid-column: 1 / -1;
+		grid-row: 3;
+		text-align: center;
+		padding: 12px 0 18px;
+		font-size: 11.5px;
+		color: var(--text-dimmer);
+	}
+	@media (max-width: 650px) {
+		.lightbox {
+			grid-template-columns: 1fr;
+			grid-template-rows: auto 1fr auto;
+		}
+		.lb-stage {
+			grid-column: 1;
+		}
+		.lb-stage img {
+			max-height: 62vh;
+		}
+		/* Side arrows would sit on top of the image on a phone; move them into
+		   the bottom row as a pair with full-size touch targets. */
+		.lb-nav {
+			grid-row: 3;
+			width: 48px;
+			height: 48px;
+		}
+		.lb-nav.prev {
+			grid-column: 1;
+			justify-self: start;
+			margin-left: 18px;
+		}
+		.lb-nav.next {
+			grid-column: 1;
+			justify-self: end;
+			margin-right: 18px;
+		}
+		.lb-count {
+			grid-row: 3;
+			align-self: center;
+		}
+		.lb-btn span {
+			display: none;
+		}
+		.lb-btn {
+			width: 40px;
+			height: 40px;
+			padding: 0;
+			justify-content: center;
+		}
+	}
+</style>
+
+<script>
+	interface Frame {
+		full: string;
+		raw: string;
+		skill: string;
+		meta: string;
+		caption: string;
+		href: string;
+		avatar: string;
+	}
+
+	function initLightbox(): void {
+		const box = document.getElementById('mediaLightbox');
+		const img = document.getElementById('lbImage') as HTMLImageElement | null;
+		const elSkill = document.getElementById('lbSkill');
+		const elMeta = document.getElementById('lbMeta');
+		const elCaption = document.getElementById('lbCaption');
+		const elCount = document.getElementById('lbCount');
+		const elAvatar = document.getElementById('lbAvatar');
+		const elRaw = document.getElementById('lbRaw') as HTMLAnchorElement | null;
+		const elDetails = document.getElementById('lbDetails') as HTMLAnchorElement | null;
+		const btnPrev = document.getElementById('lbPrev') as HTMLButtonElement | null;
+		const btnNext = document.getElementById('lbNext') as HTMLButtonElement | null;
+		const btnClose = document.getElementById('lbClose') as HTMLButtonElement | null;
+		if (!box || !img || !elSkill || !elMeta || !elCaption || !elCount || !elAvatar) return;
+		if (!elRaw || !elDetails || !btnPrev || !btnNext || !btnClose) return;
+
+		const triggers = Array.from(document.querySelectorAll<HTMLElement>('[data-preview-full]'));
+		if (triggers.length === 0) return;
+
+		const frames: Frame[] = triggers.map((el) => ({
+			full: el.dataset.previewFull ?? '',
+			raw: el.dataset.previewRaw ?? el.dataset.previewFull ?? '',
+			skill: el.dataset.previewSkill ?? '',
+			meta: el.dataset.previewMeta ?? '',
+			caption: el.dataset.previewCaption ?? '',
+			href: el.dataset.previewHref ?? '',
+			avatar: el.dataset.previewAvatar ?? '',
+		}));
+
+		let index = 0;
+		let opener: HTMLElement | null = null;
+
+		function render(): void {
+			const f = frames[index];
+			if (!f || !img || !elSkill || !elMeta || !elCaption || !elCount || !elAvatar) return;
+			img.src = f.full;
+			// Alt text must describe the image, and the prompt is the only real
+			// description available.
+			img.alt = f.caption ? `${f.skill} doodle — ${f.caption}` : `${f.skill} doodle`;
+			// textContent, not innerHTML: skill/meta/caption are user-derived.
+			elSkill.textContent = f.skill;
+			elMeta.textContent = f.meta;
+			elCaption.textContent = f.caption;
+			elCount.textContent = frames.length > 1 ? `${index + 1} of ${frames.length}` : '';
+			elAvatar.style.background = f.avatar || 'var(--surface2)';
+			if (elRaw) elRaw.href = f.raw;
+			if (elDetails) {
+				elDetails.href = f.href || '#';
+				elDetails.hidden = !f.href;
+			}
+			if (btnPrev) btnPrev.disabled = frames.length < 2;
+			if (btnNext) btnNext.disabled = frames.length < 2;
+		}
+
+		function open(at: number, from: HTMLElement): void {
+			index = at;
+			opener = from;
+			render();
+			if (!box) return;
+			box.hidden = false;
+			box.setAttribute('aria-hidden', 'false');
+			document.body.style.overflow = 'hidden';
+			btnClose?.focus();
+		}
+
+		function close(): void {
+			if (!box) return;
+			box.hidden = true;
+			box.setAttribute('aria-hidden', 'true');
+			document.body.style.overflow = '';
+			if (img) img.src = '';
+			// Returning focus to the tile the user came from, so keyboard
+			// position is not lost on close.
+			opener?.focus();
+			opener = null;
+		}
+
+		function step(delta: number): void {
+			if (frames.length < 2) return;
+			index = (index + delta + frames.length) % frames.length;
+			render();
+		}
+
+		triggers.forEach((el, i) => {
+			el.addEventListener('click', (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				open(i, el);
+			});
+		});
+
+		box.querySelectorAll('[data-lb-close]').forEach((el) => {
+			el.addEventListener('click', close);
+		});
+		btnPrev.addEventListener('click', () => step(-1));
+		btnNext.addEventListener('click', () => step(1));
+
+		document.addEventListener('keydown', (event) => {
+			if (box.hidden) return;
+			if (event.key === 'Escape') {
+				close();
+				return;
+			}
+			if (event.key === 'ArrowLeft') {
+				event.preventDefault();
+				step(-1);
+				return;
+			}
+			if (event.key === 'ArrowRight') {
+				event.preventDefault();
+				step(1);
+				return;
+			}
+			if (event.key === 'Tab') {
+				// Minimal focus trap: keep Tab inside the overlay while it is open.
+				const focusables = Array.from(
+					box.querySelectorAll<HTMLElement>('a[href]:not([hidden]), button:not([disabled])'),
+				);
+				if (focusables.length === 0) return;
+				const first = focusables[0];
+				const last = focusables[focusables.length - 1];
+				if (!first || !last) return;
+				if (event.shiftKey && document.activeElement === first) {
+					event.preventDefault();
+					last.focus();
+				} else if (!event.shiftKey && document.activeElement === last) {
+					event.preventDefault();
+					first.focus();
+				}
+			}
+		});
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initLightbox, { once: true });
+	} else {
+		initLightbox();
+	}
+</script>

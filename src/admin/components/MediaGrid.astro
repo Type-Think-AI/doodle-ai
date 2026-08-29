@@ -1,0 +1,361 @@
+---
+import type { AdminMediaRow } from "../../lib/admin/media";
+import { relativeTime, truncate } from "../../lib/admin/queries";
+import { resizedCdnImage, cdnImageSrcset } from "../../lib/cdn-image";
+
+interface Props {
+	rows: AdminMediaRow[];
+	/** Builds the href that opens a tile's drawer (?media=<id>), preserving other params. */
+	linkFor: (id: string) => string;
+}
+
+const { rows, linkFor } = Astro.props;
+
+/* The first row of the grid loads eagerly; everything after is lazy.
+   A grid of 1024px CDN originals is what tanked LCP before — every tile
+   requests a small format-negotiated thumbnail via resizedCdnImage instead.
+   The lightbox is the only place a near-full-size image is ever fetched, and
+   only for the one image being viewed. */
+const EAGER_COUNT = 6;
+
+const statusLabel: Record<string, string> = {
+	ok: "Successful",
+	failed: "Failed",
+	refunded: "Refunded",
+	pending: "Pending",
+};
+
+/* Status is shown as a glyph rather than a text pill on every tile. A badge on
+   all 7 tiles (including the 4 that simply worked) was pure noise — the
+   successful case is the expectation, so it carries no badge at all and only
+   the exceptions announce themselves. */
+const statusGlyph: Record<string, string> = {
+	failed: "M6 6l12 12M18 6L6 18",
+	refunded: "M9 14H5v4M5.5 13.5A7 7 0 1 0 8 7.6",
+	pending: "M12 7.5V12l3 2",
+};
+
+/* Mirrors grad() in ./GradientAvatar.astro. Duplicated deliberately and kept
+   in one place inside this file: the same value is needed twice — as an inline
+   style for the tile avatar, and as a data attribute the lightbox reads to
+   paint its own avatar — and computing it once here keeps those two from
+   drifting apart. */
+function avatarGradient(seed: string): string {
+	let h = 0;
+	for (let i = 0; i < seed.length; i++) {
+		h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+	}
+	const a = h % 360;
+	const b = (a + 38 + ((h >> 8) % 56)) % 360;
+	return `linear-gradient(118deg, hsl(${a},64%,58%), hsl(${b},70%,42%))`;
+}
+---
+
+{
+	rows.length === 0 ? (
+		<div class="empty">
+			<p>No generations yet</p>
+			<span>Nothing matches these filters — or nobody has generated an image on the portal.</span>
+		</div>
+	) : (
+		<div class="media-grid">
+			{rows.map((row, i) => {
+				const hasImage = !!row.outputUrl && (row.status === "ok" || row.status === "pending");
+				const gradient = avatarGradient(row.userEmail);
+				const label = statusLabel[row.status] ?? row.status;
+				const glyph = statusGlyph[row.status];
+				return (
+					<figure class:list={["tile", { muted: !hasImage }]}>
+						{hasImage && row.outputUrl ? (
+							<button
+								class="shot"
+								type="button"
+								data-preview-full={resizedCdnImage(row.outputUrl, 1200)}
+								data-preview-raw={row.outputUrl}
+								data-preview-skill={row.skillId}
+								data-preview-meta={`${row.userName || row.userEmail} · ${relativeTime(row.createdAt)}`}
+								data-preview-caption={row.prompt}
+								data-preview-href={linkFor(row.id)}
+								data-preview-avatar={gradient}
+								aria-label={`Preview ${row.skillId} doodle full size`}
+							>
+								<img
+									src={resizedCdnImage(row.outputUrl, 440)}
+									srcset={cdnImageSrcset(row.outputUrl) ?? undefined}
+									sizes="(max-width: 650px) 45vw, 200px"
+									width="200"
+									height="200"
+									loading={i < EAGER_COUNT ? "eager" : "lazy"}
+									decoding="async"
+									alt={`${row.skillId} doodle — ${truncate(row.prompt, 80)}`}
+								/>
+								<span class="zoom" aria-hidden="true">
+									<svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+										<path d="M10 4H4v6M14 20h6v-6M4 4l6.5 6.5M20 20l-6.5-6.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+									</svg>
+								</span>
+								{glyph && (
+									<span class:list={["flag", row.status]} title={label}>
+										<svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+											<path d={glyph} stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									</span>
+								)}
+							</button>
+						) : (
+							/* No image to preview, so the whole plate goes to the record
+							   instead. It stays visually recessive so the generations that
+							   actually produced art are what the eye lands on. */
+							<a class="shot blank" href={linkFor(row.id)} aria-label={`Open details — ${label} ${row.skillId} generation`}>
+								<span class:list={["blank-mark", row.status]}>
+									{glyph && (
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+											<path d={glyph} stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									)}
+									<span>{label}</span>
+								</span>
+							</a>
+						)}
+
+						<figcaption>
+							<a class="line" href={linkFor(row.id)}>
+								<strong>{row.skillId}</strong>
+								<span class="when">{relativeTime(row.createdAt)}</span>
+							</a>
+							<span class="who" title={row.userEmail}>
+								<span class="avatar" style={`background:${gradient};`} aria-hidden="true"></span>
+								<span class="name">{row.userName || row.userEmail}</span>
+							</span>
+						</figcaption>
+					</figure>
+				);
+			})}
+		</div>
+	)
+}
+
+<style>
+	/* Denser than a 180px floor: the drawer takes a third of the viewport when
+	   open, and the old size left barely three tiles visible beside it. */
+	.media-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+		gap: 20px 16px;
+	}
+
+	/* Flat by construction: no tile border, no tile fill, no tile padding. The
+	   image is the object; the only rule on the page is the thin one around the
+	   plate itself. */
+	.tile {
+		display: flex;
+		flex-direction: column;
+		gap: 9px;
+		margin: 0;
+		min-width: 0;
+	}
+	.tile.muted {
+		opacity: 0.62;
+	}
+	.tile.muted:hover,
+	.tile.muted:focus-within {
+		opacity: 1;
+	}
+
+	.shot {
+		position: relative;
+		display: block;
+		width: 100%;
+		aspect-ratio: 1 / 1;
+		padding: 0;
+		border: 1px solid var(--border2);
+		border-radius: 10px;
+		overflow: hidden;
+		background: var(--surface2);
+		cursor: pointer;
+		font: inherit;
+		color: inherit;
+		text-decoration: none;
+		transition: border-color 0.15s;
+	}
+	.shot:hover {
+		border-color: var(--border3);
+	}
+	.shot:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.shot img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	/* Expand affordance — the image opens the full preview, and this says so.
+	   Always present for keyboard/touch (which have no hover), just quieter
+	   until the tile is hovered or focused. */
+	.zoom {
+		position: absolute;
+		top: 7px;
+		right: 7px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		border-radius: 7px;
+		background: rgba(0, 0, 0, 0.55);
+		color: #fff;
+		opacity: 0;
+		transition: opacity 0.15s;
+	}
+	.shot:hover .zoom,
+	.shot:focus-visible .zoom {
+		opacity: 1;
+	}
+
+	.flag {
+		position: absolute;
+		top: 7px;
+		left: 7px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: var(--card);
+		border: 1px solid var(--border2);
+	}
+	.flag.failed,
+	.flag.refunded {
+		color: var(--red, var(--text-dim));
+	}
+	.flag.pending {
+		color: var(--text-dim);
+	}
+
+	.blank {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-style: dashed;
+		cursor: pointer;
+	}
+	.blank-mark {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		font-size: 11px;
+		color: var(--text-dimmer);
+	}
+	.blank-mark.failed,
+	.blank-mark.refunded {
+		color: var(--red, var(--text-dimmer));
+	}
+
+	figcaption {
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		min-width: 0;
+	}
+	.line {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 8px;
+		min-width: 0;
+		text-decoration: none;
+		color: var(--text);
+	}
+	.line:hover strong {
+		color: var(--accent);
+	}
+	.line:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+	.line strong {
+		font-size: 12.5px;
+		font-weight: 550;
+		text-transform: capitalize;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.when {
+		flex: 0 0 auto;
+		font-size: 10.5px;
+		color: var(--text-dimmer);
+	}
+
+	/* Identity as an icon + display name, rather than a raw email string. The
+	   email moves to the title attribute so it is still one hover away. */
+	.who {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		min-width: 0;
+	}
+	.avatar {
+		width: 17px;
+		height: 17px;
+		flex: 0 0 17px;
+		border-radius: 50%;
+	}
+	.name {
+		font-size: 11.5px;
+		color: var(--text-dim);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		padding: 60px 20px;
+		text-align: center;
+		border: 1px dashed var(--border2);
+		border-radius: 12px;
+	}
+	.empty p {
+		margin: 0;
+		font-size: 14px;
+		color: var(--text);
+	}
+	.empty span {
+		font-size: 12px;
+		color: var(--text-dimmer);
+		max-width: 320px;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.shot,
+		.zoom {
+			transition: none;
+		}
+	}
+
+	@media (max-width: 650px) {
+		.media-grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 16px 10px;
+		}
+		/* No hover on touch, so the expand hint is permanent and full-size. */
+		.zoom {
+			opacity: 1;
+			width: 30px;
+			height: 30px;
+		}
+		.line strong {
+			font-size: 12px;
+		}
+	}
+</style>
