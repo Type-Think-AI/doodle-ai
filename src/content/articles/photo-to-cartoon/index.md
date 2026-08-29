@@ -289,7 +289,7 @@ What the current privacy policy states, in short:
 - DataFast provides analytics. The policy says Doodle AI does not run advertising pixels, does not sell data, and does not build an advertising profile.
 - Signed-out browser data can be cleared by clearing site data for doodleai.art.
 - Signed-in users can remove individual chats, moodboard items, and characters in the app.
-- To request deletion of an account and associated server-side content, email yash@typethink.ai from the account email address.
+- To request deletion of an account and associated server-side content, email yash@picxstudio.com from the account email address.
 - Data held by PicX, Google, OpenRouter, Cloudflare, or DataFast is subject to those providers’ own practices.
 - This article does **not** invent a numbered retention window. If the policy does not state one, neither does this guide.
 

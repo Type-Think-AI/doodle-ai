@@ -112,9 +112,11 @@ const groupKey = (section: string) => section.toLowerCase().replace(/[^a-z0-9]+/
 
     <!-- Auth slot. Both states start hidden and the resolved one is revealed
          by sidebar.ts, so a signed-in user never sees "Sign in" flash first.
-         No "Upgrade to Pro" here — there's no payment flow yet, and a button
-         that goes nowhere is worse than no button (same rule the out-of-
-         credits hint below follows). -->
+         Still no "Upgrade to Pro" CTA here — that would advertise a checkout
+         that does not exist. The out-of-credits hint below IS now actionable
+         though: it opens UpgradeContactDialog (mounted in AppShellLayout), which
+         routes to WhatsApp/Discord/email for a manual credit grant. A button
+         that reaches a human is not a button that goes nowhere. -->
     <div class="sidebar-auth" id="sidebarAuth">
       <button type="button" class="sidebar-auth-signin" id="sidebarSignIn" hidden>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -127,7 +129,7 @@ const groupKey = (section: string) => section.toLowerCase().replace(/[^a-z0-9]+/
             <span class="sidebar-auth-name" id="sidebarAuthName"></span>
             <span class="sidebar-auth-plan" id="sidebarCreditsBalance">…</span>
           </span>
-          <span class="sidebar-credits-hint" id="sidebarCreditsHint" hidden>Out of credits — more ways to get them are coming soon.</span>
+          <button type="button" class="sidebar-credits-hint" id="sidebarCreditsHint" hidden>Out of credits — tap to get more</button>
         </span>
         <button class="sidebar-auth-signout" id="sidebarSignOut" type="button" aria-label="Sign out">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -557,7 +559,20 @@ const groupKey = (section: string) => section.toLowerCase().replace(/[^a-z0-9]+/
     color: var(--text-dimmer);
     font-size: 10.5px;
     line-height: 1.35;
+    /* Now a <button>: strip the UA chrome so it still reads as the quiet hint
+       it was, while being keyboard-reachable and hit-testable. */
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: var(--border2);
+    text-underline-offset: 2px;
   }
+  .sidebar-credits-hint:not([hidden]):hover { color: var(--accent); text-decoration-color: currentColor; }
+  .sidebar-credits-hint:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
   .sidebar.collapsed .sidebar-credits-hint { display: none; }
 
   .sidebar-resize-handle {

@@ -1,0 +1,239 @@
+---
+/**
+ * UpgradeContactDialog — shown when someone tries to upgrade or buy a credit pack.
+ *
+ * Stripe checkout is not live. Before this existed, the Upgrade button wrote
+ * "Upgrade checkout is coming soon." into a status line and the billing packs
+ * were `disabled` buttons reading "Coming soon" — three dead ends on the one
+ * screen where a person has actively decided to pay us. That is the highest-intent
+ * moment in the product and it terminated in a shrug.
+ *
+ * So the fallback is a human: pick a channel, reach Yash, get credits granted
+ * manually while the project is in its testing phase. The dialog is a router to
+ * the channels in lib/contact.ts, not a form — there is nothing to submit,
+ * so there is no request that can fail and no state to persist.
+ *
+ * Opened by dispatching a CustomEvent, optionally naming what they wanted:
+ *   window.dispatchEvent(new CustomEvent("doodleai:open-upgrade-contact",
+ *     { detail: { pack: "Creator · 100 credits" } }))
+ * The pack name is interpolated into the WhatsApp and email prefills so the
+ * first message already says which pack, and Yash does not have to ask.
+ *
+ * Deliberately NOT annotated as a WebMCP tool: every action here hands off to a
+ * third-party app (WhatsApp, Discord, a mail client). An agent cannot complete
+ * a purchase conversation, and advertising a "buy credits" tool that only opens
+ * a chat window would be a misleading affordance.
+ *
+ * Flat surfaces, thin rules, existing tokens — no elevated card, per the app's
+ * visual language. The channel rows deliberately reuse the .flat-list-row
+ * pattern already used by the Connectors panel rather than inventing a look.
+ * Brand icons come from `simple-icons` (CC0) rather than being hand-drawn. An
+ * earlier version of this file used paths I authored by reasoning about the
+ * shapes, and they rendered as unrecognisable blobs — a brand mark either has
+ * the official geometry or it is wrong, there is no approximation. Simple Icons
+ * ships the official path for each brand; we read it at BUILD time in the
+ * frontmatter, so only the resolved path string reaches the client and the
+ * package stays a devDependency with no runtime cost.
+ *
+ * Simple Icons paths are single filled shapes (fill, no stroke), so they need
+ * different CSS from the stroked envelope glyph — see .uc-brand below.
+ */
+import { DISCORD_INVITE, SUPPORT_EMAIL, whatsappUrl, supportMailto } from "../../lib/contact";
+import { siWhatsapp, siDiscord } from "simple-icons";
+
+const whatsapp = whatsappUrl();
+---
+
+<dialog id="upgradeContactDialog" class="uc-dialog" aria-labelledby="ucTitle">
+	<div class="uc-body">
+		<button type="button" class="uc-close" id="upgradeContactClose" aria-label="Close">
+			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+		</button>
+
+		<span class="uc-kicker">Credits</span>
+		<h2 id="ucTitle" class="uc-title">Let's sort this out directly</h2>
+		<p class="uc-sub" id="upgradeContactSub">
+			Doodle AI is in its testing phase, so checkout isn't switched on yet. Message me
+			and I'll add credits to your account by hand — usually within a few hours.
+		</p>
+
+		<ul class="uc-channels" role="list">
+			{whatsapp && (
+				<li>
+					<a
+						class="uc-row"
+						id="upgradeContactWhatsapp"
+						href={whatsapp}
+						data-base-href={whatsapp}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<svg class="uc-brand" viewBox="0 0 24 24" role="img" aria-hidden="true"><path d={siWhatsapp.path}/></svg>
+						<span>
+							<strong>WhatsApp</strong>
+							<small>Straight to my phone — fastest</small>
+						</span>
+						<span class="uc-go" aria-hidden="true">→</span>
+					</a>
+				</li>
+			)}
+
+			<li>
+				<a class="uc-row" href={DISCORD_INVITE} target="_blank" rel="noopener noreferrer">
+					<svg class="uc-brand" viewBox="0 0 24 24" role="img" aria-hidden="true"><path d={siDiscord.path}/></svg>
+					<span>
+						<strong>Discord</strong>
+						<small>Ask in the community server</small>
+					</span>
+					<span class="uc-go" aria-hidden="true">→</span>
+				</a>
+			</li>
+
+			<li>
+				<a
+					class="uc-row"
+					id="upgradeContactEmail"
+					href={supportMailto("Doodle AI — credits")}
+					data-base-href={`mailto:${SUPPORT_EMAIL}`}
+					rel="noopener"
+				>
+					<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>
+					<span>
+						<strong>Email</strong>
+						<small>{SUPPORT_EMAIL}</small>
+					</span>
+					<span class="uc-go" aria-hidden="true">→</span>
+				</a>
+			</li>
+		</ul>
+
+		<p class="uc-foot">No payment details are collected anywhere in this flow.</p>
+	</div>
+</dialog>
+
+<script src="../../scripts/app/upgrade-contact-dialog.ts"></script>
+
+<style>
+	.uc-dialog {
+		padding: 0;
+		border: 1px solid var(--border2);
+		border-radius: var(--radius, 10px);
+		width: min(400px, calc(100vw - 32px));
+		background: var(--surface);
+		color: var(--text);
+	}
+	.uc-dialog::backdrop {
+		background: rgba(5, 5, 5, 0.6);
+		backdrop-filter: blur(3px);
+	}
+	.uc-dialog[open] { display: block; margin: auto; }
+
+	.uc-body { position: relative; padding: 22px 22px 18px; }
+
+	.uc-close {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+		width: 30px;
+		height: 30px;
+		border: none;
+		border-radius: 999px;
+		background: transparent;
+		color: var(--text-dim);
+		display: grid;
+		place-items: center;
+		cursor: pointer;
+	}
+	.uc-close:hover { color: var(--text); background: var(--hover); }
+	.uc-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+	.uc-kicker {
+		display: block;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+	.uc-title {
+		margin: 6px 0 0;
+		font-size: 1.15rem;
+		font-weight: 700;
+		letter-spacing: -0.015em;
+	}
+	.uc-sub {
+		margin: 8px 0 18px;
+		font-size: 0.82rem;
+		line-height: 1.5;
+		color: var(--text-dim);
+		max-width: 44ch;
+	}
+
+	.uc-channels { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+	.uc-channels > li { border-bottom: 1px solid var(--border); }
+
+	.uc-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		/* 48px min touch target */
+		min-height: 56px;
+		padding: 10px 4px;
+		color: var(--text);
+		text-decoration: none;
+	}
+	.uc-row:hover { background: var(--hover); }
+	.uc-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+	/* Generic (non-brand) glyphs — e.g. the envelope — are stroked outlines. */
+	.uc-row > svg {
+		flex: none;
+		width: 20px;
+		height: 20px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		color: var(--text-dim);
+	}
+	/* Simple Icons brand marks are single FILLED shapes. Stroking them (the
+	   inherited rule above) double-draws every edge and thickens the mark into
+	   a blob, so fill/stroke are explicitly inverted here. */
+	.uc-row > svg.uc-brand {
+		fill: currentColor;
+		stroke: none;
+	}
+	.uc-row:hover > svg { color: var(--accent); }
+
+	.uc-row > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+	.uc-row strong { font-size: 0.88rem; font-weight: 600; }
+	/* Previously nowrap + ellipsis, which truncated every subtitle ("Ask in the
+	   community s…"). The rows have vertical room, so wrap instead of clipping;
+	   the email address is the one value that must never wrap mid-string. */
+	.uc-row small {
+		font-size: 0.75rem;
+		color: var(--text-dimmer);
+		line-height: 1.35;
+		overflow-wrap: anywhere;
+	}
+	.uc-go { flex: none; color: var(--text-dimmer); font-size: 0.9rem; }
+	.uc-row:hover .uc-go { color: var(--text); }
+
+	.uc-foot {
+		margin: 14px 0 0;
+		font-size: 0.72rem;
+		color: var(--text-dimmer);
+		line-height: 1.4;
+	}
+
+	@media (max-width: 480px) {
+		.uc-dialog { width: calc(100vw - 20px); }
+		.uc-body { padding: 20px 18px 16px; }
+		.uc-row { min-height: 60px; }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.uc-dialog, .uc-row { transition: none; }
+	}
+</style>

@@ -5,6 +5,7 @@ import Footer from '../components/Footer.astro';
 import MobileNav from '../components/mobile/MobileNav.astro';
 import AuthDialog from '../components/app/AuthDialog.astro';
 import FeedbackDialog from '../components/app/FeedbackDialog.astro';
+import UpgradeContactDialog from '../components/app/UpgradeContactDialog.astro';
 import InstallPrompt from '../components/app/InstallPrompt.astro';
 import AccountMenu from '../components/app/AccountMenu.astro';
 import TeamNameDialog from '../components/app/TeamNameDialog.astro';
@@ -72,6 +73,7 @@ const showFooter = showFooterProp ?? (active !== 'chat' && active !== 'roadmap')
   <InstallPrompt />
   <AuthDialog />
   <FeedbackDialog />
+  <UpgradeContactDialog />
   <AccountMenu />
   <TeamNameDialog />
   <JoinTeamDialog />

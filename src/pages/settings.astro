@@ -1,6 +1,7 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
 import AuthDialog from '../components/app/AuthDialog.astro';
+import UpgradeContactDialog from '../components/app/UpgradeContactDialog.astro';
 import { THEMES } from '../lib/doodle-constants';
 import { SIGNUP_GRANT_CREDITS } from '../lib/credits/costs';
 
@@ -116,12 +117,13 @@ const settingsTabs = [
 
         <section class="settings-panel" id="settings-panel-billing" data-settings-panel="billing" role="tabpanel" aria-labelledby="settings-tab-billing" hidden>
           <button class="settings-panel-toggle" type="button" data-settings-toggle="billing" aria-expanded="false"><span><b>Billing</b><small>Credit packs</small></span><span aria-hidden="true">⌄</span></button>
-          <div class="settings-panel-body"><div class="settings-section-heading"><span class="settings-kicker">Credits</span><h2>Billing</h2><p>Buy more creative time when you need it.</p></div><div class="flat-list billing-list"><div class="billing-row"><div><strong>Starter</strong><span>25 credits · For a few experiments</span></div><button type="button" disabled>Coming soon</button></div><div class="billing-row billing-row-featured"><div><strong>Creator</strong><span>100 credits · For a full creative session</span></div><button type="button" disabled>Coming soon</button></div><div class="billing-row"><div><strong>Studio</strong><span>250 credits · For frequent making</span></div><button type="button" disabled>Coming soon</button></div></div><div class="history-section"><h3>Recent transactions</h3><div class="history-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12M6 8h12M6 12h8M6 16h10M6 20h7"/></svg><span>No transactions yet</span></div></div></div>
+          <div class="settings-panel-body"><div class="settings-section-heading"><span class="settings-kicker">Credits</span><h2>Billing</h2><p>Buy more creative time when you need it.</p></div><div class="flat-list billing-list"><div class="billing-row"><div><strong>Starter</strong><span>25 credits · For a few experiments</span></div><button type="button" data-upgrade-pack="Starter · 25 credits">Get credits</button></div><div class="billing-row billing-row-featured"><div><strong>Creator</strong><span>100 credits · For a full creative session</span></div><button type="button" data-upgrade-pack="Creator · 100 credits">Get credits</button></div><div class="billing-row"><div><strong>Studio</strong><span>250 credits · For frequent making</span></div><button type="button" data-upgrade-pack="Studio · 250 credits">Get credits</button></div></div><div class="history-section"><h3>Recent transactions</h3><div class="history-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12M6 8h12M6 12h8M6 16h10M6 20h7"/></svg><span>No transactions yet</span></div></div></div>
         </section>
       </main>
     </div>
   </div>
   <AuthDialog />
+  <UpgradeContactDialog />
 </AppLayout>
 
 <script src="../scripts/app/settings.ts"></script>
@@ -197,7 +199,7 @@ const settingsTabs = [
   .usage-note { color: var(--text-dimmer); font-size: 11px; } .history-section { margin-top: 58px; padding-top: 24px; border-top: 1px solid var(--border); } .history-empty { display: flex; align-items: center; gap: 10px; margin-top: 20px; color: var(--text-dimmer); font-size: 12px; } .history-empty svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; } .upgrade-status { min-height: 17px; margin-top: 18px; color: var(--accent); font-size: 11px; }
   .flat-list { border-top: 1px solid var(--border); } .flat-list-row, .billing-row { display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 14px 0; border-bottom: 1px solid var(--border); } .flat-list-row > svg { width: 22px; height: 22px; flex: 0 0 22px; fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; } .flat-list-row > div { flex: 1; } .flat-list-row strong, .billing-row strong { display: block; font-size: 13px; } .flat-list-row p, .billing-row span { margin-top: 5px; color: var(--text-dim); font-size: 12px; } .connected-status { color: #62d78b; font-size: 11px; }
   .settings-note { display: flex; flex-direction: column; gap: 5px; margin-top: 24px; padding: 16px 0; color: var(--text); font-size: 12px; } .settings-note span { color: var(--text-dim); }
-  .billing-row > div { flex: 1; } .billing-row button { height: 32px; padding: 0 13px; border: 1px solid var(--border2); border-radius: 999px; color: var(--text-dimmer); background: transparent; font: inherit; font-size: 11px; } .billing-row-featured strong { color: var(--accent); }
+  .billing-row > div { flex: 1; } .billing-row button { height: 32px; padding: 0 13px; border: 1px solid var(--border2); border-radius: 999px; color: var(--text); background: transparent; font: inherit; font-size: 11px; cursor: pointer; } .billing-row button:hover { border-color: var(--text); background: var(--hover); } .billing-row button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } .billing-row-featured strong { color: var(--accent); } .billing-row-featured button { border-color: var(--accent-soft, var(--border2)); color: var(--accent); }
   @media (max-width: 900px) { .settings-frame { grid-template-columns: 220px minmax(0, 1fr); } .settings-main { padding: 40px 30px 70px; } .settings-tab small { display: none; } }
   @media (max-width: 700px) {
     .settings-topbar { height: 60px; padding: 0 18px; } .settings-brand-name { font-size: 14px; } .settings-frame { display: block; min-height: calc(100dvh - 60px); } .settings-rail { display: none; } .settings-main { width: auto; padding: 0 18px 60px; }

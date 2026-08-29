@@ -354,11 +354,22 @@ async function renderCreditsSlot(): Promise<void> {
 function setCreditsBalance(balanceEl: HTMLElement, balance: number): void {
   balanceEl.textContent = `${balance} credit${balance === 1 ? "" : "s"}`;
   balanceEl.dataset.empty = String(balance <= 0);
-  // The out-of-credits hint is a plain sentence, not a button — there's no
-  // purchase flow yet (Stripe is out of scope for this phase), and a "Buy
-  // credits" control that goes nowhere would be worse than no control.
+  // The out-of-credits hint opens UpgradeContactDialog (mounted once in
+  // AppShellLayout) so someone who has run dry can reach a human and get
+  // credits granted manually. Stripe checkout is still out of scope; this is
+  // the interim path, not a purchase flow.
   const hint = document.getElementById("sidebarCreditsHint");
-  if (hint) hint.hidden = balance > 0;
+  if (hint) {
+    hint.hidden = balance > 0;
+    if (!hint.dataset.bound) {
+      hint.dataset.bound = "1";
+      hint.addEventListener("click", () => {
+        window.dispatchEvent(
+          new CustomEvent("doodleai:open-upgrade-contact", { detail: {} }),
+        );
+      });
+    }
+  }
 }
 
 if (document.readyState === "loading") {

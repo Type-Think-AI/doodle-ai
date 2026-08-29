@@ -20,6 +20,7 @@ import { buildStatus } from "./api/status";
 import { GROUP_LABELS, GROUP_ORDER, type ComponentStatus, type ProbeGroup } from "../lib/status/types";
 import { WINDOW_DAYS } from "../lib/status/history";
 import { OG_IMAGE } from "../consts";
+import { DISCORD_INVITE, supportMailto } from "../lib/contact";
 
 export const prerender = false;
 
@@ -178,8 +179,9 @@ const counts = {
           when anything probed is down.
         </p>
         <p class="st-report">
-          Broken for you but green here? <button type="button" id="stReport">Tell us</button> or
-          <a href="mailto:yash@typethink.ai?subject=Doodle%20AI%20status">email support</a>.
+          Broken for you but green here? <button type="button" id="stReport">Tell us</button>,
+          <a href={DISCORD_INVITE} target="_blank" rel="noopener noreferrer">ask in Discord</a> or
+          <a href={supportMailto('Doodle AI status')}>email support</a>.
         </p>
       </div>
     </details>

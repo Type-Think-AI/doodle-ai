@@ -183,10 +183,28 @@ function initSettings(): void {
   }
 
   /* ---- Subscription controls ---- */
+  // Checkout is not live. Rather than telling a person who has just decided to
+  // pay us that the thing is "coming soon" and leaving them there, both the
+  // Upgrade button and each credit pack open the contact dialog so they can
+  // reach a human and have credits granted manually during the testing phase.
+  const openUpgradeContact = (pack?: string): void => {
+    window.dispatchEvent(
+      new CustomEvent("doodleai:open-upgrade-contact", { detail: pack ? { pack } : {} }),
+    );
+  };
+
   const upgradeButton = document.getElementById("settingsUpgradeButton");
   const upgradeStatus = document.getElementById("settingsUpgradeStatus");
   upgradeButton?.addEventListener("click", () => {
-    if (upgradeStatus) upgradeStatus.textContent = "Upgrade checkout is coming soon.";
+    // Clear any stale status text from a previous interaction.
+    if (upgradeStatus) upgradeStatus.textContent = "";
+    openUpgradeContact();
+  });
+
+  root.querySelectorAll<HTMLButtonElement>("[data-upgrade-pack]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openUpgradeContact(button.dataset.upgradePack);
+    });
   });
   root.querySelectorAll<HTMLButtonElement>("[data-usage-range]").forEach((button) => {
     button.addEventListener("click", () => {
