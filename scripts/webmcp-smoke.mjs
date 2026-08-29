@@ -72,7 +72,6 @@ const HOMEPAGE_IMPERATIVE = {
   list_doodle_skills: { kind: 'read', args: '{"limit":8}' },
   get_doodle_skill: { kind: 'read', args: '{"id":"normal"}' },
   get_doodle_overview: { kind: 'read', args: '{}' },
-  get_doodle_status: { kind: 'read', args: '{}' },
   open_doodle_page: { kind: 'nav', args: '{"page":"home"}' }, // navigates — never executed
   search_doodle_articles: { kind: 'read', args: '{"query":"cartoon"}' },
   get_doodle_article: { kind: 'read', args: '{"url":"/photo-to-cartoon/"}' },
@@ -418,8 +417,8 @@ try {
   // The seven expected imperative tools must all be present.
   const expectedNames = Object.keys(HOMEPAGE_IMPERATIVE);
   check(
-    expectedNames.length === 7,
-    `expected tool list has exactly 7 imperative tools (${expectedNames.length})`,
+    expectedNames.length === 6,
+    `expected homepage tool list has exactly 6 original imperative tools (${expectedNames.length})`,
   );
   for (const name of expectedNames) {
     check(byName.has(name), `homepage registers imperative tool: ${name}`);
@@ -529,7 +528,7 @@ try {
 
   /* ------------------------- cancellation --------------------------------- */
   console.log('\n  -- AbortSignal is honoured (agent stop button works) --');
-  for (const name of ['get_doodle_status', 'search_doodle_articles', 'get_doodle_article']) {
+  for (const name of ['search_doodle_articles', 'get_doodle_article']) {
     if (!byName.has(name)) continue;
     const args = HOMEPAGE_IMPERATIVE[name].args;
     const res = await ev(client, EXECUTE_TOOL_ABORTED(name, args));
@@ -548,8 +547,8 @@ try {
       `diagnostics report zero failed registrations (${JSON.stringify(diag.failed)})`,
     );
     check(
-      Array.isArray(diag.registered) && diag.registered.length === 7,
-      `diagnostics report 7 imperative registrations (got ${diag.registered?.length})`,
+      Array.isArray(diag.registered) && diag.registered.length === tools.length - homepageForms.length,
+      `diagnostics registrations (${diag.registered?.length}) == getTools (${tools.length}) minus declarative forms (${homepageForms.length})`,
     );
     note(`origin-isolated: ${diag.originAgentCluster} | secureContext: ${diag.secureContext}`);
   }
@@ -566,6 +565,17 @@ try {
       names.includes('list_doodle_skills') && names.includes('get_doodle_overview'),
       `${route} registers the imperative tool set (${names.length} tools)`,
     );
+    /* get_doodle_status was deliberately moved off the global core: it was dead
+       weight on ~30 routes. Assert it is PRESENT here and absent elsewhere, so
+       the move is verified rather than merely the removal. */
+    if (route === '/status/') {
+      check(names.includes('get_doodle_status'), '/status/ registers the route-scoped get_doodle_status');
+    } else {
+      check(
+        !names.includes('get_doodle_status'),
+        `${route} does NOT register get_doodle_status (route-scoped to /status)`,
+      );
+    }
   }
 
   /* ============================= /boards ============================= */

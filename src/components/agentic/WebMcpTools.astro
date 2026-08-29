@@ -85,6 +85,11 @@ const overview = [
     type WebMcpToolDef,
     type WebMcpRegistrableTool,
   } from './tools-content';
+  import { selectTools, always, prefix, type ToolBundle } from './registry';
+  import articleBundle from './tools-articles';
+  import discoveryBundle from './tools-discovery';
+  import skillsBundle from './tools-skills';
+  import learnBundle from './tools-learn';
 
   interface Skill {
     id: string;
@@ -173,6 +178,8 @@ const overview = [
       /* registerTool rejects with SecurityError unless the agent cluster is
          origin-keyed, so this is the first thing to check on a real failure. */
       originAgentCluster: (window as unknown as { originAgentCluster?: boolean }).originAgentCluster,
+      bundles: [] as string[],
+      duplicates: [] as string[],
       registered: [] as string[],
       failed: [] as { tool: string; error: string }[],
       reason: '',
@@ -202,7 +209,7 @@ const overview = [
 
     /* Every inputSchema is a complete JSON Schema — `type`, `properties`, explicit
        `required`. A bare {} or a missing `type` fails webmcp-schema-validity. */
-    const tools: WebMcpToolDef[] = [
+    const coreTools: WebMcpToolDef[] = [
       {
         name: 'list_doodle_skills',
         description:
@@ -393,6 +400,39 @@ const overview = [
       ...contentTools,
     ];
 
+    /* ROUTE SCOPING — see registry.ts for why this is not one global set.
+       Chrome's WebMCP guidance is per-route registration: a longer tool list
+       measurably lowers an agent's tool-selection accuracy, and until now every
+       tool registered on every route including /admin.
+
+       `get_doodle_status` is pulled out of the global core by NAME rather than
+       by moving its definition, so the object literal above stays where it is
+       and this stays a one-line change if it ever moves back. */
+    const statusTools = coreTools.filter((t) => t.name === 'get_doodle_status');
+    const globalCore = coreTools.filter((t) => t.name !== 'get_doodle_status');
+
+    /* Order matters only for duplicate resolution: the first bundle to claim a
+       name wins, so the core is listed first and route-scoped bundles
+       specialise around it rather than silently shadowing it. */
+    const bundles: ToolBundle[] = [
+      { id: 'core', appliesTo: always, tools: globalCore },
+      { id: 'status', appliesTo: prefix('/status'), tools: statusTools },
+      articleBundle,
+      discoveryBundle,
+      learnBundle,
+      skillsBundle,
+    ];
+
+    const selection = selectTools(bundles, window.location.pathname);
+    diag.bundles = selection.bundles;
+    diag.duplicates = selection.duplicates;
+
+    if (selection.excluded) {
+      /* /admin, /s/<token> and /join/<token> get no agent surface at all. */
+      diag.reason = 'Route is excluded from WebMCP registration by policy.';
+      return;
+    }
+
     /* SPEC RETURN SHAPE — the one thing this file previously got wrong at the
        protocol level. The WebMCP explainer's execute callback resolves to an
        MCP-style content envelope:
@@ -407,7 +447,7 @@ const overview = [
        the wire shape is what the spec and the reference demo both use. Wrapping
        here rather than in 7 tool bodies means a newly added tool cannot ship in
        the old shape by accident. */
-    for (const tool of tools) {
+    for (const tool of selection.tools) {
       void modelContext.registerTool(withTextEnvelope(tool), options).then(
         () => {
           diag.registered.push(tool.name);
@@ -431,7 +471,7 @@ const overview = [
       /* Registration promises settle after this turn, so report on a microtask. */
       void Promise.resolve().then(() => {
         console.info(
-          `[WebMCP] ${diag.registered.length}/${tools.length} imperative tools registered ` +
+          `[WebMCP] ${diag.registered.length}/${selection.tools.length} imperative tools registered ` +
             `via ${diag.apiSurface}.modelContext`,
           diag.registered,
         );
