@@ -1,6 +1,7 @@
 import { glob } from "astro/loaders";
 import { defineCollection } from "astro:content";
 import { z } from "astro/zod";
+import { GENERATION_MODES } from "./lib/doodle-constants";
 
 /**
  * Editorial content collection.
@@ -41,8 +42,45 @@ const articles = defineCollection({
 		 * Topic silo used to compute the "related reading" block automatically, so
 		 * publishing article N+1 links it into the existing set without editing
 		 * any of them.
+		 *
+		 * Aug 2026 SEO expansion (docs/seo-keyword-pages-spec.md): added `doodle`
+		 * (photo-to-doodle / doodle-generator converters), `coloring` (line-art /
+		 * printable coloring pages), `festival` (festive portrait landings), and
+		 * `learn` (prompt-idea + how-to pages that still embed the generator).
+		 * Existing articles keep their clusters, so nothing re-silos.
 		 */
-		cluster: z.enum(["cartoon", "pets", "stickers", "gifts", "social", "studios"]),
+		cluster: z.enum([
+			"cartoon",
+			"pets",
+			"stickers",
+			"gifts",
+			"social",
+			"studios",
+			"doodle",
+			"coloring",
+			"festival",
+			"learn",
+		]),
+
+		/**
+		 * Optional. The generation mode / skill id this landing auto-applies when
+		 * the reader opens the in-page composer or the "Create your doodle" CTA.
+		 * The value is passed straight to `/?skill=<id>`, which the home composer
+		 * validates with `getSkill(id)` before pinning the chip. This is a landing
+		 * pointing at an EXISTING skill — it does NOT create a new generation mode
+		 * or a new SKILL.md package. Leave unset for pages that are purely
+		 * editorial and should not surface the try-it panel.
+		 */
+		skill: z
+			.enum(GENERATION_MODES as unknown as [string, ...string[]])
+			.optional(),
+
+		/**
+		 * Optional. The single head keyword this page targets, kept as data so a
+		 * later audit (and docs/seo-pages-shipped.md) can read intent without
+		 * parsing prose. Never rendered as a "we rank #1 for X" claim.
+		 */
+		primaryKeyword: z.string().optional(),
 
 		/**
 		 * Optional, and only for pages that genuinely render a visible Q&A list.

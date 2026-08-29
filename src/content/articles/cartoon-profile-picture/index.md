@@ -2,10 +2,23 @@
 title: "How to Make a Cartoon Profile Picture from a Photo"
 description: "Turn a selfie into a square cartoon PFP at doodleai.art for Instagram, Discord, Reddit, or similar apps. Crop and readability notes, consent, prompt moods, and why one still is not a matching set."
 pubDate: 2026-08-25
-updatedDate: 2026-08-25
+updatedDate: 2026-08-29
 heroImage: "https://cdn.picxstudio.com/api/generated/image_644d87bd-eb9c-42e8-8e2e-3ab019a3b8a7.png"
 category: "guide"
 cluster: "cartoon"
+skill: "normal"
+primaryKeyword: "cartoon profile picture"
+faq:
+  - question: "How do I make a cartoon profile picture from a photo?"
+    answer: "Sign in at doodleai.art, attach a clear selfie, and run the Normal doodle avatar skill. You get one square hand-drawn avatar. Download it and crop it yourself for Instagram, Discord, Reddit, WhatsApp, or wherever you post."
+  - question: "What size is the cartoon PFP?"
+    answer: "The output is a 1:1 square still. Most apps mask a circle, so keep the important landmarks — glasses, earrings, a hair clip — inside the face-and-hair mass rather than out near the corners, or the circular crop will cut them off."
+  - question: "Will the cartoon PFP look like me?"
+    answer: "Normal keeps recognizable landmarks like hair silhouette, face shape, expression, and glasses, but it does not guarantee identical characters across generations. Judge each still at circle size. If it drifts, name the landmarks again and regenerate."
+  - question: "Can I get a matching set of avatars for a group?"
+    answer: "Not as a locked set. Each still is one generation. You can run several, but continuity across faces is not guaranteed today. For six expressions of one person, use the Collage skill instead."
+  - question: "Is it free to make a cartoon profile picture?"
+    answer: "Browsing is free. Generation uses credits — new accounts get free starter credits, each generation costs 1 credit, and failed generations refund. There is no paywall and no professional-headshot upsell."
 ---
 
 **Direct answer:** To make a cartoon profile picture from a photo at [doodleai.art](https://doodleai.art), sign in, attach a clear selfie, and generate a square doodle avatar with the [Normal skill](https://doodleai.art/skills/normal/). Download the still and crop it yourself for Instagram, Discord, Reddit, or similar apps. Doodle AI does not ship platform export presets, matching-set continuity, or professional headshots.
@@ -375,6 +388,20 @@ These questions showed up around `ai profile picture` in a 2026-08-24 US mobile 
 - [Adobe 2025 creators survey](https://news.adobe.com/news/2025/10/adobe-max-2025-creators-survey) — industry context, not a Doodle AI metric
 - [C2PA 2.2 explainer](https://c2pa.org/specifications/specifications/2.2/explainer/Explainer.html) — provenance standard; not a current Doodle AI feature
 - [ChatGPT sticker announcement on X](https://x.com/ChatGPT/status/2091996384954069032) — messaging-sticker launch in a different product; not a Doodle AI feature
+
+## Questions people ask
+
+These questions cluster around “cartoon pfp,” “profile picture cartoon,” and “cartoon profile picture.” The answers are about doodleai.art specifically.
+
+**How do I make a cartoon profile picture from a photo?** Sign in, attach a clear selfie, and run the [Normal doodle avatar skill](https://doodleai.art/skills/normal/). You get one square hand-drawn avatar. Download it and crop it yourself for Instagram, Discord, Reddit, WhatsApp, or wherever you post.
+
+**What size is the cartoon PFP?** The output is a 1:1 square still. Most apps mask a circle, so keep the important landmarks — glasses, earrings, a hair clip — inside the face-and-hair mass rather than out near the corners.
+
+**Will the cartoon PFP look like me?** Normal keeps recognizable landmarks like hair silhouette, face shape, expression, and glasses, but it does not guarantee identical characters across generations. Judge each still at circle size and regenerate if it drifts.
+
+**Can I get a matching set of avatars for a group?** Not as a locked set. Each still is one generation, and continuity across faces is not guaranteed today. For six expressions of one person, use the [Collage skill](https://doodleai.art/skills/collage/).
+
+**Is it free to make a cartoon profile picture?** Browsing is free. Generation uses credits — new accounts get free starter credits, each generation costs 1 credit, and failed generations refund. There is no paywall.
 
 ## Make one square, then crop it where you actually post
 
