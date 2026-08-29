@@ -19,15 +19,23 @@
  * unless the caller's platform role clears the bar, so forgetting to add a
  * guard is not a way to leak data.
  *
- * WHY PAGES 404 BUT THE API 403s
+ * WHY PAGES REDIRECT HOME BUT THE API 403s
  *
- * A 403 on /admin confirms to an anonymous visitor that an admin console
- * exists at that exact path, which is free reconnaissance. Pages therefore
- * render the ordinary 404 — indistinguishable from a URL that was never a
- * route. The API is the opposite case: its callers are our own signed-in
- * client code, which needs to tell "you aren't allowed" apart from "that
- * endpoint is gone" to show the right message, so it gets a real 401/403
- * from `requirePlatformRole`.
+ * A visitor without admin access who lands on an /admin page is sent to the
+ * homepage (302). They are almost always a real signed-in user who simply
+ * lacks the platform role, and a 404 or 500 reads as "the app is broken" —
+ * a redirect home is the least confusing outcome. The API is the opposite
+ * case: its callers are our own signed-in client code, which needs to tell
+ * "you aren't allowed" apart from "that endpoint is gone" to show the right
+ * message, so it gets a real 401/403 from `requirePlatformRole`.
+ *
+ * WHY ROLE RESOLUTION IS WRAPPED IN try/catch
+ *
+ * `resolvePlatformRole` touches D1 and Better Auth; either can throw for
+ * reasons unrelated to the caller (transient DB error, schema drift, missing
+ * binding). Unhandled, that throw is a raw HTTP 500 — the "This page isn't
+ * working" screen. Instead we log the real cause and treat the failure as
+ * "not authorised": pages redirect home, the API returns a clean 503.
  */
 import { defineMiddleware } from "astro:middleware";
 import { resolvePlatformRole } from "./lib/auth/admin-guard";
@@ -44,7 +52,37 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (!isAdminPage && !isAdminApi) return next();
 
-  const resolved = await resolvePlatformRole(context);
+  // Resolving the role touches D1 and Better Auth. Either can throw for
+  // reasons that have nothing to do with the caller — a transient D1 error,
+  // a schema drift (e.g. `platform_role` not yet migrated in an environment),
+  // a missing binding. An unhandled throw here becomes a raw HTTP 500, which
+  // is exactly the "This page isn't working / HTTP ERROR 500" screen users
+  // hit on production /admin. Treat any such failure as "not authorised":
+  // page routes fall through to the homepage, the API returns a clean 503,
+  // and the real cause is logged for debugging rather than shown to visitors.
+  let resolved: Awaited<ReturnType<typeof resolvePlatformRole>>;
+  try {
+    resolved = await resolvePlatformRole(context);
+  } catch (err) {
+    console.error(
+      `[admin-middleware] Failed to resolve platform role for ${context.request.method} ${pathname}:`,
+      err,
+    );
+    if (isAdminApi) {
+      return json(
+        {
+          error: {
+            code: "admin_unavailable",
+            message: "Admin access could not be verified. Try again shortly.",
+          },
+        },
+        503,
+      );
+    }
+    // Page route: send the visitor home instead of a 500. No stack, no
+    // confirmation that /admin exists — just a normal redirect.
+    return context.redirect("/", 302);
+  }
 
   if (isAdminApi) {
     if (!resolved) {
@@ -75,10 +113,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Page routes.
   if (!resolved || !canViewAdmin(resolved.platformRole)) {
-    // `next()` on the 404 route rather than a bare 404 Response, so the
-    // visitor gets the real styled 404 page and /admin is indistinguishable
-    // from a path that was never routed.
-    return context.rewrite("/404");
+    // A visitor without admin access is sent to the homepage rather than
+    // shown a 404 or a 500. This is a deliberate product choice: the person
+    // hitting /admin is almost always a real signed-in user who simply lacks
+    // the role, and a bare 404 reads as "the app is broken". A 302 home is
+    // the least confusing outcome. (Reconnaissance value is minimal — the
+    // /admin path is already public knowledge.)
+    return context.redirect("/", 302);
   }
 
   context.locals.admin = resolved;
