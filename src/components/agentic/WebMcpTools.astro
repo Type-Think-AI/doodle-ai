@@ -104,58 +104,20 @@ const overview = [
   }
 
   /**
-   * Diagnostics, published on `window.__doodleWebMcp`.
+   * `?webmcpDebug=1` prints what happened to the console.
    *
-   * The previous version of this file swallowed every failure: an absent API was
-   * a bare `return`, and a rejected `registerTool()` hit `.catch(() => {})`. That
-   * is indistinguishable from "the browser does not support WebMCP", so a real
-   * registration bug and an unflagged browser looked identical — and cost hours.
-   * Anything that goes wrong now leaves a readable trace here, and
-   * `?webmcpDebug=1` prints it.
+   * The full record always lands on `window.__doodleWebMcp` (see `initWebMcp`);
+   * this only decides whether to also narrate it. It exists because the failure
+   * this file is most often accused of — "no tools registered" in the DevTools
+   * WebMCP panel — is usually a browser without the flag, and that is
+   * indistinguishable from a real bug unless the page says so out loud.
    */
-  interface WebMcpDiagnostics {
-    apiFound: boolean;
-    apiLocation: 'document.modelContext' | 'navigator.modelContext' | null;
-    attempted: number;
-    registered: string[];
-    failed: { name: string; error: string }[];
-    reason?: string;
-  }
-
-  const diagnostics: WebMcpDiagnostics = {
-    apiFound: false,
-    apiLocation: null,
-    attempted: 0,
-    registered: [],
-    failed: [],
-  };
-
-  const debugEnabled = (): boolean => {
+  function debugEnabled(): boolean {
     try {
       return new URLSearchParams(window.location.search).has('webmcpDebug');
     } catch {
       return false;
     }
-  };
-
-  function publishDiagnostics(): void {
-    (window as unknown as { __doodleWebMcp?: WebMcpDiagnostics }).__doodleWebMcp = diagnostics;
-    if (!debugEnabled()) return;
-    if (!diagnostics.apiFound) {
-      console.info(
-        '[WebMCP] document.modelContext is not available in this browser. ' +
-          'WebMCP is behind a flag: enable chrome://flags/#enable-webmcp-testing ' +
-          '(or #web-machine-learning-webmcp on some builds) and relaunch. ' +
-          'Nothing is wrong with the page — no polyfill is installed on purpose.',
-      );
-      return;
-    }
-    console.info(
-      `[WebMCP] ${diagnostics.registered.length}/${diagnostics.attempted} imperative tools ` +
-        `registered via ${diagnostics.apiLocation}:`,
-      diagnostics.registered,
-    );
-    if (diagnostics.failed.length > 0) console.warn('[WebMCP] failed registrations:', diagnostics.failed);
   }
 
   /** Google's ceiling for a single tool output. Applied to every return value. */
@@ -171,15 +133,9 @@ const overview = [
      origin-trial shape. Probe newest first, and do NOT polyfill when absent. */
   function resolveModelContext(): ModelContext | null {
     const fromDocument = (document as unknown as { modelContext?: ModelContext }).modelContext;
-    if (typeof fromDocument?.registerTool === 'function') {
-      diagnostics.apiLocation = 'document.modelContext';
-      return fromDocument;
-    }
+    if (typeof fromDocument?.registerTool === 'function') return fromDocument;
     const fromNavigator = (navigator as unknown as { modelContext?: ModelContext }).modelContext;
-    if (typeof fromNavigator?.registerTool === 'function') {
-      diagnostics.apiLocation = 'navigator.modelContext';
-      return fromNavigator;
-    }
+    if (typeof fromNavigator?.registerTool === 'function') return fromNavigator;
     return null;
   }
 
@@ -437,8 +393,22 @@ const overview = [
       ...contentTools,
     ];
 
+    /* SPEC RETURN SHAPE — the one thing this file previously got wrong at the
+       protocol level. The WebMCP explainer's execute callback resolves to an
+       MCP-style content envelope:
+
+           return { content: [{ type: "text", text: "…" }] };
+
+       Every tool body above returns a PLAIN STRING, which Chrome tolerates
+       (executeTool resolves to a serialised result either way) — but a host that
+       unwraps `content[]` gets an opaque blob instead of text, and there is no
+       way to signal `isError`. `withTextEnvelope` adapts each body at this single
+       point, so the `cap()` budget still measures the text a model reads while
+       the wire shape is what the spec and the reference demo both use. Wrapping
+       here rather than in 7 tool bodies means a newly added tool cannot ship in
+       the old shape by accident. */
     for (const tool of tools) {
-      void modelContext.registerTool(tool, options).then(
+      void modelContext.registerTool(withTextEnvelope(tool), options).then(
         () => {
           diag.registered.push(tool.name);
         },
@@ -455,6 +425,18 @@ const overview = [
           diag.reason = 'At least one registerTool call was rejected — see failed[].';
         },
       );
+    }
+
+    if (debugEnabled()) {
+      /* Registration promises settle after this turn, so report on a microtask. */
+      void Promise.resolve().then(() => {
+        console.info(
+          `[WebMCP] ${diag.registered.length}/${tools.length} imperative tools registered ` +
+            `via ${diag.apiSurface}.modelContext`,
+          diag.registered,
+        );
+        if (diag.failed.length > 0) console.warn('[WebMCP] rejected:', diag.failed);
+      });
     }
 
     window.addEventListener(

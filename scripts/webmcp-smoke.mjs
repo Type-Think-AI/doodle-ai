@@ -88,8 +88,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const failures = [];
 const notes = [];
+let passed = 0;
 function check(ok, message) {
   if (ok) {
+    passed += 1;
     console.log(`  ✓ ${message}`);
   } else {
     console.log(`  ✗ ${message}`);
@@ -264,8 +266,30 @@ const EXECUTE_TOOL = (name, argsJson) => `(async () => {
   if (!tool) return { ok: false, error: 'NOT_FOUND' };
   try {
     const r = await mc.executeTool(tool, ${JSON.stringify(argsJson)});
-    const s = typeof r === 'string' ? r : JSON.stringify(r);
-    return { ok: true, len: s.length, valueType: typeof r, head: s.slice(0, 120).replace(/\\s+/g, ' ') };
+    const wire = typeof r === 'string' ? r : JSON.stringify(r);
+    /* Tools return the spec's MCP content envelope
+       ({ content: [{ type: 'text', text }] }) and Chrome resolves executeTool to
+       a SERIALISED result, so the raw string is JSON. The 1,500-char budget is
+       about what a model reads, so unwrap to the text before measuring — charging
+       the tool for JSON punctuation would fail a compliant response. */
+    let text = wire;
+    let enveloped = false;
+    try {
+      const parsed = typeof r === 'string' ? JSON.parse(r) : r;
+      if (parsed && Array.isArray(parsed.content)) {
+        enveloped = true;
+        text = parsed.content.map((c) => c.text ?? JSON.stringify(c)).join('\\n');
+      }
+    } catch { /* not JSON — a bare string result, measured as-is */ }
+    return {
+      ok: true,
+      len: text.length,
+      wireLen: wire.length,
+      enveloped,
+      valueType: typeof r,
+      full: text,
+      head: text.slice(0, 120).replace(/\\s+/g, ' '),
+    };
   } catch (e) {
     return { ok: false, error: String(e).slice(0, 160) };
   }
@@ -275,6 +299,85 @@ const EXECUTE_TOOL = (name, argsJson) => `(async () => {
 const DECLARATIVE_FORMS = `JSON.stringify(
   [...document.querySelectorAll('form[toolname]')].map((f) => f.getAttribute('toolname'))
 )`;
+
+/**
+ * Structural integrity of each declarative form.
+ *
+ * A declarative form without `toolautosubmit` MUST contain a real
+ * `type="submit"` control — Chrome throws "No submit button was found" when an
+ * agent invokes one whose only button is `type="button"`. That exact bug shipped
+ * once and was only caught by a live browser run, so it is asserted here.
+ *
+ * Also verifies the annotations are BARE (`toolname`, not `data-toolname`): the
+ * `data-` prefix is a React/JSX TypeScript workaround that the browser ignores
+ * entirely, so a data-prefixed form registers nothing.
+ */
+const DECLARATIVE_DETAIL = `JSON.stringify(
+  [...document.querySelectorAll('form[toolname]')].map((f) => ({
+    name: f.getAttribute('toolname'),
+    hasDescription: !!(f.getAttribute('tooldescription') || '').trim(),
+    descLen: (f.getAttribute('tooldescription') || '').length,
+    autosubmit: f.hasAttribute('toolautosubmit'),
+    hasSubmit: !!f.querySelector('button[type="submit"], input[type="submit"], button:not([type])'),
+    named: [...f.querySelectorAll('[name]')].map((el) => ({
+      name: el.getAttribute('name'),
+      described: !!(el.getAttribute('toolparamdescription') || '').trim(),
+      required: el.hasAttribute('required'),
+    })),
+  }))
+) + '||' + JSON.stringify(
+  [...document.querySelectorAll('[data-toolname]')].map((f) => f.getAttribute('data-toolname'))
+)`;
+
+/**
+ * Execute a tool with an AbortSignal that fires immediately.
+ *
+ * Tools forward `context.signal` into every `fetch`, so a cancelled call must
+ * SETTLE — either rejecting with AbortError or returning the tool's own
+ * cancellation guidance. What it must not do is hang, which would leave an
+ * agent's stop button doing nothing.
+ */
+const EXECUTE_TOOL_ABORTED = (name, argsJson) => `(async () => {
+  const mc = document.modelContext || navigator.modelContext;
+  const tool = (await mc.getTools()).find((t) => t.name === ${JSON.stringify(name)});
+  if (!tool) return { settled: false, error: 'NOT_FOUND' };
+  const ac = new AbortController();
+  const started = Date.now();
+  const call = mc.executeTool(tool, ${JSON.stringify(argsJson)}, { signal: ac.signal });
+  setTimeout(() => ac.abort(), 1);
+  const timeout = new Promise((r) => setTimeout(() => r('__TIMEOUT__'), 8000));
+  try {
+    const r = await Promise.race([call, timeout]);
+    if (r === '__TIMEOUT__') return { settled: false, ms: Date.now() - started };
+    return { settled: true, ms: Date.now() - started, outcome: 'resolved' };
+  } catch (e) {
+    return { settled: true, ms: Date.now() - started, outcome: 'rejected:' + (e && e.name ? e.name : 'Error') };
+  }
+})()`;
+
+/** Read the page's own registration diagnostics (window.__doodleWebMcp). */
+const READ_DIAGNOSTICS = `JSON.stringify(window.__doodleWebMcp || null)`;
+
+/**
+ * Bad-input cases. Every WebMCP tool in this codebase is written to RETURN short
+ * recoverable guidance rather than throw, because a thrown error gives an agent
+ * nothing to act on. Each case asserts: the call succeeded (no throw), stayed
+ * within budget, and the text contains the substring that tells the agent what
+ * to do next.
+ */
+const ERROR_CASES = [
+  ['get_doodle_skill', '{"id":"definitely-not-a-skill"}', 'list_doodle_skills'],
+  ['get_doodle_skill', '{}', 'list_doodle_skills'],
+  ['get_doodle_skill', '{"id":12345}', 'list_doodle_skills'],
+  ['get_doodle_article', '{"url":"https://example.com/evil"}', 'search_doodle_articles'],
+  ['get_doodle_article', '{"url":"/no-such-article-exists/"}', 'search_doodle_articles'],
+  ['get_doodle_article', '{}', 'search_doodle_articles'],
+  ['search_doodle_articles', '{"query":"zzzzqqqxxnomatch"}', 'No Doodle AI articles match'],
+  ['list_doodle_skills', '{"limit":9999}', ''],
+  ['list_doodle_skills', '{"limit":-5}', ''],
+  /* Safe to execute: an unknown page must be REFUSED, not navigated to. */
+  ['open_doodle_page', '{"page":"not-a-real-page"}', 'Valid values'],
+];
 
 /* ------------------------------------------------------------------ main -- */
 
@@ -350,7 +453,11 @@ try {
     }
     const withinCap = res.len <= HARD_CAP;
     check(withinCap, `${name}: output ${res.len} chars <= ${HARD_CAP}`);
-    if (withinCap) note(`${name}: ${res.len} chars | ${res.head}`);
+    check(
+      res.enveloped === true,
+      `${name}: returns the spec content envelope { content: [{ type: 'text' }] }`,
+    );
+    if (withinCap) note(`${name}: ${res.len} chars (${res.wireLen} on the wire) | ${res.head}`);
   }
 
   // Declarative feedback form annotation must be present on the homepage.
@@ -359,6 +466,106 @@ try {
   note(`homepage declarative forms: ${homepageForms.length ? homepageForms.join(', ') : '(none)'}`);
   for (const name of HOMEPAGE_DECLARATIVE) {
     check(homepageForms.includes(name), `homepage carries declarative form: ${name}`);
+  }
+
+  /* A declarative form is only real if the BROWSER turned it into a tool. The
+     DOM check above proves the attribute is written; this proves it registered,
+     which is the thing that actually breaks (bare vs data- prefix, missing
+     submit button, form outside the document). */
+  for (const name of HOMEPAGE_DECLARATIVE) {
+    const t = byName.get(name);
+    check(!!t, `declarative form ${name} appears in getTools() as a real tool`);
+    if (t) {
+      check(
+        Array.isArray(t.required) && t.required.includes('text'),
+        `${name}: synthesized schema marks 'text' required (got ${JSON.stringify(t.required)})`,
+      );
+    }
+  }
+
+  /* Structural traps that only a live browser catches. */
+  const [detailRaw, dataPrefixedRaw] = (await ev(client, DECLARATIVE_DETAIL)).split('||');
+  const dataPrefixed = JSON.parse(dataPrefixedRaw);
+  check(
+    dataPrefixed.length === 0,
+    `no data-toolname attributes (the data- prefix is ignored by the browser) — found ${dataPrefixed.length}`,
+  );
+  for (const f of JSON.parse(detailRaw)) {
+    check(f.hasDescription, `${f.name}: has a non-empty tooldescription`);
+    check(f.descLen <= 500, `${f.name}: tooldescription ${f.descLen} chars <= 500`);
+    check(
+      f.autosubmit || f.hasSubmit,
+      `${f.name}: has a real submit control (required when toolautosubmit is absent)`,
+    );
+    for (const field of f.named) {
+      check(field.described, `${f.name}.${field.name}: has toolparamdescription`);
+    }
+  }
+
+  /* ------------------- error recovery: guidance, never throw ------------ */
+  console.log('\n  -- bad input returns recoverable guidance, never throws --');
+  for (const [name, args, expect] of ERROR_CASES) {
+    if (!byName.has(name)) continue;
+    const res = await ev(client, EXECUTE_TOOL(name, args));
+    if (!res.ok) {
+      check(false, `${name}${args}: returns guidance instead of throwing (threw: ${res.error})`);
+      continue;
+    }
+    check(res.len > 0 && res.len <= HARD_CAP, `${name}${args}: guidance is 1..${HARD_CAP} chars (${res.len})`);
+    if (expect) {
+      check(
+        res.full.includes(expect),
+        `${name}${args}: guidance points the agent at "${expect}"`,
+      );
+    }
+  }
+
+  /* open_doodle_page must have REFUSED the unknown page, not navigated. */
+  const stillHome = await ev(client, 'location.pathname');
+  check(
+    stillHome === '/',
+    `open_doodle_page rejected an unknown page without navigating (path is ${stillHome})`,
+  );
+
+  /* ------------------------- cancellation --------------------------------- */
+  console.log('\n  -- AbortSignal is honoured (agent stop button works) --');
+  for (const name of ['get_doodle_status', 'search_doodle_articles', 'get_doodle_article']) {
+    if (!byName.has(name)) continue;
+    const args = HOMEPAGE_IMPERATIVE[name].args;
+    const res = await ev(client, EXECUTE_TOOL_ABORTED(name, args));
+    check(res.settled === true, `${name}: a cancelled call settles rather than hanging (${res.outcome ?? `timeout after ${res.ms}ms`})`);
+  }
+
+  /* --------------------- the page's own diagnostics ----------------------- */
+  console.log('\n  -- page self-report (window.__doodleWebMcp) --');
+  const diagRaw = await ev(client, READ_DIAGNOSTICS);
+  const diag = diagRaw ? JSON.parse(diagRaw) : null;
+  check(!!diag, 'page publishes window.__doodleWebMcp for debugging');
+  if (diag) {
+    check(diag.apiPresent === true, 'diagnostics report the API as present');
+    check(
+      Array.isArray(diag.failed) && diag.failed.length === 0,
+      `diagnostics report zero failed registrations (${JSON.stringify(diag.failed)})`,
+    );
+    check(
+      Array.isArray(diag.registered) && diag.registered.length === 7,
+      `diagnostics report 7 imperative registrations (got ${diag.registered?.length})`,
+    );
+    note(`origin-isolated: ${diag.originAgentCluster} | secureContext: ${diag.secureContext}`);
+  }
+
+  /* ==================== per-route registration coverage ================== */
+  /* Routes use different layouts (AppShellLayout, AppLayout, ArticleLayout).
+     Registration is only universal if it survives all of them. */
+  console.log('\n=== per-route coverage ===');
+  for (const route of ['/skills/', '/learn/', '/photo-to-cartoon/', '/status/']) {
+    await navigate(client, `${BASE}${route}`);
+    const r = await ev(client, ENUMERATE_TOOLS);
+    const names = (r.tools ?? []).map((t) => t.name);
+    check(
+      names.includes('list_doodle_skills') && names.includes('get_doodle_overview'),
+      `${route} registers the imperative tool set (${names.length} tools)`,
+    );
   }
 
   /* ============================= /boards ============================= */
@@ -374,6 +581,23 @@ try {
     check(boardsForms.includes(name), `/boards carries declarative form: ${name}`);
   }
 
+  const boardsTools = await ev(client, ENUMERATE_TOOLS);
+  const boardsNames = (boardsTools.tools ?? []).map((t) => t.name);
+  for (const name of BOARDS_DECLARATIVE) {
+    check(boardsNames.includes(name), `/boards registers declarative tool in getTools(): ${name}`);
+  }
+
+  /* ================= navigation tool, executed for real ================= */
+  /* Left until last because it moves the tab. Previously this tool was only
+     enumerated, never executed, so nothing proved it actually navigates. */
+  console.log('\n=== open_doodle_page executes and navigates ===');
+  await navigate(client, `${BASE}/`);
+  const navRes = await ev(client, EXECUTE_TOOL('open_doodle_page', '{"page":"skills"}'));
+  check(navRes.ok === true, `open_doodle_page executes (${navRes.error ?? 'ok'})`);
+  await sleep(3000);
+  const landed = await ev(client, 'location.pathname');
+  check(landed === '/skills/', `open_doodle_page navigated the tab to /skills/ (got ${landed})`);
+
   client.close();
 } catch (e) {
   console.error(`\nFAILED: ${e.message}`);
@@ -387,10 +611,10 @@ try {
 
 console.log('\n' + '─'.repeat(60));
 if (code === 0 && failures.length === 0) {
-  console.log(`PASS — all WebMCP smoke assertions held on ${BASE}.`);
+  console.log(`PASS — ${passed} WebMCP conformance assertions held on ${BASE}.`);
 } else {
   code = 1;
-  console.error(`FAIL — ${failures.length} assertion(s) failed:`);
+  console.error(`FAIL — ${failures.length} of ${passed + failures.length} assertion(s) failed:`);
   for (const f of failures) console.error(`  ✗ ${f}`);
 }
 process.exit(code);

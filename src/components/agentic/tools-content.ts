@@ -33,10 +33,76 @@ export interface WebMcpToolDef {
     readOnlyHint: boolean;
     untrustedContentHint: boolean;
   };
+  /**
+   * Tool bodies in this codebase return a PLAIN STRING. They are wrapped into
+   * the spec's content envelope by `withTextEnvelope` at the registration site,
+   * so the `cap()` / `clip()` budget applies to the text an agent actually
+   * reads rather than to JSON punctuation.
+   */
   execute: (
     args: Record<string, unknown>,
     context?: { signal?: AbortSignal },
   ) => Promise<string>;
+}
+
+/**
+ * The result shape the WebMCP explainer specifies for a tool's execute callback:
+ * an MCP-style content array, not a bare string.
+ *
+ *   return { content: [{ type: "text", text: "Added todo item …" }] };
+ *
+ * Chrome currently resolves `executeTool()` to a *serialised* result either way,
+ * so a bare string "works" — but a host that unwraps `content[]` (the reference
+ * demo, the DevTools panel's Tool Activity view, and any MCP-shaped agent) then
+ * sees an opaque blob instead of text, and there is no way to express `isError`
+ * or a non-text block. Returning the envelope is the spec-correct contract.
+ */
+export interface WebMcpTextResult {
+  content: { type: "text"; text: string }[];
+  isError?: boolean;
+}
+
+/** Wrap a plain string in the spec's content envelope. */
+export function toTextResult(text: string, isError = false): WebMcpTextResult {
+  return isError
+    ? { content: [{ type: "text", text }], isError: true }
+    : { content: [{ type: "text", text }] };
+}
+
+/** A tool definition whose `execute` resolves to the spec's content envelope. */
+export interface WebMcpRegistrableTool extends Omit<WebMcpToolDef, "execute"> {
+  execute: (
+    args: Record<string, unknown>,
+    context?: { signal?: AbortSignal },
+  ) => Promise<WebMcpTextResult>;
+}
+
+/**
+ * Adapt a string-returning tool body to the registrable, spec-shaped form.
+ *
+ * Applied at the single registration site so every tool is enveloped by
+ * construction — a new tool cannot be added in the old shape and silently ship
+ * a bare string.
+ */
+export function withTextEnvelope(tool: WebMcpToolDef): WebMcpRegistrableTool {
+  return {
+    ...tool,
+    execute: async (args, context) => {
+      try {
+        return toTextResult(await tool.execute(args, context));
+      } catch (err) {
+        /* Tool bodies are written never to throw, but a host must still receive
+           a usable result rather than an unhandled rejection. */
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return toTextResult("The tool call was cancelled.", true);
+        }
+        return toTextResult(
+          `The ${tool.name} tool failed unexpectedly. Try again, or use another tool.`,
+          true,
+        );
+      }
+    },
+  };
 }
 
 /** Absolute WebMCP output ceiling. We stay safely under it. */
