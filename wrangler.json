@@ -91,6 +91,12 @@
       "binding": "BETTER_AUTH_SECRET",
       "store_id": "801d9480d51848d69033ff869398bcbe",
       "secret_name": "BETTER_AUTH_SECRET_PROD"
+    },
+    {
+      "//": "Not secret — tldraw validates this in the browser, so it is served to every visitor. It lives here anyway because it is CONFIGURATION that must not be committed to a public repo, and because a Secrets Store binding is validated at deploy time: a Worker whose canvas key is missing now fails to deploy instead of shipping a canvas that blanks itself five seconds after mount.",
+      "binding": "TLDRAW_LICENSE_KEY",
+      "store_id": "801d9480d51848d69033ff869398bcbe",
+      "secret_name": "TLDRAW_LICENSE_KEY"
     }
   ],
   "observability": {
@@ -169,6 +175,12 @@
           "binding": "BETTER_AUTH_SECRET",
           "store_id": "801d9480d51848d69033ff869398bcbe",
           "secret_name": "BETTER_AUTH_SECRET_STAGING"
+        },
+        {
+          "//": "Same store entry as production: one licence, one source of truth, no drifting copies.",
+          "binding": "TLDRAW_LICENSE_KEY",
+          "store_id": "801d9480d51848d69033ff869398bcbe",
+          "secret_name": "TLDRAW_LICENSE_KEY"
         }
       ],
       "observability": {

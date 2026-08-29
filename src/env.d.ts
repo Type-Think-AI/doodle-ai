@@ -3,19 +3,18 @@ type SecretLike = import("./lib/secrets").SecretLike;
 type AdminContext = import("./lib/auth/admin-guard").AdminContext;
 
 /**
- * Client-visible env. PUBLIC_-prefixed vars are inlined into the browser
- * bundle by Vite, which is exactly what the tldraw license key requires —
- * tldraw validates it in the browser, so it cannot be a server secret.
- * It is still kept out of tracked source (.dev.vars locally, a Worker var
- * in deploys) so the key isn't published in the public repo.
+ * No custom `PUBLIC_`-prefixed env vars. `import.meta.env.BASE_URL` and friends
+ * come from astro/client.
+ *
+ * The tldraw licence key used to be declared here as PUBLIC_TLDRAW_LICENSE_KEY,
+ * on the reasoning that "tldraw validates it in the browser, so it cannot be a
+ * server secret". That inference is false and it cost two days of a blank canvas
+ * in production: a server secret can be handed to a client island as a prop and
+ * still reach the browser. What a PUBLIC_ var actually changes is WHEN the value
+ * is captured — build time, on whatever machine ran the build — which is why a
+ * gitignored .env made every Cloudflare-built release ship an undefined key.
+ * It is now a Secrets Store binding read per request; see src/lib/tldraw-license.ts.
  */
-interface ImportMetaEnv {
-  readonly PUBLIC_TLDRAW_LICENSE_KEY?: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
 
 declare namespace App {
   interface Locals extends Runtime {

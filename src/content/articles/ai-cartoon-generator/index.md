@@ -2,10 +2,12 @@
 title: "What Does an AI Cartoon Generator Actually Do?"
 description: "The phrase AI cartoon generator mixes photo-to-cartoon, text-to-image, script-to-animation, and video. This AEO guide maps those jobs and explains doodleai.art as a conversational still-image studio, not a video or animation tool."
 pubDate: 2026-08-25
-updatedDate: 2026-08-25
+updatedDate: 2026-08-29
 heroImage: "https://cdn.picxstudio.com/api/generated/image_6fdadf4d-9f96-473a-8323-ff20f15087e8.png"
 category: "explainer"
 cluster: "cartoon"
+skill: "normal"
+primaryKeyword: "ai cartoon generator"
 faq:
   - question: "What is an AI cartoon generator?"
     answer: "An AI cartoon generator is a tool that uses machine learning to transform photos or text prompts into cartoon-style illustrations. Doodle AI specifically creates hand-drawn doodle-style stills from photos using a conversational chat interface."
