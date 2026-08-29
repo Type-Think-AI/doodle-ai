@@ -8,12 +8,14 @@
 import Lightbox from './Lightbox.astro';
 import PromptComposer from './PromptComposer.astro';
 import DoodleCanvas from './DoodleCanvas.tsx';
+import { resolveTldrawLicenseKey } from '../../lib/tldraw-license';
 
 interface Props {
 	threadId: string;
 }
 
 const { threadId } = Astro.props;
+const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 ---
 
 <!-- data-whiteboard starts "true": the canvas is the point of this screen,
@@ -61,7 +63,7 @@ const { threadId } = Astro.props;
 	     browser-only and must never enter the Worker/SSR bundle. -->
 	<div class="canvas-panel" id="canvasPanel">
 		<div class="canvas-stage" id="canvasStage">
-			<DoodleCanvas client:only="react" threadId={threadId} />
+			<DoodleCanvas client:only="react" threadId={threadId} licenseKey={tldrawLicenseKey} />
 			<div class="canvas-empty-hint" id="canvasEmptyHint">
 				<p>Your doodles will appear here as you generate them.<br/>Pan, zoom, resize, draw on them — it's your infinite canvas.</p>
 			</div>

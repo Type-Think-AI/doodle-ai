@@ -42,7 +42,16 @@ PICX_API_KEY=replace-with-a-picx-key
 # `cloudflared tunnel --url http://localhost:4321` if you need to exercise it.
 PICX_WEBHOOK_SECRET=
 
-# tldraw canvas license key (client-visible by design — tldraw validates it
-# in the browser). Without it the canvas shows a "Made with tldraw" watermark.
+# tldraw canvas licence key. NOT actually secret — tldraw validates it in the
+# browser, so it is served to every visitor as an island prop. It lives here (and
+# in Secrets Store for deploys) because it must stay out of this public repo.
+#
+# Read per request from the Worker env via src/lib/tldraw-license.ts. It is NOT
+# PUBLIC_-prefixed any more: that made it a build-time value baked into the JS
+# bundle, so a Cloudflare build without .env silently shipped an undefined key.
+#
+# Without it the canvas mounts, works for about five seconds, then replaces
+# itself with a hidden "licence expired" div — on any non-localhost origin. It
+# does NOT merely watermark. localhost is exempt, which is what hid the fault.
 # Get one at https://tldraw.dev/pricing
-PUBLIC_TLDRAW_LICENSE_KEY=replace-with-your-tldraw-license-key
+TLDRAW_LICENSE_KEY=replace-with-your-tldraw-license-key

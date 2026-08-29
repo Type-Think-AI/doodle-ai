@@ -20,6 +20,7 @@ import BoardShareSheet from '../../components/app/BoardShareSheet.astro';
  * reasons; it is a generic room-synced canvas (room + connectPath + canSeed).
  */
 import RoadmapBoard from '../../components/app/RoadmapBoard.tsx';
+import { resolveTldrawLicenseKey } from '../../lib/tldraw-license';
 import '../../styles/boards.css';
 
 const { id } = Astro.params;
@@ -35,6 +36,10 @@ const { id } = Astro.params;
  */
 const view = Astro.url.searchParams.get('view') === 'canvas' ? 'canvas' : 'grid';
 const boardId = id ?? '';
+
+// Resolved per request from the Worker environment; this page must stay
+// `prerender = false` for that to work — see src/lib/tldraw-license.ts.
+const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 ---
 
 <!-- showFooter={false}: a tool surface with a pinned composer (grid) or a
@@ -111,6 +116,7 @@ const boardId = id ?? '';
           room={boardId}
           connectPath={`/api/boards/connect/${boardId}`}
           canSeed={false}
+          licenseKey={tldrawLicenseKey}
         />
       </div>
     )}
