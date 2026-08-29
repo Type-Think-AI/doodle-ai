@@ -131,7 +131,7 @@ async function ghFetch(path, extraHeaders = {}) {
 }
 
 /** Fetch raw file content from the default branch; returns null on 404. */
-async function fetchRawFile(path) {
+async function fetchRawFile(/** @type {string} */ path) {
   const url = `https://raw.githubusercontent.com/${UPSTREAM}/HEAD/${path}`;
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
   /** @type {Record<string,string>} */
@@ -143,7 +143,7 @@ async function fetchRawFile(path) {
   return await res.text();
 }
 
-function sha256(text) {
+function sha256(/** @type {string} */ text) {
   return createHash('sha256').update(text, 'utf8').digest('hex');
 }
 
@@ -230,6 +230,7 @@ async function collectUpstreamState() {
   // Watched file content hashes (+ IDL names for the spec file).
   /** @type {Record<string,{hash:string|null,exists:boolean,bytes:number}>} */
   const files = {};
+  /** @type {string[]} */
   let idlNames = [];
   for (const path of WATCHED_FILES) {
     const content = await fetchRawFile(path);
@@ -258,7 +259,7 @@ async function collectUpstreamState() {
   try {
     const relRes = await ghFetch(`/repos/${UPSTREAM}/releases?per_page=10`);
     const rel = await relRes.json();
-    releases = rel.map((r) => ({ tag: r.tag_name, name: r.name, url: r.html_url, published_at: r.published_at }));
+    releases = rel.map((/** @type {any} */ r) => ({ tag: r.tag_name, name: r.name, url: r.html_url, published_at: r.published_at }));
   } catch { /* releases endpoint may 404 on some repos */ }
 
   let latestTag = null;
@@ -309,6 +310,7 @@ async function readBaseline() {
   }
 }
 
+/** @param {Record<string, any>} state */
 async function writeBaseline(state) {
   await mkdir(STATE_DIR, { recursive: true });
   // Store only durable fields — drop the 24h transient activity so the baseline
@@ -321,6 +323,7 @@ async function writeBaseline(state) {
 // Our-code drift cross-check (SUGGESTIONS only)
 // ---------------------------------------------------------------------------
 
+/** @param {string[]} idlNames */
 async function crossCheckOurCode(idlNames) {
   /** @type {Record<string,string>} */
   const memberContents = {};
@@ -348,7 +351,7 @@ async function crossCheckOurCode(idlNames) {
   // Opportunities: upstream member present that we do not yet use.
   const opportunities = [];
   for (const [mem, file] of Object.entries(OPPORTUNITY_MEMBERS)) {
-    const upstreamHasIt = idlSet.has(mem) || (idlNames.length === 0 ? false : idlNames.some((n) => n.toLowerCase() === mem.toLowerCase()));
+    const upstreamHasIt = idlSet.has(mem) || (idlNames.length === 0 ? false : idlNames.some((/** @type {string} */ n) => n.toLowerCase() === mem.toLowerCase()));
     const weUseIt = allOurCode.includes(mem);
     if (upstreamHasIt && !weUseIt) opportunities.push({ member: mem, file });
   }
@@ -431,6 +434,11 @@ function classify(baseline, current, drift) {
 // Rendering
 // ---------------------------------------------------------------------------
 
+/**
+ * @param {Record<string, any>} current
+ * @param {Record<string, any>} cls
+ * @param {Record<string, any>} drift
+ */
 function renderMarkdown(current, cls, drift) {
   const L = [];
   const c = current.latestCommit;
@@ -482,13 +490,13 @@ function renderMarkdown(current, cls, drift) {
     if (cls.idlAdded.length) {
       L.push('**IDL identifiers added upstream:**');
       L.push('');
-      L.push(cls.idlAdded.map((n) => `\`${n}\``).join(', '));
+      L.push(cls.idlAdded.map((/** @type {string} */ n) => `\`${n}\``).join(', '));
       L.push('');
     }
     if (cls.idlRemoved.length) {
       L.push('**IDL identifiers removed upstream:**');
       L.push('');
-      L.push(cls.idlRemoved.map((n) => `\`${n}\``).join(', '));
+      L.push(cls.idlRemoved.map((/** @type {string} */ n) => `\`${n}\``).join(', '));
       L.push('');
     }
     if (!cls.idlAdded.length && !cls.idlRemoved.length) {
@@ -585,6 +593,9 @@ async function main() {
     markdown,
     // Tell CI whether an issue should exist. NEW_BASELINE and NO_CHANGE => none.
     shouldFileIssue: cls.changed === true,
+    // Declared here (not bolted on later) so the object's shape is complete at
+    // construction; it is set to the real value once the baseline write runs.
+    stateWritten: false,
     baselineExisted: baseline != null,
   };
 

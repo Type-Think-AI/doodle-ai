@@ -5,10 +5,20 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Origin-Agent-Cluster: ?1
   Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://datafa.st https://cdn.mxpnl.com https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdn.picxstudio.com https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self' wss: https://api.picxstudio.com https://api-js.mixpanel.com https://www.google-analytics.com https://datafa.st https://cloudflareinsights.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 # ---------------------------------------------------------------------------
 # Why these two headers look the way they do
+#
+# Origin-Agent-Cluster — required by WebMCP, not a nice-to-have. The spec's
+# registerTool() steps reject with a SecurityError unless the document's agent
+# cluster `is origin-keyed` (the only exception being file: URLs), and Chrome's
+# WebMCP docs state the API is available only in origin-isolated documents.
+# Chrome already defaults to origin-keyed clusters, so this header does not
+# change today's behaviour — it PINS it, so a future default change or a stray
+# `Origin-Agent-Cluster: ?0` cannot silently unregister every tool on the site.
+# The trade-off is giving up document.domain mutation, which this app never uses.
 #
 # Cross-Origin-Opener-Policy — the 2026-08-28 audit rated "No COOP header found"
 # High. `same-origin-allow-popups` rather than plain `same-origin` on purpose:
