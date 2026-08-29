@@ -40,6 +40,16 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     ],
   },
   {
+    group: "Content",
+    items: [
+      // Both expose end-user content — generated images, uploaded source
+      // photos, and raw chat text — so they are admin-only rather than
+      // support-visible, and every open is written to the audit log.
+      { key: "media", label: "Media", href: "/admin/media", adminOnly: true },
+      { key: "chats", label: "Chats", href: "/admin/chats", adminOnly: true },
+    ],
+  },
+  {
     group: "Platform",
     items: [
       { key: "skills", label: "Skills", href: "/admin/skills" },
@@ -66,6 +76,14 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 export const ADMIN_PAGE_COPY: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "Growth, usage, and platform health at a glance." },
   users: { title: "Users", subtitle: "Everyone who has signed up to Doodle AI." },
+  media: {
+    title: "Media",
+    subtitle: "Every image generated on the portal — filter by skill, style, and outcome.",
+  },
+  chats: {
+    title: "Chats",
+    subtitle: "Every chat session, and the conversation that produced each result.",
+  },
   orgs: { title: "Teams", subtitle: "Every organization, its members, and its credit pool." },
   projects: { title: "Projects", subtitle: "Every project created across all teams." },
   skills: { title: "Skills", subtitle: "AI doodle skills available on the platform." },
