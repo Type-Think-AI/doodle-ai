@@ -14,6 +14,7 @@ import {
   feedback,
   generation,
   skillState,
+  thread,
 } from "../../db/schema/product";
 import { type DailyPoint, fillDailyGaps, formatUsd, num, truncate } from "./shared";
 
@@ -312,4 +313,197 @@ export async function getNeedsAttention(db: Db): Promise<AttentionItem[]> {
   }
 
   return items;
+}
+
+/* ------------------------------------------------------------------ *
+ * Product analytics — feature usage & underused/problem signals
+ *
+ * All queries here are windowed (default last 30 days) and start from the
+ * canonical GENERATION_MODES list, LEFT JOINed against generations, so a
+ * skill nobody has ever run still appears with a real 0 — a GROUP BY over
+ * `generation` alone can never surface a zero-usage skill.
+ * ------------------------------------------------------------------ */
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export interface FeatureUsageRow {
+  /** Raw GENERATION_MODES id — the caller maps it to a friendly name. */
+  skillId: string;
+  /** Every generation attempt in the window, any status. */
+  attempts: number;
+  /** Successful generations (status = 'ok') in the window. */
+  runs: number;
+  /** attempts as a share of the busiest skill's attempts, 0–100. */
+  barPct: number;
+}
+
+/**
+ * Per-skill generation counts over the window, busiest first, ZERO-usage
+ * skills included at the bottom. Built by counting the window's generations
+ * per skillId in one grouped query, then folding those counts onto the full
+ * canonical skill list in code so unused skills are never dropped.
+ */
+export async function getFeatureUsage(
+  db: Db,
+  skillIds: readonly string[],
+  days = 30,
+): Promise<FeatureUsageRow[]> {
+  const since = new Date(Date.now() - days * DAY_MS);
+  const rows = await db
+    .select({
+      skillId: generation.skillId,
+      attempts: count(),
+      runs: sql<number>`COALESCE(SUM(CASE WHEN ${generation.status} = 'ok' THEN 1 ELSE 0 END), 0)`,
+    })
+    .from(generation)
+    .where(gte(generation.createdAt, since))
+    .groupBy(generation.skillId);
+
+  const bySkill = new Map(rows.map((r) => [r.skillId, { attempts: num(r.attempts), runs: num(r.runs) }]));
+
+  // Start from the canonical list so zero-usage skills are present. Any
+  // skillId seen in generations but not in the canonical list (a retired or
+  // renamed skill) is appended so its usage is never silently lost.
+  const known = new Set(skillIds);
+  const extras = [...bySkill.keys()].filter((id) => !known.has(id));
+  const allIds = [...skillIds, ...extras];
+
+  const maxAttempts = Math.max(0, ...allIds.map((id) => bySkill.get(id)?.attempts ?? 0));
+
+  return allIds
+    .map((skillId) => {
+      const hit = bySkill.get(skillId);
+      const attempts = hit?.attempts ?? 0;
+      return {
+        skillId,
+        attempts,
+        runs: hit?.runs ?? 0,
+        barPct: maxAttempts === 0 ? 0 : Math.round((attempts / maxAttempts) * 100),
+      };
+    })
+    .sort((a, b) => b.attempts - a.attempts);
+}
+
+export interface SkillFailureRow {
+  skillId: string;
+  attempts: number;
+  failed: number;
+  /** failed / attempts as a percentage, 0–100 (one decimal). */
+  failureRate: number;
+}
+
+export interface UnderusedSignals {
+  /** Window length in days, echoed for the panel copy. */
+  windowDays: number;
+
+  /** Canonical skills with 0 generation attempts in the window. */
+  zeroUsageSkillIds: string[];
+  totalSkills: number;
+
+  /** Platform-wide failed / total across all skills in the window, 0–100. */
+  platformFailureRate: number;
+  /** Skills whose failure rate exceeds the platform average (min 5 attempts to be meaningful), worst first. */
+  highFailureSkills: SkillFailureRow[];
+
+  /** Overall generation success rate (ok / total) in the window, 0–100. */
+  successRate: number;
+  totalAttempts: number;
+  totalOk: number;
+
+  /** Threads created in the window with zero successful generations. */
+  abandonedThreads: number;
+  totalThreads: number;
+  /** abandonedThreads / totalThreads, 0–100. */
+  abandonedThreadPct: number;
+}
+
+/** Minimum attempts before a per-skill failure rate is worth flagging. */
+const FAILURE_FLAG_MIN_ATTEMPTS = 5;
+
+/**
+ * Underused / problem signals over the window: zero-usage skills, per-skill
+ * failure rates above the platform average, abandoned chats, and the overall
+ * success rate. Every number is derived from D1; nothing is seeded.
+ */
+export async function getUnderusedSignals(
+  db: Db,
+  skillIds: readonly string[],
+  days = 30,
+): Promise<UnderusedSignals> {
+  const since = new Date(Date.now() - days * DAY_MS);
+
+  const [perSkillRows, threadTotalRows, abandonedRows] = await db.batch([
+    // Per-skill attempts + failures in the window.
+    db
+      .select({
+        skillId: generation.skillId,
+        attempts: count(),
+        failed: sql<number>`COALESCE(SUM(CASE WHEN ${generation.status} = 'failed' THEN 1 ELSE 0 END), 0)`,
+        ok: sql<number>`COALESCE(SUM(CASE WHEN ${generation.status} = 'ok' THEN 1 ELSE 0 END), 0)`,
+      })
+      .from(generation)
+      .where(gte(generation.createdAt, since))
+      .groupBy(generation.skillId),
+    // All threads created in the window.
+    db.select({ n: count() }).from(thread).where(gte(thread.createdAt, since)),
+    // Threads created in the window with zero successful generations. A LEFT
+    // JOIN onto only the 'ok' generations, keeping thread rows where none
+    // matched, counts "started but never got a result".
+    db
+      .select({ n: count() })
+      .from(thread)
+      .leftJoin(generation, and(eq(generation.threadId, thread.id), eq(generation.status, "ok")))
+      .where(and(gte(thread.createdAt, since), sql`${generation.id} IS NULL`)),
+  ]);
+
+  const bySkill = new Map(
+    perSkillRows.map((r) => [
+      r.skillId,
+      { attempts: num(r.attempts), failed: num(r.failed), ok: num(r.ok) },
+    ]),
+  );
+
+  // Zero-usage skills, counted against the canonical list.
+  const zeroUsageSkillIds = skillIds.filter((id) => (bySkill.get(id)?.attempts ?? 0) === 0);
+
+  // Platform-wide totals in the window.
+  let totalAttempts = 0;
+  let totalFailed = 0;
+  let totalOk = 0;
+  for (const v of bySkill.values()) {
+    totalAttempts += v.attempts;
+    totalFailed += v.failed;
+    totalOk += v.ok;
+  }
+  const platformFailureRate = totalAttempts === 0 ? 0 : Math.round((totalFailed / totalAttempts) * 1000) / 10;
+  const successRate = totalAttempts === 0 ? 0 : Math.round((totalOk / totalAttempts) * 1000) / 10;
+
+  // Skills above the platform failure rate (with enough attempts to be real).
+  const highFailureSkills: SkillFailureRow[] = [...bySkill.entries()]
+    .map(([skillId, v]) => ({
+      skillId,
+      attempts: v.attempts,
+      failed: v.failed,
+      failureRate: v.attempts === 0 ? 0 : Math.round((v.failed / v.attempts) * 1000) / 10,
+    }))
+    .filter((r) => r.attempts >= FAILURE_FLAG_MIN_ATTEMPTS && r.failureRate > platformFailureRate)
+    .sort((a, b) => b.failureRate - a.failureRate);
+
+  const totalThreads = num(threadTotalRows[0]?.n);
+  const abandonedThreads = num(abandonedRows[0]?.n);
+  const abandonedThreadPct = totalThreads === 0 ? 0 : Math.round((abandonedThreads / totalThreads) * 1000) / 10;
+
+  return {
+    windowDays: days,
+    zeroUsageSkillIds,
+    totalSkills: skillIds.length,
+    platformFailureRate,
+    highFailureSkills,
+    successRate,
+    totalAttempts,
+    totalOk,
+    abandonedThreads,
+    totalThreads,
+    abandonedThreadPct,
+  };
 }

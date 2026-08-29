@@ -12,17 +12,24 @@ import {
 	polylinePoints,
 } from '../../lib/admin/queries';
 import { GENERATION_MODES } from '../../lib/doodle-constants';
+import {
+	getFeatureUsage,
+	getUnderusedSignals,
+} from '../../lib/admin/overview';
 import KpiCard from '../components/KpiCard.astro';
 import SampleBadge from '../components/SampleBadge.astro';
 import SampleNote from '../components/SampleNote.astro';
 import GenerationsChart from '../components/GenerationsChart.astro';
 import ActivationFunnel from '../components/ActivationFunnel.astro';
 import ActivityFeed from '../components/ActivityFeed.astro';
+import FeatureUsagePanel from '../components/FeatureUsagePanel.astro';
+import UnderusedSignalsPanel from '../components/UnderusedSignalsPanel.astro';
 
 const db = getDb(Astro);
 const requestedDays = Number(Astro.url.searchParams.get('days') ?? 14);
 const chartDays = [7, 14, 30].includes(requestedDays) ? requestedDays : 14;
-const [totals, byDay, byWeek, funnel, mix, activity, attention] = await Promise.all([
+const PRODUCT_WINDOW_DAYS = 30;
+const [totals, byDay, byWeek, funnel, mix, activity, attention, featureUsage, underused] = await Promise.all([
 	getOverviewTotals(db),
 	getGenerationsByDay(db, chartDays),
 	getCreditsByWeek(db),
@@ -30,6 +37,8 @@ const [totals, byDay, byWeek, funnel, mix, activity, attention] = await Promise.
 	getSkillMix(db),
 	getRecentActivity(db),
 	getNeedsAttention(db),
+	getFeatureUsage(db, GENERATION_MODES, PRODUCT_WINDOW_DAYS),
+	getUnderusedSignals(db, GENERATION_MODES, PRODUCT_WINDOW_DAYS),
 ]);
 
 const ICONS = {
@@ -63,6 +72,11 @@ function friendlySkillName(skillId: string) {
 	}
 	return skillId;
 }
+
+/* ---- Product-analytics panels: map raw skillIds to friendly names ---- */
+const featureUsageRows = featureUsage.map((row) => ({ ...row, label: friendlySkillName(row.skillId) }));
+const highFailureSkills = underused.highFailureSkills.map((row) => ({ ...row, label: friendlySkillName(row.skillId) }));
+const zeroUsageLabels = underused.zeroUsageSkillIds.map((id) => friendlySkillName(id));
 
 const mixTotal = mix.reduce((sum, slice) => sum + slice.runs, 0);
 let mixOffset = 0;
@@ -198,6 +212,23 @@ const cohorts = cohortRows.map((row) => ({
 				))}
 			</div>
 		</div>
+	</div>
+
+	<div class="grid-2">
+		<FeatureUsagePanel rows={featureUsageRows} windowDays={PRODUCT_WINDOW_DAYS} />
+		<UnderusedSignalsPanel
+			windowDays={PRODUCT_WINDOW_DAYS}
+			successRate={underused.successRate}
+			totalAttempts={underused.totalAttempts}
+			totalOk={underused.totalOk}
+			abandonedThreads={underused.abandonedThreads}
+			totalThreads={underused.totalThreads}
+			abandonedThreadPct={underused.abandonedThreadPct}
+			platformFailureRate={underused.platformFailureRate}
+			highFailureSkills={highFailureSkills}
+			zeroUsageLabels={zeroUsageLabels}
+			totalSkills={underused.totalSkills}
+		/>
 	</div>
 
 	<ActivityFeed activity={activity} attention={attention} />

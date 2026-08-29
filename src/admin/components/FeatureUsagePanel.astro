@@ -1,0 +1,94 @@
+---
+/**
+ * Per-skill generation counts over the window, busiest first, rendered as
+ * horizontal bars with the real attempt count per row. Zero-usage skills are
+ * kept in the list (at the bottom) — a skill nobody runs is the whole point
+ * of showing this next to the underused panel.
+ */
+interface UsageRow {
+	skillId: string;
+	label: string;
+	attempts: number;
+	runs: number;
+	barPct: number;
+}
+
+interface Props {
+	rows: UsageRow[];
+	windowDays: number;
+}
+
+const { rows, windowDays } = Astro.props;
+
+const active = rows.filter((r) => r.attempts > 0);
+const zero = rows.filter((r) => r.attempts === 0);
+const hasAny = active.length > 0;
+---
+
+<div class="panel">
+	<div class="panel-heading-inline">
+		<span class="panel-title">Feature usage</span>
+	</div>
+	<p class="panel-sub">Generations per skill, last {windowDays} days</p>
+
+	{hasAny ? (
+		<div class="usage-list">
+			{active.map((row) => (
+				<div class="usage-row">
+					<div class="usage-top">
+						<span class="usage-label">{row.label}</span>
+						<span class="usage-count">{row.attempts.toLocaleString('en-US')}</span>
+					</div>
+					<div class="usage-track">
+						<div class="usage-bar" style={`width:${Math.max(2, row.barPct)}%;`} />
+					</div>
+				</div>
+			))}
+		</div>
+	) : (
+		<p class="empty-state">No generations in the last {windowDays} days yet.</p>
+	)}
+
+	{zero.length > 0 && (
+		<div class="zero-block">
+			<span class="zero-heading">{zero.length} {zero.length === 1 ? 'skill' : 'skills'} with no runs</span>
+			<div class="zero-tags">
+				{zero.map((row) => <span class="zero-tag">{row.label}</span>)}
+			</div>
+		</div>
+	)}
+</div>
+
+<style>
+	.panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 18px 20px;
+	}
+	.panel-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+	.panel-sub { font-size: 11.5px; color: var(--text-dimmer); margin: 5px 0 16px; }
+	.panel-heading-inline { display: flex; align-items: center; gap: 8px; }
+
+	.usage-list { display: flex; flex-direction: column; gap: 12px; }
+	.usage-row { display: flex; flex-direction: column; gap: 6px; }
+	.usage-top { display: flex; align-items: baseline; gap: 8px; }
+	.usage-label { font-size: 12.5px; color: var(--text); }
+	.usage-count { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+	.usage-track { height: 8px; border-radius: 5px; background: var(--surface2); overflow: hidden; }
+	.usage-bar { height: 100%; border-radius: 5px; background: var(--accent); }
+
+	.zero-block { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border2); }
+	.zero-heading { font-size: 11px; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 0.05em; }
+	.zero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+	.zero-tag {
+		font-size: 11px;
+		color: var(--text-dim);
+		padding: 3px 9px;
+		border: 1px solid var(--border3);
+		border-radius: 999px;
+		white-space: nowrap;
+	}
+
+	.empty-state { font-size: 12px; color: var(--text-dimmer); padding: 16px 0 4px; text-align: center; }
+</style>

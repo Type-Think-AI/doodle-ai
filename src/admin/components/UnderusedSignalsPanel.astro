@@ -1,0 +1,158 @@
+---
+/**
+ * Problem signals worth acting on, each stated with the real number behind
+ * it: overall success rate, abandoned chats, per-skill failure rates above
+ * the platform average, and skills nobody uses. Every value is computed from
+ * D1 by getUnderusedSignals — nothing here is seeded.
+ */
+interface SkillFailureRow {
+	skillId: string;
+	label: string;
+	attempts: number;
+	failed: number;
+	failureRate: number;
+}
+
+interface Props {
+	windowDays: number;
+	successRate: number;
+	totalAttempts: number;
+	totalOk: number;
+	abandonedThreads: number;
+	totalThreads: number;
+	abandonedThreadPct: number;
+	platformFailureRate: number;
+	highFailureSkills: SkillFailureRow[];
+	zeroUsageLabels: string[];
+	totalSkills: number;
+}
+
+const {
+	windowDays,
+	successRate,
+	totalAttempts,
+	totalOk,
+	abandonedThreads,
+	totalThreads,
+	abandonedThreadPct,
+	platformFailureRate,
+	highFailureSkills,
+	zeroUsageLabels,
+	totalSkills,
+} = Astro.props;
+
+// A low success rate / high abandonment is "bad"; flag it with the danger token.
+const successIsBad = totalAttempts > 0 && successRate < 90;
+const abandonIsBad = totalThreads > 0 && abandonedThreadPct > 25;
+
+const hasData = totalAttempts > 0 || totalThreads > 0;
+---
+
+<div class="panel">
+	<div class="panel-heading-inline">
+		<span class="panel-title">Underused &amp; problem signals</span>
+	</div>
+	<p class="panel-sub">Features to upgrade, last {windowDays} days</p>
+
+	{hasData ? (
+		<div class="signal-list">
+			<!-- Overall success rate -->
+			<div class="signal-row">
+				<div class="signal-line">
+					<span class="signal-label">Generation success rate</span>
+					<span class="signal-value" class:list={{ bad: successIsBad }}>{successRate}%</span>
+				</div>
+				<span class="signal-detail">{totalOk.toLocaleString('en-US')} of {totalAttempts.toLocaleString('en-US')} attempts succeeded</span>
+			</div>
+
+			<!-- Abandoned chats -->
+			<div class="signal-row">
+				<div class="signal-line">
+					<span class="signal-label">Abandoned chats</span>
+					<span class="signal-value" class:list={{ bad: abandonIsBad }}>{abandonedThreads.toLocaleString('en-US')}</span>
+				</div>
+				<span class="signal-detail">
+					{totalThreads > 0
+						? `${abandonedThreadPct}% of ${totalThreads.toLocaleString('en-US')} threads started but never got a result`
+						: 'No threads started yet'}
+				</span>
+			</div>
+
+			<!-- Per-skill failure rates above the platform average -->
+			<div class="signal-row">
+				<div class="signal-line">
+					<span class="signal-label">Skills failing above average</span>
+					<span class="signal-value" class:list={{ bad: highFailureSkills.length > 0 }}>{highFailureSkills.length}</span>
+				</div>
+				<span class="signal-detail">Platform average failure rate {platformFailureRate}%</span>
+				{highFailureSkills.length > 0 && (
+					<ul class="fail-list">
+						{highFailureSkills.map((skill) => (
+							<li class="fail-item">
+								<span class="fail-name">{skill.label}</span>
+								<span class="fail-rate">{skill.failureRate}%</span>
+								<span class="fail-count">{skill.failed} of {skill.attempts} failed</span>
+							</li>
+						))}
+					</ul>
+				)}
+			</div>
+
+			<!-- Zero-usage skills -->
+			<div class="signal-row">
+				<div class="signal-line">
+					<span class="signal-label">Skills with no runs</span>
+					<span class="signal-value" class:list={{ bad: zeroUsageLabels.length > 0 }}>{zeroUsageLabels.length}</span>
+				</div>
+				<span class="signal-detail">of {totalSkills} skills went unused this window</span>
+				{zeroUsageLabels.length > 0 && (
+					<div class="zero-tags">
+						{zeroUsageLabels.map((label) => <span class="zero-tag">{label}</span>)}
+					</div>
+				)}
+			</div>
+		</div>
+	) : (
+		<p class="empty-state">No generations or chats in the last {windowDays} days yet — nothing to flag.</p>
+	)}
+</div>
+
+<style>
+	.panel {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 18px 20px;
+	}
+	.panel-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+	.panel-sub { font-size: 11.5px; color: var(--text-dimmer); margin: 5px 0 16px; }
+	.panel-heading-inline { display: flex; align-items: center; gap: 8px; }
+
+	.signal-list { display: flex; flex-direction: column; gap: 0; }
+	.signal-row { display: flex; flex-direction: column; gap: 5px; padding: 13px 0; border-top: 1px solid var(--border2); }
+	.signal-row:first-child { border-top: none; padding-top: 2px; }
+
+	.signal-line { display: flex; align-items: baseline; gap: 8px; }
+	.signal-label { font-size: 12.5px; color: var(--text); }
+	.signal-value { margin-left: auto; font-size: 15px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+	.signal-value.bad { color: var(--red); }
+	.signal-detail { font-size: 11px; color: var(--text-dimmer); }
+
+	.fail-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+	.fail-item { display: flex; align-items: baseline; gap: 8px; font-size: 11.5px; }
+	.fail-name { color: var(--text-dim); }
+	.fail-rate { margin-left: auto; color: var(--red); font-weight: 600; font-variant-numeric: tabular-nums; }
+	.fail-count { color: var(--text-dimmer); font-variant-numeric: tabular-nums; }
+
+	.zero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+	.zero-tag {
+		font-size: 11px;
+		color: var(--text-dim);
+		padding: 3px 9px;
+		border: 1px solid var(--border3);
+		border-radius: 999px;
+		white-space: nowrap;
+	}
+
+	.empty-state { font-size: 12px; color: var(--text-dimmer); padding: 16px 0 4px; text-align: center; }
+</style>
