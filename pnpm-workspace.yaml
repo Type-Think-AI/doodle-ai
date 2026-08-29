@@ -3,6 +3,8 @@ allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+minimumReleaseAgeExclude:
+  - simple-icons@16.29.0
 onlyBuiltDependencies:
   - esbuild
   - sharp
