@@ -1,0 +1,227 @@
+---
+import { getDb } from '../../db/client';
+import { listChats, getChatDetail, type ChatFilter } from '../../lib/admin/chats';
+import ChatList from '../components/ChatList.astro';
+import ChatTranscriptDrawer from '../components/ChatTranscriptDrawer.astro';
+
+const db = getDb(Astro);
+const params = Astro.url.searchParams;
+
+const filterValues: ChatFilter[] = ['all', 'with_gen', 'abandoned', 'has_failure'];
+const rawFilter = params.get('filter');
+const filter: ChatFilter =
+	rawFilter && filterValues.includes(rawFilter as ChatFilter) ? (rawFilter as ChatFilter) : 'all';
+const q = params.get('q')?.trim() || undefined;
+const parsedPage = Number.parseInt(params.get('page') ?? '1', 10);
+const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+const pageSize = 50;
+
+const result = await listChats(db, { filter, q, limit: pageSize, offset: (page - 1) * pageSize });
+
+const selectedThread = params.get('thread');
+const detail = selectedThread ? await getChatDetail(db, selectedThread) : null;
+
+// Same querystring-merge helper UsersPage uses: change some keys, drop empties,
+// preserve the rest. Clearing `thread` on every chip/page click closes the drawer.
+const linkFor = (changes: Record<string, string | null>) => {
+	const next = new URLSearchParams(params);
+	for (const [key, value] of Object.entries(changes)) {
+		if (value === null || value === '') next.delete(key);
+		else next.set(key, value);
+	}
+	return `?${next.toString()}`;
+};
+
+// Opening a thread keeps the current filter/search/page and adds ?thread=<id>.
+const hrefFor = (threadId: string) => linkFor({ thread: threadId });
+
+const filters = [
+	{ key: 'all' as const, label: 'All', path: 'M4 6h16M7 12h10M10 18h4' },
+	{
+		key: 'with_gen' as const,
+		label: 'With generation',
+		title: 'Chats with at least one successful generation',
+		path: 'M4 15l5-5 4 4 7-8',
+	},
+	{
+		key: 'abandoned' as const,
+		label: 'Abandoned',
+		title: 'Chats with zero successful generations — users who tried but got nothing',
+		path: 'M6 6l12 12M18 6L6 18',
+	},
+	{
+		key: 'has_failure' as const,
+		label: 'Has failure',
+		title: 'Chats with at least one failed generation',
+		path: 'M12 8v5M12 16h.01M10.3 3.9 2.4 18a1.8 1.8 0 0 0 1.6 2.7h16a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z',
+	},
+];
+
+const hasNext = page * pageSize < result.total;
+const hasPrev = page > 1;
+---
+
+<div class="chats-page">
+	<div class="toolbar">
+		<form class="search-form" method="get">
+			<input type="hidden" name="filter" value={filter} />
+			<input name="q" value={q ?? ''} placeholder="Search messages or email" aria-label="Search chats" />
+		</form>
+		<div class="filter-row">
+			{
+				filters.map((chip) => (
+					<a
+						class:list={['seg-chip', { active: filter === chip.key }]}
+						href={linkFor({ filter: chip.key, page: '1', thread: null })}
+						title={chip.title}
+					>
+						<span class="seg-icon">
+							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+								<path
+									d={chip.path}
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+						</span>
+						{chip.label}
+						<span class="seg-count">{result.filterCounts[chip.key]}</span>
+					</a>
+				))
+			}
+		</div>
+	</div>
+
+	<ChatList rows={result.rows} hrefFor={hrefFor} selectedThread={selectedThread} />
+
+	{(hasPrev || hasNext) && (
+		<nav class="pagination" aria-label="Chats pagination">
+			{hasPrev ? <a href={linkFor({ page: String(page - 1), thread: null })}>Previous</a> : <span class="disabled">Previous</span>}
+			<span>Page {page}</span>
+			{hasNext ? <a href={linkFor({ page: String(page + 1), thread: null })}>Next</a> : <span class="disabled">Next</span>}
+		</nav>
+	)}
+
+	{detail && <ChatTranscriptDrawer detail={detail} />}
+</div>
+
+<style>
+	.chats-page {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+	.toolbar {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.search-form {
+		display: flex;
+		justify-content: flex-end;
+	}
+	.search-form input {
+		width: min(280px, 100%);
+		height: 34px;
+		padding: 0 12px;
+		border: 1px solid var(--border2);
+		border-radius: 9px;
+		background: var(--card);
+		color: var(--text);
+		font: inherit;
+		font-size: 12px;
+	}
+	.search-form input::placeholder {
+		color: var(--text-dimmer);
+	}
+	.filter-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	.seg-chip {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		height: 34px;
+		padding: 0 13px;
+		border-radius: 999px;
+		border: 1px solid var(--border2);
+		font-size: 12.5px;
+		background: transparent;
+		color: var(--text-dim);
+		text-decoration: none;
+		cursor: pointer;
+	}
+	.seg-chip:hover {
+		color: var(--text);
+		border-color: var(--border3);
+	}
+	.seg-chip.active {
+		background: var(--hover);
+		color: var(--text);
+		border-color: var(--border3);
+	}
+	.seg-icon {
+		flex: 0 0 auto;
+		display: flex;
+	}
+	.seg-count {
+		font-size: 10.5px;
+		padding: 1px 6px;
+		border-radius: 999px;
+		background: var(--surface2);
+		color: var(--text-dimmer);
+	}
+	.pagination {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 16px;
+		font-size: 12px;
+		color: var(--text-dim);
+	}
+	.pagination a {
+		color: var(--text);
+		text-decoration: none;
+		padding: 8px 14px;
+		border-radius: 8px;
+		border: 1px solid var(--border2);
+	}
+	.pagination a:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+	.pagination .disabled {
+		color: var(--text-dimmer);
+	}
+
+	@media (max-width: 650px) {
+		.search-form {
+			justify-content: stretch;
+		}
+		.search-form input {
+			width: 100%;
+			height: 42px;
+			font-size: 14px;
+			border-radius: 12px;
+		}
+		.filter-row {
+			gap: 6px;
+		}
+		.seg-chip {
+			height: 38px;
+			padding: 0 11px;
+			font-size: 12px;
+		}
+		.pagination a {
+			padding: 10px 18px;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+	}
+</style>

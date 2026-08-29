@@ -1,0 +1,222 @@
+---
+import type { AdminChatRow } from '../../lib/admin/chats';
+import { relativeTime, thousands, truncate } from '../../lib/admin/queries';
+import { resizedCdnImage } from '../../lib/cdn-image';
+
+interface Props {
+	rows: AdminChatRow[];
+	// Building the row href here keeps the list state (filter/search/page) intact
+	// while adding ?thread=<id>. Passed in from the page so it owns the querystring.
+	hrefFor: (threadId: string) => string;
+	selectedThread: string | null;
+}
+
+const { rows, hrefFor, selectedThread } = Astro.props;
+---
+
+{rows.length === 0 ? (
+	<div class="empty">
+		<strong>No chats match</strong>
+		<span>Try a different filter or clear the search.</span>
+	</div>
+) : (
+	<div class="chat-list" role="list">
+		{rows.map((row) => {
+			const snippet = row.firstUserMessage ? truncate(row.firstUserMessage, 120) : null;
+			const owner = row.userName || row.userEmail || row.userId;
+			return (
+				<a
+					class:list={['chat-row', { active: row.id === selectedThread }]}
+					href={hrefFor(row.id)}
+					role="listitem"
+				>
+					<div class="thumb">
+						{row.thumbnailUrl ? (
+							<img
+								src={resizedCdnImage(row.thumbnailUrl, 240)}
+								alt=""
+								width="52"
+								height="52"
+								loading="lazy"
+							/>
+						) : (
+							<span class="thumb-placeholder" aria-hidden="true" />
+						)}
+					</div>
+					<div class="body">
+						<div class="line1">
+							<strong class="title">{row.title}</strong>
+							<span class="time">{relativeTime(row.updatedAt)}</span>
+						</div>
+						<div class="line2">
+							<span class="owner">{owner}</span>
+							{row.userName && row.userEmail && <span class="email">{row.userEmail}</span>}
+						</div>
+						{snippet ? (
+							<p class="snippet">{snippet}</p>
+						) : (
+							<p class="snippet muted">No user message</p>
+						)}
+						<div class="counts">
+							<span>{thousands(row.messageCount)} msg</span>
+							<span>{thousands(row.generationCount)} gen</span>
+							{row.okGenerationCount === 0 ? (
+								<span class="badge-abandoned">abandoned</span>
+							) : (
+								<span class="badge-ok">{thousands(row.okGenerationCount)} ok</span>
+							)}
+						</div>
+					</div>
+				</a>
+			);
+		})}
+	</div>
+)}
+
+<style>
+	.chat-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+	.chat-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 12px;
+		border-radius: 10px;
+		border: 1px solid transparent;
+		text-decoration: none;
+		color: inherit;
+		transition: background 0.12s, border-color 0.12s;
+	}
+	.chat-row:hover {
+		background: var(--hover);
+		border-color: var(--border2);
+	}
+	.chat-row.active {
+		background: var(--hover);
+		border-color: var(--border3);
+	}
+	.thumb {
+		flex: 0 0 52px;
+	}
+	.thumb img,
+	.thumb-placeholder {
+		width: 52px;
+		height: 52px;
+		border-radius: 9px;
+		object-fit: cover;
+		background: var(--surface2);
+		display: block;
+	}
+	.thumb-placeholder {
+		border: 1px dashed var(--border2);
+	}
+	.body {
+		flex: 1;
+		min-width: 0;
+	}
+	.line1 {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 10px;
+	}
+	.title {
+		font-size: 13.5px;
+		color: var(--text);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.time {
+		flex: 0 0 auto;
+		font-size: 10.5px;
+		color: var(--text-dimmer);
+	}
+	.line2 {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		margin-top: 3px;
+		min-width: 0;
+	}
+	.owner {
+		font-size: 11.5px;
+		color: var(--text-dim);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		flex: 0 1 auto;
+	}
+	.email {
+		font-size: 11px;
+		color: var(--text-dimmer);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.snippet {
+		margin: 6px 0 0;
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--text-dim);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.snippet.muted {
+		color: var(--text-dimmer);
+		font-style: italic;
+	}
+	.counts {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 7px;
+		font-size: 10.5px;
+		color: var(--text-dimmer);
+	}
+	.counts .badge-ok {
+		color: var(--green);
+	}
+	.counts .badge-abandoned {
+		color: var(--text-dim);
+		padding: 1px 7px;
+		border-radius: 999px;
+		border: 1px solid var(--border2);
+		background: var(--surface2);
+	}
+	.empty {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		align-items: center;
+		text-align: center;
+		padding: 48px 16px;
+		border: 1px dashed var(--border2);
+		border-radius: 12px;
+		background: var(--card);
+	}
+	.empty strong {
+		font-size: 13px;
+		color: var(--text);
+	}
+	.empty span {
+		font-size: 12px;
+		color: var(--text-dimmer);
+	}
+
+	@media (max-width: 500px) {
+		.chat-row {
+			padding: 12px 10px;
+			min-height: 44px;
+		}
+		.line2 {
+			flex-wrap: wrap;
+		}
+	}
+</style>
