@@ -1,0 +1,119 @@
+/* Tool-page SHELL styles — the page measure, the header block, the composer
+ * area, the shared section rhythm and the footer.
+ *
+ * Split out of a single 420-line tool.css, which had grown to carry the shell,
+ * the prose, three section types and two galleries at once. Each concern now
+ * lives with the component that renders it, so a change to the FAQ cannot
+ * accidentally reflow the header.
+ *
+ * All four tool-*.css files are imported together by ToolLayout.astro. They are
+ * separate for editing, not for loading.
+ *
+ * Flat surfaces only: thin rules, type hierarchy and spacing do the work. No
+ * elevated cards, no shadows, per the site's existing convention.
+ *
+ * A separate stylesheet rather than a scoped <style> block in ToolLayout,
+ * because these rules have to reach markup emitted by the ToolX components AND
+ * the prose HTML that Astro's markdown pipeline produces. Astro rewrites scoped
+ * selectors with a data-astro-cid attribute that neither of those carries, so a
+ * scoped block would silently style nothing.
+ */
+
+/* ─── Page measure ─── */
+
+.tool-page {
+	max-width: 760px;
+	margin: 0 auto;
+	padding: 0 var(--shell-pad) 96px;
+}
+
+/* ─── Header: four short lines, then the fold ─── */
+
+.tool-head {
+	padding-top: 20px;
+	margin-bottom: 22px;
+}
+
+.tool-eyebrow {
+	display: inline-block;
+	margin: 10px 0 8px;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+.tool-head h1 {
+	font-size: 2rem;
+	font-weight: 800;
+	letter-spacing: -0.025em;
+	line-height: 1.15;
+	color: var(--text);
+	margin: 0 0 10px;
+}
+
+.tool-subhead {
+	margin: 0;
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--text-dim);
+	max-width: 58ch;
+}
+
+/* ─── The composer: the actual hero of the page ─── */
+
+.tool-composer {
+	margin: 0 0 12px;
+}
+
+.tool-composer-note {
+	margin: 12px 2px 0;
+	font-size: 0.82rem;
+	line-height: 1.55;
+	color: var(--text-dimmer);
+}
+
+/* ─── Shared section rhythm ─── */
+
+.tool-section {
+	margin-top: 56px;
+	padding-top: 26px;
+	border-top: 1px solid var(--border);
+}
+
+.tool-section > h2 {
+	font-size: 1.25rem;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	color: var(--text);
+	margin: 0 0 20px;
+}
+
+.tool-section h3 {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--text);
+	margin: 0 0 6px;
+}
+/* ─── Footer ─── */
+
+.tool-footer {
+	margin-top: 56px;
+}
+
+@media (max-width: 640px) {
+	.tool-head h1 {
+		font-size: 1.55rem;
+		line-height: 1.22;
+	}
+
+	.tool-subhead {
+		font-size: 0.94rem;
+	}
+
+	.tool-section {
+		margin-top: 44px;
+		padding-top: 22px;
+	}
+}

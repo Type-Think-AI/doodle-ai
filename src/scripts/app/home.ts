@@ -239,10 +239,19 @@ function initHome(): void {
   // Arriving here from a skill's detail page ("Use this skill") pre-pins
   // that skill, same as picking it via / in the composer — but nothing is
   // created yet; a thread only exists once you actually send.
+  //
+  // A tool landing page (ToolLayout.astro) instead pins its skill server-side
+  // via data-default-skill on the composer root, so the chip is already correct
+  // on first paint with a clean URL. `?skill=` still wins when both are present,
+  // because that one was an explicit act by the visitor.
   const params = new URLSearchParams(window.location.search);
   const skillFromUrl = params.get("skill");
-  if (skillFromUrl && getSkill(skillFromUrl)) {
-    pendingSkillId = skillFromUrl;
+  const defaultSkill = document
+    .querySelector<HTMLElement>(".composer[data-default-skill]")
+    ?.dataset.defaultSkill?.trim();
+  const initialSkill = skillFromUrl || defaultSkill;
+  if (initialSkill && getSkill(initialSkill)) {
+    pendingSkillId = initialSkill;
     syncSkillChip();
   }
 
@@ -278,7 +287,13 @@ function initHome(): void {
 
   if (skillFromUrl || boardFromUrl || promptFromUrl || refFromUrl) {
     // Keep the URL clean, but only AFTER the values are captured in state.
-    window.history.replaceState(null, "", "/");
+    //
+    // Strip the QUERY, never the PATH. This used to hardcode "/" because the
+    // composer only ever ran on the homepage; once ToolLayout.astro mounts the
+    // same composer on /photo-to-coloring-page/ and friends, that hardcoded "/"
+    // would silently rewrite a ranking landing page's URL to the homepage on
+    // first paint — breaking back-button history and any analytics keyed on path.
+    window.history.replaceState(null, "", window.location.pathname);
   }
 }
 

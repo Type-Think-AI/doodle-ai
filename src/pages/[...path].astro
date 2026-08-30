@@ -14,6 +14,7 @@
  */
 import { getCollection, render } from "astro:content";
 import ArticleLayout from "../layouts/ArticleLayout.astro";
+import ToolLayout from "../layouts/ToolLayout.astro";
 import { assertContentPaths, idToPath } from "../lib/content/reserved-routes";
 
 export async function getStaticPaths() {
@@ -39,8 +40,28 @@ export async function getStaticPaths() {
 
 const { entry, path } = Astro.props;
 const { Content, headings } = await render(entry);
+
+/**
+ * `category: "tool"` is the one frontmatter value that swaps the LAYOUT rather
+ * than a label: the free-tool screens put the real generator above the fold and
+ * the prose beneath it (see ToolLayout.astro). Everything else keeps the
+ * editorial article shell.
+ *
+ * Branching here rather than in a second route keeps one URL space — a page
+ * becomes a tool by editing one line of its own frontmatter, with no file move,
+ * no redirect, and no change to its ranking URL.
+ */
+const isTool = entry.data.category === "tool";
 ---
 
-<ArticleLayout path={path} data={entry.data} headings={headings}>
-	<Content />
-</ArticleLayout>
+{
+	isTool ? (
+		<ToolLayout path={path} data={entry.data}>
+			<Content />
+		</ToolLayout>
+	) : (
+		<ArticleLayout path={path} data={entry.data} headings={headings}>
+			<Content />
+		</ArticleLayout>
+	)
+}

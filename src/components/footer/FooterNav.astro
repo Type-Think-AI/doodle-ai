@@ -17,12 +17,37 @@ interface NavColumn {
 }
 
 import { contactChannels } from "../../lib/contact";
+import { getToolLinks } from "../../lib/content/articles";
+
+/**
+ * The Tools column is generated, not hand-written, so converting a page to
+ * `category: "tool"` links it from every page on the site with no edit here.
+ * A hand-maintained array is precisely how the footer would fall out of sync
+ * once batches 2 and 3 land.
+ *
+ * Capped, because the set is heading for ~50 entries and a 50-link footer column
+ * is neither readable nor a useful internal-link signal. The highest-intent ones
+ * are listed and "All free tools" carries the rest — the /tools/ hub is what
+ * distributes link equity to the long tail.
+ */
+const FOOTER_TOOL_LIMIT = 8;
+const toolLinks = (await getToolLinks()).slice(0, FOOTER_TOOL_LIMIT).map((tool) => ({
+	// The keyword is the short, scannable label; the editorial title is far too
+	// long for a footer column ("Photo to Coloring Page — Turn a Photo into Line Art").
+	label: tool.primaryKeyword ?? tool.title,
+	href: tool.url,
+}));
 
 const columns: NavColumn[] = [
+	{
+		title: "Free tools",
+		links: [...toolLinks, { label: "All free tools", href: "/tools" }],
+	},
 	{
 		title: "Studio",
 		links: [
 			{ label: "Doodle AI App", href: "/" },
+			{ label: "Free tools", href: "/tools" },
 			{ label: "Skill gallery", href: "/skills" },
 			{ label: "Characters", href: "/characters" },
 			{ label: "Learn", href: "/learn" },

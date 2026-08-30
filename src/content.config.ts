@@ -35,8 +35,17 @@ const articles = defineCollection({
 		 * sitemap priority. It deliberately does NOT drive HowTo structured data:
 		 * see `src/components/article/ArticleSchema.astro` for why fabricated
 		 * step markup is not emitted.
+		 *
+		 * `tool` is the one value that changes the LAYOUT rather than just a
+		 * label. A tool page is rendered by `ToolLayout.astro` instead of
+		 * `ArticleLayout.astro`: the real generator sits above the fold and the
+		 * prose sits under it, because these URLs answer converter queries
+		 * ("photo to coloring page", "free ai doodle generator") where the
+		 * searcher wants an input box, not an essay. It REQUIRES `skill` — a tool
+		 * page with nothing to run is just a slower guide — and the refine below
+		 * enforces that at build time.
 		 */
-		category: z.enum(["guide", "explainer", "prompts", "studios"]),
+		category: z.enum(["guide", "explainer", "prompts", "studios", "tool"]),
 
 		/**
 		 * Topic silo used to compute the "related reading" block automatically, so
@@ -99,6 +108,25 @@ const articles = defineCollection({
 			return true;
 		},
 		{ message: 'Guides and explainers should have at least 3 FAQ entries for FAQPage schema' }
+	).refine(
+		// A tool page's whole reason to exist is the generator above the fold, so
+		// `skill` is not optional there. Without this guard the page would render a
+		// tool shell with an empty hole where the composer belongs, and the failure
+		// would only be visible to a human who happened to load the page.
+		(data) => data.category !== 'tool' || Boolean(data.skill),
+		{
+			message:
+				'category: "tool" requires a `skill` — the generator IS the page. Use category: "guide" for an editorial page.',
+		},
+	).refine(
+		// The tool layout renders a visible Q&A block as one of its sections, so the
+		// FAQ is load-bearing content rather than optional decoration — and FAQPage
+		// markup is only honest when the page really shows the questions.
+		(data) => data.category !== 'tool' || (data.faq?.length ?? 0) >= 3,
+		{
+			message:
+				'category: "tool" requires at least 3 faq entries — the FAQ block is a section of the tool layout, not an extra.',
+		},
 	),
 });
 

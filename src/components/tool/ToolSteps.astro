@@ -1,0 +1,50 @@
+---
+/**
+ * Three steps, derived from the bound skill rather than written per page.
+ *
+ * Deriving it means 27 tool pages cannot drift into 27 slightly different
+ * descriptions of the same three actions, and a skill that does not need a photo
+ * never tells the reader to attach one — which a hand-written block on a
+ * copy-pasted page reliably gets wrong.
+ *
+ * Deliberately not marked up as HowTo. Google requires HowTo markup to describe
+ * a task the user performs in the real world with the page as instructions, and
+ * these three steps are UI affordances on this page; ArticleSchema.astro already
+ * documents why fabricated step markup is not emitted anywhere in this codebase.
+ */
+import type { Skill } from "../../lib/skills";
+
+interface Props {
+	skill: Skill;
+}
+const { skill } = Astro.props;
+
+const steps = skill.requiresPhoto
+	? [
+			{ n: 1, t: "Attach your photo", d: "Drop it in the box above, or use the camera on your phone." },
+			{ n: 2, t: "Say what you want", d: "One line is enough. The skill is already selected for you." },
+			{ n: 3, t: "Press send", d: `${skill.name} runs and the result opens on its own canvas, ready to download.` },
+		]
+	: [
+			{ n: 1, t: "Describe it", d: "No photo needed — a sentence about the character or scene is enough." },
+			{ n: 2, t: "Press send", d: `${skill.name} runs immediately.` },
+			{ n: 3, t: "Keep or redo", d: "The result opens on its own canvas. Not right? Change a word and send again." },
+		];
+---
+
+<section class="tool-section tool-steps" aria-labelledby="tool-steps-h">
+	<h2 id="tool-steps-h">How it works</h2>
+	<ol>
+		{
+			steps.map((s) => (
+				<li>
+					<span class="tool-step-n" aria-hidden="true">{s.n}</span>
+					<div>
+						<h3>{s.t}</h3>
+						<p>{s.d}</p>
+					</div>
+				</li>
+			))
+		}
+	</ol>
+</section>

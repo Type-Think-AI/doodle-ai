@@ -1,0 +1,62 @@
+---
+/**
+ * The bound skill, described in its own words.
+ *
+ * Every string here comes from the skill's SKILL.md frontmatter via
+ * skill-loader.ts, so this block is unique per skill without anyone writing
+ * per-page copy — and it cannot claim something the skill does not do, because
+ * the same text is what instructs the agent at generation time.
+ *
+ * `skill.description` is the model-facing "Use when the user…" line. It is the
+ * most concrete statement of what the skill is for that exists anywhere in the
+ * repo, which is exactly what a visitor deciding whether this is their tool
+ * needs to read.
+ *
+ * Flat block with a thin rule, not an elevated card — matches the rest of the
+ * site's surfaces.
+ */
+import type { Skill } from "../../lib/skills";
+
+interface Props {
+	skill: Skill;
+}
+const { skill } = Astro.props;
+---
+
+<section class="tool-section tool-skill" aria-labelledby="tool-skill-h">
+	<h2 id="tool-skill-h">The skill behind this tool</h2>
+
+	<div class="tool-skill-row">
+		<div class="tool-skill-body">
+			<h3>{skill.name}</h3>
+			<p class="tool-skill-tagline">{skill.tagline}</p>
+			<p class="tool-skill-desc">{skill.description}</p>
+
+			<dl class="tool-skill-facts">
+				<div>
+					<dt>Input</dt>
+					<dd>{skill.requiresPhoto ? "A photo" : "Text only"}</dd>
+				</div>
+				<div>
+					<dt>Output</dt>
+					<dd>{skill.aspectRatio === "1:1" ? "Square image" : "Landscape image"}</dd>
+				</div>
+				<div>
+					<dt>Cost</dt>
+					<dd>1 credit per generation</dd>
+				</div>
+			</dl>
+
+			<a class="tool-skill-link" href={`/skills/${skill.id}/`}>
+				Full {skill.name} documentation
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M5 12h13m0 0-5-5m5 5-5 5"
+						stroke="currentColor"
+						stroke-width="1.7"
+						stroke-linecap="round"></path>
+				</svg>
+			</a>
+		</div>
+	</div>
+</section>

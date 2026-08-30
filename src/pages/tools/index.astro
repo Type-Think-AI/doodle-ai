@@ -1,0 +1,284 @@
+---
+/**
+ * /tools/ — the directory for every `category: "tool"` page.
+ *
+ * Separate from /learn/ on purpose. /learn/ is an editorial index: read this to
+ * understand something. This is a tool rack: open one and it does the job. Those
+ * are two different visitor intents and mixing them into one page made the tools
+ * invisible among 87 guides.
+ *
+ * Built from `getToolsBySkill()`, so a page converted to a tool appears here, in
+ * the navbar count, and in the footer with no edit to this file. The grouping is
+ * by powering skill because that is the only fact a visitor cannot read off the
+ * titles — and it makes the shape of the catalogue honest: seven coloring URLs
+ * really are one skill wearing seven keywords.
+ *
+ * Cards lead with the tool's own thumbnail and carry the description, unlike the
+ * /learn/ cards which are image-and-title only. A visitor picking a tool is
+ * choosing between near-identical names ("doodle color pages" vs "doodle
+ * coloring page"), so the one-line description is what disambiguates them.
+ */
+import AppLayout from "../../layouts/AppLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import { getToolsBySkill } from "../../lib/content/articles";
+import { getSkill } from "../../lib/skills";
+import { resizedCdnImage } from "../../lib/cdn-image";
+import CollectionSchema from "../../components/article/CollectionSchema.astro";
+import { OG_IMAGE } from "../../consts";
+import "../../styles/app.css";
+import "../../styles/page.css";
+
+const groups = await getToolsBySkill();
+const total = groups.reduce((n, g) => n + g.items.length, 0);
+
+/* Flattened in the page's own rendered order (groups, then items within each),
+   so the declared ItemList order matches what a visitor actually sees. */
+const listItems = groups.flatMap((group) =>
+	group.items.map((item) => ({
+		url: item.url,
+		name: item.title,
+		description: item.description,
+	})),
+);
+---
+
+<AppLayout
+	title="Free Doodle AI Tools — Generate in the Browser"
+	description={`${total} free tools that turn a photo into a hand-drawn doodle, cartoon, sticker, or printable coloring page. Each one opens with the generator ready and the right skill already selected.`}
+	image={OG_IMAGE.skills}
+	markdownUrl="/tools.md"
+>
+	<CollectionSchema
+		name="Free Doodle AI Tools"
+		description={`${total} free browser tools that turn a photo into a hand-drawn doodle, cartoon, sticker, or printable coloring page.`}
+		path="/tools/"
+		items={listItems}
+		slot="head"
+	/>
+
+	<Navbar />
+
+	<main class="page">
+		<header class="tools-head">
+			<h1>Free tools</h1>
+			<p>
+				{total} tools, each one open and ready — the prompt box is the first thing on the page and the
+				right skill is already selected. New accounts get free starter credits.
+			</p>
+		</header>
+
+		{
+			groups.map((group) => {
+				const skill = getSkill(group.skill);
+				return (
+					<section class="tools-group">
+						<header class="tools-group-head">
+							<h2>{skill?.name ?? group.skill}</h2>
+							<p>{skill?.tagline}</p>
+							<a href={`/skills/${group.skill}/`}>
+								About this skill
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+									<path
+										d="M5 12h13m0 0-5-5m5 5-5 5"
+										stroke="currentColor"
+										stroke-width="1.7"
+										stroke-linecap="round"></path>
+								</svg>
+							</a>
+						</header>
+
+						<ul class="tools-grid">
+							{group.items.map((tool) => (
+								<li>
+									<a href={tool.url}>
+										<div class="tools-thumb">
+											{tool.heroImage ? (
+												<img
+													src={resizedCdnImage(tool.heroImage, 480)}
+													alt=""
+													width="320"
+													height="180"
+													loading="lazy"
+													decoding="async"
+												/>
+											) : (
+												<div class="tools-thumb-empty" aria-hidden="true" />
+											)}
+										</div>
+										<h3>{tool.primaryKeyword ?? tool.title}</h3>
+										<p>{tool.description}</p>
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+				);
+			})
+		}
+	</main>
+
+	<Footer />
+
+	<script>
+		import { initThemeToggle } from "../../lib/theme";
+		const themeToggle = document.getElementById("themeToggle");
+		if (themeToggle) initThemeToggle(themeToggle);
+	</script>
+</AppLayout>
+
+<style>
+	.tools-head {
+		padding: 24px 0 8px;
+		max-width: 60ch;
+	}
+	.tools-head h1 {
+		font-size: 2rem;
+		font-weight: 800;
+		letter-spacing: -0.025em;
+		color: var(--text);
+		margin: 0 0 10px;
+	}
+	.tools-head p {
+		margin: 0;
+		font-size: 0.98rem;
+		line-height: 1.65;
+		color: var(--text-dim);
+	}
+
+	.tools-group {
+		margin-top: 48px;
+		padding-top: 24px;
+		border-top: 1px solid var(--border);
+	}
+
+	.tools-group-head {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: baseline;
+		gap: 12px;
+		margin-bottom: 20px;
+	}
+	.tools-group-head h2 {
+		grid-column: 1;
+		font-size: 1.2rem;
+		font-weight: 800;
+		color: var(--text);
+		margin: 0;
+		letter-spacing: -0.01em;
+	}
+	.tools-group-head p {
+		grid-column: 1;
+		grid-row: 2;
+		margin: 4px 0 0;
+		font-size: 0.86rem;
+		color: var(--text-dimmer);
+	}
+	.tools-group-head a {
+		grid-column: 2;
+		grid-row: 1 / span 2;
+		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 44px;
+		font-size: 0.84rem;
+		color: var(--text-dim);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+	.tools-group-head a:hover {
+		color: var(--accent);
+	}
+
+	.tools-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 22px;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.tools-grid a {
+		display: block;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.tools-thumb {
+		aspect-ratio: 16 / 9;
+		border-radius: 12px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+		background: var(--card-hover);
+	}
+	.tools-thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		transition: transform 0.25s ease;
+	}
+	.tools-grid a:hover .tools-thumb img {
+		transform: scale(1.03);
+	}
+	.tools-thumb-empty {
+		width: 100%;
+		height: 100%;
+	}
+
+	.tools-grid h3 {
+		margin: 10px 0 4px;
+		font-size: 0.95rem;
+		font-weight: 700;
+		color: var(--text);
+		line-height: 1.35;
+		/* Keywords are lowercase in the workbook; presenting them sentence-cased
+		   keeps the card readable without editing the stored keyword. */
+		text-transform: capitalize;
+	}
+	.tools-grid p {
+		margin: 0;
+		font-size: 0.82rem;
+		line-height: 1.55;
+		color: var(--text-dimmer);
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	@media (max-width: 900px) {
+		.tools-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 560px) {
+		.tools-head h1 {
+			font-size: 1.6rem;
+		}
+		.tools-grid {
+			grid-template-columns: 1fr;
+			gap: 18px;
+		}
+		.tools-group-head {
+			grid-template-columns: 1fr;
+		}
+		.tools-group-head a {
+			grid-column: 1;
+			grid-row: 3;
+			justify-self: start;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.tools-thumb img,
+		.tools-grid a:hover .tools-thumb img {
+			transition: none;
+			transform: none;
+		}
+	}
+</style>

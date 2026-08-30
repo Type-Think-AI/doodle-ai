@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-08-30T04:58:12.595Z",
+  "model": "fal-ai/bytedance/seedream/v5/lite",
+  "pairs": {
+    "coloring": {
+      "sourceImageUrl": "https://cdn.picxstudio.com/api/generated/image_a5af382e-7ea1-4712-813c-f33a65d78ffd.jpg",
+      "thumbnailUrl": "https://cdn.picxstudio.com/api/edited/image_60da4049-9adf-4901-ac58-42c5567acbe5.jpg"
+    },
+    "idea": {
+      "sourceImageUrl": null,
+      "thumbnailUrl": "https://cdn.picxstudio.com/api/generated/image_7a41e957-849c-4acd-a5f1-f546a8a8e3c1.jpg"
+    }
+  },
+  "pages": {
+    "photo-to-coloring-page": {
+      "skill": "coloring",
+      "examples": [
+        "https://cdn.picxstudio.com/api/edited/image_ea4bddc2-7dfe-42af-a05e-096b705ba801.jpg",
+        "https://cdn.picxstudio.com/api/edited/image_bc5c716f-86b6-47ce-8a6b-8bb036b9d502.jpg",
+        "https://cdn.picxstudio.com/api/edited/image_9a47ed02-8c93-4f16-9e02-41ad9d06543c.jpg"
+      ]
+    },
+    "coloring-page-generator": {
+      "skill": "coloring",
+      "examples": [
+        "https://cdn.picxstudio.com/api/edited/image_cc66fe50-da8a-40de-9a97-1e35baa732e1.jpg",
+        "https://cdn.picxstudio.com/api/edited/image_9f0deaad-496b-485b-9235-0a65dd754846.jpg",
+        "https://cdn.picxstudio.com/api/edited/image_7d85e9c9-999a-4a99-980f-4b0bf58f882b.jpg"
+      ]
+    },
+    "doodle-coloring-pages": {
+      "skill": "coloring",
+      "examples": [
+        "https://cdn.picxstudio.com/api/edited/image_73d7921b-7a88-463e-946c-171b73ed1bd4.jpg",
+        "https://cdn.picxstudio.com/api/edited/image_f6e9fd90-cf17-4c42-9f57-970946022ea2.jpg",
+        "https://cdn.picxstudio.com/api/edited/image_74793fd4-6690-4456-a313-360d149e5207.jpg"
+      ]
+    },
+    "doodle-color-pages": {
+      "skill": "coloring",
+      "examples": [
+        "https://cdn.picxstudio.com/api/edited/image_9ce0d5bc-a02f-4c90-ba50-05ae8dcde822.jpg",
+        "https://cdn.picxstudio.com/api/edited/image_ce9ef404-fdf3-427a-b502-5ff1e951a54b.jpg",
+        "https://cdn.picxstudio.com/api/edited/image_e3041ead-bbf6-483f-818c-727e2815f022.jpg"
+      ]
+    },
+    "doodle-art-coloring-pages": {
+      "skill": "coloring",
+      "examples": [
+        "https://cdn.picxstudio.com/api/generated/image_81da6e3f-6c56-4283-a9d4-8aa8d9916bfa.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_b5abe88f-2345-4b5a-bc7d-0857532e41e6.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_8130c493-9bb1-4e3c-99a3-9eb5e2f01f5a.jpg"
+      ]
+    },
+    "coloring-pages-doodles": {
+      "skill": "coloring",
+      "examples": [
+        "https://cdn.picxstudio.com/api/generated/image_3941df94-8e85-43f2-a2dc-3b676424fecf.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_2ab3bdee-36a2-4ac3-8a72-9829d0677cd8.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_58834e01-e968-4d44-b40d-4b45c2b3c607.jpg"
+      ]
+    },
+    "coloring-doodle-pages": {
+      "skill": "coloring",
+      "examples": [
+        "https://cdn.picxstudio.com/api/generated/image_0ff52a49-8c1a-439e-81b2-79454cef2f5f.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_6cfb75d6-e89c-442d-b10e-120824f4cbc5.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_2e16c572-4bfc-48ba-92bc-af787fdfe9ee.jpg"
+      ]
+    },
+    "doodle-ideas": {
+      "skill": "idea",
+      "examples": [
+        "https://cdn.picxstudio.com/api/generated/image_77198a89-f767-4b83-b2fe-ceb9d13c6fb5.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_903c3a8e-ce46-41f4-b7a2-bb8403b0e4d0.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_f46a658e-b23a-4f7b-9413-7c81ef78a04a.jpg"
+      ]
+    },
+    "random-doodle-generator": {
+      "skill": "idea",
+      "examples": [
+        "https://cdn.picxstudio.com/api/generated/image_7a33abf4-602a-481e-a7b9-ef319d4e8fb5.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_da9f2ac5-3ee0-4823-932a-2f46d92ac5af.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_ab9c9889-290d-45ee-81bb-8ea22312feec.jpg"
+      ]
+    },
+    "doodle-prompt-generator": {
+      "skill": "idea",
+      "examples": [
+        "https://cdn.picxstudio.com/api/generated/image_7941a039-a178-4466-a9ef-0951274021ac.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_1a04e784-d605-40af-ad52-9ff277d28677.jpg",
+        "https://cdn.picxstudio.com/api/generated/image_92bb45f1-3279-4103-9fe1-74bdbc5f0ee1.jpg"
+      ]
+    }
+  },
+  "sources": [
+    "https://cdn.picxstudio.com/api/generated/image_d2efc4be-922c-4545-98ac-8832741a45c9.jpg",
+    "https://cdn.picxstudio.com/api/generated/image_251e151a-1b36-4619-ba8d-2556d8def0bc.jpg",
+    "https://cdn.picxstudio.com/api/generated/image_1dc34579-7104-4195-996f-3aea6c090293.jpg"
+  ]
+}

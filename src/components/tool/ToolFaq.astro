@@ -1,0 +1,46 @@
+---
+/**
+ * The visible Q&A for a tool page.
+ *
+ * ArticleSchema.astro emits FAQPage structured data from the same `faq`
+ * frontmatter, and Google requires that markup to describe questions the page
+ * actually SHOWS. This component is what makes that true: the schema and the
+ * rendered list read the one array, so they can never disagree.
+ *
+ * Native <details> rather than a JS accordion — the answer text is in the DOM
+ * for a crawler either way, it is keyboard-operable and screen-reader-correct
+ * with no code, and it costs zero bytes of JavaScript on a page whose job is to
+ * load fast for search traffic. The first entry is open so the section does not
+ * read as an empty stack of headings.
+ */
+interface Props {
+	faq?: { question: string; answer: string }[];
+}
+const { faq } = Astro.props;
+---
+
+{
+	faq && faq.length > 0 && (
+		<section class="tool-section tool-faq" aria-labelledby="tool-faq-h">
+			<h2 id="tool-faq-h">Questions people ask</h2>
+			<div class="tool-faq-list">
+				{faq.map((item, i) => (
+					<details open={i === 0}>
+						<summary>
+							<span>{item.question}</span>
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+								<path
+									d="M6 9l6 6 6-6"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"></path>
+							</svg>
+						</summary>
+						<p>{item.answer}</p>
+					</details>
+				))}
+			</div>
+		</section>
+	)
+}

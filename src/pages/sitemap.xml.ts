@@ -52,6 +52,9 @@ export async function GET(context: APIContext) {
        listing it would submit a thin page for indexing. Same for /c/[id] and
        /b/[id], which robots.txt also disallows. */
     { path: "/", changefreq: "weekly", priority: "1.0" },
+    // The tool rack ranks above the skill gallery: every entry on it is a page
+    // that completes the visitor's job rather than describing a capability.
+    { path: "/tools/", lastmod: newestArticle, changefreq: "weekly", priority: "0.9" },
     { path: "/skills/", changefreq: "weekly", priority: "0.9" },
     { path: "/learn/", lastmod: newestArticle, changefreq: "weekly", priority: "0.8" },
     { path: "/about/", changefreq: "monthly", priority: "0.6" },
