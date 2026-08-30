@@ -26,10 +26,13 @@ import {
   syncSkillChip,
   renderMessage,
   renderThinking,
+  renderError,
+  renderCreditsCta,
   downloadImage,
   REFINE_PLACEHOLDER,
   type RenderContext,
 } from "./render";
+import { pruneStaleSuggestions } from "./suggestions";
 import {
   requestAssistantReply,
   send as apiSend,
@@ -110,23 +113,37 @@ function initChat(): void {
     if (fileInput) fileInput.value = "";
   }
 
+  /* Tapping a suggestion chip is exactly the same act as typing that text and
+     pressing send, so it goes through the normal send path — one code path for
+     the turn, and the chosen suggestion is stored as a real user message. */
+  function sendSuggestion(text: string): void {
+    if (sendState.sending) return;
+    input!.textContent = text;
+    input!.focus();
+    void doSend();
+  }
+
   const renderCtx: RenderContext = {
     thread,
     empty: empty!,
     input,
     onRemix: (userMsg) => void remix(userMsg),
     onDownload: (url) => void downloadImage(url),
+    onSuggestion: sendSuggestion,
   };
 
   const turnCallbacks: TurnCallbacks = {
     onThinkingStart: () => {
       const bubble = renderThinking(thread);
-      return { setText: bubble.setText, setDrawing: bubble.setDrawing, remove: () => bubble.wrap.remove() };
+      return { setText: bubble.setText, setPhase: bubble.setPhase, remove: () => bubble.wrap.remove() };
     },
     onAssistantMessage: (msg, preceding) => {
       const result = renderMessage(renderCtx, msg, preceding);
       if (result.hasResult) hasResult = true;
       if (msg.role === "user") lastUserMessage = msg;
+      // Suggestions answer "what next" at one moment; keep them on the newest
+      // reply only so the thread does not accumulate stale branches.
+      pruneStaleSuggestions(thread);
       pushToCanvas(collectThreadImages(threadId!));
     },
     onImage: (url) => {
@@ -140,6 +157,13 @@ function initChat(): void {
     },
     onCanvasOps: (ops, label) => pushCanvasOps(ops, label),
     onStatus: doSetStatus,
+    onError: (message) => {
+      // Keep the composer status line clean — the failure now lives in the
+      // thread where the user is looking, with the retry attached to it.
+      doSetStatus("");
+      renderError(thread, message, lastUserMessage ? () => void remix(lastUserMessage!) : null);
+    },
+    onCreditsBlocked: () => renderCreditsCta(thread),
     onSendStateChange: doSyncSendState,
     invalidateImageCache: invalidateThreadImagesCache,
   };
@@ -310,6 +334,9 @@ function initChat(): void {
     });
     empty!.hidden = messages.length > 0;
     if (hasResult) input!.dataset.placeholder = REFINE_PLACEHOLDER;
+    // A repaint renders every historical reply, each of which may carry its own
+    // follow-up list; only the newest set is still a live offer.
+    pruneStaleSuggestions(thread!);
     pushToCanvas(collectThreadImages(threadId!));
   }
 

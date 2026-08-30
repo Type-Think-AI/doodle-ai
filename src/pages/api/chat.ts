@@ -21,10 +21,14 @@ interface ChatMessage {
 
 type StreamEvent =
   | { type: "text"; text: string }
-  | { type: "status"; phase: "drawing" }
+  | { type: "status"; phase: "drawing" | "reading-canvas" | "arranging" }
   | { type: "image"; url: string; skillId?: string }
   | { type: "credits"; balance: number; orgId?: string }
   | { type: "canvas"; ops: CanvasOp[]; label?: string }
+  /* A non-fatal outcome the UI should offer an action for. `credits` means the
+     generation was refused for lack of them — the agent explains it in prose,
+     but prose has nothing to click, so the client pairs this with a CTA. */
+  | { type: "notice"; kind: "credits" }
   | { type: "done" }
   | { type: "error"; message: string };
 
@@ -157,6 +161,12 @@ export async function POST(context: APIContext) {
             if (isDoodleTool(payload.toolName)) {
               lastSkillId = payload.args?.skill;
               emit({ type: "status", phase: "drawing" });
+            } else if (isCanvasReadTool(payload.toolName)) {
+              // Canvas work used to emit nothing, so a turn spent reading and
+              // rearranging the board looked identical to a stalled request.
+              emit({ type: "status", phase: "reading-canvas" });
+            } else if (isCanvasEditTool(payload.toolName)) {
+              emit({ type: "status", phase: "arranging" });
             }
           } else if (chunk.type === "tool-result") {
             const payload = chunk.payload as { toolName?: string; result?: unknown };
@@ -187,6 +197,13 @@ export async function POST(context: APIContext) {
                   const db = getDb(context);
                   emit({ type: "credits", balance: await getBalance(db, orgId), orgId });
                 }
+              } else if (
+                value?.status === "insufficient-credits" ||
+                value?.status === "org-cap-reached"
+              ) {
+                // Keyed off the tool's real status rather than sniffing the
+                // agent's wording, so rephrasing the prompt can never break it.
+                emit({ type: "notice", kind: "credits" });
               }
             }
           } else if (chunk.type === "error") {
@@ -232,6 +249,11 @@ function isDoodleTool(name: string | undefined): boolean {
  *  name used by the Mastra tool definition and the kebab-case alias. */
 function isCanvasEditTool(name: string | undefined): boolean {
   return name === "editCanvas" || name === "canvas-edit";
+}
+
+/** Same dual-convention match for the canvas read tool. */
+function isCanvasReadTool(name: string | undefined): boolean {
+  return name === "readCanvas" || name === "canvas-read";
 }
 
 function json(data: unknown, status = 200): Response {

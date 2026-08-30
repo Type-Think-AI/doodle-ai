@@ -1,8 +1,14 @@
 ---
 import AppShellLayout from '../layouts/AppShellLayout.astro';
+import { OG_IMAGE } from '../consts';
 ---
 
-<AppShellLayout title="Characters — Doodle AI" active="characters">
+<AppShellLayout
+	title="Characters — Doodle AI"
+	description="Save a reference photo once as a reusable character, then @mention it in any Doodle AI chat to keep the same face across avatars, collages, stickers and gifts — no re-uploading."
+	image={OG_IMAGE.characters}
+	active="characters"
+>
 	<div class="chars-page">
 		<h1>Characters</h1>
 		<p class="chars-sub">Reusable reference photos — mention one with @ in any chat instead of re-uploading.</p>

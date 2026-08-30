@@ -31,8 +31,10 @@ interface Props {
    * canvas.
    */
   showFooter?: boolean;
+  /** Path to this page's Markdown twin, forwarded to AppLayout. */
+  markdownUrl?: string;
 }
-const { title, description, image, active, showFooter: showFooterProp } = Astro.props;
+const { title, description, image, active, showFooter: showFooterProp, markdownUrl } = Astro.props;
 // The marketing footer (CTA hero, marquee, partner grid) belongs on the
 // content-browsing pages (skills, boards index, characters) — it was added
 // there deliberately. "chat" and "roadmap" are live tool surfaces with a
@@ -57,7 +59,7 @@ const showFooter = showFooterProp ?? (active !== 'chat' && active !== 'roadmap')
    to every client on every page. */
 ---
 
-<AppLayout title={title} description={description} image={image}>
+<AppLayout title={title} description={description} image={image} markdownUrl={markdownUrl}>
   <div class="app-shell">
     <Sidebar active={active} />
 

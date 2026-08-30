@@ -18,18 +18,38 @@ import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
 import { getArticlesByCategory } from "../../lib/content/articles";
+import CollectionSchema from "../../components/article/CollectionSchema.astro";
 import { OG_IMAGE } from "../../consts";
 import "../../styles/app.css";
 import "../../styles/page.css";
 
 const groups = await getArticlesByCategory();
+
+/* Flattened in the page's own rendered order so the declared ItemList order
+   matches what a visitor sees. */
+const listItems = groups.flatMap((group) =>
+	group.items.map((item) => ({
+		url: item.url,
+		name: item.title,
+		description: item.description,
+	})),
+);
 ---
 
 <AppLayout
 	title="Learn — doodleai.art"
 	description="Guides, explainers, prompt libraries, and studio workflows for turning photos into hand-drawn doodles with Doodle AI."
 	image={OG_IMAGE.learn}
+	markdownUrl="/learn.md"
 >
+	<CollectionSchema
+		name="Learn — Doodle AI"
+		description="Guides, explainers, prompt libraries, and studio workflows for turning photos into hand-drawn doodles."
+		path="/learn/"
+		items={listItems}
+		slot="head"
+	/>
+
 	<Navbar />
 
 	<main class="page">

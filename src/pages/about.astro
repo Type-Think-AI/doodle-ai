@@ -1,90 +1,256 @@
 ---
+/**
+ * /about — written to be QUOTED, not just read.
+ *
+ * This page's job is to be the source an AI assistant reaches for when someone
+ * asks "what is Doodle AI / is there a free tool that turns a photo into a
+ * doodle". That changes how it is written: one canonical definition sentence, and
+ * facts in TABLES rather than prose, because a table row survives extraction into
+ * an answer where the same fact mid-paragraph usually does not.
+ *
+ * All content lives in src/lib/content/about-content.ts, NOT here, because
+ * /about.md renders the same data as markdown. Add a row there and both surfaces
+ * get it. See that file for the honesty constraint on video generation.
+ */
 import AppLayout from '../layouts/AppLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
+import {
+	DEFINITION,
+	FAQ,
+	FIGURES,
+	SKILL_NAMES,
+	GLANCE_ROWS,
+	COMPARISON_HEAD,
+	COMPARISON_ROWS,
+	ROADMAP_ROWS,
+	CATEGORY_ROWS,
+} from '../lib/content/about-content';
+import { OG_IMAGE, SITE_TITLE } from '../consts';
 import '../styles/app.css';
 import '../styles/page.css';
+
+const site = Astro.site ?? new URL('https://doodleai.art');
+const canonical = new URL('/about/', site).href;
+
+const aboutSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'AboutPage',
+	'@id': canonical,
+	url: canonical,
+	name: `About ${SITE_TITLE}`,
+	description: DEFINITION,
+	inLanguage: 'en',
+	isPartOf: { '@type': 'WebSite', '@id': `${site.href}#website` },
+	mainEntity: {
+		'@type': 'WebApplication',
+		'@id': `${site.href}#application`,
+		name: SITE_TITLE,
+		url: site.href,
+		description: DEFINITION,
+		applicationCategory: 'MultimediaApplication',
+		applicationSubCategory: 'Image Generator',
+		operatingSystem: 'Web',
+		isAccessibleForFree: true,
+		offers: {
+			'@type': 'Offer',
+			price: '0',
+			priceCurrency: 'USD',
+			description: `${FIGURES.signupGrant} starter credits on signup, no card required`,
+		},
+		featureList: SKILL_NAMES,
+	},
+};
+
+const faqSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'FAQPage',
+	mainEntity: FAQ.map((item) => ({
+		'@type': 'Question',
+		name: item.question,
+		acceptedAnswer: { '@type': 'Answer', text: item.answer },
+	})),
+};
 ---
 
 <AppLayout
-	title="About — doodleai.art"
-	description="What doodleai.art is: sign in, chat with an agent, attach a photo, and get back a hand-drawn doodle avatar or collage using account credits."
+	title="About Doodle AI — Free AI Doodle Art Generator"
+	description={`What ${SITE_TITLE} is, what it can generate, what it costs, and how the agent picks a drawing style. ${FIGURES.runnable} skills, free starter credits, images only — no video.`}
+	image={OG_IMAGE.home}
+	markdownUrl="/about.md"
 >
+	<script type="application/ld+json" set:html={JSON.stringify(aboutSchema)} slot="head" />
+	<script type="application/ld+json" set:html={JSON.stringify(faqSchema)} slot="head" />
+
 	<Navbar />
 
 	<main class="page">
 		<div class="page-hero">
 			<div class="eyebrow">About</div>
-			<h1>A doodle booth you <span class="grad">chat</span> with</h1>
-			<p class="lede">
-				doodleai.art turns a photo into a hand-drawn doodle avatar or collage. Instead of a form,
-				you talk to an agent: attach a photo (or just describe a character), say what you want, and
-				it draws it.
-			</p>
+			<h1>A doodle studio you <span class="grad">chat</span> with</h1>
+			<p class="lede">{DEFINITION}</p>
+			<div class="about-hero-cta">
+				<a class="about-btn about-btn-primary" href="/">Start doodling free →</a>
+				<a class="about-btn about-btn-ghost" href="/tools/">Browse the free tools</a>
+			</div>
 		</div>
 
 		<div class="prose">
-			<h2>The idea</h2>
-			<p>
-				Most "AI photo" tools are a picker full of filters. This one is a conversation — attach a
-				photo, tell the agent what you're after, and it picks the right doodle style, generates it,
-				and lets you keep refining ("thicker outline", "warmer paper") until it's right.
-			</p>
-			<p>
-				<strong>Sign in to create.</strong> Your account keeps chats, saved doodles, and characters in sync
-				across devices. Generation runs through Doodle AI's platform connection and account credits.
-			</p>
-
-			<h2>How it works</h2>
-			<ol class="steps">
-				<li><b>Sign in.</b> Google sign-in unlocks creation, syncing, and your starter credits.</li>
-				<li><b>Start a chat.</b> Attach a photo, mention a saved character with @, or just describe someone for a surprise.</li>
-				<li><b>The agent draws it.</b> It picks a skill — a single avatar, a close-up collage, a full-body action collage — and generates it.</li>
-				<li><b>Keep it or refine it.</b> Ask for changes, remix, save to your moodboard, or download.</li>
-			</ol>
-
-			<h2>Platform-powered generation</h2>
-			<p>
-				Doodle AI handles the provider connection on the server, so you can focus on the creative part.
-				Each generation uses account credits, with starter credits included for new accounts. Chat is
-				routed through OpenRouter and images are processed by PicX.
-			</p>
-
-			<div class="facts">
-				<div class="fact">
-					<div class="k">Login required</div>
-					<div class="v">For creation</div>
-				</div>
-				<div class="fact">
-					<div class="k">Cost to use this site</div>
-					<div class="v">Free</div>
-				</div>
-				<div class="fact">
-					<div class="k">Your synced workspace</div>
-					<div class="v">Account-scoped</div>
-				</div>
-				<div class="fact">
-					<div class="k">Skill needed</div>
-					<div class="v">Zero</div>
-				</div>
+			<h2 id="at-a-glance">Doodle AI at a glance</h2>
+			<div class="about-table-wrap">
+				<table class="about-table">
+					<caption>Summary of what Doodle AI is and what it costs.</caption>
+					<tbody>
+						{GLANCE_ROWS.map(([k, v]) => (
+							<tr><th scope="row">{k}</th><td>{v}</td></tr>
+						))}
+					</tbody>
+				</table>
 			</div>
 
-			<h2>What this isn't</h2>
+			<h2 id="how-the-agent-works">How the agent works</h2>
 			<p>
-				There's no feed or public gallery. Your account-scoped chats, moodboard, saved characters, and
-				generated results are visible only to you through the app. We don't build an advertising profile,
-				and provider credentials are never exposed to your browser.
+				Most "AI photo" products are a grid of presets: you pick a filter and hope it is the one you
+				meant. Doodle AI inverts that. You describe the outcome, and an agent decides how to get there.
+			</p>
+			<p>
+				Each skill is a self-contained package of instructions the agent reads before it draws, so the
+				catalogue is the agent's actual capability list rather than a menu bolted onto a single model.
+				On every turn the agent picks exactly one skill, calls a generation tool with your photo, and
+				then offers three concrete next steps — a variation in the same style, a different skill that
+				follows naturally, or a refinement pass. It can also read and rearrange your canvas, so a
+				multi-image set arrives laid out instead of piled up.
+			</p>
+			<p>
+				Refinement is conversational. "Thicker outline", "warmer paper", "make the expressions more
+				distinct" are all valid instructions — there is no prompt to hand-edit and no seed to manage.
 			</p>
 
-			<h2>Who made this</h2>
+			<h2 id="skills">What the skills can generate</h2>
 			<p>
-				doodleai.art is a small side project — built fast, deployed on Cloudflare's edge. It's
-				the kind of thing that exists because it was fun enough to ship.
+				Every drawing style is a skill. Both the chat and the tool pages draw on the same catalogue,
+				so nothing is exclusive to one route.
+			</p>
+			<div class="about-table-wrap">
+				<table class="about-table">
+					<caption>Runnable skills by category, generated from the live skill catalogue.</caption>
+					<thead>
+						<tr>
+							<th scope="col">Category</th>
+							<th scope="col">Skills</th>
+							<th scope="col">Photo needed</th>
+							<th scope="col">Images per run</th>
+							<th scope="col">Examples</th>
+						</tr>
+					</thead>
+					<tbody>
+						{CATEGORY_ROWS.map((row) => (
+							<tr>
+								<th scope="row">{row.label}</th>
+								<td>{row.count}</td>
+								<td>{row.photo}</td>
+								<td>{row.images}</td>
+								<td>{row.examples}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<p>
+				{FIGURES.packSkills} of the {FIGURES.runnable} skills are multi-image packs: one request returns
+				a whole set — a run of expressions, four seasons, a sheet of stickers — rather than a single
+				frame. The full list, with a real sample output for each, is on the
+				<a href="/skills/">skills page</a>.
+			</p>
+
+			<h2 id="comparison">How Doodle AI compares</h2>
+			<p>
+				Three different kinds of product answer "turn my photo into art". They fail in different places.
+			</p>
+			<div class="about-table-wrap">
+				<table class="about-table">
+					<caption>Doodle AI compared with preset filter apps and general-purpose image models.</caption>
+					<thead>
+						<tr>
+							{COMPARISON_HEAD.map((h) => <th scope="col">{h || 'Dimension'}</th>)}
+						</tr>
+					</thead>
+					<tbody>
+						{COMPARISON_ROWS.map((row) => (
+							<tr>
+								<th scope="row">{row[0]}</th>
+								{row.slice(1).map((c) => <td>{c}</td>)}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+
+			<h2 id="generation">How image generation works</h2>
+			<p>
+				Generation runs server-side through Doodle AI's own platform connection, so no provider
+				credential ever reaches your browser and there is no API key for you to obtain. Chat is routed
+				through OpenRouter; images are produced and hosted by PicX. Each returned image is a permanent
+				URL you can download.
+			</p>
+			<p>
+				Credits are spent per image and cost the same whatever the style: {FIGURES.creditsPerImage} credit
+				each, so a single avatar costs 1 and a {FIGURES.maxImages}-image pack costs {FIGURES.maxImages}. An
+				image that fails is refunded automatically rather than silently charged. Credits are shared at the
+				team level, not per person, so a workspace draws from one balance.
+			</p>
+
+			<h2 id="roadmap">Roadmap</h2>
+			<p>
+				These are not available yet. They are listed because "what is planned" is a fair question, and
+				because the honest answer is more useful than an implied one.
+			</p>
+			<div class="about-table-wrap">
+				<table class="about-table">
+					<caption>Planned work. Nothing in this table is available today.</caption>
+					<thead>
+						<tr><th scope="col">Planned</th><th scope="col">Status</th></tr>
+					</thead>
+					<tbody>
+						{ROADMAP_ROWS.map(([k, v]) => (
+							<tr><th scope="row">{k}</th><td>{v}</td></tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+
+			<h2 id="faq">Frequently asked questions</h2>
+			{FAQ.map((item) => (
+				<div class="about-faq-item">
+					<h3>{item.question}</h3>
+					<p>{item.answer}</p>
+				</div>
+			))}
+
+			<h2 id="what-this-isnt">What this isn't</h2>
+			<p>
+				There is no feed and no public gallery. Your chats, boards, saved characters and generated
+				results are account-scoped and visible only to you through the app. We do not build an
+				advertising profile, and provider credentials are never exposed to the browser. It does not
+				generate video, and it is not a general-purpose image model — it draws in one house style, on
+				purpose.
+			</p>
+
+			<h2 id="who-made-this">Who made this</h2>
+			<p>
+				Doodle AI is built by <a href="https://github.com/Type-Think-AI/doodle-ai" target="_blank" rel="noopener noreferrer">Type-Think-AI</a>,
+				open source under the MIT licence, and deployed on Cloudflare's edge. The skill catalogue,
+				the agent instructions and the generation pipeline are all in the public repository.
 			</p>
 		</div>
 
-		<div class="page-cta">
-			<a href="/">Start doodling →</a>
+		<div class="page-cta about-cta">
+			<h2>Turn a photo into a doodle</h2>
+			<p>Free to start, {FIGURES.signupGrant} credits on signup, no card required.</p>
+			<a class="about-btn about-btn-primary" href="/">Open Doodle AI →</a>
+			<p class="about-cta-alt">
+				Or start from a specific job on the <a href="/tools/">free tools</a> page.
+			</p>
 		</div>
 	</main>
 
@@ -96,3 +262,94 @@ import '../styles/page.css';
 		if (themeToggle) initThemeToggle(themeToggle);
 	</script>
 </AppLayout>
+
+<style>
+	/* Tables are the point of this page — they are what survives extraction into
+	   an AI answer — so they get real styling rather than browser defaults. */
+	.about-table-wrap {
+		overflow-x: auto;
+		margin: 18px 0 26px;
+		border: 1px solid var(--border2);
+		border-radius: 12px;
+	}
+	.about-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 14px;
+		min-width: 520px;
+	}
+	.about-table caption {
+		caption-side: top;
+		text-align: left;
+		padding: 11px 14px 10px;
+		font-size: 12.5px;
+		color: var(--text-dimmer);
+		border-bottom: 1px solid var(--border2);
+	}
+	.about-table th,
+	.about-table td {
+		padding: 10px 14px;
+		text-align: left;
+		vertical-align: top;
+		border-top: 1px solid var(--border);
+		line-height: 1.5;
+	}
+	.about-table thead th {
+		font-size: 12px;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: var(--text-dimmer);
+		font-weight: 500;
+		border-top: 0;
+	}
+	.about-table tbody th[scope="row"] {
+		color: var(--text);
+		font-weight: 500;
+		white-space: nowrap;
+	}
+	.about-table tbody td { color: var(--text-dim); }
+	.about-table tbody tr:hover { background: var(--hover); }
+
+	.about-hero-cta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-top: 22px;
+	}
+	.about-btn {
+		display: inline-flex;
+		align-items: center;
+		height: 42px;
+		padding: 0 18px;
+		border-radius: 999px;
+		font-size: 14px;
+		text-decoration: none;
+		transition: background 0.15s, border-color 0.15s;
+	}
+	.about-btn-primary {
+		background: var(--accent);
+		color: #241a00;
+		border: 1px solid var(--accent);
+		font-weight: 500;
+	}
+	.about-btn-primary:hover { background: color-mix(in srgb, var(--accent) 86%, #fff); }
+	.about-btn-ghost {
+		border: 1px solid var(--border3);
+		color: var(--text);
+	}
+	.about-btn-ghost:hover { background: var(--hover); }
+
+	.about-faq-item { margin: 0 0 18px; }
+	.about-faq-item h3 { font-size: 15.5px; margin: 0 0 6px; color: var(--text); }
+	.about-faq-item p { margin: 0; }
+
+	.about-cta { text-align: center; }
+	.about-cta h2 { margin: 0 0 6px; }
+	.about-cta p { margin: 0 0 16px; color: var(--text-dim); }
+	.about-cta-alt { margin-top: 14px !important; font-size: 13px; }
+
+	@media (max-width: 720px) {
+		.about-table { min-width: 460px; }
+		.about-btn { height: 46px; }
+	}
+</style>
