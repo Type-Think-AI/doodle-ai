@@ -3,10 +3,10 @@ title: "Photo to Coloring Page — Turn a Photo into Line Art"
 description: "Turn a photo into a coloring page at doodleai.art. The crayon-based skill draws a clean line-art doodle from your photo that you can print and color in. How it works, prompt tips, credits, and honest limits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
-category: "guide"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_fec5e9ba-5a52-4f7d-9e09-9a73a65f1752.jpg"
+category: "tool"
 cluster: "coloring"
-skill: "crayon"
+skill: "coloring"
 primaryKeyword: "photo to coloring page"
 faq:
   - question: "How do I turn a photo into a coloring page?"

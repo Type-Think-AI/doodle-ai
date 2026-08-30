@@ -3,7 +3,7 @@ title: "Canva Photo to Cartoon — How Doodle AI Compares"
 description: "Comparing Canva photo to cartoon with doodleai.art: a chat-first converter that redraws your photo into a hand-drawn cartoon. Sign in, attach a photo, run the Normal skill; 1 credit each, free credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_8c79804a-aafc-43e8-9459-a56409d618e3.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

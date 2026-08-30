@@ -3,7 +3,7 @@ title: "Printable Doodle Coloring Pages — Print Your Own Line Art"
 description: "Printable doodle coloring pages at doodleai.art: make a clean doodle outline from a photo, download, and print to color. Sign in, attach a photo, run the crayon skill; 1 credit each, free credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_ba8e18df-504b-480e-9276-d2b17ddaf67f.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

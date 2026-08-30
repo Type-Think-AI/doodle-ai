@@ -3,7 +3,7 @@ title: "Photo to Cartoon AI Free — AI Cartoons, Free to Start"
 description: "Photo to cartoon AI free at doodleai.art: an AI model redraws your photo and new accounts get free starter credits. Sign in, attach a photo, run the Normal skill; 1 credit each, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_7eb63ae3-92fd-45ac-8d19-8f5ab5543d09.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

@@ -3,7 +3,7 @@ title: "Photo to Cartoon Free — Free Starter Credits, No Paywall"
 description: "Photo to cartoon free at doodleai.art: new accounts get free starter credits. Sign in, attach a photo, run the Normal skill; each cartoon is 1 credit and refunds on failure. No card, no paywall."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_fcecf149-c345-4f8b-acca-93d91f6d89df.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

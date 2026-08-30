@@ -3,7 +3,7 @@ title: "Doodle Generator — Make a Hand-Drawn Doodle from a Photo"
 description: "A doodle generator that starts from your photo. At doodleai.art, attach a picture and the Normal skill draws one square doodle. Photo-first, not text-to-sketch. How to run it, prompts, credits, and limits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_a8e32e40-b0e4-40fd-9552-87b1ffce19ab.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

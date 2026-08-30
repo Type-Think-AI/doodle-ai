@@ -3,7 +3,7 @@ title: "Photo to Cartoon AI — AI Redraws Your Photo as a Cartoon"
 description: "Photo to cartoon AI at doodleai.art uses an illustration model to redraw your photo as a cartoon. Sign in, attach a photo, run the Normal skill; 1 credit each, free starter credits, refunds on fail."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_c8e3a3f3-a0b3-4437-966f-f757e425a991.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

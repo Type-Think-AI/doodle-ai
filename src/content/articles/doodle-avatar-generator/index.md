@@ -3,7 +3,7 @@ title: "Doodle Avatar Generator — A Doodle Avatar from Your Photo"
 description: "Make a doodle avatar at doodleai.art. Attach a photo and the Normal skill draws a square doodle avatar you can set as a profile picture. How the generator works, prompts, credits, and honest limits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_8d9849eb-5555-4f5e-bac6-da27771368dd.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

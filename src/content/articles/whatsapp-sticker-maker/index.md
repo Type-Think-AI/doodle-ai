@@ -3,7 +3,7 @@ title: "WhatsApp Sticker Maker — Doodle Sticker Sheets from a Photo"
 description: "Use the doodle sticker maker at doodleai.art to turn a photo into a square die-cut doodle sticker sheet. What it makes, how it differs from a WhatsApp export, and how to run the Sticker skill. Credits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_560d04c6-b592-4f2a-a1a8-e54d87dca174.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_c5846a69-854d-4eb9-9a08-713a82fb16b0.jpg"
 category: "guide"
 cluster: "stickers"
 skill: "stickers"

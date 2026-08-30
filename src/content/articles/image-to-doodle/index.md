@@ -3,7 +3,7 @@ title: "Image to Doodle Converter — Redraw Any Image as a Doodle"
 description: "Turn an image to a doodle at doodleai.art. Upload a saved image, screenshot, or portrait and the Normal skill redraws it as a square hand-drawn doodle. How it handles non-camera images, prompts, and credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_c5396147-81dd-4784-9a47-051659e0b33a.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

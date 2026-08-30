@@ -3,7 +3,7 @@ title: "Photo to Doodle Converter — Turn a Photo into a Doodle"
 description: "Convert a photo to a doodle at doodleai.art: sign in, attach a face-forward photo, and run the Normal skill for one square hand-drawn doodle. How the converter works, prompts, credits, and honest limits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_32a389f2-ab0c-4cb0-8a89-0b3ddf56c43f.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

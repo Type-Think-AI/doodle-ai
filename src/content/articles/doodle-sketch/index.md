@@ -3,7 +3,7 @@ title: "Doodle Sketch — Turn a Photo into a Sketchy Doodle"
 description: "Doodle sketch at doodleai.art: turn a photo into a sketchy hand-drawn doodle. Sign in, attach a photo, run the Normal skill, and download a square sketch for 1 credit. Free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_03cfa0b2-2f54-4b6f-89a3-29cf523608a3.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

@@ -3,7 +3,7 @@ title: "Hand-Drawn Image Generator — Photo to Hand-Drawn Doodle"
 description: "The hand-drawn image generator at doodleai.art redraws your photo with a hand-drawn look. Sign in, attach a photo, run the Normal skill; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_bcf0bae1-dbe2-4e7a-b4af-93e3abc180e7.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

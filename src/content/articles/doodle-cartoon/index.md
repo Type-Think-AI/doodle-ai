@@ -3,7 +3,7 @@ title: "Doodle Cartoon — Turn a Photo into a Doodle Cartoon"
 description: "Doodle cartoon at doodleai.art: turn a photo into a hand-drawn doodle cartoon. Sign in, attach a photo, run the Normal skill, and download a square image for 1 credit. Free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_7f20976e-06cb-4aa3-803f-6a618f45fc45.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

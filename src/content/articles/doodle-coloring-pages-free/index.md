@@ -3,7 +3,7 @@ title: "Doodle Coloring Pages Free — Free Starter Credits to Begin"
 description: "Doodle coloring pages free at doodleai.art: new accounts get free starter credits. Sign in, attach a photo, run the crayon skill for a line-art outline; 1 credit each, refunds on failure, no paywall."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_c0a0b242-b538-44da-9396-2a337a0e43a2.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

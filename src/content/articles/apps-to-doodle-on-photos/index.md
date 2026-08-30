@@ -3,7 +3,7 @@ title: "Apps to Doodle on Photos — A Web Alternative That Redraws"
 description: "Looking for apps to doodle on photos? doodleai.art runs in your browser and redraws the whole photo as a doodle. Sign in, attach a photo, run the Normal skill; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_58d78a71-67f1-4ccd-8c87-3c7895fa7496.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

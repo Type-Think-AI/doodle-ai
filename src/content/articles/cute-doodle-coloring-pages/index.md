@@ -3,7 +3,7 @@ title: "Cute Doodle Coloring Pages — Sweet Outlines to Color"
 description: "Cute doodle coloring pages at doodleai.art: turn a photo into a sweet, rounded doodle outline to color. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_088412aa-0aab-4a87-b25d-b2d300ccc24d.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

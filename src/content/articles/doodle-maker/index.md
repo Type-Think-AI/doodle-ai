@@ -3,7 +3,7 @@ title: "Doodle Maker — Make a Doodle from a Photo (Not a Video)"
 description: "A doodle maker that draws a still doodle from your photo at doodleai.art. Attach a picture, run the Normal skill, download one square doodle. Not a whiteboard-video tool. Prompts, credits, and limits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_87093148-b075-4414-892e-a8fad7ffe4a2.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

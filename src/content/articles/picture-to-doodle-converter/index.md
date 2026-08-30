@@ -3,7 +3,7 @@ title: "Picture to Doodle Converter — Redraw a Picture as a Doodle"
 description: "The picture to doodle converter at doodleai.art redraws a camera-roll picture as a hand-drawn doodle. Sign in, attach the picture, run the Normal skill; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_c645ba6f-b91e-408d-b7e5-5c0f40e780e1.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

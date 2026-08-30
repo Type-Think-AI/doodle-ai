@@ -3,7 +3,7 @@ title: "Onam Doodle — A Festive Onam Portrait from Your Photo"
 description: "Make an Onam doodle at doodleai.art: attach your photo and the Festival Pack draws a festive Onam portrait with pookalam-style color. A doodle of you for Onam — no deity art. How it works, prompts, and credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_9055f3f4-b6a3-4528-a558-70eda48ffd45.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_411ed038-4180-4f63-979d-a53c82f22269.jpg"
 category: "guide"
 cluster: "festival"
 skill: "festival"

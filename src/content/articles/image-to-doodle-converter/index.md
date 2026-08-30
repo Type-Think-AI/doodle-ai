@@ -3,7 +3,7 @@ title: "Image to Doodle Converter — Turn a Saved Image into a Doodle"
 description: "The image to doodle converter at doodleai.art redraws a saved image as a hand-drawn doodle. Sign in, attach the image, run the Normal skill; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_07dd7f34-188e-44d0-bbb6-e484bd1f204f.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

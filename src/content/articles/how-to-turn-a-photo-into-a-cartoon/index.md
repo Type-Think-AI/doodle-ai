@@ -3,7 +3,7 @@ title: "How to Turn a Photo into a Cartoon — Step-by-Step Guide"
 description: "How to turn a photo into a cartoon at doodleai.art: sign in, attach a photo, run the Normal skill, and download a square cartoon. A short step-by-step — 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_5ec5beb8-54a5-4947-b3ab-76e2332d6845.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

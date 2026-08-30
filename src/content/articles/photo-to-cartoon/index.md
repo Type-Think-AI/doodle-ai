@@ -3,7 +3,7 @@ title: "Photo to Cartoon: Turn a Photo into a Doodle"
 description: "Turn a photo to cartoon at doodleai.art: sign in, attach a face-forward selfie, run the Normal doodle skill, and get one square hand-drawn avatar. Photo prep, prompts, credits, privacy, and limits."
 pubDate: 2026-08-25
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_fe46119c-7ab0-449b-95dd-399c090c12ac.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_d09c9f08-2a75-499e-bc69-9f2d73d6e7ab.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

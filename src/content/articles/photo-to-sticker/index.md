@@ -3,7 +3,7 @@ title: "Photo to Sticker: WhatsApp Doodle Sticker Sheets from a Photo"
 description: "Turn a photo to sticker at doodleai.art: run the Sticker Pack skill for a square die-cut doodle sticker sheet. What it is, how it differs from a WhatsApp/iMessage pack and a print shop, and how to make one."
 pubDate: 2026-08-25
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_4ca202e9-1bc9-4124-ab06-165205f2d4f5.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_ab2829bf-6c64-4a53-afdc-5ca56b7dd870.jpg"
 category: "explainer"
 cluster: "stickers"
 skill: "stickers"

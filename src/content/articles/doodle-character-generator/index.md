@@ -3,7 +3,7 @@ title: "Doodle Character Generator — Describe a Character, Get a Doodle"
 description: "The doodle character generator at doodleai.art draws a fictional character from your words — no photo. Sign in, describe it, run the Surprise skill; 1 credit each, free starter credits, refunds on fail."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_33f43b6a-1bc7-48b8-af1e-4b44abe09a73.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_5c3c8f6d-bf05-412c-b52e-166a5f3afa42.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "surprise"

@@ -3,7 +3,7 @@ title: "Picture to Doodle — Turn a Picture into a Hand-Drawn Doodle"
 description: "Turn a picture into a doodle at doodleai.art. Upload a camera-roll picture and the Normal skill draws one square doodle that keeps your face, hair, and clothes. Popular in India — here is how it works."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_245d77c4-bf2f-491b-b7af-9f88b668b6f6.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

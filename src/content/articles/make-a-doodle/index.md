@@ -3,7 +3,7 @@ title: "Make a Doodle — Make One From Your Photo in Seconds"
 description: "Make a doodle from your photo at doodleai.art. Sign in, attach a photo, run the Normal skill, and download one square hand-drawn doodle for 1 credit. Free starter credits; refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_90ef43d2-6a2b-4867-bf39-32777bc7ea40.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

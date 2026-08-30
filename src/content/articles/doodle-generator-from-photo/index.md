@@ -3,7 +3,7 @@ title: "Doodle Generator From Photo — Start with Your Picture"
 description: "The doodle generator from photo at doodleai.art starts with your picture. Sign in, attach a photo, run the Normal skill, spend 1 credit, and download a square doodle. Free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_bb1a9fa8-4b7c-4477-ae3c-566b89191247.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

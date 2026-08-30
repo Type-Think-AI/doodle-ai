@@ -3,7 +3,7 @@ title: "Doodle Idea Generator — Spark and Draw Doodle Ideas"
 description: "The doodle idea generator at doodleai.art sparks an idea and draws it — the Surprise skill invents a doodle from your words, no photo. Sign in, type, generate; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_33f43b6a-1bc7-48b8-af1e-4b44abe09a73.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_c7bb2813-cc56-4e8d-a88d-476ffa66dd82.jpg"
 category: "prompts"
 cluster: "learn"
 skill: "surprise"

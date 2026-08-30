@@ -3,7 +3,7 @@ title: "Convert Photo to Doodle — Redraw a Picture by Hand"
 description: "Convert a photo to a doodle at doodleai.art. Sign in, attach a photo, run the Normal skill, and get one square hand-drawn doodle for 1 credit. Free starter credits; refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_04ce7343-76eb-4f4d-97bc-5569e6aa786e.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

@@ -3,7 +3,7 @@ title: "What Does an AI Cartoon Generator Actually Do?"
 description: "The phrase AI cartoon generator mixes photo-to-cartoon, text-to-image, script-to-animation, and video. This AEO guide maps those jobs and explains doodleai.art as a conversational still-image studio, not a video or animation tool."
 pubDate: 2026-08-25
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6fdadf4d-9f96-473a-8323-ff20f15087e8.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_0ab9f8b8-2e5d-4dee-81a7-fd8e9ee179eb.jpg"
 category: "explainer"
 cluster: "cartoon"
 skill: "normal"

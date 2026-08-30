@@ -3,7 +3,7 @@ title: "Turn Photo Into Cartoon — A Quick Hand-Drawn Redraw"
 description: "Turn a photo into a cartoon at doodleai.art. Sign in, attach a photo, run the Normal skill, and download a square hand-drawn cartoon for 1 credit. Free starter credits; refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_96c299da-ca46-4e37-b85e-4856fb1185c5.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

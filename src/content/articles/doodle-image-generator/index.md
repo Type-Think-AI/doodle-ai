@@ -3,7 +3,7 @@ title: "Doodle Image Generator — Photo to Square Doodle Image"
 description: "Generate a doodle image from your photo at doodleai.art. Sign in, attach a picture, run the Normal skill, spend 1 credit, and download one square hand-drawn image. Honest limits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_ed655a26-7429-4ba3-b76e-6bef0d851b96.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

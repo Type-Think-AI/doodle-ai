@@ -3,7 +3,7 @@ title: "Christmas Doodle Coloring Pages — Festive Outlines to Color"
 description: "Christmas doodle coloring pages at doodleai.art: turn a photo into a festive doodle outline with holiday touches to color. Sign in, attach a photo, run the crayon skill; 1 credit each, free credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_83a40a4e-ca93-4a64-ba29-7976a70282cc.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

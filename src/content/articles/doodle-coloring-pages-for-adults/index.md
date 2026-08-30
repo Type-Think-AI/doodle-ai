@@ -3,7 +3,7 @@ title: "Doodle Coloring Pages for Adults — Unwind with Line Art"
 description: "Doodle coloring pages for adults at doodleai.art: turn a photo into a detailed doodle outline for calm coloring. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_a9d712f3-d13c-4335-8772-0b4f7840d8cc.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

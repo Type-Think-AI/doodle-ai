@@ -3,7 +3,7 @@ title: "Doodle Drawing Generator — Turn a Photo into a Drawing"
 description: "The doodle drawing generator at doodleai.art redraws your photo as a hand-drawn doodle. Sign in, attach a photo, run the Normal skill, spend 1 credit, and download a square drawing."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_df59fe8c-f78a-48be-ab3f-4049021bb868.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

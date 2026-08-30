@@ -3,7 +3,7 @@ title: "AI Doodle Art Generator — Photo to Hand-Drawn Doodle"
 description: "Use the AI doodle art generator at doodleai.art: sign in, attach a photo, run the Normal skill, and get one square hand-drawn doodle. How it works, prompts, and honest credit limits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_daa29e50-87c3-45ab-b494-6d1a6d816f5a.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

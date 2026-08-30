@@ -3,7 +3,7 @@ title: "Convert Photo to Doodle Online Free — No Install, Free Start"
 description: "Convert a photo to a doodle online free at doodleai.art — runs in your browser, no install. Sign in, attach a photo, run the Normal skill; free starter credits, then 1 credit each, refunds on fail."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_d7a5c389-344c-416e-8777-2166fbbb72c3.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

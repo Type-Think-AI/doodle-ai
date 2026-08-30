@@ -3,7 +3,7 @@ title: "Holi Doodle — A Colorful Holi Portrait from Your Photo"
 description: "Make a Holi doodle at doodleai.art: attach your photo and the Festival Pack draws a festive Holi portrait splashed with color. A doodle of you for Holi — no deity art. How it works, prompts, credits, and limits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_9055f3f4-b6a3-4528-a558-70eda48ffd45.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_ff0094fe-cb90-4815-a784-47f84ec2c6ad.jpg"
 category: "guide"
 cluster: "festival"
 skill: "festival"

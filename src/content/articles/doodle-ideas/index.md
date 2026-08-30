@@ -3,10 +3,10 @@ title: "Doodle Ideas — Prompts You Can Generate Right Now"
 description: "Doodle ideas you can actually draw. At doodleai.art, pick an idea and generate it with the Surprise skill — no photo needed — or doodle yourself from a photo. A generator plus prompts, not a Pinterest listicle."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_33f43b6a-1bc7-48b8-af1e-4b44abe09a73.png"
-category: "prompts"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_b884e6ba-83ec-4928-8a14-f5973b9472d3.jpg"
+category: "tool"
 cluster: "learn"
-skill: "surprise"
+skill: "idea"
 primaryKeyword: "doodle ideas"
 faq:
   - question: "Is this a list of doodle ideas or a generator?"

@@ -3,7 +3,7 @@ title: "Doodle Prompts — Ideas to Feed the Surprise Skill"
 description: "Doodle prompts at doodleai.art: describe a subject and the Surprise skill draws a fictional doodle — no photo. Sign in, type a prompt, generate; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_33f43b6a-1bc7-48b8-af1e-4b44abe09a73.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_be2e3b63-f40b-4c51-87b4-493d31bb9059.jpg"
 category: "prompts"
 cluster: "learn"
 skill: "surprise"

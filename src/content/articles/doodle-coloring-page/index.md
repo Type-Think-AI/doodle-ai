@@ -3,7 +3,7 @@ title: "Doodle Coloring Page — Make One From Your Photo"
 description: "Make a doodle coloring page at doodleai.art: the crayon skill turns your photo into a clean line-art outline to color. Sign in, attach a photo, spend 1 credit; free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_a5fd5201-5488-41cd-8d77-b26d69d9e9d8.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

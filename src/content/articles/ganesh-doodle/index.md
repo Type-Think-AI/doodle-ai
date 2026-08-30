@@ -3,7 +3,7 @@ title: "Ganesh Chaturthi Doodle — A Festive Portrait from Your Photo"
 description: "Make a Ganesh Chaturthi doodle at doodleai.art: attach your photo and the Festival Pack draws a festive celebration portrait of you. A doodle of you for the festival — no deity art. Prompts, credits, and limits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_9055f3f4-b6a3-4528-a558-70eda48ffd45.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_5e3bec00-3596-4669-be63-2b1b6bae42f1.jpg"
 category: "guide"
 cluster: "festival"
 skill: "festival"

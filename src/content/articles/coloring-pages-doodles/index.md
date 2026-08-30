@@ -3,10 +3,10 @@ title: "Coloring Pages Doodles — Doodle Outlines You Can Color"
 description: "Coloring pages doodles at doodleai.art: turn a photo into a hand-drawn doodle outline to color. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
-category: "guide"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_0f8218ee-52a1-40ff-81bb-2a33ff411bb0.jpg"
+category: "tool"
 cluster: "coloring"
-skill: "crayon"
+skill: "coloring"
 primaryKeyword: "coloring pages doodles"
 faq:
   - question: "What makes these doodle coloring pages?"

@@ -3,7 +3,7 @@ title: "Doodle Portrait — A Hand-Drawn Portrait from Your Photo"
 description: "Make a doodle portrait at doodleai.art. Attach a photo and the Normal skill draws a square hand-drawn portrait that keeps your face, hair, and expression. Prompt tips, credits, and honest limits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_affb7549-ae40-4db6-bcff-a48602bb9a4a.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

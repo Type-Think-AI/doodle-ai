@@ -3,10 +3,10 @@ title: "Coloring Page Generator — Turn a Photo into Line Art"
 description: "The coloring page generator at doodleai.art turns your photo into a clean doodle outline to color. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
-category: "guide"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_16753f64-0b9c-4473-9ce8-ef175da803ac.jpg"
+category: "tool"
 cluster: "coloring"
-skill: "crayon"
+skill: "coloring"
 primaryKeyword: "coloring page generator"
 faq:
   - question: "What does the coloring page generator make?"

@@ -3,7 +3,7 @@ title: "Photo to Cartoon Generator — Turn a Photo into a Cartoon"
 description: "The photo to cartoon generator at doodleai.art redraws your photo as a hand-drawn cartoon. Sign in, attach a photo, run the Normal skill; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_e9ef48a2-d4a1-481b-9d00-95b03dcaf8b3.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

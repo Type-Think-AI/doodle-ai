@@ -3,7 +3,7 @@ title: "Doodle Art Maker — Make Doodle Art from Your Photo"
 description: "The doodle art maker at doodleai.art turns a photo into hand-drawn doodle art. Sign in, attach a photo, run the Normal skill, spend 1 credit per piece, and download a square image."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_8959dd85-30b4-41b5-8bbf-26ea93bad94c.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

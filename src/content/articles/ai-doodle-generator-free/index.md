@@ -3,7 +3,7 @@ title: "AI Doodle Generator Free — Free Starter Credits to Begin"
 description: "Free AI doodle generator at doodleai.art: new accounts get free starter credits. Sign in, attach a photo, run the Normal skill; each doodle is 1 credit and refunds on failure. No paywall."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_0d66ca21-8415-4010-ba3f-20020987755f.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

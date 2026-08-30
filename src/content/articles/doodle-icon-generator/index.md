@@ -3,7 +3,7 @@ title: "Doodle Icon Generator — A Doodle Icon from a Photo or Idea"
 description: "Make a doodle icon at doodleai.art. Turn a photo or an idea into a simple square hand-drawn doodle icon with the Normal or Surprise skill. Not a new icon engine — how it works, prompts, and credits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_03b964ee-96b2-400e-bf95-600f38e112fb.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

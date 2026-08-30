@@ -3,7 +3,7 @@ title: "Couple Doodle — Turn a Couple Photo into a Doodle"
 description: "Make a couple doodle at doodleai.art. Upload a photo of two people and the Couple skill draws one hand-drawn doodle of the pair. Great for anniversaries and DPs. How it works, prompts, credits, and limits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_5ef46520-6769-496f-9f10-35863fac3234.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_f4d724e9-ddc1-4b63-93ac-1a6df1a3df44.jpg"
 category: "guide"
 cluster: "social"
 skill: "couple"

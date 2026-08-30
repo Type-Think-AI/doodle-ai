@@ -3,10 +3,10 @@ title: "Coloring Doodle Pages — Print Doodle Outlines to Color"
 description: "Coloring doodle pages at doodleai.art: the crayon skill draws doodle outlines from your photo to print and color. Sign in, attach a photo, spend 1 credit; free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
-category: "guide"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_486bdb6b-6d8e-47f2-a820-18af71327eae.jpg"
+category: "tool"
 cluster: "coloring"
-skill: "crayon"
+skill: "coloring"
 primaryKeyword: "coloring doodle pages"
 faq:
   - question: "How do I get a doodle page to color?"

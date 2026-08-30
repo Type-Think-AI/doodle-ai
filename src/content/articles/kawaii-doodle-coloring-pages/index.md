@@ -3,7 +3,7 @@ title: "Kawaii Doodle Coloring Pages — Cute Japanese-Style Outlines"
 description: "Kawaii doodle coloring pages at doodleai.art: turn a photo into a cute kawaii-style doodle outline to color. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_4349f8b6-b059-474b-9e8e-74d8950d1a78.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

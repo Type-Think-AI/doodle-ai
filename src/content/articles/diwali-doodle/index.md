@@ -3,7 +3,7 @@ title: "Diwali Doodle — A Festive Diwali Portrait from Your Photo"
 description: "Make a Diwali doodle at doodleai.art: attach your photo and the Festival Pack draws a festive portrait with diyas, lights, and rangoli motifs. A doodle of you for Diwali — no deity art. Prompts and credits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_9055f3f4-b6a3-4528-a558-70eda48ffd45.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_5da7c61f-fafd-4493-8dfd-934e7b8188c5.jpg"
 category: "guide"
 cluster: "festival"
 skill: "festival"

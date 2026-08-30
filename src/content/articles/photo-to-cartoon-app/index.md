@@ -3,7 +3,7 @@ title: "Photo to Cartoon App — A Web App That Needs No Install"
 description: "Want a photo to cartoon app? doodleai.art works in your phone browser, no install. Sign in, attach a photo, run the Normal skill; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_e0808cd3-0616-40a2-a932-8b6176d54048.jpg"
 category: "guide"
 cluster: "cartoon"
 skill: "normal"

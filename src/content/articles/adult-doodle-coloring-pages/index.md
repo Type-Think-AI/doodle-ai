@@ -3,7 +3,7 @@ title: "Adult Doodle Coloring Pages — Detailed Outlines to Color"
 description: "Adult doodle coloring pages at doodleai.art: turn a photo into a detailed doodle outline for relaxed coloring. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_2edda344-ce66-4d8f-92ac-d76a0ca25ce5.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

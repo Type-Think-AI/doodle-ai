@@ -3,7 +3,7 @@ title: "How to Make a Personalized Digital Doodle Gift from a Photo"
 description: "Turn a consented photo into a square digital birthday, thank-you, anniversary, or celebration doodle at doodleai.art with the Gift skill. Plan the occasion, spend credits on purpose, then download and send the still yourself."
 pubDate: 2026-08-25
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_e3c22eb6-cc42-41f2-8719-2e68f10aa526.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_c5cf4d4b-9f4f-4458-8ac3-ec1d912df459.jpg"
 category: "guide"
 cluster: "gifts"
 skill: "gift"

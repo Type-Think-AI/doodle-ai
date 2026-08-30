@@ -3,7 +3,7 @@ title: "Doodles Coloring Pages — Turn Doodles into Colorable Outlines"
 description: "Doodles coloring pages at doodleai.art: the crayon skill draws colorable doodle outlines from your photo. Sign in, attach a photo, spend 1 credit; free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_dfc9f899-dfe6-49e2-805e-2bbb48c0715f.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

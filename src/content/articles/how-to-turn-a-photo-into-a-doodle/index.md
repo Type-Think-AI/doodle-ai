@@ -3,7 +3,7 @@ title: "How to Turn a Photo into a Doodle — Step-by-Step Guide"
 description: "How to turn a photo into a doodle at doodleai.art: sign in, attach a photo, run the Normal skill, and download a square doodle. A short step-by-step — 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_3bc84387-8839-48f9-b3e9-8419b1488b3a.jpg"
 category: "guide"
 cluster: "learn"
 skill: "normal"

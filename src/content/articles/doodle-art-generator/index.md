@@ -3,7 +3,7 @@ title: "Doodle Art Generator — Turn a Photo into Doodle Art"
 description: "A doodle art generator at doodleai.art. Attach a photo and the Normal skill draws hand-drawn doodle art that keeps your features. What counts as doodle art here, prompt tips, and credits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_5ff5fc70-b6b6-4f64-ba86-11f602bef2ea.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

@@ -3,10 +3,10 @@ title: "Random Doodle Generator — Surprise Me a Doodle"
 description: "A random doodle generator at doodleai.art. Hit the Surprise skill and it invents a fictional hand-drawn doodle character — no photo, no prompt required. How it works, how to steer the randomness, and credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_33f43b6a-1bc7-48b8-af1e-4b44abe09a73.png"
-category: "guide"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_17c8cc81-c9fd-407f-9564-5287fad79411.jpg"
+category: "tool"
 cluster: "learn"
-skill: "surprise"
+skill: "idea"
 primaryKeyword: "random doodle generator"
 faq:
   - question: "How does the random doodle generator work?"

@@ -3,7 +3,7 @@ title: "Cute Doodle — Make a Cute Hand-Drawn Doodle of You"
 description: "Make a cute doodle at doodleai.art. Attach a photo and the Normal skill draws an adorable hand-drawn doodle with a chibi, kawaii lean. How to prompt for cute, credits, and honest limits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_f5619b90-15f9-4df7-b731-17360c84988d.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

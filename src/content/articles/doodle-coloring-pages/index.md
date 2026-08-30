@@ -3,10 +3,10 @@ title: "Doodle Coloring Pages — Printable Line-Art Doodles"
 description: "Make printable doodle coloring pages at doodleai.art. The crayon-based skill turns a photo into a clean line-art doodle you can print and color. The hub for coloring variants, with prompts, credits, and limits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
-category: "guide"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_a023a2c1-1417-4534-9ef7-4db9cb7236de.jpg"
+category: "tool"
 cluster: "coloring"
-skill: "crayon"
+skill: "coloring"
 primaryKeyword: "doodle coloring pages"
 faq:
   - question: "How do I make doodle coloring pages?"

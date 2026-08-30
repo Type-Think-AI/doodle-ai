@@ -3,7 +3,7 @@ title: "Easy Doodle Coloring Pages — Simple Outlines to Color"
 description: "Easy doodle coloring pages at doodleai.art: turn a photo into a simple, bold doodle outline that's easy to color. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_e5d6b94f-3d80-4572-b717-f4a5e0b9fcc0.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

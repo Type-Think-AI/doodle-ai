@@ -3,7 +3,7 @@ title: "Zen Doodle Coloring Pages — Calm, Flowing Line Art to Color"
 description: "Zen doodle coloring pages at doodleai.art: turn a photo into a calm, flowing doodle outline for mindful coloring. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_1f778baa-62fd-4514-8f5b-44066c6dddac.jpg"
 category: "guide"
 cluster: "coloring"
 skill: "crayon"

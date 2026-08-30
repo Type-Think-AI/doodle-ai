@@ -3,10 +3,10 @@ title: "Doodle Art Coloring Pages — Line Art from Your Photo"
 description: "Doodle art coloring pages at doodleai.art: turn a photo into hand-drawn line art to color. Sign in, attach a photo, run the crayon skill; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png"
-category: "guide"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_7d258751-934c-4991-82d7-92bfe08b2cc4.jpg"
+category: "tool"
 cluster: "coloring"
-skill: "crayon"
+skill: "coloring"
 primaryKeyword: "doodle art coloring pages"
 faq:
   - question: "What is doodle art coloring?"

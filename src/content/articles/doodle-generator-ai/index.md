@@ -3,7 +3,7 @@ title: "Doodle Generator AI — AI-Powered Photo to Doodle"
 description: "The AI doodle generator at doodleai.art redraws your photo with an AI illustration model. Sign in, attach a photo, run the Normal skill, spend 1 credit, and download a square doodle."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_7bb6bcbb-be93-42d3-846b-5ac8f5b8041c.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

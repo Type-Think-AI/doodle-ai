@@ -3,7 +3,7 @@ title: "Doodle Generator Online — Photo to Doodle, No Download"
 description: "Doodle generator online at doodleai.art: sign in, attach a photo, run the Normal skill in your browser, and download a square doodle. Free starter credits, 1 credit each, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_cfa07ddc-5847-447a-bdd9-af19d701f3e9.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

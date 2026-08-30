@@ -3,7 +3,7 @@ title: "Photo to Doodle Converter — Convert Any Photo to a Doodle"
 description: "The photo to doodle converter at doodleai.art redraws your photo as a hand-drawn doodle. Sign in, attach a photo, run the Normal skill, spend 1 credit, download a square image. Free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_961d7d5c-7e50-4a13-9e0f-3406385740fa.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

@@ -3,7 +3,7 @@ title: "AI Doodle Maker — Make a Doodle from a Photo with AI"
 description: "An AI doodle maker at doodleai.art. Attach a photo and the Normal skill uses a generative model to draw a square hand-drawn doodle. Still images only. How it works, prompts, and credits inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_41b196b0-0905-4c80-bc82-5acf6e2dcfbd.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"

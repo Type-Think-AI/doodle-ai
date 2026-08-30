@@ -3,7 +3,7 @@ title: "Text to Doodle — Turn Words into a Hand-Drawn Doodle"
 description: "Text to doodle at doodleai.art: describe it in words and the Surprise skill draws a fictional doodle — no photo. Sign in, type, generate; 1 credit each, free starter credits, refunds on failure."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_33f43b6a-1bc7-48b8-af1e-4b44abe09a73.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_0144cfd9-60d6-4856-853c-a96c63cb822c.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "surprise"

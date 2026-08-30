@@ -3,10 +3,10 @@ title: "Doodle Prompt Generator — Ideas That Actually Draw"
 description: "A doodle prompt generator that also draws. At doodleai.art, grab a prompt idea and run the Surprise skill to generate a doodle instantly — no photo needed. Prompt patterns, credits, and how it works inside."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_33f43b6a-1bc7-48b8-af1e-4b44abe09a73.png"
-category: "prompts"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_b7684c6d-8603-4414-a689-3b43327bf5e8.jpg"
+category: "tool"
 cluster: "learn"
-skill: "surprise"
+skill: "idea"
 primaryKeyword: "doodle prompt generator"
 faq:
   - question: "What does the doodle prompt generator do?"

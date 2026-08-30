@@ -3,7 +3,7 @@ title: "Doodle Prompts Generator — Turn Prompts into Doodles"
 description: "The doodle prompts generator at doodleai.art draws a fictional doodle from a written prompt via the Surprise skill — no photo. Sign in, type, generate; 1 credit each, free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_33f43b6a-1bc7-48b8-af1e-4b44abe09a73.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_79a7b119-8750-4b2e-8974-fa2fc7a82144.jpg"
 category: "prompts"
 cluster: "learn"
 skill: "surprise"

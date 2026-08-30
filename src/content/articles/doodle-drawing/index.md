@@ -3,7 +3,7 @@ title: "Doodle Drawing — Turn a Photo into a Hand-Drawn Doodle"
 description: "Doodle drawing at doodleai.art: turn a photo into a loose hand-drawn doodle. Sign in, attach a photo, run the Normal skill, and download a square drawing for 1 credit. Free starter credits."
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
-heroImage: "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_ba60332e-5a30-43ea-8b44-962489cefb54.jpg"
 category: "guide"
 cluster: "doodle"
 skill: "normal"
