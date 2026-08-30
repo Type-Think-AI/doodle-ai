@@ -91,3 +91,103 @@
 		font-size: 13px;
 	}
 }
+
+/* ---- Related-prompt suggestion chips ----
+   The agent already writes 3 follow-ups per result; these make them tappable
+   instead of text the user has to retype. Separated from the prose by a rule
+   so they read as offered actions, not as part of the reply. */
+.chat-suggestions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 7px;
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid var(--border);
+}
+.chat-suggestion {
+	max-width: 100%;
+	height: 30px;
+	padding: 0 12px;
+	border-radius: 999px;
+	border: 1px solid var(--border3);
+	background: transparent;
+	color: var(--text-dim);
+	font-family: inherit;
+	font-size: 12.5px;
+	line-height: 1;
+	/* The label clips; the full text is what gets sent (see suggestions.ts). */
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+	transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.chat-suggestion:hover {
+	color: var(--text);
+	background: var(--hover);
+	border-color: color-mix(in srgb, var(--accent) 45%, var(--border3));
+}
+.chat-suggestion:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- Per-image download ----
+   Always visible on touch, where there is no hover to reveal it. */
+.chat-bubble-image-action {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	width: 26px;
+	height: 26px;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	background: rgba(15, 15, 15, 0.66);
+	backdrop-filter: blur(4px);
+	color: #fff;
+	font-family: inherit;
+	font-size: 14px;
+	line-height: 1;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	transition: opacity 0.14s ease-out;
+}
+.chat-bubble-image-wrap:hover .chat-bubble-image-action { opacity: 1; }
+.chat-bubble-image-action:focus-visible { opacity: 1; outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: none) {
+	.chat-bubble-image-action { opacity: 1; width: 32px; height: 32px; }
+}
+
+/* ---- Failed turn ----
+   Specificity matches `.chat-msg-assistant .chat-bubble` so the tint wins
+   without !important. */
+.chat-msg-assistant .chat-bubble-error {
+	border-color: color-mix(in srgb, var(--red) 40%, var(--border));
+	background: color-mix(in srgb, var(--red) 8%, var(--card));
+}
+.chat-msg-assistant .chat-bubble-error .chat-bubble-actions { margin-top: 10px; }
+
+/* ---- Out-of-credits call to action ----
+   Filled, unlike the ghost bubble actions: this is the one moment the user has
+   decided to spend and must not hit a dead end. */
+.chat-msg-cta { justify-content: flex-start; }
+.chat-credits-cta { margin-top: 0; }
+.chat-credits-cta-btn {
+	height: 34px;
+	padding: 0 15px;
+	border-radius: 999px;
+	border: 1px solid var(--accent);
+	background: color-mix(in srgb, var(--accent) 18%, transparent);
+	color: var(--text);
+	font-family: inherit;
+	font-size: 12.5px;
+	cursor: pointer;
+	transition: background 0.15s;
+}
+.chat-credits-cta-btn:hover { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.chat-credits-cta-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 860px) {
+	.chat-suggestion { height: 40px; font-size: 13px; padding: 0 14px; }
+	.chat-credits-cta-btn { height: 44px; font-size: 13px; }
+}

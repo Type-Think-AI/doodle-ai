@@ -1,8 +1,46 @@
 ---
+/* The style swatches are a "Style Gallery": the four THEMES each inject a
+   styleHint into the generation prompt (src/mastra/tools/generate-doodle.ts),
+   but the only way to choose one used to be a <select> buried in /settings, so
+   a real creative dial was invisible at the moment of creation. The swatches
+   write the same localStorage key that getStyleId() reads, so no request
+   plumbing changes.
+
+   This slot previously held an "Auto / Fast / Fine" dropdown that was purely
+   cosmetic — it had no backend concept and was never sent with the request. */
+import { THEMES, STYLE_THEME_STORAGE_KEY } from "../../../lib/doodle-constants";
+import { STYLE_NONE } from "../../../lib/style-choice";
+
 interface Props {
   id: string;
 }
 const { id } = Astro.props;
+
+/**
+ * One short line per style for the menu row.
+ *
+ * Derived from each theme's own `styleHint` rather than added as a new field on
+ * THEMES, because `doodle-constants.ts` has uncommitted edits from other work in
+ * flight and this component should not need to touch it. The derivation drops
+ * the parenthetical colour list first (it contains commas, so splitting on comma
+ * alone would cut mid-list) and then keeps the opening clause:
+ *
+ *   "Soft pastel palette (blush pink, buttery cream, sky blue), gentle …"
+ *     -> "Soft pastel palette"
+ */
+function blurbFor(styleHint: string): string {
+  const withoutParens = styleHint.replace(/\s*\([^)]*\)/g, "");
+  const clause = withoutParens.split(",")[0]!.trim().replace(/\.$/, "");
+  return clause.length > 52 ? `${clause.slice(0, 51).trimEnd()}…` : clause;
+}
+
+const STYLE_OPTIONS = THEMES.map((theme) => ({
+  id: theme.id,
+  label: theme.label,
+  bg: theme.bg,
+  accent: theme.accent,
+  blurb: blurbFor(theme.styleHint),
+}));
 ---
 
 <div class="composer-toolbar">
@@ -20,36 +58,100 @@ const { id } = Astro.props;
   </button>
   <input type="file" id={`${id}FileInput`} accept="image/*" hidden />
 
-  <div class="composer-mode-wrap">
-    <button type="button" class="composer-auto" id={`${id}ModeBtn`} aria-haspopup="true" aria-expanded="false">
-      <span id={`${id}ModeLabel`}>Auto</span>
-      <svg class="composer-auto-dot" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+  <div
+    class="composer-style"
+    id={`${id}Style`}
+    data-style-key={STYLE_THEME_STORAGE_KEY}
+  >
+    <button
+      type="button"
+      class="composer-style-trigger"
+      id={`${id}StyleBtn`}
+      aria-haspopup="true"
+      aria-expanded="false"
+      aria-label="Doodle style"
+    >
+      <span class="composer-style-chip" id={`${id}StyleChip`} aria-hidden="true">
+        <span class="composer-style-chip-dot"></span>
+      </span>
+      <span class="composer-style-label" id={`${id}StyleLabel`}></span>
+      <svg class="composer-style-caret" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
     </button>
-    <div class="composer-mode-menu" id={`${id}ModeMenu`} hidden>
-      <button type="button" class="composer-mode-item" data-mode="Auto" data-active="true">
-        <span class="composer-mode-item-dot"></span>
-        <span class="composer-mode-item-text">
-          <span class="composer-mode-item-label">Auto</span>
-          <span class="composer-mode-item-sub">Picks a model per prompt</span>
+
+    <div class="composer-style-menu" id={`${id}StyleMenu`} hidden role="menu" aria-label="Doodle style">
+      {STYLE_OPTIONS.map((theme) => (
+        <button
+          type="button"
+          role="menuitemradio"
+          aria-checked="false"
+          class="composer-style-item"
+          data-style-id={theme.id}
+          data-style-label={theme.label}
+          style={`--swatch-bg:${theme.bg};--swatch-accent:${theme.accent}`}
+        >
+          <span class="composer-style-chip" aria-hidden="true">
+            <span class="composer-style-chip-dot"></span>
+            <span class="composer-style-chip-line"></span>
+          </span>
+          <span class="composer-style-item-text">
+            <span class="composer-style-item-label">{theme.label}</span>
+            <span class="composer-style-item-sub">{theme.blurb}</span>
+          </span>
+          <span class="composer-style-check" aria-hidden="true">✓</span>
+        </button>
+      ))}
+
+      <div class="composer-style-sep" role="separator"></div>
+
+      <button
+        type="button"
+        role="menuitemradio"
+        aria-checked="false"
+        class="composer-style-item"
+        data-style-id={STYLE_NONE}
+        data-style-label="None"
+      >
+        <span class="composer-style-chip composer-style-chip-empty" aria-hidden="true"></span>
+        <span class="composer-style-item-text">
+          <span class="composer-style-item-label">None</span>
+          <span class="composer-style-item-sub">No colour theme — keep it natural</span>
         </span>
-        <span class="composer-mode-item-check">✓</span>
+        <span class="composer-style-check" aria-hidden="true">✓</span>
       </button>
-      <button type="button" class="composer-mode-item" data-mode="Fast">
-        <span class="composer-mode-item-dot"></span>
-        <span class="composer-mode-item-text">
-          <span class="composer-mode-item-label">Fast</span>
-          <span class="composer-mode-item-sub">Quick sketch passes</span>
+
+      <button
+        type="button"
+        role="menuitemradio"
+        aria-checked="false"
+        class="composer-style-item"
+        data-style-id="custom"
+        data-style-label="Custom"
+        id={`${id}StyleCustomBtn`}
+      >
+        <span class="composer-style-chip" id={`${id}StyleCustomChip`} aria-hidden="true">
+          <span class="composer-style-chip-dot"></span>
+          <span class="composer-style-chip-line"></span>
         </span>
-        <span class="composer-mode-item-check">✓</span>
-      </button>
-      <button type="button" class="composer-mode-item" data-mode="Fine">
-        <span class="composer-mode-item-dot"></span>
-        <span class="composer-mode-item-text">
-          <span class="composer-mode-item-label">Fine</span>
-          <span class="composer-mode-item-sub">Slower, highest detail</span>
+        <span class="composer-style-item-text">
+          <span class="composer-style-item-label">Custom</span>
+          <span class="composer-style-item-sub">Pick your own colour</span>
         </span>
-        <span class="composer-mode-item-check">✓</span>
+        <span class="composer-style-check" aria-hidden="true">✓</span>
       </button>
+
+      <div class="composer-style-custom" id={`${id}StyleCustomPanel`} hidden>
+        <input
+          type="range"
+          min="0"
+          max="359"
+          step="1"
+          value="42"
+          class="composer-style-hue"
+          id={`${id}StyleHue`}
+          aria-label="Pick a colour"
+        />
+        <output class="composer-style-hex" id={`${id}StyleHex`} for={`${id}StyleHue`}></output>
+      </div>
     </div>
   </div>
 

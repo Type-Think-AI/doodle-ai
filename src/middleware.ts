@@ -40,12 +40,48 @@
 import { defineMiddleware } from "astro:middleware";
 import { resolvePlatformRole } from "./lib/auth/admin-guard";
 import { canViewAdmin } from "./lib/auth/admin-guard";
+import { trackDataFastBotRequest } from "./lib/analytics/datafast-bot";
 
 /** Mutating verbs require 'admin'; reads are satisfied by 'support'. */
 const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
+/* NO `Accept: text/markdown` CONTENT NEGOTIATION HERE — deliberately.
+ *
+ * Redirecting markdown-preferring clients to a page's `.md` twin belongs in
+ * middleware in principle, and it was implemented here and then removed after
+ * testing proved it cannot work on this site: every editorial article is
+ * PRERENDERED (no `prerender = false`), and Astro skips middleware for
+ * prerendered routes, so the handler never ran. Verified by request — the
+ * response came back 200 HTML with no `Vary: Accept`.
+ *
+ * The two mechanisms that DO work statically are in place instead: the `.md`
+ * sibling routes (src/pages/[...path].md.ts, src/pages/learn.md.ts) and the
+ * `<link rel="alternate" type="text/markdown">` tag emitted by AppLayout.astro.
+ * If header negotiation is ever wanted it has to sit in front of the static
+ * asset handler — a Cloudflare Worker route or a Snippet — not here.
+ */
+
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
+
+  // DataFast bot-traffic tracking (server-side, best-effort, fire-and-forget).
+  // MUST run here — before the admin gate's early `return next()` below — so it
+  // sees EVERY request, not just /admin ones. It only actually POSTs when the
+  // User-Agent looks like a crawler (Googlebot, GPTBot, ClaudeBot, …); human
+  // pageviews are handled by the browser script.js tag in AppLayout.astro and
+  // are skipped here. The tracker returns a background promise which we hand to
+  // the Worker's ctx.waitUntil() so the page response is never delayed; if the
+  // ExecutionContext is unavailable (e.g. `astro dev` local mode) we simply do
+  // not track — never await it in the request path.
+  const botTrack = trackDataFastBotRequest(context.request);
+  if (botTrack) {
+    const ctx = (context.locals as { runtime?: { ctx?: ExecutionContext } })?.runtime?.ctx;
+    if (ctx?.waitUntil) {
+      ctx.waitUntil(botTrack);
+    }
+    // No else: without a real ExecutionContext (local dev), skip tracking
+    // rather than block the response awaiting a network call.
+  }
 
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
   const isAdminApi = pathname === "/api/admin" || pathname.startsWith("/api/admin/");

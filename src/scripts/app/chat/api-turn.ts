@@ -17,15 +17,28 @@ import type { CanvasOp } from "../../../lib/canvas/ops";
 /* ---- Types ---- */
 
 export interface TurnCallbacks {
-  onThinkingStart: () => { setText: (t: string) => void; setDrawing: () => void; remove: () => void };
+  onThinkingStart: () => { setText: (t: string) => void; setPhase: (label: string) => void; remove: () => void };
   onAssistantMessage: (msg: ChatMessage, precedingUserMessage: ChatMessage | null) => void;
   onImage: (url: string, skillId: string | undefined) => void;
   onCredits: (balance: number) => void;
   onCanvasOps: (ops: CanvasOp[], label?: string) => void;
   onStatus: (msg: string, err?: boolean) => void;
+  /** A turn failed for a real reason (not a user Stop) — show it in the thread. */
+  onError: (message: string) => void;
+  /** The generation was refused for lack of credits — offer the upgrade path. */
+  onCreditsBlocked: () => void;
   onSendStateChange: () => void;
   invalidateImageCache: () => void;
 }
+
+/* Server status phases mapped to what the user should read while waiting.
+   The stream already distinguishes each tool call; before this map the client
+   collapsed everything into "Drawing…" and canvas work looked like a hang. */
+const PHASE_LABELS: Record<string, string> = {
+  drawing: "Drawing…",
+  "reading-canvas": "Looking at your canvas…",
+  arranging: "Arranging the canvas…",
+};
 
 /* ---- Message formatting ---- */
 
@@ -67,6 +80,10 @@ export async function requestAssistantReply(
   let text = "";
   const images: string[] = [];
   let streamError: string | null = null;
+  /* Set by a `notice` event when the doodle tool refused for lack of credits.
+     Read after the reply renders, so the CTA lands under the agent's
+     explanation rather than above it. */
+  let creditsBlocked = false;
 
   try {
     const res = await fetch("/api/chat", {
@@ -104,6 +121,7 @@ export async function requestAssistantReply(
           url?: string;
           message?: string;
           phase?: string;
+          kind?: string;
           balance?: number;
           skillId?: string;
           ops?: CanvasOp[];
@@ -112,9 +130,15 @@ export async function requestAssistantReply(
         if (event.type === "text" && event.text) {
           text += event.text;
           thinking.setText(text);
-        } else if (event.type === "status" && event.phase === "drawing") {
-          thinking.setDrawing();
+        } else if (event.type === "status" && event.phase) {
+          const phaseLabel = PHASE_LABELS[event.phase];
+          if (phaseLabel) thinking.setPhase(phaseLabel);
+        } else if (event.type === "notice" && event.kind === "credits") {
+          creditsBlocked = true;
         } else if (event.type === "canvas" && event.ops?.length) {
+          // summarizeOps() already produced a human sentence server-side; it was
+          // being forwarded over the wire and then dropped on the floor.
+          if (event.label) thinking.setPhase(event.label);
           callbacks.onCanvasOps(event.ops, event.label);
         } else if (event.type === "image" && event.url) {
           images.push(event.url);
@@ -142,14 +166,18 @@ export async function requestAssistantReply(
     thinking.remove();
     if (streamError) throw new Error(streamError);
     saveAssistantReply();
+    if (creditsBlocked) callbacks.onCreditsBlocked();
   } catch (err) {
     thinking.remove();
     if (err instanceof DOMException && err.name === "AbortError") {
       callbacks.onStatus("Generation stopped.", false);
+      saveAssistantReply();
     } else {
-      callbacks.onStatus(err instanceof Error ? err.message : "Chat request failed", true);
+      // Persist whatever prose arrived before the break, then show the failure
+      // in the thread with a retry rather than only in the composer status line.
+      saveAssistantReply();
+      callbacks.onError(err instanceof Error ? err.message : "Chat request failed");
     }
-    saveAssistantReply();
   } finally {
     sendState.activeAbort = null;
     sendState.sending = false;

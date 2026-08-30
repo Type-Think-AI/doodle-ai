@@ -59,7 +59,9 @@ async function waitForCdp(timeoutMs = 25000) {
     try {
       const r = await fetch(`${CDP}/json/version`);
       if (r.ok) return (await r.json()).Browser;
-    } catch {}
+    } catch {
+      // CDP endpoint not up yet — swallow and keep polling until the deadline.
+    }
     await sleep(400);
   }
   throw new Error('CDP never became reachable');
@@ -99,7 +101,8 @@ function connect(wsUrl, onEvent) {
       if (msg.id && pending.has(msg.id)) {
         const p = pending.get(msg.id);
         pending.delete(msg.id);
-        msg.error ? p.rej(new Error(JSON.stringify(msg.error))) : p.res(msg.result);
+        if (msg.error) p.rej(new Error(JSON.stringify(msg.error)));
+        else p.res(msg.result);
       } else if (msg.method) onEvent(msg);
     });
   });
@@ -249,7 +252,9 @@ try {
 } finally {
   try {
     client?.close();
-  } catch {}
+  } catch {
+    // Best-effort cleanup: the socket may already be closed on the way out.
+  }
   child.kill('SIGKILL');
   rmSync(PROFILE, { recursive: true, force: true });
 }

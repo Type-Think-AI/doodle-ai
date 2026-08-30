@@ -41,6 +41,11 @@ const IMAGES_PER_RUN: Record<GenerationMode, number> = {
   couple: 1,
   pet: 1,
   faceless: 1,
+  /* Free-tool landing page skills (Aug 2026). Single image each — a coloring
+     page is one printable sheet and a doodle idea is one drawing, so neither is
+     a pack. */
+  coloring: 1,
+  idea: 1,
   /* Pack skills — one separate image per variant, not one composite sheet.
      A sheet cannot be cut into usable sticker/season files, which is the whole
      reason these are packs (see docs/skills-research-2026-08.md). */

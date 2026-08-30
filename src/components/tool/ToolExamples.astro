@@ -1,0 +1,126 @@
+---
+/**
+ * Real output proof for a tool page.
+ *
+ * Every image here is a GENUINE generation from the bound skill, not concept
+ * art: `skill.thumbnailUrl` is produced by running the skill's own prompt
+ * builder through the live PicX call path (see scripts/generate-skill-thumbnails.ts
+ * and the thumbnailUrl doc in src/lib/skill-loader.ts), and `sourceImageUrl` is
+ * the input photo it came from. When both exist we show the pair, which is the
+ * single most persuasive thing on the page: this photo went in, that came out.
+ *
+ * WHY NOT 12 EXAMPLES PER PAGE
+ * The keyword workbook asks for 12+ per URL. At the measured 15 credits an image
+ * that is ~4,900 credits across the tool set, so the honest v1 is the real
+ * before/after we already have plus a rail of sibling skills' real outputs.
+ * Nothing here is fabricated or reused as a stand-in for output it is not, which
+ * matters more than the count — a gallery of images that are not really this
+ * skill's output is worse than four that are.
+ */
+import type { Skill } from "../../lib/skills";
+import { SKILLS } from "../../lib/skills";
+import { resizedCdnImage, cdnImageSrcset } from "../../lib/cdn-image";
+
+interface Props {
+	skill: Skill;
+}
+const { skill } = Astro.props;
+
+const hasPair = Boolean(skill.sourceImageUrl && skill.thumbnailUrl);
+
+/* Sibling rail: other runnable skills that produced a real thumbnail, so the
+   rail never shows a synthetic SVG placeholder next to real output. Same
+   category first — a coloring tool should suggest coloring-adjacent skills
+   before it suggests a couple portrait. */
+const siblings = SKILLS.filter(
+	(s) => s.id !== skill.id && s.runnable && Boolean(s.thumbnailUrl),
+)
+	.sort((a, b) => Number(b.category === skill.category) - Number(a.category === skill.category))
+	.slice(0, 4);
+---
+
+<section class="tool-section tool-examples" aria-labelledby="tool-examples-h">
+	<h2 id="tool-examples-h">What it makes</h2>
+
+	{
+		hasPair ? (
+			<figure class="tool-pair">
+				<div class="tool-pair-item">
+					<img
+						src={resizedCdnImage(skill.sourceImageUrl!, 560)}
+						srcset={cdnImageSrcset(skill.sourceImageUrl!)}
+						sizes="(max-width: 720px) 46vw, 320px"
+						alt="The photo that was uploaded"
+						width="320"
+						height="320"
+						loading="lazy"
+						decoding="async"
+					/>
+					<figcaption>The photo</figcaption>
+				</div>
+				<div class="tool-pair-arrow" aria-hidden="true">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+						<path
+							d="M5 12h14M13 6l6 6-6 6"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"></path>
+					</svg>
+				</div>
+				<div class="tool-pair-item">
+					<img
+						src={resizedCdnImage(skill.thumbnailUrl!, 560)}
+						srcset={cdnImageSrcset(skill.thumbnailUrl!)}
+						sizes="(max-width: 720px) 46vw, 320px"
+						alt={`The ${skill.name} result generated from that photo`}
+						width="320"
+						height="320"
+						loading="lazy"
+						decoding="async"
+					/>
+					<figcaption>What {skill.name} returned</figcaption>
+				</div>
+			</figure>
+		) : skill.thumbnailUrl ? (
+			<figure class="tool-single">
+				<img
+					src={resizedCdnImage(skill.thumbnailUrl, 900)}
+					srcset={cdnImageSrcset(skill.thumbnailUrl)}
+					sizes="(max-width: 720px) 92vw, 640px"
+					alt={`A real ${skill.name} result`}
+					width="640"
+					height="640"
+					loading="lazy"
+					decoding="async"
+				/>
+				<figcaption>A real {skill.name} result</figcaption>
+			</figure>
+		) : null
+	}
+
+	{
+		siblings.length > 0 && (
+			<>
+				<h3 class="tool-rail-h">Other skills you can switch to</h3>
+				<ul class="tool-rail">
+					{siblings.map((s) => (
+						<li>
+							<a href={`/skills/${s.id}/`}>
+								<img
+									src={resizedCdnImage(s.thumbnailUrl!, 320)}
+									alt=""
+									width="180"
+									height="180"
+									loading="lazy"
+									decoding="async"
+								/>
+								<span>{s.name}</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</>
+		)
+	}
+</section>

@@ -4,13 +4,11 @@
  * Uses semantic <nav> with aria-label per group for screen-readers
  * and clean internal link signals for search engines.
  *
- * The "Guides" column lists the keyword-first editorial pages that live at the
- * site root (/photo-to-cartoon/, /cartoon-pet-portrait/, …). Those pages are
- * this product's only marketing channel, and the footer is the one surface on
- * every page — so listing them here is what actually distributes internal
- * links to them from the app pages, not just from /learn. Labels are the short
- * keyword form rather than each article's full <title>, which is far too long
- * for a footer link and would wrap three lines.
+ * Keyword landings live at the site root and are this product's marketing
+ * channel. The footer is on every page, so listing the hubs here is how
+ * app pages pass internal links to them. Labels are the short keyword form.
+ * A Skills column points at live generation modes so people can explore
+ * the catalog without hunting the marketplace.
  */
 
 interface NavColumn {
@@ -19,45 +17,86 @@ interface NavColumn {
 }
 
 import { contactChannels } from "../../lib/contact";
+import { getToolLinks } from "../../lib/content/articles";
+
+/**
+ * The Tools column is generated, not hand-written, so converting a page to
+ * `category: "tool"` links it from every page on the site with no edit here.
+ * A hand-maintained array is precisely how the footer would fall out of sync
+ * once batches 2 and 3 land.
+ *
+ * Capped, because the set is heading for ~50 entries and a 50-link footer column
+ * is neither readable nor a useful internal-link signal. The highest-intent ones
+ * are listed and "All free tools" carries the rest — the /tools/ hub is what
+ * distributes link equity to the long tail.
+ */
+const FOOTER_TOOL_LIMIT = 8;
+const toolLinks = (await getToolLinks()).slice(0, FOOTER_TOOL_LIMIT).map((tool) => ({
+	// The keyword is the short, scannable label; the editorial title is far too
+	// long for a footer column ("Photo to Coloring Page — Turn a Photo into Line Art").
+	label: tool.primaryKeyword ?? tool.title,
+	href: tool.url,
+}));
 
 const columns: NavColumn[] = [
 	{
+		title: "Free tools",
+		links: [...toolLinks, { label: "All free tools", href: "/tools" }],
+	},
+	{
 		title: "Studio",
 		links: [
-			{ label: "Characters", href: "/characters" },
-			{ label: "Moodboards", href: "/moodboards" },
-			{ label: "Projects", href: "/projects" },
-			{ label: "Skill gallery", href: "/skills" },
-		],
-	},
-	{
-		title: "Guides",
-		links: [
-			{ label: "Photo to cartoon", href: "/photo-to-cartoon" },
-			{ label: "AI cartoon generator", href: "/ai-cartoon-generator" },
-			{ label: "Cartoon prompt library", href: "/ai-cartoon-generator/prompts" },
-			{ label: "Cartoon profile picture", href: "/cartoon-profile-picture" },
-			{ label: "Cartoon pet portrait", href: "/cartoon-pet-portrait" },
-			{ label: "Photo to sticker", href: "/photo-to-sticker" },
-			{ label: "Mood-caption collage", href: "/mood-caption-collage" },
-			{ label: "Doodle gifts", href: "/doodle-gift" },
-		],
-	},
-	{
-		title: "Product",
-		links: [
 			{ label: "Doodle AI App", href: "/" },
-			{ label: "For studios", href: "/for-studios" },
-			{ label: "AI filmmaker stills", href: "/for-studios/ai-filmmaker-stills" },
-			{ label: "Animation concepts", href: "/for-studios/animation-concept-sprint" },
+			{ label: "Free tools", href: "/tools" },
+			{ label: "Skill gallery", href: "/skills" },
+			{ label: "Characters", href: "/characters" },
 			{ label: "Learn", href: "/learn" },
-			{ label: "Team", href: "/team" },
+			{ label: "For studios", href: "/for-studios" },
+			{ label: "About Doodle AI", href: "/about" },
+		],
+	},
+	{
+		title: "Convert",
+		links: [
+			{ label: "Photo to doodle", href: "/photo-to-doodle" },
+			{ label: "Picture to doodle", href: "/picture-to-doodle" },
+			{ label: "Photo to cartoon", href: "/photo-to-cartoon" },
+			{ label: "Photo to sticker", href: "/photo-to-sticker" },
+			{ label: "WhatsApp sticker maker", href: "/whatsapp-sticker-maker" },
+			{ label: "Photo to coloring page", href: "/photo-to-coloring-page" },
+			{ label: "Cartoon profile picture", href: "/cartoon-profile-picture" },
+		],
+	},
+	{
+		title: "Make",
+		links: [
+			{ label: "Doodle generator", href: "/doodle-generator" },
+			{ label: "AI doodle generator", href: "/ai-doodle-generator" },
+			{ label: "Doodle maker", href: "/doodle-maker" },
+			{ label: "Couple doodle", href: "/couple-doodle" },
+			{ label: "Diwali doodle", href: "/diwali-doodle" },
+			{ label: "Cute doodle", href: "/cute-doodle" },
+			{ label: "Doodle ideas", href: "/doodle-ideas" },
+			{ label: "Doodle coloring pages", href: "/doodle-coloring-pages" },
+		],
+	},
+	{
+		title: "Skills",
+		links: [
+			{ label: "All skills", href: "/skills" },
+			{ label: "Doodle Avatar", href: "/skills/normal" },
+			{ label: "Sticker Pack", href: "/skills/stickers" },
+			{ label: "Couple Doodle", href: "/skills/couple" },
+			{ label: "Festival Pack", href: "/skills/festival" },
+			{ label: "Crayon Self", href: "/skills/crayon" },
+			{ label: "Surprise Me", href: "/skills/surprise" },
+			{ label: "Gift Doodle", href: "/skills/gift" },
+			{ label: "Pet Portrait", href: "/skills/pet" },
 		],
 	},
 	{
 		title: "Company",
 		links: [
-			{ label: "About Doodle AI", href: "/about" },
 			{ label: "GitHub (open source)", href: "https://github.com/Type-Think-AI/doodle-ai" },
 			{ label: "Terms of service", href: "/terms-of-service" },
 			{ label: "Privacy policy", href: "/privacy-policy" },

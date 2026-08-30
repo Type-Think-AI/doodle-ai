@@ -1,11 +1,13 @@
 ---
-title: "Photo to Sticker: Die-Cut Sheets Versus Print Shops and Chat Apps"
-description: "The search photo to sticker mixes a doodleai.art die-cut sheet, a print-on-demand vinyl order, and a transparent iMessage or WhatsApp pack. This guide separates those jobs and names what Doodle AI currently makes."
+title: "Photo to Sticker: WhatsApp Doodle Sticker Sheets from a Photo"
+description: "Turn a photo to sticker at doodleai.art: run the Sticker Pack skill for a square die-cut doodle sticker sheet. What it is, how it differs from a WhatsApp/iMessage pack and a print shop, and how to make one."
 pubDate: 2026-08-25
-updatedDate: 2026-08-25
-heroImage: "https://cdn.picxstudio.com/api/generated/image_4ca202e9-1bc9-4124-ab06-165205f2d4f5.png"
+updatedDate: 2026-08-29
+heroImage: "https://cdn.picxstudio.com/api/generated/image_ab2829bf-6c64-4a53-afdc-5ca56b7dd870.jpg"
 category: "explainer"
 cluster: "stickers"
+skill: "stickers"
+primaryKeyword: "photo to sticker"
 faq:
   - question: "Can Doodle AI make WhatsApp or iMessage stickers?"
     answer: "No. The Sticker Pack skill generates a square die-cut sticker sheet image. It does not export transparent PNG packs for WhatsApp or iMessage. ChatGPT Images and Apple's built-in tools handle chat-app sticker formats."

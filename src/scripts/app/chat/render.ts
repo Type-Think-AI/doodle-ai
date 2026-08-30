@@ -6,6 +6,7 @@ import { openLightbox } from "../lightbox";
 import { addToMoodboard } from "../moodboard";
 import { landOnBoard } from "../board-target";
 import type { ChatMessage } from "../chat-store";
+import { parseSuggestions, renderSuggestions } from "./suggestions";
 
 export const REFINE_PLACEHOLDER = "Ask for a change — thicker outline, warmer paper…";
 
@@ -51,6 +52,8 @@ export interface RenderContext {
   input: HTMLElement;
   onRemix: (userMsg: ChatMessage) => void;
   onDownload: (url: string) => void;
+  /** A suggestion chip was tapped — prefill the composer and send it. */
+  onSuggestion: (text: string) => void;
 }
 
 export function renderMessage(
@@ -75,10 +78,17 @@ export function renderMessage(
     bubble.appendChild(img);
   }
 
-  if (msg.content) {
+  /* Assistant replies are contracted to end with a numbered follow-up list
+     (see the agent's "Post-generation suggestions" section). Split it off so
+     the prose stays in the bubble and the list becomes tappable chips — until
+     this existed the user had to retype a prompt we already generated. */
+  const parsed = msg.role === "assistant" ? parseSuggestions(msg.content ?? "") : null;
+  const bodyText = parsed ? parsed.body : msg.content;
+
+  if (bodyText) {
     const p = document.createElement("p");
     p.style.margin = "0";
-    p.textContent = msg.content;
+    p.textContent = bodyText;
     bubble.appendChild(p);
   }
 
@@ -116,6 +126,23 @@ export function renderMessage(
       img.loading = "lazy";
       setImageSrc(img, url);
       cell.appendChild(img);
+
+      /* Per-image download. The bubble-level button can only ever reach one
+         URL, so on a 6-panel collage or a sticker sheet the other five results
+         had no way out of the app. stopPropagation preserves the cell's own
+         click-to-lightbox behaviour. */
+      const cellDownload = document.createElement("button");
+      cellDownload.type = "button";
+      cellDownload.className = "chat-bubble-image-action";
+      cellDownload.textContent = "↓";
+      cellDownload.title = "Download this doodle";
+      cellDownload.setAttribute("aria-label", "Download this doodle");
+      cellDownload.addEventListener("click", (event) => {
+        event.stopPropagation();
+        ctx.onDownload(url);
+      });
+      cell.appendChild(cellDownload);
+
       cell.addEventListener("click", () => openLightbox(msg.images!, url));
       grid.appendChild(cell);
     });
@@ -132,10 +159,15 @@ export function renderMessage(
       actions.appendChild(remixBtn);
     }
 
+    const images = msg.images;
     const downloadBtn = document.createElement("button");
     downloadBtn.type = "button";
-    downloadBtn.textContent = "Download";
-    downloadBtn.addEventListener("click", () => ctx.onDownload(msg.images![0]));
+    downloadBtn.textContent = images.length > 1 ? `Download all ${images.length}` : "Download";
+    downloadBtn.addEventListener("click", () => {
+      /* Staggered: browsers treat a burst of synchronous programmatic
+         downloads as a popup flood and silently drop all but the first. */
+      images.forEach((url, i) => window.setTimeout(() => ctx.onDownload(url), i * 350));
+    });
     actions.appendChild(downloadBtn);
 
     bubble.appendChild(actions);
@@ -151,6 +183,11 @@ export function renderMessage(
     });
   }
 
+  if (parsed && parsed.suggestions.length > 0) {
+    const row = renderSuggestions(parsed.suggestions, ctx.onSuggestion);
+    if (row) bubble.appendChild(row);
+  }
+
   wrap.appendChild(bubble);
   ctx.thread.appendChild(wrap);
   ctx.thread.scrollTop = ctx.thread.scrollHeight;
@@ -163,7 +200,8 @@ export function renderMessage(
 export interface StreamingBubble {
   wrap: HTMLElement;
   setText: (text: string) => void;
-  setDrawing: () => void;
+  /** Name the step in progress, e.g. "Drawing…" / "Arranging the canvas…". */
+  setPhase: (label: string) => void;
 }
 
 export function renderThinking(thread: HTMLElement): StreamingBubble {
@@ -194,11 +232,90 @@ export function renderThinking(thread: HTMLElement): StreamingBubble {
       bubble.textContent = text;
       thread.scrollTop = thread.scrollHeight;
     },
-    setDrawing() {
+    setPhase(phaseLabel: string) {
+      /* Once prose has started streaming the bubble IS the reply, so a phase
+         update would overwrite the user's answer. Tool calls normally precede
+         the final text, so in practice the label is seen. */
       if (streaming) return;
-      label.textContent = "Drawing…";
+      label.textContent = phaseLabel;
     },
   };
+}
+
+/* ---- Error bubble ---- */
+
+/**
+ * A failed turn used to vanish: the thinking bubble was removed and the reason
+ * appeared in the status line under the composer, leaving the thread looking
+ * like nothing happened and no way forward but retyping. This keeps the failure
+ * in place and offers the retry path that `remix()` already implements.
+ */
+export function renderError(
+  thread: HTMLElement,
+  message: string,
+  onRetry: (() => void) | null,
+): void {
+  const wrap = document.createElement("div");
+  wrap.className = "chat-msg chat-msg-assistant";
+  const bubble = document.createElement("div");
+  bubble.className = "chat-bubble chat-bubble-error";
+  bubble.setAttribute("role", "alert");
+
+  const p = document.createElement("p");
+  p.style.margin = "0";
+  p.textContent = message;
+  bubble.appendChild(p);
+
+  if (onRetry) {
+    const actions = document.createElement("div");
+    actions.className = "chat-bubble-actions";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.textContent = "Try again";
+    retry.addEventListener("click", () => {
+      // One shot — a dead retry button after the row is replaced reads as broken.
+      wrap.remove();
+      onRetry();
+    });
+    actions.appendChild(retry);
+    bubble.appendChild(actions);
+  }
+
+  wrap.appendChild(bubble);
+  thread.appendChild(wrap);
+  thread.scrollTop = thread.scrollHeight;
+}
+
+/* ---- Out-of-credits call to action ---- */
+
+/**
+ * Credit exhaustion arrives as agent PROSE (the tool returns a status and the
+ * model explains it), so the highest-intent moment in the product — someone who
+ * wants another doodle and cannot have one — used to terminate in a sentence
+ * with nothing to click. The upgrade dialog already exists and is wired from
+ * settings, the credit packs and the sidebar hint; this is the fourth entry
+ * point, in the place the wall is actually hit.
+ */
+export function renderCreditsCta(thread: HTMLElement): void {
+  const wrap = document.createElement("div");
+  wrap.className = "chat-msg chat-msg-assistant chat-msg-cta";
+  const actions = document.createElement("div");
+  actions.className = "chat-bubble-actions chat-credits-cta";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "chat-credits-cta-btn";
+  button.textContent = "Get more credits";
+  button.addEventListener("click", () => {
+    window.dispatchEvent(
+      new CustomEvent("doodleai:open-upgrade-contact", { detail: { pack: "more credits" } }),
+    );
+  });
+
+  actions.appendChild(button);
+  wrap.appendChild(actions);
+  thread.appendChild(wrap);
+  thread.scrollTop = thread.scrollHeight;
 }
 
 /* ---- Download helper ---- */

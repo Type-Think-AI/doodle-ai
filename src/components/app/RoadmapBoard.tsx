@@ -49,6 +49,14 @@ interface RoadmapBoardProps {
    *   where the feedback dialog's stickies land.
    */
   variant?: "team" | "public";
+  /**
+   * tldraw licence key, resolved server-side from the Worker environment and
+   * handed down as a prop. Deliberately NOT read from `import.meta.env` here:
+   * that inlines it at build time, so the key only existed when the build ran on
+   * a machine holding `.env` — see src/lib/tldraw-license.ts for the outage that
+   * caused. Optional so the board still renders (unlicensed) if it is absent.
+   */
+  licenseKey?: string;
 }
 
 /* Chrome we remove from tldraw's default UI.
@@ -380,7 +388,7 @@ function seedPublicBoard(editor: Editor): void {
   editor.zoomToFit({ animation: { duration: 400 } });
 }
 
-export default function RoadmapBoard({ room, connectPath, canSeed, variant = "team" }: RoadmapBoardProps) {
+export default function RoadmapBoard({ room, connectPath, canSeed, variant = "team", licenseKey }: RoadmapBoardProps) {
   const [mode, setMode] = useState<BoardMode>("loading");
 
   /* Pre-flight: probe the connect route to decide which mode to use.
@@ -511,7 +519,7 @@ export default function RoadmapBoard({ room, connectPath, canSeed, variant = "te
       <div className="roadmap-board-root" style={{ position: "absolute", inset: 0 }}>
         <Tldraw
           persistenceKey={`doodleai-roadmap-${room}`}
-          licenseKey={import.meta.env.PUBLIC_TLDRAW_LICENSE_KEY}
+          licenseKey={licenseKey}
           components={BOARD_COMPONENTS}
           onMount={onMount}
         />
@@ -524,7 +532,7 @@ export default function RoadmapBoard({ room, connectPath, canSeed, variant = "te
     <div className="roadmap-board-root" style={{ position: "absolute", inset: 0 }}>
       <Tldraw
         store={syncStore}
-        licenseKey={import.meta.env.PUBLIC_TLDRAW_LICENSE_KEY}
+        licenseKey={licenseKey}
         components={BOARD_COMPONENTS}
         onMount={onMount}
         data-room={room}

@@ -2,10 +2,23 @@
 title: "How to Make a Personalized Digital Doodle Gift from a Photo"
 description: "Turn a consented photo into a square digital birthday, thank-you, anniversary, or celebration doodle at doodleai.art with the Gift skill. Plan the occasion, spend credits on purpose, then download and send the still yourself."
 pubDate: 2026-08-25
-updatedDate: 2026-08-25
-heroImage: "https://cdn.picxstudio.com/api/generated/image_e3c22eb6-cc42-41f2-8719-2e68f10aa526.png"
+updatedDate: 2026-08-29
+heroImage: "https://cdn.picxstudio.com/api/generated/image_c5cf4d4b-9f4f-4458-8ac3-ec1d912df459.jpg"
 category: "guide"
 cluster: "gifts"
+skill: "gift"
+primaryKeyword: "doodle gift"
+faq:
+  - question: "What is a doodle gift?"
+    answer: "A doodle gift is a personalized square greeting still made from a photo at doodleai.art with the Gift skill. Name the occasion — birthday, thank-you, anniversary, congratulations — in your wording, and the skill adds matching embellishments and a card message. You download the PNG and send it yourself."
+  - question: "How do I make a doodle gift from a photo?"
+    answer: "Sign in, attach a photo you have permission to use, and run the Gift skill with the occasion named in one sentence. You get one 1:1 greeting doodle. Then download the image and share it through the chat or email you already use."
+  - question: "Does Doodle AI ship a printed card or present?"
+    answer: "No. The doodle gift is a digital still. There is no physical fulfillment, no shipped card, and no checkout. If the recipient expects a package, use a printer or store instead."
+  - question: "Can I write my own message on the card?"
+    answer: "The Gift skill picks one occasion and a fixed card message from your wording — it is not a custom-lettering tool. If you need a specific typeset name or line, add it yourself in any editor after downloading."
+  - question: "Is the doodle gift free?"
+    answer: "Browsing is free. Each generation costs 1 credit, new accounts get free starter credits, and failed generations refund. Paid checkout is off, so there is no paywall."
 ---
 
 **Direct answer:** To make a personalized digital doodle gift at [doodleai.art](https://doodleai.art), sign in, attach a photo you may use, and run [Gift](https://doodleai.art/skills/gift/) with the occasion named in your wording. You get one square greeting still with a standard card message. Download the PNG and send it yourself — Doodle AI does not ship cards or prints.
@@ -359,6 +372,20 @@ It is **not a public gallery post**. Account-scoped chats, moodboards, saved cha
 - [C2PA 2.2 explainer](https://c2pa.org/specifications/specifications/2.2/explainer/Explainer.html) — provenance standard; not a current Doodle AI feature
 - [ChatGPT sticker announcement on X](https://x.com/ChatGPT/status/2091996384954069032) — chat-app stickers are a different job; Doodle AI does not export them
 - [Google privacy policy](https://policies.google.com/privacy) — Google sign-in
+
+## Questions people ask
+
+These questions cluster around “doodle gift” and “personalized photo gift.” The answers are about doodleai.art, not a print-on-demand store.
+
+**What is a doodle gift?** A personalized square greeting still made from a photo with the [Gift skill](https://doodleai.art/skills/gift/). Name the occasion — birthday, thank-you, anniversary, congratulations — and the skill adds matching embellishments and a card message. You download the PNG and send it yourself.
+
+**How do I make a doodle gift from a photo?** Sign in, attach a photo you have permission to use, and run Gift with the occasion named in one sentence. You get one 1:1 greeting doodle, then share it through the chat or email you already use.
+
+**Does Doodle AI ship a printed card or present?** No. It is a digital still. There is no physical fulfillment, no shipped card, and no checkout. If the recipient expects a package, use a printer or store.
+
+**Can I write my own message on the card?** Gift picks one occasion and a fixed card message from your wording — it is not a custom-lettering tool. Add a specific name or line yourself in any editor after downloading.
+
+**Is the doodle gift free?** Browsing is free. Each generation costs 1 credit, new accounts get free starter credits, and failed generations refund. There is no paywall.
 
 ## Make one digital card, then send it yourself
 

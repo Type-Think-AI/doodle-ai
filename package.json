@@ -14,6 +14,7 @@
     "astro": "5.16.9",
     "better-auth": "1.7.1",
     "drizzle-orm": "0.45.2",
+    "github-slugger": "2.0.0",
     "mixpanel-browser": "2.82.1",
     "picx-ai": "0.2.1",
     "react": "19.2.8",

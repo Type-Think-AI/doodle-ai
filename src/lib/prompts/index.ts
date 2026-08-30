@@ -19,6 +19,8 @@ import { buildCrayonPrompt } from "./crayon-self";
 import { buildCouplePrompt } from "./couple-doodle";
 import { buildPetPortraitPrompt } from "./pet-portrait";
 import { buildFacelessPortraitPrompt } from "./faceless-portrait";
+import { buildColoringPagePrompt } from "./coloring-page";
+import { buildDoodleIdeaPrompt } from "./doodle-idea";
 import { buildSeasonalPack } from "./seasonal-pack";
 import { buildEmotionalModes } from "./emotional-modes";
 import { buildExpressionSheet } from "./expression-sheet";
@@ -113,6 +115,16 @@ export const SKILL_PROMPT_BUILDERS: Record<string, PromptBuilder> = {
   // the product, and the louder visual themes fight it.
   faceless: () => buildFacelessPortraitPrompt(),
   family: (input) => buildFamilyPortrait(input),
+  // Powers the coloring-page tool cluster. Takes the wrapped themeHint like the
+  // other single-image builders; the builder itself keeps the theme subordinate
+  // to the no-colour rule, since a loud palette is the one thing that would
+  // break a page you are meant to colour in yourself.
+  coloring: (input) =>
+    buildColoringPagePrompt({ themeHint: input.themeHint, description: input.description }),
+  // Powers the idea/prompt tool pages. `description` is the idea the visitor
+  // typed and is the whole input — unlike `surprise`, which ignores it.
+  idea: (input) =>
+    buildDoodleIdeaPrompt({ themeHint: input.themeHint, description: input.description }),
   // The occupation is carried in `description` — the tool's schema already
   // documents that field as free-text guidance, and the builder falls back to a
   // neutral setting rather than guessing a profession when it is absent.

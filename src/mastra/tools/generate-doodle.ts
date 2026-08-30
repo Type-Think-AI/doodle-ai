@@ -12,9 +12,9 @@ import {
   pick,
   pickMany,
   SURPRISE_PROMPTS,
-  THEMES,
   VIRAL_MOOD_WORDS,
 } from "../../lib/doodle-constants";
+import { resolveStyle } from "../../lib/style-choice";
 import { refund, spend } from "../../lib/credits";
 import { packBuilderFor, promptBuilderFor, type PackVariant } from "../../lib/prompts";
 import { CREDITS_PER_IMAGE, creditCostForSkill, imageCountForSkill } from "../../lib/credits/costs";
@@ -185,8 +185,10 @@ export const generateDoodleTool = createTool({
     }
 
     const styleId = requestContext?.get("styleId");
-    const theme = THEMES.find((t) => t.id === styleId) || THEMES[0];
-    const themeHint = `Apply this visual style distinctly: ${theme.styleHint}`;
+    /* Resolved centrally so "none" and "custom:#RRGGBB" are honoured. A bare
+       THEMES.find(...) || THEMES[0] here would silently render both as Pastel. */
+    const resolvedStyle = resolveStyle(styleId);
+    const themeHint = resolvedStyle.themeHint;
     /**
      * Every image this run will produce, in display order. Single-image skills
      * yield exactly one entry, so the fan-out below has no special case for
@@ -198,7 +200,7 @@ export const generateDoodleTool = createTool({
     // Pack skills first: they own the multi-image path. Then single-image
     // modular skills (src/lib/prompts/), then the original seven's switch.
     if (packBuilder) {
-      variants = packBuilder({ themeHint, styleHint: theme.styleHint, description: input.description });
+      variants = packBuilder({ themeHint, styleHint: resolvedStyle.styleHint, description: input.description });
       aspectRatio = "1:1";
     } else {
       const modularBuilder = promptBuilderFor(input.skill);
@@ -206,7 +208,7 @@ export const generateDoodleTool = createTool({
         variants = [
           {
             label: input.skill,
-            prompt: modularBuilder({ themeHint, styleHint: theme.styleHint, description: input.description }),
+            prompt: modularBuilder({ themeHint, styleHint: resolvedStyle.styleHint, description: input.description }),
           },
         ];
         // Every modular skill is square today. A future 3:2 one must declare its

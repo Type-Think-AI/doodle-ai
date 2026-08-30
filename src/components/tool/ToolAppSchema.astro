@@ -1,0 +1,79 @@
+---
+/**
+ * `SoftwareApplication` (as `WebApplication`) for ONE free-tool page.
+ *
+ * WHY: a `category: "tool"` page is not an article — it is a working generator
+ * with a bound skill, real example outputs and a genuine free tier. It was
+ * emitting only `Article` + `BreadcrumbList` + `FAQPage`, while the single
+ * `SoftwareApplication` node in AppLayout's @graph describes Doodle AI as a
+ * whole. So the ten individual tools asserted no app identity of their own, on
+ * exactly the queries ("free ai doodle generator", "photo to coloring page")
+ * where being the tool is the entire competitive advantage.
+ *
+ * `Article` is still emitted alongside this by ArticleSchema, deliberately: these
+ * pages do carry a real prose body under the generator, and the two types
+ * describe different truths about the same URL rather than contradicting each
+ * other. Both point at the same canonical `@id`.
+ *
+ * `screenshot` uses the page's own example output — the images ToolExamples
+ * already renders — so the markup describes something a visitor can actually see,
+ * which is the rule that makes structured data legitimate rather than decorative.
+ */
+import { SITE_TITLE } from "../../consts";
+
+interface Props {
+	name: string;
+	description: string;
+	/** Root-relative article path, without leading or trailing slash. */
+	path: string;
+	/** Bound skill's display name, e.g. "Crayon Self". */
+	skillName: string;
+	/** Example output shown on the page, used as the screenshot. */
+	screenshot?: string;
+	faqCount: number;
+}
+
+const { name, description, path, skillName, screenshot } = Astro.props;
+
+const site = Astro.site ?? new URL("https://doodleai.art");
+const canonical = new URL(`/${path}/`, site).href;
+
+const appSchema: Record<string, unknown> = {
+	"@context": "https://schema.org",
+	"@type": "WebApplication",
+	"@id": `${canonical}#tool`,
+	name,
+	description,
+	url: canonical,
+	// Runs in the browser, no install — the two facts that matter for a "free
+	// online <thing>" query.
+	applicationCategory: "MultimediaApplication",
+	applicationSubCategory: "Image Generator",
+	operatingSystem: "Web",
+	browserRequirements: "Requires JavaScript and a modern browser",
+	inLanguage: "en",
+	isAccessibleForFree: true,
+	offers: {
+		"@type": "Offer",
+		price: "0",
+		priceCurrency: "USD",
+		description: "Free starter credits on signup, no card required",
+	},
+	featureList: [
+		`Powered by the ${skillName} skill`,
+		"Upload a photo or use your camera",
+		"Reusable saved characters",
+		"Runs in the browser, nothing to install",
+	],
+	isPartOf: { "@type": "WebSite", "@id": `${site.href}#website` },
+	publisher: { "@type": "Organization", name: SITE_TITLE, url: site.href },
+};
+
+if (screenshot) {
+	appSchema.screenshot = screenshot.startsWith("http")
+		? screenshot
+		: new URL(screenshot, site).href;
+}
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(appSchema)} />

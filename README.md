@@ -29,13 +29,18 @@
 
 Doodle AI is a **conversational creative studio** that turns your photos into hand-drawn doodle art. Chat with an AI agent, attach a photo, pick a skill — and get a unique doodle avatar, collage, sticker sheet, or gift image in seconds.
 
+There are **two ways in**:
+
+- **The chat studio** — describe what you want, attach a photo, and the agent picks the right skill. Full run of 23 skills.
+- **Free-tool pages** — single-purpose landing pages (e.g. `/photo-to-coloring-page/`, `/doodle-ideas/`) where the real prompt composer is the first thing on the page and the matching skill is already pre-pinned. 10 are live; the hub is at **[doodleai.art/tools](https://doodleai.art/tools)**. Same generator, same threads, just entered from a specific query instead of a blank chat.
+
 > **Try it now:** [doodleai.art](https://doodleai.art) — 5 free credits on signup, no credit card needed.
 
 ---
 
 ## ✨ Skills
 
-Every generation style is a pluggable **Skill**. Drop in a `SKILL.md` file and you've added a new creative mode.
+Every generation style is a pluggable **Skill** — a self-contained `SKILL.md` under `src/mastra/skills/`. There are **23 runnable skills** today, from single-image avatars to multi-image packs (Sticker Pack, Expression Pack, Seasonal Pack). A few, with real output:
 
 <table>
 <tr>
@@ -45,53 +50,9 @@ Every generation style is a pluggable **Skill**. Drop in a `SKILL.md` file and y
 <sub>1:1 hand-drawn avatar from a photo</sub>
 </td>
 <td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/edited/image_5ef46520-6769-496f-9f10-35863fac3234.png" width="160" /><br />
-<strong>Doodle Collage</strong><br />
-<sub>6 close-up poses in a 3×2 grid</sub>
-</td>
-<td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/edited/image_99868a77-06d4-4421-9101-30d37aa41808.png" width="160" /><br />
-<strong>Full-Body Collage</strong><br />
-<sub>6 full-body action poses</sub>
-</td>
-<td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png" width="160" /><br />
-<strong>Surprise Me</strong><br />
-<sub>Fictional character, no photo needed</sub>
-</td>
-</tr>
-<tr>
-<td align="center" width="25%">
 <img src="https://cdn.picxstudio.com/api/generated/image_0cb0deb7-a9ac-4fc7-a458-b9d9bd79982f.png" width="160" /><br />
 <strong>Sticker Pack</strong><br />
 <sub>Die-cut sticker sheet image</sub>
-</td>
-<td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/generated/image_298403d7-f0f6-477f-a996-ebfb09cf6f83.png" width="160" /><br />
-<strong>Mood Captions</strong><br />
-<sub>3×2 collage with hand-lettered text</sub>
-</td>
-<td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/edited/image_7cc91c45-a8c1-4e74-8a55-8c5cc8b942fe.png" width="160" /><br />
-<strong>Gift Doodle</strong><br />
-<sub>Greeting card image from a photo</sub>
-</td>
-<td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/generated/image_889bf322-8840-44d1-82ea-fac82be13d77.png" width="160" /><br />
-<strong>Chibi Mini-Me</strong><br />
-<sub>Overlay chibi on your original photo</sub>
-</td>
-</tr>
-<tr>
-<td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/generated/image_fbca2637-7236-4565-a6c7-e909110cf472.png" width="160" /><br />
-<strong>Crayon Self</strong><br />
-<sub>Ugly-cute crayon marker style</sub>
-</td>
-<td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/generated/image_484bb3f1-70ad-48af-929d-d525ed13b154.png" width="160" /><br />
-<strong>Couple Doodle</strong><br />
-<sub>Two-person doodle from a couple photo</sub>
 </td>
 <td align="center" width="25%">
 <img src="https://cdn.picxstudio.com/api/generated/image_51fc5883-5be1-476f-a98d-1a57f40c7c5a.png" width="160" /><br />
@@ -99,14 +60,14 @@ Every generation style is a pluggable **Skill**. Drop in a `SKILL.md` file and y
 <sub>Your pet as a hand-drawn character</sub>
 </td>
 <td align="center" width="25%">
-<img src="https://cdn.picxstudio.com/api/generated/image_560d04c6-b592-4f2a-a1a8-e54d87dca174.png" width="160" /><br />
-<strong>Faceless Portrait</strong><br />
-<sub>Aesthetic portrait without facial features</sub>
+<img src="https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png" width="160" /><br />
+<strong>Surprise Me</strong><br />
+<sub>Fictional character, no photo needed</sub>
 </td>
 </tr>
 </table>
 
-**+ more coming:** Emotional Modes, Seasonal Pack, and community-contributed skills.
+The full, always-current catalogue — including the newer **Coloring Page** (`coloring`, printable line art) and **Doodle Idea** (`idea`, draw a typed idea with no photo) — is data-driven from the skill files and rendered at **[doodleai.art/skills](https://doodleai.art/skills)**. This README deliberately does **not** list all 23: the count above is interpolated from the same source the app reads, and the picker page can't drift because it *is* the source.
 
 ---
 
@@ -185,16 +146,21 @@ Every skill is a self-contained directory under `src/mastra/skills/`:
 
 ```
 src/mastra/skills/your-skill/
-├── SKILL.md          # Metadata + agent instructions
+├── SKILL.md          # Agent-selection description + a `metadata:` block
 └── references/       # Optional supporting docs
 ```
 
-1. Create your `SKILL.md` with frontmatter (id, displayName, category, etc.)
-2. Add the generation mode to `src/lib/doodle-constants.ts`
-3. Add the prompt branch in `src/mastra/tools/generate-doodle.ts`
-4. Run `pnpm build` — the loader validates everything and fails with a helpful message if anything is missing
+A **runnable** skill (one the agent can generate with) has to be wired into four places. This isn't ceremony — three of the four are enforced by `tsc` or the loader precisely *because* the interesting failure mode is silent: a skill that half-exists, generates images, and never gets charged for them.
 
-The build catches broken skills before they can reach production.
+1. **`SKILL.md`** — top-level `description` (this is what the agent reads to pick the skill), plus a `metadata:` block with `id`, `displayName`, `runnable: true`, `requiresPhoto`, `aspectRatio`, etc. The `id` under `metadata:` — not the directory name — is the key everything else references.
+
+2. **Register a prompt builder** in `src/lib/prompts/index.ts`. Single-image skills add an entry to `SKILL_PROMPT_BUILDERS`; multi-image "pack" skills add one to `SKILL_PACK_BUILDERS` (and their id to `PACK_SKILL_IDS` in `costs.ts`). The builder function itself lives one-per-file under `src/lib/prompts/`. Without a registered builder the skill falls through to the generic single-image prompt at run time.
+
+3. **Add the id to `GENERATION_MODES`** in `src/lib/doodle-constants.ts`. This is the canonical list; `src/lib/skill-loader.ts` asserts at build that the set of `runnable: true` ids and `GENERATION_MODES` match *exactly* in both directions — a runnable skill missing from the list, or a mode with no skill, fails the build.
+
+4. **Add an entry to `IMAGES_PER_RUN`** in `src/lib/credits/costs.ts`. This map is typed `Record<GenerationMode, number>`, so the moment you add an id to `GENERATION_MODES` (step 3) without pricing it here, `tsc` fails with a missing-property error. **This is the one that matters most:** credits are resolved server-side from the skill id alone, so an unpriced skill would generate images while charging nothing. Making it a typed record means "ships a skill that generates for free" is a compile error, not a production incident. Pack skills also cross-check: an id in `PACK_SKILL_IDS` priced at 1 image (or a >1 entry not in the list) throws at module load.
+
+Then run `pnpm build` — the loader validates the whole chain and fails with a message pointing at whatever is missing.
 
 ---
 
@@ -203,7 +169,7 @@ The build catches broken skills before they can reach production.
 ```
 src/
 ├── mastra/          # Agent, skills (SKILL.md), and generation tool
-├── pages/           # Astro routes (/, /c/[id], /skills/, /settings, /api/*)
+├── pages/           # Astro routes (/, /c/[id], /skills/, /tools/, /settings, /api/*)
 ├── components/      # UI: Sidebar, Composer, Canvas, Footer, Navbar
 ├── scripts/app/     # Client controllers (chat, sidebar, media-picker)
 ├── lib/             # Auth, credits, content, admin queries
@@ -219,7 +185,7 @@ src/
 We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 **Good first issues:**
-- Add a new skill (just a `SKILL.md` + prompt branch)
+- Add a new skill (a `SKILL.md` + a registered prompt builder — see [Adding a New Skill](#️-adding-a-new-skill))
 - Improve an existing article in `src/content/articles/`
 - Fix a bug from the [issues tab](https://github.com/Type-Think-AI/doodle-ai/issues)
 
@@ -234,12 +200,13 @@ pnpm lint
 
 ## 🗺️ Roadmap
 
-- [x] 12 generation skills (avatar, collage, stickers, pet, couple, chibi, crayon, faceless, gift, mood, surprise, full-body)
+- [x] 23 generation skills — single-image (avatar, collage, pet, couple, chibi, crayon, faceless, gift, coloring, idea, family, occupation, …) and multi-image packs (stickers, mood-captions, expressions, seasonal, style-roll, childhood, festival, webtoon)
+- [x] Free-tool landing pages with the composer above the fold + `/tools/` hub (10 live)
 - [x] tldraw infinite canvas for generated images
 - [x] Multiplayer roadmap board (Durable Objects)
-- [x] Team workspaces and shared credits
+- [x] Team workspaces and shared credits (org-owned ledger, invites, per-member spend, credit transfer)
 - [x] SEO: keyword-first URLs, JSON-LD, FAQ schema, llms.txt
-- [ ] Stripe checkout for credit packs
+- [ ] Stripe checkout for credit packs (schema in place; checkout not switched on yet)
 - [ ] User-created custom skills
 - [ ] Video generation (provider-neutral adapter)
 - [ ] WhatsApp + Discord channel connectors

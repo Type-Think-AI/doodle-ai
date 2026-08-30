@@ -222,7 +222,8 @@ function connect(wsUrl) {
       const p = msg.id && pending.get(msg.id);
       if (p) {
         pending.delete(msg.id);
-        msg.error ? p.rej(new Error(JSON.stringify(msg.error))) : p.res(msg.result);
+        if (msg.error) p.rej(new Error(JSON.stringify(msg.error)));
+        else p.res(msg.result);
       }
     });
   });
@@ -397,7 +398,7 @@ try {
   try {
     title = await ev(client, 'document.title');
   } catch (e) {
-    throw new Error(`Could not read the homepage — is a dev server running at ${BASE}? (${e.message})`);
+    throw new Error(`Could not read the homepage — is a dev server running at ${BASE}? (${e.message})`, { cause: e });
   }
   note(`title: ${title}`);
 

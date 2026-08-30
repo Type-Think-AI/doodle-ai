@@ -9,6 +9,21 @@ interface Props {
 	 * is not announced as a generic website node.
 	 */
 	ogType?: 'website' | 'article';
+	/**
+	 * Path to this page's Markdown twin, e.g. `/cute-doodle.md`. When set, a
+	 * `<link rel="alternate" type="text/markdown">` is emitted so a crawler that
+	 * reads the HTML first can discover the clean version instead of guessing the
+	 * URL. Opt-in per page because the tag must never point at a 404 — only the
+	 * routes with a real `.md` sibling ([...path].md.ts, learn.md.ts) pass it.
+	 */
+	markdownUrl?: string;
+	/**
+	 * Real pixel size of `image`, when it is known. Both must be given together;
+	 * omitting them (the default) means no `og:image:width`/`height` is emitted
+	 * and scrapers measure the asset themselves — see the note at the tags.
+	 */
+	imageWidth?: number;
+	imageHeight?: number;
 }
 
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
@@ -22,6 +37,9 @@ const {
 	image = '/icon-512.png',
 	noindex = false,
 	ogType = 'website',
+	markdownUrl,
+	imageWidth,
+	imageHeight,
 } = Astro.props;
 
 const site = Astro.site ?? new URL('https://doodleai.art');
@@ -114,6 +132,20 @@ const jsonLd = {
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical} />
 		<link rel="alternate" hreflang="x-default" href={canonical} />
+		{
+			/* Markdown twin of this page. Agents and AI crawlers spend their context
+			   window on our nav, scripts and inline SVG before reaching a sentence of
+			   prose; several now look for this tag (or send Accept: text/markdown,
+			   which src/middleware.ts answers) and read the clean file instead. */
+			markdownUrl && (
+				<link
+					rel="alternate"
+					type="text/markdown"
+					href={new URL(markdownUrl, site)}
+					title="Markdown version of this page"
+				/>
+			)
+		}
 		<!-- Machine-readable discovery hint. A rel="alternate" with a JSON type
 		     is the standard alternate-representation pattern (same mechanism as
 		     the RSS alternate); it lets an agent find the article index from any
@@ -138,8 +170,23 @@ const jsonLd = {
 		<meta property="og:description" content={description} />
 		<meta property="og:image" content={ogImage} />
 		<meta property="og:image:alt" content="Doodle AI hand-drawn avatar creator" />
-		<meta property="og:image:width" content="1200" />
-		<meta property="og:image:height" content="630" />
+		{
+			/* Dimensions are OPT-IN, and nothing passes them yet — deliberately.
+			   They used to be hardcoded to 1200x630 for every page, which was
+			   inaccurate almost everywhere: the fallback is /icon-512.png (512x512)
+			   and both the article heroImages and the curated OG_IMAGE set are
+			   square PicX renders. A scraper that trusts a wrong declaration
+			   renders a stretched or cropped card, which is worse than not
+			   declaring at all — with these absent, Facebook/X/Slack fetch the
+			   image and measure it themselves. Pass both props only for an asset
+			   whose real pixel size is known. */
+			imageWidth && imageHeight && (
+				<>
+					<meta property="og:image:width" content={String(imageWidth)} />
+					<meta property="og:image:height" content={String(imageHeight)} />
+				</>
+			)
+		}
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />

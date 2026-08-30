@@ -1,0 +1,67 @@
+---
+/**
+ * `CollectionPage` + `ItemList` structured data for an index page.
+ *
+ * WHY: /tools/ and /learn/ are pure hubs — one lists the 10 free-tool screens,
+ * the other every editorial page. Both shipped with a title, a description and an
+ * OG image but NO structured data at all, so nothing told a crawler that the page
+ * is a set, how large the set is, or what is in it. `ItemList` states exactly
+ * that, and is the type Google reads for list-style treatments.
+ *
+ * `Article` would be wrong here (a hub is not a piece of writing) and
+ * `SoftwareApplication` would be wrong too (the hub is not itself the tool) —
+ * which is why this is a separate component rather than reusing ArticleSchema.
+ *
+ * `position` is 1-based and follows the page's own visual order, because a list
+ * whose declared order disagrees with the rendered order is worse than an
+ * unordered one.
+ */
+import { SITE_TITLE } from "../../consts";
+
+export interface CollectionItem {
+	/** Absolute or root-relative URL of the item. */
+	url: string;
+	name: string;
+	description?: string;
+}
+
+interface Props {
+	name: string;
+	description: string;
+	/** Root-relative path of the hub itself, e.g. "/tools/". */
+	path: string;
+	items: CollectionItem[];
+}
+
+const { name, description, path, items } = Astro.props;
+
+const site = Astro.site ?? new URL("https://doodleai.art");
+const absolute = (value: string) => new URL(value, site).href;
+const canonical = absolute(path);
+
+const collectionSchema = {
+	"@context": "https://schema.org",
+	"@type": "CollectionPage",
+	"@id": canonical,
+	url: canonical,
+	name,
+	description,
+	inLanguage: "en",
+	isPartOf: { "@type": "WebSite", "@id": `${site.href}#website` },
+	publisher: { "@type": "Organization", name: SITE_TITLE, url: site.href },
+	mainEntity: {
+		"@type": "ItemList",
+		numberOfItems: items.length,
+		itemListOrder: "https://schema.org/ItemListOrderAscending",
+		itemListElement: items.map((item, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			url: absolute(item.url),
+			name: item.name,
+			...(item.description ? { description: item.description } : {}),
+		})),
+	},
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />

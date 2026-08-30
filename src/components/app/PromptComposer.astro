@@ -14,11 +14,28 @@ interface Props {
   id: string;
   variant?: "hero" | "compact";
   placeholder?: string;
+  /**
+   * Generation-mode id to pin in the skill chip on first paint, with no
+   * `?skill=` in the URL. Used by tool landing pages (ToolLayout.astro), where
+   * the whole point is that the right skill is already selected before the
+   * visitor types anything.
+   *
+   * This is a DEFAULT, not an override: home.ts still lets `?skill=` win, and
+   * the visitor can clear the chip or pick another skill with `/`. Validation
+   * lives in home.ts via getSkill(), so an unknown id pins nothing rather than
+   * rendering a chip that names a skill the app cannot run.
+   */
+  defaultSkill?: string;
 }
-const { id, variant = "compact", placeholder = "Describe a doodle, drop a photo, or @mention a character" } = Astro.props;
+const {
+  id,
+  variant = "compact",
+  placeholder = "Describe a doodle, drop a photo, or @mention a character",
+  defaultSkill,
+} = Astro.props;
 ---
 
-<div class={`composer composer-${variant}`} data-id={id}>
+<div class={`composer composer-${variant}`} data-id={id} data-default-skill={defaultSkill}>
   <div class="composer-expand-backdrop" id={`${id}ExpandBackdrop`} hidden></div>
 
   <ComposerSkillChip id={id} />
@@ -54,10 +71,10 @@ const { id, variant = "compact", placeholder = "Describe a doodle, drop a photo,
 <script>
   /* Cosmetic/interaction layer ported from the "Prompt Composer v2" design
      that has no equivalent in home.ts/chat.ts: focus-expand mode, the
-     resize grabber, and the rendering-mode dropdown. None of this touches
-     send/attach/mention state — it only toggles classes and inline styles
-     on elements scoped by [data-id], so it safely runs alongside (and
-     independently of) each page's own composer controller.
+     resize grabber, and the style swatches. None of this touches
+     send/attach/mention state — it only toggles classes, inline styles and
+     the style localStorage key on elements scoped by [data-id], so it safely
+     runs alongside (and independently of) each page's own composer controller.
 
      Runs once per `.composer` found on the page (Home and Chat each render
      exactly one), guarded by a dataset flag in case Astro's script
@@ -78,9 +95,6 @@ const { id, variant = "compact", placeholder = "Describe a doodle, drop a photo,
     const collapseBtn = $(`CollapseBtn`);
     const editable = $(`Input`);
     const resizeHandle = $(`ResizeHandle`);
-    const modeBtn = $(`ModeBtn`) as HTMLButtonElement | null;
-    const modeMenu = $(`ModeMenu`);
-    const modeLabel = $(`ModeLabel`);
     if (!box || !editable) return;
 
     /* ---- Focus / expand ---- */
@@ -144,32 +158,215 @@ const { id, variant = "compact", placeholder = "Describe a doodle, drop a photo,
       });
     }
 
-    /* ---- Mode dropdown (cosmetic — no backend concept of modes yet) ---- */
-    if (modeBtn && modeMenu && modeLabel) {
-      let open = false;
-      const setOpen = (next: boolean): void => {
-        open = next;
-        modeMenu.hidden = !next;
-        modeBtn.setAttribute("aria-expanded", String(next));
+    /* ---- Style menu ----
+       One trigger, one popover. Persists to the same localStorage key that
+       getStyleId() reads, so choosing a style changes the next generation with
+       no request-shape change. The key arrives as a data attribute rather than
+       being re-typed here, so the client and doodle-constants.ts cannot drift. */
+    const styleRoot = $(`Style`);
+    const styleBtn = $(`StyleBtn`) as HTMLButtonElement | null;
+    const styleMenu = $(`StyleMenu`);
+    const styleLabel = $(`StyleLabel`);
+    const styleChip = $(`StyleChip`);
+    const styleCustomChip = $(`StyleCustomChip`);
+    const styleCustomPanel = $(`StyleCustomPanel`);
+    const styleHue = $(`StyleHue`) as HTMLInputElement | null;
+    const styleHex = $(`StyleHex`);
+
+    if (styleRoot && styleBtn && styleMenu) {
+      const storageKey = styleRoot.dataset.styleKey;
+      const items = Array.from(
+        styleMenu.querySelectorAll<HTMLButtonElement>(".composer-style-item"),
+      );
+      /* Must match STYLE_CUSTOM_PREFIX in src/lib/style-choice.ts — the module
+         that parses this value back out server-side. */
+      const CUSTOM_PREFIX = "custom:";
+      const CUSTOM_ID = "custom";
+
+      const readStoredStyle = (): string | null => {
+        if (!storageKey) return null;
+        try {
+          return localStorage.getItem(storageKey);
+        } catch {
+          return null;
+        }
       };
-      modeBtn.addEventListener("click", (e) => {
+
+      const persist = (value: string): void => {
+        if (!storageKey) return;
+        try {
+          localStorage.setItem(storageKey, value);
+        } catch {
+          /* storage unavailable — the choice still applies to this view */
+        }
+      };
+
+      /* Hue -> hex at fixed saturation/lightness. One dimension keeps this to a
+         single draggable handle, and pinning S/L holds the result inside the
+         range that reads as hand-drawn marker colour — a fully free picker
+         mostly yields unusable near-black and near-white choices. */
+      const hueToHex = (hue: number, saturation: number, lightness: number): string => {
+        const s = saturation / 100;
+        const l = lightness / 100;
+        const k = (n: number): number => (n + hue / 30) % 12;
+        const a = s * Math.min(l, 1 - l);
+        const f = (n: number): number =>
+          l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+        const toByte = (v: number): string =>
+          Math.round(v * 255)
+            .toString(16)
+            .padStart(2, "0");
+        return `#${toByte(f(0))}${toByte(f(8))}${toByte(f(4))}`.toUpperCase();
+      };
+
+      /** Paint the custom row chip, the hex readout, and the trigger chip. */
+      const paintCustomColour = (hue: number): string => {
+        const accent = hueToHex(hue, 72, 52);
+        // A pale wash of the same hue stands in for paper, so the custom preview
+        // reads the same way the fixed themes do (bg + accent).
+        const bg = hueToHex(hue, 60, 92);
+        [styleCustomChip, styleChip].forEach((chip) => {
+          if (!chip) return;
+          chip.style.setProperty("--swatch-accent", accent);
+          chip.style.setProperty("--swatch-bg", bg);
+        });
+        if (styleHex) styleHex.textContent = accent;
+        return accent;
+      };
+
+      const showCustomPanel = (show: boolean): void => {
+        if (styleCustomPanel) styleCustomPanel.hidden = !show;
+      };
+
+      const paintActive = (activeId: string | null): void => {
+        // Fall back to the first option when nothing is stored or the stored id
+        // is stale (a retired theme), matching resolveStyle()'s own fallback.
+        let resolved = activeId;
+        if (!resolved || !items.some((i) => i.dataset.styleId === resolved)) {
+          resolved = items[0]?.dataset.styleId ?? null;
+        }
+        items.forEach((item) => {
+          const on = item.dataset.styleId === resolved;
+          item.setAttribute("aria-checked", String(on));
+          if (!on) return;
+          if (styleLabel) styleLabel.textContent = item.dataset.styleLabel ?? "";
+          /* Mirror the chosen palette onto the trigger so the closed control
+             still shows which style is live. Custom has no fixed palette, so
+             paintCustomColour owns the trigger in that case. */
+          if (styleChip && item.dataset.styleId !== CUSTOM_ID) {
+            styleChip.style.setProperty("--swatch-bg", item.style.getPropertyValue("--swatch-bg"));
+            styleChip.style.setProperty("--swatch-accent", item.style.getPropertyValue("--swatch-accent"));
+          }
+        });
+      };
+
+      /** Recover a hue (0-359) from a stored hex so the handle lands where the
+       *  user left it instead of snapping back to the default. */
+      const hueFromHex = (hex: string): number | null => {
+        const parsed = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+        if (!parsed) return null;
+        const r = parseInt(parsed[1]!, 16) / 255;
+        const g = parseInt(parsed[2]!, 16) / 255;
+        const b = parseInt(parsed[3]!, 16) / 255;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        if (max === min) return 0;
+        const d = max - min;
+        let hue: number;
+        if (max === r) hue = ((g - b) / d) % 6;
+        else if (max === g) hue = (b - r) / d + 2;
+        else hue = (r - g) / d + 4;
+        hue = Math.round(hue * 60);
+        return hue < 0 ? hue + 360 : hue;
+      };
+
+      let styleOpen = false;
+      const setStyleOpen = (next: boolean): void => {
+        styleOpen = next;
+        styleMenu.hidden = !next;
+        styleBtn.setAttribute("aria-expanded", String(next));
+        if (next) {
+          // Land focus on the current choice so keyboard and screen-reader users
+          // start from where they are, not at the top of the list.
+          const current = items.find((i) => i.getAttribute("aria-checked") === "true");
+          (current ?? items[0])?.focus();
+        }
+      };
+
+      /* Restore. A custom choice is stored as "custom:#RRGGBB", which matches no
+         data-style-id, so it has to be unpacked BEFORE paintActive sees it —
+         otherwise the stale-id fallback would silently reset the user to the
+         first theme on every reload. */
+      const stored = readStoredStyle();
+      if (stored && stored.startsWith(CUSTOM_PREFIX)) {
+        const restoredHue = hueFromHex(stored.slice(CUSTOM_PREFIX.length));
+        if (restoredHue !== null && styleHue) styleHue.value = String(restoredHue);
+        paintCustomColour(Number(styleHue?.value ?? 42));
+        paintActive(CUSTOM_ID);
+        showCustomPanel(true);
+      } else {
+        paintCustomColour(Number(styleHue?.value ?? 42));
+        paintActive(stored);
+        showCustomPanel(false);
+      }
+
+      styleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        setOpen(!open);
+        setStyleOpen(!styleOpen);
       });
-      modeMenu.querySelectorAll<HTMLButtonElement>(".composer-mode-item").forEach((item) => {
+
+      items.forEach((item, index) => {
         item.addEventListener("click", () => {
-          const mode = item.dataset.mode || "Auto";
-          modeLabel.textContent = mode;
-          modeMenu.querySelectorAll(".composer-mode-item").forEach((i) => delete (i as HTMLElement).dataset.active);
-          item.dataset.active = "true";
-          setOpen(false);
+          const styleId = item.dataset.styleId;
+          if (!styleId) return;
+
+          if (styleId === CUSTOM_ID) {
+            /* Custom stays OPEN: the click selects the mode, and the colour is
+               chosen by dragging the slider this reveals. Closing here would
+               hide the control the user just asked for. */
+            const accent = paintCustomColour(Number(styleHue?.value ?? 42));
+            persist(`${CUSTOM_PREFIX}${accent}`);
+            paintActive(CUSTOM_ID);
+            showCustomPanel(true);
+            styleHue?.focus();
+            return;
+          }
+
+          persist(styleId);
+          paintActive(styleId);
+          showCustomPanel(false);
+          setStyleOpen(false);
+          styleBtn.focus();
+        });
+
+        // Roving arrow-key navigation within the menu.
+        item.addEventListener("keydown", (e) => {
+          if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+          e.preventDefault();
+          const delta = e.key === "ArrowDown" ? 1 : -1;
+          items[(index + delta + items.length) % items.length]?.focus();
         });
       });
+
+      /* `input`, not `change`: the swatch and the stored value track the handle
+         continuously as it is dragged, which is what makes the pick feel live. */
+      styleHue?.addEventListener("input", () => {
+        const accent = paintCustomColour(Number(styleHue.value));
+        persist(`${CUSTOM_PREFIX}${accent}`);
+        paintActive(CUSTOM_ID);
+      });
+      // Left/Right on the slider are its own; stop them reaching the menu's
+      // Up/Down roving handler or focus would jump mid-drag.
+      styleHue?.addEventListener("keydown", (e) => e.stopPropagation());
+
       document.addEventListener("click", (e) => {
-        if (open && !modeMenu.contains(e.target as Node) && e.target !== modeBtn) setOpen(false);
+        if (styleOpen && !styleRoot.contains(e.target as Node)) setStyleOpen(false);
       });
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && open) setOpen(false);
+        if (e.key === "Escape" && styleOpen) {
+          setStyleOpen(false);
+          styleBtn.focus();
+        }
       });
     }
   }

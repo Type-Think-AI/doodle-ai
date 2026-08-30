@@ -94,6 +94,7 @@ const appSchema = {
 	description={skill.longDesc}
 	image={heroImage}
 	active="skills"
+	markdownUrl={`/skills/${skill.id}.md`}
 >
 	<script type="application/ld+json" is:inline set:html={JSON.stringify(breadcrumbSchema)} />
 	<script type="application/ld+json" is:inline set:html={JSON.stringify(appSchema)} />

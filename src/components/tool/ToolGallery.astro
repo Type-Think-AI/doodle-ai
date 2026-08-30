@@ -1,0 +1,93 @@
+---
+/**
+ * Per-page example gallery for a tool page — masonry, viewable, shareable.
+ *
+ * SPLIT OUT OF ToolExamples.astro on purpose. That file now does one thing
+ * (the skill's own before/after and the sibling rail) and this does one thing,
+ * which keeps both under the size where a component starts hiding its own
+ * behaviour. The controller lives in src/scripts/app/tool-gallery.ts, matching
+ * where every other client controller in this codebase lives.
+ *
+ * MASONRY, NOT A CROPPED GRID
+ * The first version used `aspect-ratio: 1/1; object-fit: cover`, which CROPPED
+ * every example to a square. That is actively wrong here: the whole point of a
+ * coloring-page example is the full sheet, and a cropped one hides the edges of
+ * the line art — the part a visitor is judging. CSS multi-column masonry lets
+ * every image keep its true aspect ratio at full width of its column, so a tall
+ * pattern sheet and a square portrait can sit side by side undistorted.
+ *
+ * VIEWING reuses the existing <Lightbox /> (src/components/app/Lightbox.astro +
+ * src/scripts/app/lightbox.ts) rather than adding a second full-screen viewer.
+ * It already handles arrow keys, Escape, click-outside, the counter and body
+ * scroll lock. Duplicating that would be strictly worse.
+ *
+ * SHARING uses the Web Share API where the browser has it (that is the native
+ * sheet on iOS/Android, which is where sharing actually happens) and falls back
+ * to copying the link. It shares the PAGE url, not the bare CDN image: a shared
+ * image file is a dead end for both the visitor and for search, whereas the page
+ * carries the generator, the examples and the credit.
+ */
+import { resizedCdnImage, cdnImageSrcset } from "../../lib/cdn-image";
+
+interface Props {
+	/** This page's own example image URLs, in display order. */
+	images: string[];
+	/** Skill display name, used for honest alt text and the share title. */
+	skillName: string;
+	/** Page title, used as the share sheet's title. */
+	pageTitle: string;
+}
+const { images, skillName, pageTitle } = Astro.props;
+---
+
+{
+	images.length > 0 && (
+		<section class="tool-section tool-gallery-section" aria-labelledby="tool-gallery-h">
+			<h2 id="tool-gallery-h">More made with this tool</h2>
+			<p class="tool-gallery-hint">Tap any one to see it full size.</p>
+
+			<ul
+				class="tool-gallery"
+				data-tool-gallery
+				data-share-title={pageTitle}
+				data-images={JSON.stringify(images)}
+			>
+				{images.map((url, i) => (
+					<li>
+						<button
+							type="button"
+							class="tool-gallery-open"
+							data-gallery-url={url}
+							aria-label={`View ${skillName} example ${i + 1} full size`}
+						>
+							<img
+								src={resizedCdnImage(url, 700)}
+								srcset={cdnImageSrcset(url)}
+								sizes="(max-width: 560px) 92vw, (max-width: 900px) 46vw, 300px"
+								alt={`${skillName} example ${i + 1}`}
+								loading="lazy"
+								decoding="async"
+							/>
+						</button>
+						<button
+							type="button"
+							class="tool-gallery-share"
+							data-gallery-share={url}
+							aria-label={`Share ${skillName} example ${i + 1}`}
+						>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+								<path
+									d="M12 16V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"></path>
+							</svg>
+							<span>Share</span>
+						</button>
+					</li>
+				))}
+			</ul>
+		</section>
+	)
+}

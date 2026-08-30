@@ -29,7 +29,7 @@
       s.async = false;
       s.onload = function () { s.remove(); };
       (document.head || document.documentElement).appendChild(s);
-    } catch (e) {
+    } catch {
       // best effort
     }
   }

@@ -47,7 +47,6 @@ function el(tag, cls, text) {
   if (text != null) e.textContent = text;
   return e;
 }
-function esc(s) { return String(s == null ? "" : s); }
 
 // ============================================================
 // Tabs
@@ -161,7 +160,7 @@ function prefillArgs(schema) {
   var required = Array.isArray(schema.required) ? schema.required : [];
   Object.keys(props).forEach(function (k) {
     var p = props[k] || {};
-    var placeholder = "";
+    var placeholder;
     if (p.type === "number" || p.type === "integer") placeholder = 0;
     else if (p.type === "boolean") placeholder = false;
     else if (p.type === "array") placeholder = [];
@@ -319,11 +318,11 @@ function doInvoke() {
   var t0 = performance.now();
   bridge("executeTool", { name: name, args: args }).then(function (r) {
     var dt = Math.round(performance.now() - t0);
-    showInvokeResult(t, r, dt);
+    showInvokeResult(t, r);
     status.textContent = "Done in " + dt + " ms";
   });
 }
-function showInvokeResult(tool, r, dt) {
+function showInvokeResult(tool, r) {
   $("invoke-result-wrap").hidden = false;
   var pre = $("invoke-result");
   var budget = $("invoke-budget");
@@ -365,7 +364,7 @@ function toOpenAITools() {
   });
 }
 
-function chatCompletion(cfg, messages, tools, signalAbort) {
+function chatCompletion(cfg, messages, tools) {
   var url = cfg.baseUrl.replace(/\/+$/, "") + "/chat/completions";
   var body = { model: cfg.model, messages: messages };
   if (tools && tools.length) { body.tools = tools; body.tool_choice = "auto"; }
@@ -383,7 +382,7 @@ function chatCompletion(cfg, messages, tools, signalAbort) {
       }
       var json;
       try { json = JSON.parse(text); }
-      catch (e) { throw new Error("Non-JSON response from endpoint."); }
+      catch (e) { throw new Error("Non-JSON response from endpoint.", { cause: e }); }
       return json;
     });
   });
@@ -508,7 +507,7 @@ function executeCalls(cfg, messages, oaiTools, step, calls, idx, thinkMs) {
   var name = fn.name;
   var argsObj = {};
   try { argsObj = fn.arguments ? JSON.parse(fn.arguments) : {}; }
-  catch (e) { argsObj = {}; }
+  catch { argsObj = {}; }
 
   var tool = state.toolsByName[name];
   transcriptStep("tool", "tool call → " + name + (thinkMs ? " · think " + thinkMs + " ms" : ""), JSON.stringify(argsObj));

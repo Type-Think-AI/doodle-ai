@@ -4,6 +4,7 @@ import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import Lightbox from '../../components/app/Lightbox.astro';
 import PromptComposer from '../../components/app/PromptComposer.astro';
 import DoodleCanvas from '../../components/app/DoodleCanvas.tsx';
+import { resolveTldrawLicenseKey } from '../../lib/tldraw-license';
 import '../../styles/chat-page.css';
 import '../../styles/chat-bubbles.css';
 
@@ -11,6 +12,11 @@ import '../../styles/chat-bubbles.css';
 // board. Route param only — the thread's contents still live in localStorage
 // and are read client-side, same as before.
 const threadId = Astro.params.id ?? 'new';
+
+// Resolved per request from the Worker environment (Secrets Store binding in
+// production, .dev.vars locally) and handed to the island as a prop. This page
+// must stay `prerender = false` for that to work — see src/lib/tldraw-license.ts.
+const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 ---
 
 <AppShellLayout title="Chat — Doodle AI" active="chat">
@@ -59,7 +65,7 @@ const threadId = Astro.params.id ?? 'new';
 		     browser-only and must never enter the Worker/SSR bundle. -->
 		<div class="canvas-panel" id="canvasPanel">
 			<div class="canvas-stage" id="canvasStage">
-				<DoodleCanvas client:only="react" threadId={threadId} />
+				<DoodleCanvas client:only="react" threadId={threadId} licenseKey={tldrawLicenseKey} />
 				<div class="canvas-empty-hint" id="canvasEmptyHint">
 					<p>Your doodles will appear here as you generate them.<br/>Pan, zoom, resize, draw on them — it's your infinite canvas.</p>
 				</div>

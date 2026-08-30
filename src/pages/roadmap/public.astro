@@ -9,6 +9,7 @@ export const prerender = false;
 import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import RoadmapBoard from '../../components/app/RoadmapBoard.tsx';
 import { resolvePlatformRole } from '../../lib/auth/admin-guard';
+import { resolveTldrawLicenseKey } from '../../lib/tldraw-license';
 
 const ROOM = 'public-v6';
 
@@ -17,13 +18,17 @@ const env = (Astro.locals as { runtime?: { env?: RoadmapEnv } })?.runtime?.env;
 const hasSync = !!env?.ROADMAP_ROOM;
 const resolved = hasSync ? await resolvePlatformRole(Astro as never) : null;
 const canSeed = !hasSync || resolved?.platformRole === 'admin';
+
+// Same Worker env the ROADMAP_ROOM check above reads, resolved through
+// readSecret because this one arrives as a Secrets Store binding.
+const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 ---
 
 <AppShellLayout title="Roadmap — Doodle AI" active="roadmap" showFooter
   description="The Doodle AI public roadmap. See what's coming and drop your own feedback as a sticky note.">
   <div class="roadmap-page">
     <div class="roadmap-stage">
-      <RoadmapBoard client:only="react" room={ROOM} connectPath={`/api/roadmap/connect/${ROOM}`} canSeed={canSeed} variant="public" />
+      <RoadmapBoard client:only="react" room={ROOM} connectPath={`/api/roadmap/connect/${ROOM}`} canSeed={canSeed} variant="public" licenseKey={tldrawLicenseKey} />
     </div>
   </div>
 </AppShellLayout>

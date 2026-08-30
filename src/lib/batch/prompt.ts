@@ -25,10 +25,10 @@ import {
   pick,
   pickMany,
   SURPRISE_PROMPTS,
-  THEMES,
   VIRAL_MOOD_WORDS,
   type GenerationMode,
 } from "../doodle-constants";
+import { resolveStyle } from "../style-choice";
 
 export type AspectRatio = "1:1" | "3:2";
 
@@ -52,8 +52,8 @@ export function buildBatchPrompt(
   skillId: string,
   options: { styleId?: string | null; description?: string | null },
 ): BuiltPrompt {
-  const theme = THEMES.find((t) => t.id === options.styleId) || THEMES[0];
-  const themeHint = `Apply this visual style distinctly: ${theme.styleHint}`;
+  const resolvedStyle = resolveStyle(options.styleId);
+  const themeHint = resolvedStyle.themeHint;
   const description = options.description ?? undefined;
 
   switch (skillId) {

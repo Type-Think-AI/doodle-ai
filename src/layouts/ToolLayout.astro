@@ -1,0 +1,204 @@
+---
+/**
+ * Layout for `category: "tool"` pages — the free-tool screens.
+ *
+ * WHY THIS EXISTS SEPARATELY FROM ArticleLayout
+ * These URLs answer converter queries: "photo to coloring page", "free ai
+ * doodle generator", "image to doodle converter". The searcher wants an input
+ * box, not an essay, and the SERPs are held by pages that ARE the tool
+ * (colorifyai.art, ilus.ai). ArticleLayout puts a 16:9 hero, a breadcrumb, a
+ * date line and an H1 above the first interactive element, so the generator
+ * lands below the fold — on the exact query where being the tool is the whole
+ * advantage. Here the order is inverted: the generator is the hero.
+ *
+ * Section order, and why:
+ *   1. Compact title block   — one line of context, no hero image stealing the fold
+ *   2. THE REAL COMPOSER     — skill pre-pinned, attach + camera + @mentions live
+ *   3. Real output examples  — proof it works, before the reader has to trust prose
+ *   4. How it works          — three steps, no padding
+ *   5. Prose body            — the article's own markdown
+ *   6. Skill detail          — what the bound skill actually does, links to /skills/<id>
+ *   7. FAQ                   — visible Q&A, which is what makes FAQPage markup honest
+ *   8. Related tools         — internal links
+ *
+ * IT IS THE REAL COMPOSER, NOT A REPLICA
+ * `ArticleComposer.astro` (used by ArticleLayout) is a look-alike that can only
+ * build a link to `/?skill=…&prompt=…`. It cannot attach a photo, open the
+ * camera, or @mention a character — so on a "photo to coloring page" query, the
+ * one thing the query demands is impossible above the fold. This layout mounts
+ * `PromptComposer` with `id="home"` and runs the real `home.ts` controller, so
+ * there is exactly one generation implementation in the codebase. Send creates a
+ * thread and hands off to `/c/[id]`, identical to the homepage.
+ *
+ * `id="home"` is load-bearing: home.ts looks up its elements by that literal
+ * prefix (`homeInput`, `homeSend`, …). Renaming it here silently disables the
+ * composer, which is why the prop is hardcoded rather than parameterised.
+ *
+ * The composer's dialogs are mounted here too (AuthDialog, Toast,
+ * UpgradeContactDialog). Without AuthDialog an anonymous visitor pressing send
+ * would fire `doodleai:open-auth` into a page with no listener and appear to
+ * click a dead button — the worst possible outcome on a page whose entire job is
+ * converting anonymous search traffic.
+ */
+import type { CollectionEntry } from "astro:content";
+import AppLayout from "./AppLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import ArticleSchema from "../components/article/ArticleSchema.astro";
+import Breadcrumbs from "../components/article/Breadcrumbs.astro";
+import RelatedArticles from "../components/article/RelatedArticles.astro";
+import PromptComposer from "../components/app/PromptComposer.astro";
+import AuthDialog from "../components/app/AuthDialog.astro";
+import UpgradeContactDialog from "../components/app/UpgradeContactDialog.astro";
+import Toast from "../components/app/Toast.astro";
+import ToolExamples from "../components/tool/ToolExamples.astro";
+import ToolGallery from "../components/tool/ToolGallery.astro";
+import ToolSteps from "../components/tool/ToolSteps.astro";
+import ToolFaq from "../components/tool/ToolFaq.astro";
+import ToolSkillCard from "../components/tool/ToolSkillCard.astro";
+import ToolAppSchema from "../components/tool/ToolAppSchema.astro";
+import Lightbox from "../components/app/Lightbox.astro";
+import { getBreadcrumbs, getRelatedArticles } from "../lib/content/articles";
+import { getToolExamples } from "../lib/content/tool-examples";
+import { getSkill } from "../lib/skills";
+import "../styles/app.css";
+import "../styles/page.css";
+/* Tool-page CSS, split by concern rather than one 420-line file. Separate for
+   editing, not for loading — they always ship together. */
+import "../styles/tool.css";
+import "../styles/tool-sections.css";
+import "../styles/tool-prose.css";
+import "../styles/tool-gallery.css";
+
+interface Props {
+	path: string;
+	data: CollectionEntry<"articles">["data"];
+}
+
+const { path, data } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, faq, skill, primaryKeyword } = data;
+
+// The schema guarantees `skill` on a tool page, so an unresolvable id here means
+// GENERATION_MODES and the skill catalogue have drifted — fail the build loudly
+// rather than render a tool with no tool in it.
+const boundSkill = skill ? getSkill(skill) : undefined;
+if (!boundSkill) {
+	throw new Error(
+		`ToolLayout: /${path}/ declares skill "${skill}" but src/lib/skills.ts has no such skill. ` +
+			`A tool page cannot render without a runnable skill.`,
+	);
+}
+
+const breadcrumbs = await getBreadcrumbs(path, title);
+const related = await getRelatedArticles(path, 4);
+/* Read once here and hand down, rather than two components each importing and
+   re-deriving the same manifest JSON. */
+const exampleImages = getToolExamples(path);
+
+/* The H1 carries the keyword; this strips a trailing "— subtitle" from the
+   editorial title so the tool header reads as a product name with the rest
+   demoted to a subhead, instead of one long sentence in 2rem type. */
+const [headline, ...rest] = title.split(" — ");
+const subhead = rest.join(" — ") || boundSkill.tagline;
+
+const composerPlaceholder = primaryKeyword
+	? `Describe the ${primaryKeyword} you want…`
+	: "Describe what you want…";
+---
+
+<AppLayout
+	title={`${title} — doodleai.art`}
+	description={description}
+	image={heroImage}
+	ogType="website"
+	markdownUrl={`/${path}.md`}
+>
+	<ArticleSchema
+		title={title}
+		description={description}
+		path={path}
+		pubDate={pubDate}
+		updatedDate={updatedDate}
+		heroImage={heroImage}
+		breadcrumbs={breadcrumbs}
+		faq={faq}
+		slot="head"
+	/>
+
+	{/* A tool page is an application as well as an article — see the component's
+	    header for why both types are emitted for the same URL. */}
+	<ToolAppSchema
+		name={headline}
+		description={description}
+		path={path}
+		skillName={boundSkill.name}
+		screenshot={heroImage}
+		faqCount={faq?.length ?? 0}
+		slot="head"
+	/>
+
+	<Navbar />
+
+	<main class="tool-page">
+		<header class="tool-head">
+			<Breadcrumbs items={breadcrumbs} />
+			<span class="tool-eyebrow">Free tool</span>
+			<h1>{headline}</h1>
+			<p class="tool-subhead">{subhead}</p>
+		</header>
+
+		{/* The fold. Everything above this is four short lines of context. */}
+		<section class="tool-composer" aria-label={`Generate with the ${boundSkill.name} skill`}>
+			<PromptComposer
+				id="home"
+				variant="hero"
+				placeholder={composerPlaceholder}
+				defaultSkill={boundSkill.id}
+			/>
+			<p class="tool-composer-note">
+				{
+					boundSkill.requiresPhoto
+						? "Attach a photo and press send. New accounts get free starter credits — no card."
+						: "No photo needed. Describe it and press send. New accounts get free starter credits — no card."
+				}
+			</p>
+		</section>
+
+		<ToolExamples skill={boundSkill} />
+
+		<ToolGallery images={exampleImages} skillName={boundSkill.name} pageTitle={headline} />
+
+		<ToolSteps skill={boundSkill} />
+
+		<div class="tool-prose">
+			<slot />
+		</div>
+
+		<ToolSkillCard skill={boundSkill} />
+
+		<ToolFaq faq={faq} />
+
+		<footer class="tool-footer">
+			<RelatedArticles heading="Related tools and guides" items={related} />
+		</footer>
+	</main>
+
+	<Footer />
+
+	<AuthDialog />
+	<UpgradeContactDialog />
+	<Toast />
+	<Lightbox />
+
+	<script>
+		import { initThemeToggle } from "../lib/theme";
+		const themeToggle = document.getElementById("themeToggle");
+		if (themeToggle) initThemeToggle(themeToggle);
+	</script>
+</AppLayout>
+
+{/* The one real composer controller, same module the homepage runs. */}
+<script src="../scripts/app/home.ts"></script>
+
+{/* Gallery: open an example full size in the shared Lightbox, or share it. */}
+<script src="../scripts/app/tool-gallery.ts"></script>

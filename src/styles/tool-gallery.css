@@ -1,0 +1,148 @@
+/* Tool-page example gallery — masonry, true aspect ratio.
+ *
+ * Split out of tool.css, which had grown past 400 lines and was carrying the
+ * page shell, the prose, the FAQ and the galleries in one file.
+ *
+ * WHY CSS MULTI-COLUMN AND NOT GRID
+ * `grid` needs a row height, and any row height forces either a fixed
+ * aspect-ratio box (which crops) or ragged whitespace. Multi-column lets each
+ * image keep its NATURAL aspect ratio at the full width of its column, so a tall
+ * pattern sheet and a square portrait sit side by side undistorted and larger
+ * than a cropped square of the same column width. `break-inside: avoid` is what
+ * stops an image being split across a column boundary.
+ *
+ * The known trade-off: multi-column fills top-to-bottom per column, so visual
+ * order runs down column 1, then column 2. For an unordered set of examples that
+ * is fine. It would not be for anything sequential — do not reuse this for steps.
+ */
+
+.tool-gallery-section {
+	/* The gallery is the widest thing on a 760px-measure page and reads better
+	   given a little more room than the prose. */
+	margin-top: 56px;
+}
+
+.tool-gallery-hint {
+	margin: -8px 0 18px;
+	font-size: 0.82rem;
+	color: var(--text-dimmer);
+}
+
+.tool-gallery {
+	columns: 3;
+	column-gap: 12px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.tool-gallery li {
+	position: relative;
+	break-inside: avoid;
+	margin: 0 0 12px;
+	/* Establishes the containing block for the absolutely-positioned share
+	   button and clips the image's corners to the same radius. */
+	border-radius: 14px;
+	overflow: hidden;
+	border: 1px solid var(--border);
+	background: var(--card-hover);
+}
+
+/* The whole tile is the view control, so it is a real <button> rather than a
+   click handler on a div — keyboard and screen-reader support for free. */
+.tool-gallery-open {
+	display: block;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: zoom-in;
+	line-height: 0;
+}
+
+.tool-gallery-open img {
+	width: 100%;
+	height: auto;
+	display: block;
+	transition: transform 0.28s ease;
+}
+
+.tool-gallery-open:hover img {
+	transform: scale(1.02);
+}
+
+.tool-gallery-open:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: -2px;
+}
+
+/* Share sits on the image. Always visible on touch (there is no hover to
+   reveal it) and it must clear 44px of hit area even though the visible pill is
+   smaller, hence the padding rather than a fixed height. */
+.tool-gallery-share {
+	position: absolute;
+	right: 8px;
+	bottom: 8px;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 9px 12px;
+	min-height: 36px;
+	border: 0;
+	border-radius: 999px;
+	background: rgba(0, 0, 0, 0.62);
+	backdrop-filter: blur(6px);
+	color: #fff;
+	font: inherit;
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.tool-gallery-share:hover {
+	background: rgba(0, 0, 0, 0.82);
+}
+
+.tool-gallery-share:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+/* On pointer devices the pill would sit over the artwork permanently, so it
+   fades in on hover/focus there. Touch devices keep it always visible — the
+   media query below re-shows it. */
+@media (hover: hover) and (pointer: fine) {
+	.tool-gallery-share {
+		opacity: 0;
+	}
+	.tool-gallery li:hover .tool-gallery-share,
+	.tool-gallery-share:focus-visible {
+		opacity: 1;
+	}
+}
+
+@media (max-width: 900px) {
+	.tool-gallery {
+		columns: 2;
+	}
+}
+
+@media (max-width: 480px) {
+	/* One column on a small phone: at ~46vw a coloring sheet's line work is too
+	   small to judge, which defeats the point of showing it. */
+	.tool-gallery {
+		columns: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tool-gallery-open img,
+	.tool-gallery-open:hover img {
+		transition: none;
+		transform: none;
+	}
+	.tool-gallery-share {
+		transition: none;
+	}
+}

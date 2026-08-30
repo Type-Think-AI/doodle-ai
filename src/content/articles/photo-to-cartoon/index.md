@@ -1,11 +1,26 @@
 ---
-title: "How to Turn a Photo into a Cartoon with Doodle AI"
-description: "A practical process for turning a selfie or portrait into a playful square doodle at doodleai.art: photo prep, sign-in, the Normal avatar skill, prompt wording, credits, privacy, and current limits."
+title: "Photo to Cartoon: Turn a Photo into a Doodle"
+description: "Turn a photo to cartoon at doodleai.art: sign in, attach a face-forward selfie, run the Normal doodle skill, and get one square hand-drawn avatar. Photo prep, prompts, credits, privacy, and limits."
 pubDate: 2026-08-25
-updatedDate: 2026-08-25
-heroImage: "https://cdn.picxstudio.com/api/generated/image_fe46119c-7ab0-449b-95dd-399c090c12ac.png"
+updatedDate: 2026-08-29
+heroImage: "https://cdn.picxstudio.com/api/generated/image_d09c9f08-2a75-499e-bc69-9f2d73d6e7ab.jpg"
 category: "guide"
 cluster: "cartoon"
+skill: "normal"
+primaryKeyword: "photo to cartoon"
+faq:
+  - question: "How do I turn my photo into a cartoon here?"
+    answer: "Sign in with Google, attach one clear face-forward photo in the composer, and ask for a doodle avatar. The Normal skill is the default for “photo to cartoon” and “doodle me.” Generate, look at the square still, then refine or stop."
+  - question: "Can AI turn my photo into a cartoon?"
+    answer: "On Doodle AI, yes — as a playful hand-drawn still redrawn from your photo. That is not the same as a text-to-video product or a script-to-animation tool. You get one square illustrated avatar per generation."
+  - question: "Is the photo to cartoon converter free?"
+    answer: "Browsing skill pages is free. Generation uses credits. New accounts get free starter credits (currently 5), each generation costs 1 credit, and failed generations refund. Paid checkout is off, so there is no paywall and no “unlimited” promise."
+  - question: "Will the cartoon look exactly like me?"
+    answer: "Normal is instructed to keep recognizable landmarks — hairstyle, face shape, expression, skin tone, glasses, and accessories — but it does not guarantee identical characters across generations. Judge each still. If it drifts, name the landmarks again in your next prompt."
+  - question: "Can I use the cartoon as a profile picture?"
+    answer: "Yes. Download the square still and crop it yourself for a PFP. It is not a dedicated export preset and it is not a professional headshot product — it is a hand-drawn doodle you can crop for Instagram, WhatsApp, or Discord."
+  - question: "What happens to my photo?"
+    answer: "It is uploaded through Doodle AI’s server-owned PicX connection, used to generate the still, and hosted along that path. You never paste a provider key. Read the privacy policy and only upload photos you have the right to use."
 ---
 
 **Direct answer:** To turn a photo into a cartoon at [doodleai.art](https://doodleai.art), sign in, attach a clear face-forward photo, and run the [Normal doodle avatar](https://doodleai.art/skills/normal/) skill. You get one square hand-drawn still, not a headshot, print, or video. Each generation reserves 1 credit and refunds on failure; new accounts start with 5.

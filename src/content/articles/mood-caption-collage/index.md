@@ -3,7 +3,7 @@ title: "How to Make a Mood-Caption Collage from a Photo"
 description: "Turn one photo into a 3:2 six-panel mood-caption collage at doodleai.art. What the Mood Captions skill actually letters, how the word pool works, how it differs from other collages, and how to review and post the still yourself."
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
-heroImage: "https://cdn.picxstudio.com/api/generated/image_f217610d-a7ea-4b96-819f-2dfec195c57b.png"
+heroImage: "https://cdn.picxstudio.com/api/generated/image_829da19d-460e-456f-908d-95d3903ccefa.jpg"
 category: "guide"
 cluster: "social"
 ---

@@ -8,6 +8,7 @@ export const prerender = false;
 import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import RoadmapBoard from '../../components/app/RoadmapBoard.tsx';
 import { resolvePlatformRole } from '../../lib/auth/admin-guard';
+import { resolveTldrawLicenseKey } from '../../lib/tldraw-license';
 
 const ROOM = 'team-v1';
 
@@ -22,13 +23,17 @@ if (!resolved || resolved.platformRole !== 'admin') {
 }
 
 const canSeed = true; // Only admins reach here.
+
+// Same Worker env the ROADMAP_ROOM check above reads, resolved through
+// readSecret because this one arrives as a Secrets Store binding.
+const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 ---
 
 <AppShellLayout title="Team Roadmap — Doodle AI" active="roadmap"
   description="Internal team roadmap — deploy, CI/CD, infrastructure, and sprint items.">
   <div class="roadmap-page">
     <div class="roadmap-stage">
-      <RoadmapBoard client:only="react" room={ROOM} connectPath={`/api/roadmap/connect/${ROOM}`} canSeed={canSeed} variant="team" />
+      <RoadmapBoard client:only="react" room={ROOM} connectPath={`/api/roadmap/connect/${ROOM}`} canSeed={canSeed} variant="team" licenseKey={tldrawLicenseKey} />
     </div>
   </div>
 </AppShellLayout>

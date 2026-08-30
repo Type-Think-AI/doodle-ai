@@ -23,8 +23,9 @@ export const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([
 	"settings",
 	"skills",
 	"team",
-	// Content directory index
+	// Content directory indexes
 	"learn",
+	"tools",
 	// Legal, plus the legacy short paths that 308 to them
 	"privacy",
 	"privacy-policy",

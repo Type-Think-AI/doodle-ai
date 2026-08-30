@@ -1,0 +1,254 @@
+/* Tool-page SECTION styles — the real before/after pair, the sibling skill rail,
+ * the three-step how-it-works list, the bound-skill block and the FAQ.
+ *
+ * Split out of tool.css. Pairs with ToolExamples.astro, ToolSteps.astro,
+ * ToolSkillCard.astro and ToolFaq.astro. The masonry example gallery is NOT here
+ * — it has its own file, tool-gallery.css, because it is the one section with a
+ * non-trivial layout model.
+ */
+
+/* ─── Examples: real before/after ─── */
+
+.tool-pair {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	gap: 14px;
+	margin: 0;
+}
+
+.tool-pair-item {
+	min-width: 0;
+}
+
+.tool-pair-item img,
+.tool-single img {
+	width: 100%;
+	height: auto;
+	display: block;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: var(--card-hover);
+}
+
+.tool-pair-item figcaption,
+.tool-single figcaption {
+	margin-top: 8px;
+	font-size: 0.78rem;
+	color: var(--text-dimmer);
+	text-align: center;
+}
+
+.tool-pair-arrow {
+	color: var(--accent);
+	flex: 0 0 auto;
+}
+
+.tool-single {
+	margin: 0;
+	max-width: 480px;
+}
+
+.tool-rail-h {
+	margin: 32px 0 14px;
+	font-size: 0.85rem !important;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	color: var(--text-dim);
+}
+
+.tool-rail {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.tool-rail a {
+	display: block;
+	text-decoration: none;
+	color: var(--text-dim);
+}
+
+.tool-rail img {
+	width: 100%;
+	height: auto;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+	display: block;
+	border-radius: 12px;
+	border: 1px solid var(--border);
+}
+
+.tool-rail span {
+	display: block;
+	margin-top: 7px;
+	font-size: 0.78rem;
+	line-height: 1.35;
+}
+
+.tool-rail a:hover span {
+	color: var(--text);
+}
+
+/* ─── Steps ─── */
+
+.tool-steps ol {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 20px;
+}
+
+.tool-steps li {
+	display: flex;
+	gap: 14px;
+	align-items: flex-start;
+}
+
+.tool-step-n {
+	flex: 0 0 auto;
+	width: 26px;
+	height: 26px;
+	border-radius: 999px;
+	border: 1px solid var(--border2, var(--border));
+	display: grid;
+	place-items: center;
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--accent);
+}
+
+.tool-steps p {
+	margin: 0;
+	font-size: 0.92rem;
+	line-height: 1.65;
+	color: var(--text-dim);
+}
+
+/* ─── Skill block ─── */
+
+.tool-skill-tagline {
+	margin: 0 0 12px;
+	font-size: 0.95rem;
+	color: var(--text-dim);
+}
+
+.tool-skill-desc {
+	margin: 0 0 20px;
+	font-size: 0.92rem;
+	line-height: 1.7;
+	color: var(--text-dim);
+}
+
+.tool-skill-facts {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px;
+	margin: 0 0 22px;
+	padding: 16px 0;
+	border-top: 1px solid var(--border);
+	border-bottom: 1px solid var(--border);
+}
+
+.tool-skill-facts dt {
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	color: var(--text-dimmer);
+	margin-bottom: 5px;
+}
+
+.tool-skill-facts dd {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--text);
+}
+
+.tool-skill-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	min-height: 44px;
+	font-size: 0.9rem;
+	color: var(--text);
+	text-decoration: none;
+}
+
+.tool-skill-link:hover {
+	color: var(--accent);
+}
+
+/* ─── FAQ ─── */
+
+.tool-faq-list details {
+	border-bottom: 1px solid var(--border);
+}
+
+.tool-faq-list summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	min-height: 52px;
+	padding: 12px 0;
+	cursor: pointer;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--text);
+	list-style: none;
+}
+
+.tool-faq-list summary::-webkit-details-marker {
+	display: none;
+}
+
+.tool-faq-list summary svg {
+	flex: 0 0 auto;
+	color: var(--text-dimmer);
+	transition: transform 0.18s ease;
+}
+
+.tool-faq-list details[open] summary svg {
+	transform: rotate(180deg);
+}
+
+.tool-faq-list p {
+	margin: 0 0 18px;
+	font-size: 0.92rem;
+	line-height: 1.7;
+	color: var(--text-dim);
+}
+
+@media (max-width: 640px) {
+	/* The arrow between the pair costs a column that the images need on a 375px
+	   screen, so the pair stacks and the arrow rotates to point down. */
+	.tool-pair {
+		grid-template-columns: 1fr;
+		gap: 10px;
+	}
+
+	.tool-pair-arrow {
+		justify-self: center;
+		transform: rotate(90deg);
+	}
+
+	.tool-rail {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.tool-skill-facts {
+		grid-template-columns: 1fr;
+		gap: 12px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tool-faq-list summary svg {
+		transition: none;
+	}
+}

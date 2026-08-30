@@ -22,6 +22,16 @@ export const GENERATION_MODES = [
   "couple",
   "pet",
   "faceless",
+  /* Added Aug 2026 for the free-tool landing pages (docs/tool-pages-plan.md).
+     The /tools/ pages were bound to the nearest available skill rather than the
+     right one — 7 coloring-page tools ran `crayon` (an ugly-cute crayon
+     PORTRAIT skill, nothing about line art) and 3 idea tools ran `surprise`
+     (which invents a random fictional character instead of drawing what you
+     typed). These two exist so those pages run a skill that matches the query.
+     Builders live in src/lib/prompts/ and are registered in
+     SKILL_PROMPT_BUILDERS. */
+  "coloring",
+  "idea",
   /* Pack skills (Aug 2026). Each produces SEVERAL separate images from one
      run — one PicX call per variant, priced per image in
      src/lib/credits/costs.ts. Their prompt builders return a PackVariant[]

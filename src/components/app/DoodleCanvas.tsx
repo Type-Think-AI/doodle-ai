@@ -75,6 +75,14 @@ interface DoodleCanvasProps {
   threadId: string;
   /** Images already in the thread on first paint (page reload / revisit). */
   initialUrls?: string[];
+  /**
+   * tldraw licence key, resolved server-side from the Worker environment and
+   * handed down as a prop. Deliberately NOT read from `import.meta.env` here:
+   * that inlines it at build time, so the key only existed when the build ran on
+   * a machine holding `.env` — see src/lib/tldraw-license.ts for the outage that
+   * caused. Optional so the component still renders (unlicensed) if it is absent.
+   */
+  licenseKey?: string;
 }
 
 /* Queue chat.ts writes to before this island exists.
@@ -143,7 +151,7 @@ function hideEmptyHint(): void {
   if (hint) hint.hidden = true;
 }
 
-export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanvasProps) {
+export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }: DoodleCanvasProps) {
   const editorRef = useRef<Editor | null>(null);
   /* URLs already placed, so a re-render or a duplicate NDJSON event doesn't
      stack a second copy of the same doodle on top of the first. */
@@ -430,7 +438,7 @@ export default function DoodleCanvas({ threadId, initialUrls = [] }: DoodleCanva
         <Tldraw
           // Per-thread key: each chat gets its own board, and it survives reload.
           persistenceKey={`doodleai-canvas-${threadId}`}
-          licenseKey={import.meta.env.PUBLIC_TLDRAW_LICENSE_KEY}
+          licenseKey={licenseKey}
           components={CANVAS_COMPONENTS}
           onMount={handleMount}
         />

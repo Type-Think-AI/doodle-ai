@@ -240,7 +240,8 @@ function connect(wsUrl) {
       const p = msg.id && pending.get(msg.id);
       if (p) {
         pending.delete(msg.id);
-        msg.error ? p.rej(new Error(JSON.stringify(msg.error))) : p.res(msg.result);
+        if (msg.error) p.rej(new Error(JSON.stringify(msg.error)));
+        else p.res(msg.result);
       }
     });
   });
@@ -435,7 +436,7 @@ async function runScenarioLLM(client, scenario, tools, toolIndex) {
       try {
         args = call.function?.arguments ? JSON.parse(call.function.arguments) : {};
       } catch {
-        args = {};
+        // Malformed tool-call arguments: fall back to the empty-object default.
       }
 
       const record = await executeToolGuarded(client, name, args, toolIndex);

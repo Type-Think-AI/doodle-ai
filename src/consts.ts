@@ -19,6 +19,14 @@ export const OG_IMAGE = {
 	learn: "https://cdn.picxstudio.com/api/generated/image_1ec39073-cdbf-420b-9198-2ad1d1dbbd6c.png",
 	skills: "https://cdn.picxstudio.com/api/generated/image_1b9d3b74-6e31-44cd-9906-f414a92a2d70.png",
 	forStudios: "https://cdn.picxstudio.com/api/generated/image_f8d97467-263f-49d1-a410-68e0304cc4b0.png",
+	/**
+	 * /characters/ reuses the "Nova" sign-in sample below rather than shipping a
+	 * dedicated render: it is a real doodle character portrait, which is exactly
+	 * what that page is about, and any curated doodle beats the square app icon
+	 * this route was falling back to. Replace with a purpose-made card when
+	 * `scripts/generate-blog-thumbnails.mjs --pages` is next run.
+	 */
+	characters: "https://cdn.picxstudio.com/api/generated/image_8e49ae56-a6d9-42f5-ae26-011e03e1b5c9.png",
 } as const;
 
 /**

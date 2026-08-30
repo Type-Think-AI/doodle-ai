@@ -7,6 +7,7 @@ export type Cluster = Article["data"]["cluster"];
 
 /** Human labels for the editorial formats. Used as the article eyebrow and on /learn/. */
 export const CATEGORY_LABEL: Record<Category, string> = {
+	tool: "Free tool",
 	guide: "Guide",
 	explainer: "Explainer",
 	prompts: "Prompts",
@@ -14,17 +15,23 @@ export const CATEGORY_LABEL: Record<Category, string> = {
 };
 
 /** Order the categories appear in on /learn/, highest search intent first. */
-export const CATEGORY_ORDER: readonly Category[] = ["guide", "explainer", "prompts", "studios"];
+export const CATEGORY_ORDER: readonly Category[] = ["tool", "guide", "explainer", "prompts", "studios"];
 
 export const CATEGORY_BLURB: Record<Category, string> = {
+	tool: "Open one, describe it, generate. The skill is already selected.",
 	guide: "Step-by-step processes for one photo and one result.",
 	explainer: "What a term actually means, and which job you have.",
 	prompts: "Copyable prompt patterns for the runnable skills.",
 	studios: "Production workflows for studios and filmmakers.",
 };
 
-/** Sitemap priority per format. Guides carry the highest commercial intent. */
+/**
+ * Sitemap priority per format. Tool pages rank highest because they are the only
+ * ones where the page itself completes the searcher's job rather than describing
+ * how to complete it.
+ */
 export const CATEGORY_PRIORITY: Record<Category, string> = {
+	tool: "0.9",
 	guide: "0.8",
 	explainer: "0.8",
 	prompts: "0.7",
@@ -41,6 +48,10 @@ export interface ArticleLink {
 	pubDate: Date;
 	updatedDate?: Date;
 	heroImage?: string;
+	/** Bound generation-mode id. Always set on a `tool` page (schema-enforced). */
+	skill?: string;
+	/** The single head keyword this page targets, used as the short nav label. */
+	primaryKeyword?: string;
 }
 
 function toLink(entry: Article): ArticleLink {
@@ -55,6 +66,8 @@ function toLink(entry: Article): ArticleLink {
 		pubDate: entry.data.pubDate,
 		updatedDate: entry.data.updatedDate,
 		heroImage: entry.data.heroImage,
+		skill: entry.data.skill,
+		primaryKeyword: entry.data.primaryKeyword,
 	};
 }
 
@@ -77,6 +90,44 @@ export async function getArticlesByCategory(): Promise<
 		blurb: CATEGORY_BLURB[category],
 		items: links.filter((l) => l.category === category),
 	})).filter((group) => group.items.length > 0);
+}
+
+/**
+ * Every `category: "tool"` page — the free-tool screens.
+ *
+ * ONE source for the /tools/ hub, the navbar, the footer column and the sitemap,
+ * so converting a page (a single frontmatter line) makes it appear in all four
+ * without anyone editing a hand-written list. A hard-coded footer array is
+ * exactly how these things drift: batch 2 and 3 would silently ship unlinked.
+ *
+ * Sorted by title so the hub reads alphabetically rather than by publish date —
+ * these are tools, not posts, and every one of them was published on the same day.
+ */
+export async function getToolLinks(): Promise<ArticleLink[]> {
+	const links = await getArticleLinks();
+	return links
+		.filter((l) => l.category === "tool")
+		.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+/**
+ * Tool pages grouped by the skill that powers them, which is the only grouping
+ * that tells a visitor something they cannot already see from the title. Seven
+ * coloring URLs powered by one skill is a fact worth surfacing, not hiding.
+ */
+export async function getToolsBySkill(): Promise<{ skill: string; items: ArticleLink[] }[]> {
+	const tools = await getToolLinks();
+	const bySkill = new Map<string, ArticleLink[]>();
+	for (const tool of tools) {
+		const key = tool.skill ?? "other";
+		const bucket = bySkill.get(key);
+		if (bucket) bucket.push(tool);
+		else bySkill.set(key, [tool]);
+	}
+	// Largest group first — that is where a browsing visitor has most to choose from.
+	return [...bySkill.entries()]
+		.map(([skill, items]) => ({ skill, items }))
+		.sort((a, b) => b.items.length - a.items.length);
 }
 
 /**

@@ -549,9 +549,8 @@ const read_article_section: WebMcpToolDef = {
     //      index — an in-range index resolves, an out-of-range one (including 0
     //      and negatives) returns RANGE guidance naming the valid range.
     //   3. Otherwise it is an unknown slug — return slug guidance.
-    let idx = -1;
     const want = sectionArg.toLowerCase();
-    idx = sections.findIndex((s) => (s.slug ?? "").toLowerCase() === want);
+    let idx = sections.findIndex((s) => (s.slug ?? "").toLowerCase() === want);
 
     if (idx < 0 && /^-?\d+$/.test(sectionArg)) {
       const asIndex = Number(sectionArg);

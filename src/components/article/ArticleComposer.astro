@@ -1,0 +1,245 @@
+---
+/**
+ * In-page "try it" composer for keyword landing pages.
+ *
+ * This is NOT a second generator. It is a faithful visual replica of the app's
+ * prompt area (same rounded box, same skill chip, same accent send button) that
+ * hands the typed prompt to the ONE real composer on the homepage by navigating
+ * to `/?skill=<id>&prompt=<text>`. `src/scripts/app/home.ts` already reads those
+ * query params — it validates the skill with `getSkill()`, pins the skill chip,
+ * and pre-fills the prompt — so a submit here lands the reader in the real,
+ * signed-in generation flow with the right skill pre-applied. No new PicX call,
+ * no new generateDoodle mode, no duplicated controller.
+ *
+ * Progressive enhancement: with JS off, the "Create your doodle" control is a
+ * plain anchor to `/?skill=<id>`, so the CTA still works. With JS on, the typed
+ * prompt is appended so the reader arrives with their words already in the box.
+ */
+import { getSkill } from "../../lib/skills";
+
+interface Props {
+	/** Existing generation-mode / skill id, e.g. "normal". Validated below. */
+	skill: string;
+	/** Primary keyword, used only to seed a sensible placeholder. */
+	keyword?: string;
+	/** Optional starter prompt pre-filled into the box. */
+	starter?: string;
+}
+
+const { skill, keyword, starter } = Astro.props;
+
+// Resolve the skill so the panel can name it honestly. If the id is unknown
+// (should never happen — the schema constrains it to GENERATION_MODES) we still
+// render, defaulting the label, and the CTA falls back to the plain app.
+const resolved = getSkill(skill);
+const skillName = resolved?.name ?? "Doodle Avatar";
+const requiresPhoto = resolved?.requiresPhoto ?? true;
+
+const placeholder = starter
+	? starter
+	: keyword
+		? `Describe your ${keyword}…`
+		: "Describe the doodle you want…";
+
+// The fallback link (JS-off) and the base the script extends.
+const ctaHref = `/?skill=${encodeURIComponent(skill)}`;
+---
+
+<section class="try-panel" aria-label={`Create a doodle with the ${skillName} skill`}>
+	<div class="try-head">
+		<span class="try-eyebrow">Try it now</span>
+		<a class="try-chip" href={`/skills/${skill}/`} title={`Explore the ${skillName} skill`}>
+			{resolved?.thumbnailUrl ? (
+				<img class="try-chip-thumb" src={resolved.thumbnailUrl} alt="" width="22" height="22" />
+			) : (
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2.5 6.5L22 12l-6.5 2.5L13 21l-2.5-6.5L4 12l6.5-2.5z"
+						stroke="currentColor"
+						stroke-width="1.6"
+						stroke-linecap="round"
+						stroke-linejoin="round"></path>
+				</svg>
+			)}
+			<span>{skillName}</span>
+		</a>
+	</div>
+
+	<div class="try-box" data-article-composer data-skill={skill} data-cta={ctaHref}>
+		<textarea
+			class="try-input"
+			id="tryInput"
+			rows="3"
+			placeholder={placeholder}
+			aria-label={placeholder}>{starter}</textarea>
+
+		<div class="try-row">
+			<p class="try-note">
+				{
+					requiresPhoto
+						? "Sign in and attach a photo to generate. New accounts get free starter credits."
+						: "Sign in to generate. New accounts get free starter credits."
+				}
+			</p>
+			<a class="try-send" href={ctaHref} data-article-composer-send>
+				Create your doodle
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M5 12h14M13 6l6 6-6 6"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"></path>
+				</svg>
+			</a>
+		</div>
+	</div>
+</section>
+
+<script>
+	/* Extend the CTA with the typed prompt at submit time. Kept tiny and
+	   dependency-free: the real composer state lives on the homepage. */
+	function initArticleComposers(): void {
+		const boxes = document.querySelectorAll<HTMLElement>("[data-article-composer]");
+		boxes.forEach((box) => {
+			if (box.dataset.acInit === "true") return;
+			box.dataset.acInit = "true";
+
+			const input = box.querySelector<HTMLTextAreaElement>(".try-input");
+			const send = box.querySelector<HTMLAnchorElement>("[data-article-composer-send]");
+			const skill = box.dataset.skill ?? "";
+			const base = box.dataset.cta ?? "/";
+			if (!input || !send) return;
+
+			const buildHref = (): string => {
+				const prompt = input.value.trim();
+				const params = new URLSearchParams();
+				if (skill) params.set("skill", skill);
+				if (prompt) params.set("prompt", prompt);
+				const qs = params.toString();
+				return qs ? `/?${qs}` : base;
+			};
+
+			// Keep the anchor href live so middle-click / open-in-new-tab also
+			// carry the prompt, and so there is no click-handler race.
+			const sync = () => send.setAttribute("href", buildHref());
+			input.addEventListener("input", sync);
+			sync();
+
+			// Cmd/Ctrl+Enter submits, matching the app's keyboard habit.
+			input.addEventListener("keydown", (e) => {
+				if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+					e.preventDefault();
+					window.location.href = buildHref();
+				}
+			});
+		});
+	}
+
+	initArticleComposers();
+	document.addEventListener("astro:page-load", initArticleComposers);
+</script>
+
+<style>
+	.try-panel {
+		margin: 8px 0 32px;
+		padding: 18px;
+		border-radius: 20px;
+		border: 1px solid var(--border3, var(--border));
+		background: var(--card-hover, var(--surface2));
+		box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+	}
+
+	.try-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 12px;
+	}
+
+	.try-eyebrow {
+		font-size: 12px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-dim);
+	}
+
+	.try-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		padding: 5px 11px;
+		border-radius: 999px;
+		border: 1px solid var(--border2, var(--border));
+		background: var(--surface2, var(--surface));
+		font-size: 12.5px;
+		color: var(--text);
+	}
+	.try-chip svg { color: var(--accent, #fab700); flex: 0 0 auto; }
+	.try-chip { text-decoration: none; }
+	.try-chip-thumb { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; flex: 0 0 auto; }
+
+	.try-box {
+		border-radius: 16px;
+		background: var(--surface, #fff);
+		border: 1px solid var(--border3, var(--border));
+		padding: 14px 14px 12px;
+	}
+	.try-box:focus-within {
+		border-color: var(--text-dimmer, var(--accent, #fab700));
+	}
+
+	.try-input {
+		width: 100%;
+		border: 0;
+		background: none;
+		resize: vertical;
+		min-height: 62px;
+		font: inherit;
+		font-size: 15px;
+		line-height: 1.5;
+		color: var(--text);
+		outline: none;
+	}
+	.try-input::placeholder { color: var(--text-dimmer, #999); }
+
+	.try-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 14px;
+		margin-top: 10px;
+		flex-wrap: wrap;
+	}
+
+	.try-note {
+		margin: 0;
+		font-size: 12.5px;
+		color: var(--text-dim);
+		max-width: 60ch;
+	}
+
+	.try-send {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		padding: 10px 16px;
+		border-radius: 999px;
+		background: var(--accent, #fab700);
+		color: #1a1400;
+		font-weight: 600;
+		font-size: 14px;
+		text-decoration: none;
+		white-space: nowrap;
+		transition: transform 0.12s ease, filter 0.12s ease;
+	}
+	.try-send:hover { filter: brightness(1.05); transform: translateY(-1px); }
+	.try-send svg { flex: 0 0 auto; }
+
+	@media (max-width: 520px) {
+		.try-row { flex-direction: column; align-items: stretch; }
+		.try-send { justify-content: center; }
+	}
+</style>
