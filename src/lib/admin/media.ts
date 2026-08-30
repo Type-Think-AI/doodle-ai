@@ -8,7 +8,7 @@
  * Imports directly from the domain modules, NOT the queries barrel, so this
  * module stays self-contained and adds nothing to that barrel's export surface.
  */
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../../db/client";
 import { user } from "../../db/schema/auth";
 import { generation } from "../../db/schema/product";
@@ -66,10 +66,21 @@ export interface AdminMediaDetail {
   userImage: string | null;
 }
 
-/** Map a status-filter chip to the SQL predicate over `generation.status`. */
+/**
+ * Map a status-filter chip to the SQL predicate over `generation.status`.
+ *
+ * The "failed" bucket reads FAILED_STATUSES rather than an inline list. That
+ * list was previously written out twice as raw SQL — here and in the chip-count
+ * query — while the constant sat unused, which is exactly how the two copies
+ * drift apart the first time a new failure state is added.
+ */
+function failedPredicate() {
+  return inArray(generation.status, [...FAILED_STATUSES]);
+}
+
 function statusPredicate(filter: MediaStatusFilter) {
   if (filter === "all") return undefined;
-  if (filter === "failed") return sql`${generation.status} IN ('failed', 'refunded')`;
+  if (filter === "failed") return failedPredicate();
   return eq(generation.status, filter);
 }
 
@@ -145,7 +156,7 @@ export async function listMedia(
       .select({ n: count() })
       .from(generation)
       .innerJoin(user, eq(generation.userId, user.id))
-      .where(statusScopeWhere(sql`${generation.status} IN ('failed', 'refunded')`)),
+      .where(statusScopeWhere(failedPredicate())),
     db
       .select({ n: count() })
       .from(generation)

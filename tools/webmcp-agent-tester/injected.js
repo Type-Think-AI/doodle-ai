@@ -43,7 +43,7 @@
     } else if (schema && typeof schema === "object") {
       try {
         schemaOut = JSON.stringify(schema);
-      } catch (e) {
+      } catch {
         schemaOut = null;
       }
     }

@@ -44,6 +44,9 @@ importers:
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2(@cloudflare/workers-types@4.20260702.1)(kysely@0.29.5)
+      github-slugger:
+        specifier: 2.0.0
+        version: 2.0.0
       mixpanel-browser:
         specifier: 2.82.1
         version: 2.82.1

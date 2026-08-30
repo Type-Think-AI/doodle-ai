@@ -315,7 +315,9 @@ async function writeBaseline(state) {
   await mkdir(STATE_DIR, { recursive: true });
   // Store only durable fields — drop the 24h transient activity so the baseline
   // does not churn every run.
-  const { recentIssues, recentPRs, ...durable } = state;
+  const durable = { ...state };
+  delete durable.recentIssues;
+  delete durable.recentPRs;
   await writeFile(STATE_PATH, JSON.stringify(durable, null, 2) + '\n', 'utf8');
 }
 
