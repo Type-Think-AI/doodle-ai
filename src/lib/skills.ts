@@ -11,9 +11,9 @@
 
 import { buildAvatarSVG } from "./doodle-avatar";
 import { SAMPLE_PRESETS } from "./doodle-constants";
-import { SKILL_DEFINITIONS, type SkillCategory } from "./skill-loader";
+import { SKILL_DEFINITIONS, type SkillCategory, type SkillKind } from "./skill-loader";
 
-export type { SkillCategory };
+export type { SkillCategory, SkillKind };
 
 /* Neutral build-time thumbnail theme — same convention the old sample rail
    used, independent of the visual-style themes users pick in Settings. */
@@ -34,8 +34,14 @@ export interface Skill {
   category: SkillCategory;
   tags: string[];
   runnable: boolean;
+  /** 'image' or 'video' — the UI badges a video skill and warns it costs per second. */
+  kind: SkillKind;
   requiresPhoto: boolean;
-  aspectRatio: "1:1" | "3:2";
+  /* Shape of the skill's OUTPUT, used for the catalogue tile. "9:16" belongs to
+     the vertical clip skills only — the image submit contract
+     (src/lib/media/submit-image.ts) stays 1:1|3:2 because PicX has no portrait
+     still size, and a video skill never reaches that path. */
+  aspectRatio: "1:1" | "3:2" | "9:16";
   /** Index into SAMPLE_PRESETS (doodle-constants.ts), used only when thumbnailUrl is unset. */
   sampleIndex: number;
   /** A real generateDoodle output to show instead of the synthetic SVG preview, when set. */
@@ -61,6 +67,7 @@ export const SKILLS: Skill[] = SKILL_DEFINITIONS.map((definition) => ({
   category: definition.category,
   tags: definition.tags,
   runnable: definition.runnable,
+  kind: definition.kind,
   requiresPhoto: definition.requiresPhoto,
   aspectRatio: definition.aspectRatio,
   sampleIndex: definition.sampleIndex,

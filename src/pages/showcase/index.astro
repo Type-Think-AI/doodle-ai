@@ -1,0 +1,129 @@
+---
+import AppShellLayout from '../../layouts/AppShellLayout.astro';
+import ClipTile from '../../components/app/ClipTile.astro';
+import '../../styles/showcase.css';
+
+/* WHY THIS FILE IS NOT ALLOWED TO STATIC-IMPORT ITS DATA.
+ *
+ * src/data/showcase-clips.json is produced by the generation script, and it may
+ * legitimately not exist yet — a fresh clone, or a build that runs before
+ * anyone has spent the credits. A bare `import clips from '...json'` turns that
+ * into a hard build failure on a page whose only job is to say "here is what
+ * this makes, and here is what happens when there is nothing yet".
+ *
+ * import.meta.glob resolves at build time and yields an empty object when the
+ * pattern matches nothing, so a missing file is data, not an error. It also
+ * needs no Node builtins, which matters because this project builds for the
+ * Cloudflare adapter.
+ *
+ * KEY NAMING. The plan writes cdn_url, the lane brief writes cdnUrl. Both are
+ * read below rather than betting on which one lands, because guessing wrong
+ * shows an empty page while the data sits right there on disk. */
+const FILES = import.meta.glob('../../data/showcase-clips.json', { eager: true }) as Record<string, unknown>;
+
+/* `caption` and `resolution` are deliberately NOT read any more. The captions
+   were generated with an endpoint name in front of them ("Image-to-video: …")
+   and repeated what the tile's own line already says, and a resolution is a
+   number no consumer asked for. Less prose, more motion. */
+interface Clip {
+	id: string;
+	title: string;
+	skillId?: string;
+	mode?: string;
+	seconds?: number;
+	sourceImageUrl?: string;
+	cdnUrl: string;
+}
+
+const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
+const firstText = (row: Record<string, unknown>, ...keys: string[]): string => {
+	for (const key of keys) {
+		const found = text(row[key]);
+		if (found) return found;
+	}
+	return '';
+};
+const count = (value: unknown): number | undefined => {
+	const parsed = typeof value === 'number' ? value : Number.parseFloat(text(value));
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+};
+
+/* Everything from here to `clips` is defensive on purpose: the file is written
+   by another process, so it can be absent, an object rather than an array, or
+   hold a half-written row. Any of those must degrade to the empty state, never
+   to a 500 or a broken tile. */
+let clips: Clip[];
+try {
+	const module = Object.values(FILES)[0] as { default?: unknown } | undefined;
+	const payload = module?.default ?? module;
+	const rows: unknown[] = Array.isArray(payload)
+		? payload
+		: Array.isArray((payload as { clips?: unknown })?.clips)
+			? ((payload as { clips: unknown[] }).clips)
+			: [];
+
+	clips = rows
+		.filter((row): row is Record<string, unknown> => !!row && typeof row === 'object' && !Array.isArray(row))
+		.map((row, index) => ({
+			id: firstText(row, 'id', 'clipId') || `clip-${index + 1}`,
+			title: firstText(row, 'title') || 'Untitled',
+			skillId: firstText(row, 'skillId', 'skill_id', 'skill') || undefined,
+			mode: firstText(row, 'mode') || undefined,
+			seconds: count(row.seconds ?? row.duration_seconds ?? row.durationSeconds),
+			sourceImageUrl: firstText(row, 'sourceImageUrl', 'source_image_url') || undefined,
+			cdnUrl: firstText(row, 'cdnUrl', 'cdn_url', 'url'),
+		}))
+		// A row with no playable URL is dropped rather than rendered as a tile
+		// that cannot play. An empty page is honest; a dead tile is not.
+		.filter((clip) => clip.cdnUrl.length > 0);
+} catch {
+	clips = [];
+}
+
+const description =
+	'Real doodles brought to life in Doodle AI — a drawing that starts moving, and new scenes starring the same doodle character. Everything here was made in the app.';
+
+/* A real NavKey: `showcase` is now in nav-items.ts and in AppShellLayout's
+   union, so the sidebar row and the mobile tab are both rendered from NAV_ITEMS
+   and light up from this prop. No URL matching, no cast. */
+const activeNav = 'showcase';
+---
+
+<AppShellLayout
+	title="Showcase — doodles that move — Doodle AI"
+	description={description}
+	active={activeNav}
+>
+	<div class="showcase">
+		<header class="showcase-head">
+			<h1>Doodles that move</h1>
+			<p class="showcase-sub">Every one of these started as a drawing in this app.</p>
+			<p class="showcase-note">Muted. Nothing moves until you hover or press play.</p>
+		</header>
+
+		{clips.length > 0 ? (
+			<ul class="showcase-grid">
+				{clips.map((clip) => (
+					<ClipTile
+						id={clip.id}
+						title={clip.title}
+						skillId={clip.skillId}
+						mode={clip.mode}
+						seconds={clip.seconds}
+						sourceImageUrl={clip.sourceImageUrl}
+						cdnUrl={clip.cdnUrl}
+					/>
+				))}
+			</ul>
+		) : (
+			<div class="showcase-empty">
+				<h2>Nothing here yet</h2>
+				<p>
+					This page only shows real work made in Doodle AI, so it stays empty until the first
+					doodles are brought to life. No samples, no placeholders.
+				</p>
+				<p><a href="/skills">See what the app can make</a></p>
+			</div>
+		)}
+	</div>
+</AppShellLayout>

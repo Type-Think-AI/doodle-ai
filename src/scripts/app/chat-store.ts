@@ -38,6 +38,14 @@ export interface ChatMessage {
   /** A #-mentioned moodboard image, sent as an extra style/composition reference. */
   refImageUrl?: string;
   images?: string[];
+  /**
+   * Async video clips generated in this turn. Added additively — older threads
+   * in localStorage have no `videos` key and keep deserialising untouched. A
+   * clip is persisted here at `queued` time (url absent) so a reload re-attaches
+   * to the in-flight job by jobId rather than losing it; its `status`/`url` are
+   * updated in place as the poll (video-job.ts) resolves it to `ok`/`failed`.
+   */
+  videos?: { jobId: string; url?: string; status: string; skillId?: string; posterUrl?: string }[];
   createdAt: number;
 }
 
@@ -178,6 +186,40 @@ export function appendMessage(id: string, message: ChatMessage): ChatMessage[] {
   return messages;
 }
 
+/**
+ * Update one queued clip inside a thread's stored messages in place.
+ *
+ * The poll (video-job.ts) calls this as a job moves queued -> ok/failed so a
+ * reload mid-render re-attaches to the resolved clip, not a stuck placeholder.
+ * Matched by jobId across all messages; a no-op if the clip is not found (the
+ * thread may have been deleted, or the append not yet flushed). Local only —
+ * the assistant message itself is synced to the server through appendMessage,
+ * and re-posting a whole message to patch one clip's status is not worth a
+ * round trip when the authoritative row already lives in D1.
+ */
+export function updateThreadVideo(
+  threadId: string,
+  jobId: string,
+  patch: { url?: string; status?: string; posterUrl?: string },
+): void {
+  const messages = loadThread(threadId);
+  let changed = false;
+  for (const msg of messages) {
+    if (!msg.videos) continue;
+    const clip = msg.videos.find((v) => v.jobId === jobId);
+    if (clip) {
+      if (patch.url !== undefined) clip.url = patch.url;
+      if (patch.status !== undefined) clip.status = patch.status;
+      // Persisted so a reload re-attaches the clip WITH its poster (migration
+      // 0018) rather than re-fetching the row just for the still.
+      if (patch.posterUrl !== undefined) clip.posterUrl = patch.posterUrl;
+      changed = true;
+      break;
+    }
+  }
+  if (changed) saveThread(threadId, messages);
+}
+
 export function getThreadTitle(id: string): string {
   return loadIndex().find((t) => t.id === id)?.title || "New chat";
 }
@@ -229,6 +271,28 @@ export function setThreadThumbnail(id: string, thumbnailUrl: string, title: stri
   entry.title = title;
   saveIndex(index);
   patchThread(id, { thumbnailUrl, title });
+}
+
+/**
+ * Name a thread without giving it a thumbnail.
+ *
+ * Exists for the animation-only thread. `setThreadThumbnail` sets the name and
+ * the picture together, which is right for a doodle but impossible for a clip:
+ * the sidebar paints its thumbnail with `img.src`, and an mp4 there renders a
+ * broken-image icon. So a thread whose first result is an animation would either
+ * be stuck as "New chat" forever or carry a broken tile — this takes the name
+ * and leaves the tile empty until a still exists to fill it.
+ *
+ * Only fires while the title is still the placeholder, so it can never rename a
+ * thread a doodle has already titled.
+ */
+export function setThreadTitleIfUnset(id: string, title: string): void {
+  const index = loadIndex();
+  const entry = index.find((t) => t.id === id);
+  if (!entry || (entry.title && entry.title !== "New chat")) return;
+  entry.title = title;
+  saveIndex(index);
+  patchThread(id, { title });
 }
 
 export function deleteThread(id: string): void {

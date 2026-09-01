@@ -36,6 +36,9 @@
 .chat-split[data-resizing="true"] { cursor: col-resize; user-select: none; }
 
 .chat-split[data-whiteboard="true"] {
+	/* Must match --bg in src/styles/app.css. A third definition exists as an
+	   inline style on the chat shell; all three have to agree or the chat page
+	   renders a different canvas from Home. */
 	--bg: #141414;
 	--stage: #0a0a0a;
 	--surface: #141414;

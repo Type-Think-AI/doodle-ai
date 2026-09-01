@@ -31,15 +31,43 @@ GOOGLE_CLIENT_SECRET=replace-with-your-google-oauth-client-secret
 
 # Server-owned PicX key used for authenticated, credit-metered generation and uploads.
 PICX_API_KEY=replace-with-a-picx-key
-# Signing secret for inbound PicX webhook deliveries. Copy it from the API key's
-# detail view in the PicX developer console — it is the key-derived secret used to
-# sign per-request `callback_url` deliveries, and is not returned by any API.
+
+# Signing secret for inbound PicX webhook deliveries (X-PicX-Signature).
 #
-# Optional. While unset, batch generation keeps blocking on each render (the
-# previous behaviour) and POST /api/webhooks/picx refuses every delivery with 503.
-# Local `astro dev` cannot receive real deliveries anyway: PicX rejects a callback
-# host it cannot resolve publicly, so localhost is not a usable target. Use
-# `cloudflared tunnel --url http://localhost:4321` if you need to exercise it.
+# ── WHY THIS IS NOT OPTIONAL FOR VIDEO ──────────────────────────────────────
+# The async submit path is gated on this being set. While it is BLANK:
+#   • image batches silently fall back to the OLD synchronous path (each render
+#     blocks the request), which still works — so leaving it blank looks fine;
+#   • POST /api/webhooks/picx refuses every delivery with 503 (fails closed);
+#   • VIDEO has NO synchronous fallback — a clip is submitted async and completed
+#     only by the inbound webhook, so with this blank VIDEO SIMPLY CANNOT WORK.
+# It reads as "set but empty" today; that empty value is what disables video.
+#
+# ── HOW TO GET THE VALUE (format: whsec_<hex>) ──────────────────────────────
+# Two sources, pick one:
+#   1. Per-request callback_url (what this app uses): the signing secret is the
+#      deterministic inline secret DERIVED FROM THE API KEY. Read it from the API
+#      key's detail endpoint in the PicX developer console — it is shown as a
+#      `whsec_`-prefixed value tied to that key and is stable for the key.
+#   2. Registered webhook: create a webhook in the PicX console instead, which
+#      issues its OWN `whsec_` secret — shown ONCE at creation, so copy it then.
+# Do not invent one: an HMAC computed with the wrong secret fails every delivery
+# (401 invalid_signature), which is indistinguishable from "not configured".
+#
+# ── WHERE IT BELONGS (project rule) ─────────────────────────────────────────
+#   • Deployed Workers: Cloudflare Secrets Store, bound via secrets_store_secrets
+#     in wrangler.json for BOTH prod and staging. Create the store secret FIRST,
+#     THEN add the binding — a binding that references a missing secret fails the
+#     deploy with error 10182 and blocks every later deploy of that worker,
+#     including git-connected auto-deploys. See docs/secrets.md for the commands.
+#   • Locally: this .dev.vars file only.
+#   • NEVER in a tracked file, and NEVER as a PUBLIC_-prefixed build-time var —
+#     it is a server-side signing key and must not reach the browser bundle.
+#
+# Local astro dev cannot receive real deliveries: PicX rejects a callback host it
+# cannot resolve publicly, so localhost is not a usable target. Expose it with
+# `cloudflared tunnel --url http://localhost:4321`, or exercise the verifier
+# offline with `node scripts/video-smoke.mjs` (see that file's header).
 PICX_WEBHOOK_SECRET=
 
 # tldraw canvas licence key. NOT actually secret — tldraw validates it in the
@@ -55,3 +83,48 @@ PICX_WEBHOOK_SECRET=
 # does NOT merely watermark. localhost is exempt, which is what hid the fault.
 # Get one at https://tldraw.dev/pricing
 TLDRAW_LICENSE_KEY=replace-with-your-tldraw-license-key
+
+
+# ── Local video/webhook testing over a tunnel ────────────────────────────────
+#
+# WHY THIS IS NEEDED. The callback URL PicX delivers results to is derived from
+# the incoming request's origin, so staging and production each call themselves
+# back with zero config. On a dev machine that derives http://localhost:4321,
+# which PicX's SSRF guard refuses — so a video generation can never complete
+# locally. Point the callback at a tunnel instead:
+#
+#   ngrok http --domain="intensely-moral-pig.ngrok-free.app" 4321
+#
+# Then the receiver is https://intensely-moral-pig.ngrok-free.app/api/webhooks/picx
+#
+# Leave PICX_CALLBACK_ORIGIN UNSET in staging and production. Set there it would
+# route every environment's callbacks to one host, including production results
+# to somebody's dev tunnel.
+PICX_CALLBACK_ORIGIN=https://intensely-moral-pig.ngrok-free.app
+
+# ── Signature verification: the part that cannot be skipped by choice ────────
+#
+# PicX SIGNS every delivery (X-PicX-Signature: t=…,v1=…). That is not optional on
+# their side and there is no "unsigned" mode. Which secret it signs with depends
+# on how the generation was submitted, and this is the bit that decides your setup:
+#
+#   callback_url only   -> signed with a secret DERIVED from your API key
+#                          (HMAC of PicX's own server key + the api_key_id).
+#                          No endpoint returns it, so a consumer CANNOT obtain it
+#                          and therefore cannot verify these deliveries.
+#   registered webhook  -> signed with that webhook's own whsec_… secret, which
+#                          POST /api/webhooks returns EXACTLY ONCE. This is the
+#                          only retrievable secret, and the only verifiable setup.
+#
+# So for a real environment: register a webhook in the PicX console, copy the
+# whsec_ value here once, and submit generations bound to that webhook id.
+PICX_WEBHOOK_SECRET=
+
+# DEV ONLY. Accepts UNVERIFIED deliveries when PICX_WEBHOOK_SECRET is empty, so
+# you can test the full video round trip over ngrok before a webhook is
+# registered. It disables the ONLY authentication on an endpoint that marks paid
+# generations complete and writes media URLs into a user's gallery — while it is
+# on, anyone who can reach your tunnel can forge a completion. Every accepted
+# delivery logs a warning. Never set this in staging or production; a configured
+# PICX_WEBHOOK_SECRET always wins over it.
+PICX_WEBHOOK_INSECURE_DEV=false

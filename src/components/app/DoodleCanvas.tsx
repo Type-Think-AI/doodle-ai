@@ -11,12 +11,15 @@
  * module, so the vanilla chat.ts never has to import React:
  *
  *   window.dispatchEvent(new CustomEvent("doodleai:canvas-add", {
- *     detail: { urls: string[], label?: string }
+ *     detail: { items: CanvasMediaInput[], label?: string }
  *   }))
  *
- * chat.ts fires that as generations land; this island places each URL as a
- * real tldraw image shape. Position is auto-flowed left-to-right in rows so a
- * multi-image batch reads as a set rather than a stack.
+ * chat.ts fires that as generations land; this island places each item as a real
+ * tldraw shape — an image shape for a still, a video shape for an animation.
+ * The kind travels in the payload rather than being guessed from the URL,
+ * because PicX serves generated media through extensionless signed URLs (see
+ * src/lib/canvas/media.ts). Position is auto-flowed left-to-right in rows so a
+ * multi-item batch reads as a set rather than a stack.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -32,7 +35,13 @@ import {
 import "tldraw/tldraw.css";
 
 import type { CanvasOp } from "../../lib/canvas/ops";
+import {
+  normalizeCanvasMedia,
+  type CanvasMediaInput,
+  type CanvasMediaItem,
+} from "../../lib/canvas/media";
 import { applyCanvasOps } from "./canvas/apply-ops";
+import { CanvasVideoToolbar } from "./canvas/CanvasVideoToolbar";
 import { publishDigest } from "./canvas/digest";
 import { assignRef, autoRef } from "./canvas/refs";
 
@@ -62,10 +71,20 @@ const CANVAS_COMPONENTS: TLComponents = {
   PeopleMenu: null,
   PageMenu: null,
   StylePanel: null,
+  /* Replaces tldraw's DefaultVideoToolbar, which offers Replace media / Download
+     / Alt text but no way to HEAR the animation — the vendor renders `muted` as a
+     literal attribute, and every clip we produce carries audio. Ours keeps the
+     vendor's shell (so positioning and the locked/tool-state guards stay theirs)
+     and swaps the contents for Sound / Full screen / Download. See
+     src/components/app/canvas/CanvasVideoToolbar.tsx. */
+  VideoToolbar: CanvasVideoToolbar,
 };
 
-/** Payload chat.ts sends when a generation (or upload) produces images. */
+/** Payload chat.ts sends when a generation (or upload) produces media.
+ *  `items` is current; `urls` is the legacy stills-only array, still read so a
+ *  cached older chat bundle can keep delivering doodles to a fresh island. */
 interface CanvasAddDetail {
+  items?: CanvasMediaInput[];
   urls?: string[];
   label?: string;
 }
@@ -73,8 +92,9 @@ interface CanvasAddDetail {
 interface DoodleCanvasProps {
   /** Thread id — scopes tldraw's local persistence so each chat keeps its own board. */
   threadId: string;
-  /** Images already in the thread on first paint (page reload / revisit). */
-  initialUrls?: string[];
+  /** Media already in the thread on first paint (page reload / revisit).
+   *  Accepts bare URL strings as stills for backward compatibility. */
+  initialMedia?: CanvasMediaInput[];
   /**
    * tldraw licence key, resolved server-side from the Worker environment and
    * handed down as a prop. Deliberately NOT read from `import.meta.env` here:
@@ -106,29 +126,71 @@ const GAP = 28;
 const COLUMNS = 3;
 
 /** Natural size probe so portrait/landscape results aren't squashed into a square. */
-const imageSizeCache = new Map<string, { w: number; h: number }>();
+const mediaSizeCache = new Map<string, { w: number; h: number }>();
 
+const FALLBACK_SIZE = { w: CELL_W, h: CELL_H };
+
+/**
+ * Measure a still.
+ *
+ * Resolves to the default cell on error rather than rejecting — a broken URL
+ * should still land on the canvas as a visible placeholder, not silently vanish
+ * and leave the user wondering where their doodle went.
+ */
 function probeImageSize(url: string): Promise<{ w: number; h: number }> {
-  const cached = imageSizeCache.get(url);
-  if (cached) return Promise.resolve(cached);
-
   return new Promise((resolve) => {
     const img = new Image();
-    // Resolve to the default cell on error rather than rejecting — a broken
-    // URL should still land on the canvas as a visible placeholder, not
-    // silently vanish and leave the user wondering where their doodle went.
-    img.onerror = () => {
-      const size = { w: CELL_W, h: CELL_H };
-      imageSizeCache.set(url, size);
-      resolve(size);
-    };
-    img.onload = () => {
-      const size = { w: img.naturalWidth || CELL_W, h: img.naturalHeight || CELL_H };
-      imageSizeCache.set(url, size);
-      resolve(size);
-    };
+    img.onerror = () => resolve(FALLBACK_SIZE);
+    img.onload = () => resolve({ w: img.naturalWidth || CELL_W, h: img.naturalHeight || CELL_H });
     img.src = url;
   });
+}
+
+/**
+ * Measure an animation.
+ *
+ * This has to be a separate probe rather than reusing the image one, and that is
+ * the whole reason clips used to lay out wrong. `new Image()` cannot decode an
+ * mp4, so it fires `onerror`, the probe falls back to the square default cell,
+ * and a 1344x768 landscape animation gets placed as a square. Reading
+ * videoWidth/videoHeight off a metadata-only load is the only honest measurement.
+ *
+ * `preload="metadata"` fetches headers, not the clip — no wasted bandwidth. The
+ * timeout exists because a URL that never resolves metadata would otherwise
+ * leave the whole batch's `Promise.all` hanging forever, and one slow clip must
+ * not stop the doodles beside it from being placed.
+ */
+function probeVideoSize(url: string): Promise<{ w: number; h: number }> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    let settled = false;
+    const done = (size: { w: number; h: number }) => {
+      if (settled) return;
+      settled = true;
+      video.removeAttribute("src");
+      resolve(size);
+    };
+    const timer = window.setTimeout(() => done(FALLBACK_SIZE), 8_000);
+    const finish = (size: { w: number; h: number }) => {
+      window.clearTimeout(timer);
+      done(size);
+    };
+    video.preload = "metadata";
+    video.muted = true;
+    video.onerror = () => finish(FALLBACK_SIZE);
+    video.onloadedmetadata = () =>
+      finish({ w: video.videoWidth || CELL_W, h: video.videoHeight || CELL_H });
+    video.src = url;
+  });
+}
+
+/** Measure by kind, memoised. A URL is only ever one kind, so one cache serves both. */
+async function probeMediaSize(item: CanvasMediaItem): Promise<{ w: number; h: number }> {
+  const cached = mediaSizeCache.get(item.url);
+  if (cached) return cached;
+  const size = item.isVideo ? await probeVideoSize(item.url) : await probeImageSize(item.url);
+  mediaSizeCache.set(item.url, size);
+  return size;
 }
 
 /** Fit natural dimensions into the cell box, preserving aspect ratio. */
@@ -151,14 +213,14 @@ function hideEmptyHint(): void {
   if (hint) hint.hidden = true;
 }
 
-export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }: DoodleCanvasProps) {
+export default function DoodleCanvas({ threadId, initialMedia = [], licenseKey }: DoodleCanvasProps) {
   const editorRef = useRef<Editor | null>(null);
   /* URLs already placed, so a re-render or a duplicate NDJSON event doesn't
      stack a second copy of the same doodle on top of the first. */
   const placedRef = useRef<Set<string>>(new Set());
-  /* URLs that arrived before tldraw handed us an editor. Held here and flushed
-     in onMount — dropping them was the bug that left the canvas blank. */
-  const pendingRef = useRef<string[]>([]);
+  /* Media that arrived before tldraw handed us an editor. Held here and flushed
+     in onMount — dropping it was the bug that left the canvas blank. */
+  const pendingRef = useRef<CanvasMediaItem[]>([]);
   /* Ops batches that arrived before tldraw handed us an editor. Same pattern
      as pendingRef — hold and drain on mount so the first agent edit is never dropped. */
   const pendingOpsRef = useRef<CanvasOp[]>([]);
@@ -216,11 +278,14 @@ export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }:
     };
   }, []);
 
-  const placeUrls = useCallback(async (urls: string[]) => {
+  const placeMedia = useCallback(async (media: readonly CanvasMediaInput[]) => {
+    const incoming = normalizeCanvasMedia(media);
+    if (!incoming.length) return;
+
     const editor = editorRef.current;
     if (!editor) {
       // Not ready yet — hold, don't drop. onMount flushes this.
-      pendingRef.current.push(...urls);
+      pendingRef.current.push(...incoming);
       return;
     }
 
@@ -231,59 +296,111 @@ export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }:
        placedRef let those through (placedRef is still empty at that point)
        and every doodle was placed on the board twice. */
     const seen = new Set<string>();
-    const fresh = urls.filter((url) => {
-      if (!url || placedRef.current.has(url) || seen.has(url)) return false;
-      seen.add(url);
+    const fresh = incoming.filter((item) => {
+      if (placedRef.current.has(item.url) || seen.has(item.url)) return false;
+      seen.add(item.url);
       return true;
     });
     if (!fresh.length) return;
-    fresh.forEach((url) => placedRef.current.add(url));
+    fresh.forEach((item) => placedRef.current.add(item.url));
 
-    const sizes = await Promise.all(fresh.map(probeImageSize));
+    const sizes = await Promise.all(fresh.map(probeMediaSize));
     const createdIds: TLShapeId[] = [];
 
-    fresh.forEach((url, i) => {
+    fresh.forEach((item, i) => {
       const slot = slotRef.current++;
       const col = slot % COLUMNS;
       const row = Math.floor(slot / COLUMNS);
       const { w, h } = fitToCell(sizes[i]!);
+      const { url, isVideo } = item;
 
-      /* tldraw needs an asset record before an image shape can reference it.
-         The id is derived from the URL hash so the same image reuses one
-         asset instead of duplicating it in the store on every placement. */
+      /* tldraw needs an asset record before a shape can reference it. The id is
+         derived from the URL hash so the same media reuses one asset instead of
+         duplicating it in the store on every placement. */
       const assetId: TLAssetId = AssetRecordType.createId(getHashForString(url));
 
       if (!editor.getAsset(assetId)) {
+        /* Two genuinely different asset types, not one with a flag. An mp4
+           registered as an `image` asset renders through an <img>, which cannot
+           decode it — the shape paints tldraw's broken-asset icon and the user
+           reads that as their animation being lost. Both prop sets below are
+           complete per @tldraw/tlschema 5.3.2 (TLImageAsset / TLVideoAsset);
+           a missing required prop throws inside the store and kills the board. */
         editor.createAssets([
-          {
-            id: assetId,
-            type: "image",
-            typeName: "asset",
-            meta: {},
-            props: {
-              name: "doodle",
-              src: url,
-              w,
-              h,
-              mimeType: "image/png",
-              isAnimated: false,
-            },
-          },
+          isVideo
+            ? {
+                id: assetId,
+                type: "video",
+                typeName: "asset",
+                meta: {},
+                props: {
+                  name: "doodle-animation",
+                  src: url,
+                  w,
+                  h,
+                  mimeType: "video/mp4",
+                  isAnimated: true,
+                },
+              }
+            : {
+                id: assetId,
+                type: "image",
+                typeName: "asset",
+                meta: {},
+                props: {
+                  name: "doodle",
+                  src: url,
+                  w,
+                  h,
+                  mimeType: "image/png",
+                  isAnimated: false,
+                },
+              },
         ]);
       }
 
       const shapeId = createShapeId();
       createdIds.push(shapeId);
-      editor.createShape({
-        id: shapeId,
-        type: "image",
-        // Centre each image inside its cell so mixed aspect ratios still
-        // line up on a tidy grid rather than hugging the top-left corner.
-        x: col * (CELL_W + GAP) + (CELL_W - w) / 2,
-        y: row * (CELL_H + GAP) + (CELL_H - h) / 2,
-        props: { assetId, w, h },
-        meta: { ref: autoRef(editor, "image"), author: "user" },
-      });
+
+      /* Centre each item inside its cell so mixed aspect ratios still line up on
+         a tidy grid rather than hugging the top-left corner. */
+      const x = col * (CELL_W + GAP) + (CELL_W - w) / 2;
+      const y = row * (CELL_H + GAP) + (CELL_H - h) / 2;
+      const meta = { ref: autoRef(editor, isVideo ? "video" : "image"), author: "user" };
+
+      /* Two separate createShape calls rather than one with a ternary `type`.
+         createShape's parameter is a DISCRIMINATED UNION keyed on `type`, so a
+         computed `type` widens to "video" | "image" and TypeScript can no longer
+         pair it with the matching props shape — it rejects the call outright.
+         Branching keeps each call individually well-typed, which is what makes
+         the compiler check the props against the right shape at all. */
+      if (isVideo) {
+        /* Every prop below is required by videoShapeProps — a partial write
+           throws inside tldraw's store. `autoplay` is deliberately true: the
+           whole point of this product is that the doodle moves, and tldraw ANDs
+           this with the user's prefers-reduced-motion setting at render time, so
+           honouring that preference costs nothing here. `time`/`playing` are
+           vestigial in 5.3.2 (tldraw's own comment says they are unused) but
+           still required. `url` is the shape's own external-link field, which is
+           unrelated to the asset src and stays empty. */
+        editor.createShape({
+          id: shapeId,
+          type: "video",
+          x,
+          y,
+          props: { assetId, w, h, time: 0, playing: true, autoplay: true, url: "", altText: "" },
+          meta,
+        });
+      } else {
+        editor.createShape({
+          id: shapeId,
+          type: "image",
+          x,
+          y,
+          props: { assetId, w, h },
+          meta,
+        });
+      }
     });
 
     if (createdIds.length) {
@@ -295,7 +412,7 @@ export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }:
     }
   }, []);
 
-  /** Apply agent canvas ops. Buffers if editor not ready, same as placeUrls. */
+  /** Apply agent canvas ops. Buffers if editor not ready, same as placeMedia. */
   const applyOps = useCallback((ops: CanvasOp[]) => {
     const editor = editorRef.current;
     if (!editor) {
@@ -340,7 +457,11 @@ export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }:
            came back with and only place URLs that are genuinely missing. */
         const existing = new Set<string>();
         for (const asset of editor.getAssets()) {
-          if (asset.type === "image" && asset.props.src) existing.add(asset.props.src);
+          // Both kinds: a restored animation must seed the dedupe set too, or
+          // the reload backfill places a second copy of it beside the first.
+          if ((asset.type === "image" || asset.type === "video") && asset.props.src) {
+            existing.add(asset.props.src);
+          }
         }
         placedRef.current = existing;
         // Start new work below anything restored, so it never lands on top.
@@ -355,17 +476,17 @@ export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }:
       /* Everything that tried to reach the canvas before this point, in
          arrival order: props, then whatever chat.ts queued pre-hydration,
          then anything an event delivered while tldraw was still booting. */
-      const backlog = [
-        ...initialUrls,
+      const backlog: CanvasMediaInput[] = [
+        ...initialMedia,
         ...(window.__doodleCanvasQueue ?? []),
         ...pendingRef.current,
       ];
       pendingRef.current = [];
       // Leave the queue in place but emptied — chat.ts keeps appending to it,
-      // and placeUrls dedupes, so a later re-read is harmless either way.
+      // and placeMedia dedupes, so a later re-read is harmless either way.
       if (window.__doodleCanvasQueue) window.__doodleCanvasQueue.length = 0;
 
-      if (backlog.length) void placeUrls(backlog);
+      if (backlog.length) void placeMedia(backlog);
 
       /* Drain any ops that arrived before the editor was ready — same pattern
          as the image backlog above. Without this, the first agent edit of a
@@ -382,13 +503,13 @@ export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }:
         if (skipped.length > 0) console.warn("[DoodleCanvas] mount ops skipped:", skipped);
       }
 
-      /* Assign refs to existing image shapes that lack them, so the agent can
-         address images placed before the ref system existed. */
+      /* Assign refs to existing media shapes that lack them, so the agent can
+         address media placed before the ref system existed. */
       for (const shape of editor.getCurrentPageShapes()) {
-        if (shape.type === "image") {
+        if (shape.type === "image" || shape.type === "video") {
           const meta = shape.meta as Record<string, unknown>;
           if (!meta?.ref) {
-            const ref = autoRef(editor, "image");
+            const ref = autoRef(editor, shape.type);
             assignRef(editor, shape.id, ref);
           }
         }
@@ -401,13 +522,16 @@ export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }:
         source: "all",
       });
     },
-    [initialUrls, placeUrls],
+    [initialMedia, placeMedia],
   );
 
   useEffect(() => {
     const onAdd = (event: Event) => {
       const detail = (event as CustomEvent<CanvasAddDetail>).detail;
-      if (detail?.urls?.length) void placeUrls(detail.urls);
+      // Prefer `items`; fall back to the legacy stills-only `urls` so an older
+      // cached chat bundle can still deliver doodles to a freshly built island.
+      const media = detail?.items?.length ? detail.items : detail?.urls;
+      if (media?.length) void placeMedia(media);
     };
     window.addEventListener("doodleai:canvas-add", onAdd);
 
@@ -421,7 +545,7 @@ export default function DoodleCanvas({ threadId, initialUrls = [], licenseKey }:
       window.removeEventListener("doodleai:canvas-add", onAdd);
       window.removeEventListener("doodleai:canvas-ops", onOps);
     };
-  }, [placeUrls, applyOps]);
+  }, [placeMedia, applyOps]);
 
   return (
     /* Sizing lives HERE, not in the parent page's CSS. tldraw measures its

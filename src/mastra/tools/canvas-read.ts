@@ -18,7 +18,10 @@ export const canvasReadTool = createTool({
   description:
     "Look at what is currently on the canvas. Must be called before arranging, " +
     "moving, grouping, or labelling existing shapes — you cannot arrange what " +
-    "you have not looked at.",
+    "you have not looked at. The board may hold images, videos (clips), text, " +
+    "notes, geo shapes, arrows, frames and groups; each is addressed by its " +
+    "`ref`, and you can move, resize, order, group, align, label or delete a " +
+    "video the same way as any other shape.",
   inputSchema: z.object({}),
   outputSchema: canvasDigestSchema,
   execute: async (_input, toolContext) => {

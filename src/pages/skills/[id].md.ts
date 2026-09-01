@@ -1,6 +1,14 @@
 import type { APIRoute } from "astro";
 import { SKILLS, type Skill } from "../../lib/skills";
 import { imageCountForSkill, creditCostForSkill } from "../../lib/credits/costs";
+import {
+	DEFAULT_VIDEO_RESOLUTION,
+	DEFAULT_VIDEO_SECONDS,
+	MAX_VIDEO_SECONDS,
+	MIN_VIDEO_SECONDS,
+	VIDEO_CREDITS_PER_SECOND,
+	videoCreditCost,
+} from "../../lib/video/constants";
 import { mdLink, mdPageResponse, mdTable, resolveSite } from "../../lib/markdown/page-md";
 
 /**
@@ -35,7 +43,12 @@ interface Props {
 export const GET: APIRoute<Props> = ({ props, site }) => {
 	const base = resolveSite(site);
 	const { skill } = props;
-	const images = imageCountForSkill(skill.id);
+	const isVideo = skill.kind === "video";
+	/* Guarded: imageCountForSkill() is defined over the image modes only and
+	   throws for a video skill by design — that same guard is what stops a clip
+	   being charged as a single image. A clip's unit is seconds, not frames. */
+	const images = isVideo ? 0 : imageCountForSkill(skill.id);
+	const perSecond = VIDEO_CREDITS_PER_SECOND[DEFAULT_VIDEO_RESOLUTION];
 
 	const facts = mdTable(
 		["Property", "Value"],
@@ -44,10 +57,16 @@ export const GET: APIRoute<Props> = ({ props, site }) => {
 			["What it makes", skill.tagline],
 			["Category", skill.category],
 			["Photo required", skill.requiresPhoto ? "Yes" : "No — describe it instead"],
-			["Images per run", String(images)],
-			["Credit cost", `${creditCostForSkill(skill.id)} (1 per image)`],
+			isVideo
+				? ["Clip length", `${MIN_VIDEO_SECONDS}-${MAX_VIDEO_SECONDS} seconds, with sound`]
+				: ["Images per run", String(images)],
+			isVideo
+				? ["Credit cost", `${perSecond} per second (a ${DEFAULT_VIDEO_SECONDS}s clip costs ${videoCreditCost(DEFAULT_VIDEO_SECONDS)})`]
+				: ["Credit cost", `${creditCostForSkill(skill.id)} (1 per image)`],
 			["Aspect ratio", skill.aspectRatio],
-			["Output", "Still image (PNG). Doodle AI does not generate video"],
+			isVideo
+				? ["Output", `Video clip (MP4, ${DEFAULT_VIDEO_RESOLUTION}, audio included), delivered when it finishes rendering`]
+				: ["Output", "Still image (PNG)"],
 			...(skill.tags.length ? ([["Tags", skill.tags.join(", ")]] as [string, string][]) : []),
 		],
 	);
@@ -59,15 +78,23 @@ export const GET: APIRoute<Props> = ({ props, site }) => {
 		site: base,
 		frontmatter: {
 			skill_id: skill.id,
+			kind: skill.kind,
 			requires_photo: skill.requiresPhoto,
-			images_per_run: images,
-			credits: creditCostForSkill(skill.id),
+			images_per_run: isVideo ? null : images,
+			/* Per clip at the default length for video, per run for images. A single
+			   `credits` number would be a lie for a skill whose price scales with a
+			   duration the user chooses. */
+			credits: isVideo ? videoCreditCost(DEFAULT_VIDEO_SECONDS) : creditCostForSkill(skill.id),
+			credits_per_second: isVideo ? perSecond : null,
 		},
 		body: [
 			skill.longDesc || skill.desc || skill.tagline,
 			facts,
 			skill.description ? `## When to use it\n\n${skill.description}` : "",
-			images > 1
+			isVideo
+				? `## How clips are billed\n\nA clip costs ${perSecond} credit per second, so the default ${DEFAULT_VIDEO_SECONDS}-second clip is ${videoCreditCost(DEFAULT_VIDEO_SECONDS)} credits and the longest (${MAX_VIDEO_SECONDS}s) is ${videoCreditCost(MAX_VIDEO_SECONDS)}. Rendering happens in the background and the clip appears in your chat when it is ready; if it fails, the credits are returned automatically.`
+				: "",
+			!isVideo && images > 1
 				? `## Multi-image pack\n\nOne run of this skill returns ${images} separate images rather than a single frame, and is charged ${images} credits — 1 per image. Failed images are refunded.`
 				: "",
 			`## How to run it\n\n${[

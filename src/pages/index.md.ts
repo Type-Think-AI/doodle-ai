@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { SKILLS } from "../lib/skills";
 import { imageCountForSkill } from "../lib/credits/costs";
+import { MAX_VIDEO_SECONDS, MIN_VIDEO_SECONDS } from "../lib/video/constants";
 import { DEFINITION, FIGURES, GLANCE_ROWS } from "../lib/content/about-content";
 import { mdLink, mdPageResponse, mdTable, resolveSite } from "../lib/markdown/page-md";
 
@@ -26,12 +27,17 @@ export const GET: APIRoute = ({ site }) => {
 	const runnable = SKILLS.filter((s) => s.runnable);
 
 	const skillTable = mdTable(
-		["Skill", "What it makes", "Photo", "Images"],
+		["Skill", "What it makes", "Photo", "Output"],
 		runnable.map((s) => [
 			mdLink(s.name, new URL(`/skills/${s.id}.md`, base).href),
 			s.tagline,
 			s.requiresPhoto ? "Required" : "Not needed",
-			String(imageCountForSkill(s.id)),
+			/* A video skill has no frame count — imageCountForSkill() is defined over
+			   the image modes and throws for one by design, which is the same guard
+			   that stops a clip being charged as a single image. */
+			s.kind === "video"
+				? `${MIN_VIDEO_SECONDS}-${MAX_VIDEO_SECONDS}s clip`
+				: `${imageCountForSkill(s.id)} image(s)`,
 		]),
 	);
 

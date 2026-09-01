@@ -9,6 +9,8 @@
  * dragenter when it re-enters the box, and naively toggling on each would
  * flicker the drop overlay off while still dragging over the box.
  */
+import { createOverlayModal } from "./dialog-a11y";
+
 export function initComposerDropZone(box: HTMLElement, onFiles: (files: FileList | File[]) => void): () => void {
   let depth = 0;
 
@@ -74,18 +76,30 @@ export function initMediaPicker(options: MediaPickerOptions): () => void {
   let stream: MediaStream | null = null;
   let capturedFile: File | null = null;
   let capturedPreviewUrl: string | null = null;
-  let restoreFocus: HTMLElement | null = null;
-  let previousBodyOverflow = "";
+
+  /* The camera dialog is a div overlay, not a native <dialog>, so Escape, the
+     Tab trap, the body scroll lock and focus restoration all come from the
+     shared helper. Before this it had Escape and restoration but no trap, so Tab
+     from inside a modal that declares `aria-modal="true"` landed on the page
+     behind it; and the scroll lock stashed body.style.overflow on every open,
+     which meant a second open recorded "hidden" as the value to put back. */
+  const overlay = createOverlayModal({
+    /* Imported from ./dialog-a11y — the shared trap/Escape/scroll-lock helper. */
+    container: options.dialog,
+    isOpen: () => !options.dialog.hidden,
+    requestClose: () => closeCamera(),
+    // Focus the dialog itself: on open the only enabled controls are Cancel and
+    // Close, and neither is what the person came for. Capture takes focus as
+    // soon as the stream is live (see openCamera), and if permission is refused
+    // focus is already inside the dialog to read the status message.
+    initialFocus: () => options.dialog,
+  });
 
   const setDialogOpen = (open: boolean): void => {
     options.dialog.hidden = !open;
     options.dialog.setAttribute("aria-hidden", String(!open));
-    if (open) {
-      previousBodyOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = previousBodyOverflow;
-    }
+    if (open) overlay.activate();
+    else overlay.release();
   };
 
   const stopStream = (): void => {
@@ -111,12 +125,9 @@ export function initMediaPicker(options: MediaPickerOptions): () => void {
     capturedFile = null;
     options.status.textContent = "";
     setDialogOpen(false);
-    restoreFocus?.focus();
-    restoreFocus = null;
   };
 
   const openCamera = async (): Promise<void> => {
-    restoreFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setDialogOpen(true);
     options.status.textContent = "Requesting camera access…";
     options.captureButton.disabled = true;
@@ -196,8 +207,7 @@ export function initMediaPicker(options: MediaPickerOptions): () => void {
     closeCamera();
   };
 
-  options.trigger.addEventListener("click", () => {
-    options.fileInput.click();
+  options.trigger.addEventListener("click", () => {    options.fileInput.click();
   });
   options.cameraButton.addEventListener("click", () => {
     void openCamera();

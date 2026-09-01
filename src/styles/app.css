@@ -11,6 +11,13 @@
      (#141414); that split meant the app shell and the page canvas were two
      different colours, and any moment the shell was not exactly full-bleed the
      seam became visible. One value removes the failure mode. */
+  /* REVERTED 2026-09-01 to #141414, the shipped value.
+     This was briefly changed to #0a0a0a to give the composer a darker canvas to
+     sit on. That was a mistake: --bg is the whole application's canvas, so the
+     change repainted the sidebar and every page to chase a difference that was
+     only ever about the prompt box. The composer gets its contrast from
+     --prompt-bg instead, which is what that token is for.
+     Do not retune --bg to fix a single component. */
   --bg: #141414;
   --stage: #0a0a0a;
   --surface: #141414;

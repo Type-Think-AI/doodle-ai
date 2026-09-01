@@ -37,10 +37,12 @@ export const canvasEditTool = createTool({
   id: "editCanvas",
   description:
     "Submit a batch of canvas operations — add shapes, labels, notes, arrows; " +
-    "arrange, group, align, grid existing shapes; set alt text. Call ONCE per " +
-    "turn with every op together (one call = one undo step for the user). The " +
-    "ops are validated here and applied by the browser — this tool does not " +
-    "touch the canvas directly.",
+    "arrange, group, align, grid existing shapes; set alt text (on image or " +
+    "video shapes). Existing images and videos are moved, resized, ordered, " +
+    "grouped and labelled the same way. Call ONCE per turn with every op " +
+    "together (one call = one undo step for the user). The ops are validated " +
+    "here and applied by the browser — this tool does not touch the canvas " +
+    "directly.",
   inputSchema: z.object({
     ops: canvasBatchSchema,
     note: z

@@ -44,11 +44,12 @@ const STYLE_OPTIONS = THEMES.map((theme) => ({
 ---
 
 <div class="composer-toolbar">
-  <button class="composer-icon-btn" id={`${id}AttachBtn`} type="button" aria-label="Upload photo">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3.5" stroke="currentColor" stroke-width="1.6"></rect><path d="M4 16.2l3.9-3.6a2 2 0 0 1 2.7 0l3.2 3M14 14.6l1.6-1.4a2 2 0 0 1 2.6 0l2 1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path><circle cx="15.3" cy="9.4" r="1.35" fill="currentColor"></circle></svg>
-  </button>
-  <button class="composer-icon-btn" id={`${id}CameraBtn`} type="button" aria-label="Use camera">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 8.5h2.2l1.4-2h7.8l1.4 2h2.2a1.5 1.5 0 0 1 1.5 1.5v7.5a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5V10a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><circle cx="12" cy="13.6" r="3.3" stroke="currentColor" stroke-width="1.6"></circle></svg>
+  <!-- ONE entry point for media. The photo and camera buttons that used to sit
+       here are not gone — they moved inside ComposerMediaDialog.astro with their
+       ids intact, alongside the user's existing uploads and generations. Two
+       permanent icons became one, and gained a library. -->
+  <button class="composer-icon-btn composer-plus" id={`${id}PlusBtn`} type="button" aria-label="Add media" aria-haspopup="dialog">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
   </button>
   <button class="composer-icon-btn" id={`${id}CharacterBtn`} type="button" aria-label="Mention a character">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.4" stroke="currentColor" stroke-width="1.6"></circle><circle cx="12" cy="10.4" r="2.7" stroke="currentColor" stroke-width="1.6"></circle><path d="M6.9 18.3c1.1-2.1 3-3.2 5.1-3.2s4 1.1 5.1 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
@@ -63,22 +64,30 @@ const STYLE_OPTIONS = THEMES.map((theme) => ({
     id={`${id}Style`}
     data-style-key={STYLE_THEME_STORAGE_KEY}
   >
+    <!-- A settings icon, not a labelled "Neon" pill. The pill spent the widest
+         slot in the bar on a value the user sets once and rarely changes, and it
+         read as the composer's main control rather than a preference. It is now
+         an icon that carries the active palette as a small dot — the state stays
+         visible, the width goes back to the prompt. Ids are unchanged so the
+         existing menu script and localStorage key keep working untouched. -->
     <button
       type="button"
       class="composer-style-trigger"
       id={`${id}StyleBtn`}
       aria-haspopup="true"
       aria-expanded="false"
-      aria-label="Doodle style"
+      aria-label="Settings"
+      title="Doodle style"
     >
-      <span class="composer-style-chip" id={`${id}StyleChip`} aria-hidden="true">
+      <svg class="composer-settings-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 8h9M17.5 8H19M5 16h3M11.5 16H19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path><circle cx="15.6" cy="8" r="2.1" stroke="currentColor" stroke-width="1.7"></circle><circle cx="9.6" cy="16" r="2.1" stroke="currentColor" stroke-width="1.7"></circle></svg>
+      <span class="composer-style-chip composer-style-chip-mini" id={`${id}StyleChip`} aria-hidden="true">
         <span class="composer-style-chip-dot"></span>
       </span>
-      <span class="composer-style-label" id={`${id}StyleLabel`}></span>
-      <svg class="composer-style-caret" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <span class="composer-style-label sr-only" id={`${id}StyleLabel`}></span>
     </button>
 
     <div class="composer-style-menu" id={`${id}StyleMenu`} hidden role="menu" aria-label="Doodle style">
+      <p class="composer-style-menu-title">Doodle style</p>
       {STYLE_OPTIONS.map((theme) => (
         <button
           type="button"
@@ -155,9 +164,11 @@ const STYLE_OPTIONS = THEMES.map((theme) => ({
     </div>
   </div>
 
-  <button class="composer-icon-btn" id={`${id}ExpandBtn`} type="button" aria-label="Expand composer">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="m20 4-7 7M4 20l7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
-  </button>
+  <!-- The expand button is deliberately gone. It duplicated a gesture the box
+       already has two better versions of — the drag grabber above the text and
+       ⌘/Ctrl+Enter (still bound, still listed in the hint row) — and it sat in
+       the send button's neighbourhood competing for the same glance. -->
+  <span class="composer-spacer"></span>
   <button class="composer-stop" id={`${id}StopBtn`} type="button" aria-label="Stop generation" hidden>
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="6.5" y="6.5" width="11" height="11" rx="2.5" fill="currentColor"/></svg>
   </button>

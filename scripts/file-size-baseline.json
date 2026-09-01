@@ -1,0 +1,269 @@
+{
+  "note": "Frozen file-size debt for scripts/check-file-sizes.mjs. Each entry is an ALLOWANCE, not a target: the check fails on new violations and on any listed file that grows past the recorded line count. Shrink a file and re-run with --update-baseline to ratchet the allowance down. Never add an entry by hand to silence a new violation — split the file instead.",
+  "generatedAt": "2026-08-31T23:57:43.081Z",
+  "policy": {
+    "page": 150,
+    "component": 300,
+    "controller": 300,
+    "lib": 250,
+    "css": 400
+  },
+  "files": {
+    "src/admin/components/ChatTranscriptDrawer.astro": {
+      "category": "component",
+      "lines": 364
+    },
+    "src/admin/components/MediaDrawer.astro": {
+      "category": "component",
+      "lines": 428
+    },
+    "src/admin/components/MediaGrid.astro": {
+      "category": "component",
+      "lines": 361
+    },
+    "src/admin/components/MediaLightbox.astro": {
+      "category": "component",
+      "lines": 446
+    },
+    "src/admin/components/Sidebar.astro": {
+      "category": "component",
+      "lines": 490
+    },
+    "src/admin/components/UserDrawer.astro": {
+      "category": "component",
+      "lines": 516
+    },
+    "src/admin/pages/BillingPage.astro": {
+      "category": "component",
+      "lines": 333
+    },
+    "src/admin/pages/CreditsPage.astro": {
+      "category": "component",
+      "lines": 337
+    },
+    "src/components/agentic/tools-articles.ts": {
+      "category": "lib",
+      "lines": 701
+    },
+    "src/components/agentic/tools-content.ts": {
+      "category": "lib",
+      "lines": 354
+    },
+    "src/components/agentic/tools-discovery.ts": {
+      "category": "lib",
+      "lines": 693
+    },
+    "src/components/agentic/tools-learn.ts": {
+      "category": "lib",
+      "lines": 370
+    },
+    "src/components/agentic/tools-skills.ts": {
+      "category": "lib",
+      "lines": 406
+    },
+    "src/components/agentic/WebMcpTools.astro": {
+      "category": "component",
+      "lines": 493
+    },
+    "src/components/app/AuthDialog.astro": {
+      "category": "component",
+      "lines": 439
+    },
+    "src/components/app/BoardShareSheet.astro": {
+      "category": "component",
+      "lines": 369
+    },
+    "src/components/app/canvas/apply-ops.ts": {
+      "category": "lib",
+      "lines": 566
+    },
+    "src/components/app/composer/composer-styles.css": {
+      "category": "css",
+      "lines": 660
+    },
+    "src/components/app/DoodleCanvas.tsx": {
+      "category": "component",
+      "lines": 448
+    },
+    "src/components/app/PromptComposer.astro": {
+      "category": "component",
+      "lines": 375
+    },
+    "src/components/app/RoadmapBoard.tsx": {
+      "category": "component",
+      "lines": 542
+    },
+    "src/components/app/Sidebar.astro": {
+      "category": "component",
+      "lines": 616
+    },
+    "src/components/Footer.astro": {
+      "category": "component",
+      "lines": 1043
+    },
+    "src/components/Navbar.astro": {
+      "category": "component",
+      "lines": 360
+    },
+    "src/db/schema/product.ts": {
+      "category": "lib",
+      "lines": 458
+    },
+    "src/layouts/ArticleLayout.astro": {
+      "category": "component",
+      "lines": 368
+    },
+    "src/lib/admin/chats.ts": {
+      "category": "lib",
+      "lines": 283
+    },
+    "src/lib/admin/media.ts": {
+      "category": "lib",
+      "lines": 269
+    },
+    "src/lib/admin/overview.ts": {
+      "category": "lib",
+      "lines": 509
+    },
+    "src/lib/admin/projects.ts": {
+      "category": "lib",
+      "lines": 271
+    },
+    "src/lib/admin/users.ts": {
+      "category": "lib",
+      "lines": 272
+    },
+    "src/lib/auth/index.ts": {
+      "category": "lib",
+      "lines": 292
+    },
+    "src/lib/batch/run.ts": {
+      "category": "lib",
+      "lines": 280
+    },
+    "src/lib/boards/queries.ts": {
+      "category": "lib",
+      "lines": 263
+    },
+    "src/lib/canvas/ops.ts": {
+      "category": "lib",
+      "lines": 337
+    },
+    "src/lib/content/article-sections.ts": {
+      "category": "lib",
+      "lines": 303
+    },
+    "src/lib/credits/index.ts": {
+      "category": "lib",
+      "lines": 338
+    },
+    "src/lib/doodle-constants.ts": {
+      "category": "lib",
+      "lines": 377
+    },
+    "src/lib/skill-loader.ts": {
+      "category": "lib",
+      "lines": 296
+    },
+    "src/lib/status/probes.ts": {
+      "category": "lib",
+      "lines": 458
+    },
+    "src/mastra/tools/generate-doodle.ts": {
+      "category": "lib",
+      "lines": 488
+    },
+    "src/mastra/tools/generate-video.ts": {
+      "category": "lib",
+      "lines": 338
+    },
+    "src/pages/about.astro": {
+      "category": "page",
+      "lines": 355
+    },
+    "src/pages/api/chat.ts": {
+      "category": "controller",
+      "lines": 317
+    },
+    "src/pages/api/webhooks/picx.ts": {
+      "category": "controller",
+      "lines": 371
+    },
+    "src/pages/characters.astro": {
+      "category": "page",
+      "lines": 175
+    },
+    "src/pages/learn/index.astro": {
+      "category": "page",
+      "lines": 215
+    },
+    "src/pages/privacy-policy.astro": {
+      "category": "page",
+      "lines": 166
+    },
+    "src/pages/settings.astro": {
+      "category": "page",
+      "lines": 212
+    },
+    "src/pages/skills/[id].astro": {
+      "category": "page",
+      "lines": 468
+    },
+    "src/pages/status.astro": {
+      "category": "page",
+      "lines": 361
+    },
+    "src/pages/terms-of-service.astro": {
+      "category": "page",
+      "lines": 158
+    },
+    "src/pages/tools/index.astro": {
+      "category": "page",
+      "lines": 284
+    },
+    "src/scripts/app/board-detail.ts": {
+      "category": "controller",
+      "lines": 307
+    },
+    "src/scripts/app/board-share.ts": {
+      "category": "controller",
+      "lines": 326
+    },
+    "src/scripts/app/chat-store.ts": {
+      "category": "controller",
+      "lines": 345
+    },
+    "src/scripts/app/chat/api-turn.ts": {
+      "category": "controller",
+      "lines": 330
+    },
+    "src/scripts/app/chat/index.ts": {
+      "category": "controller",
+      "lines": 414
+    },
+    "src/scripts/app/chat/render.ts": {
+      "category": "controller",
+      "lines": 504
+    },
+    "src/scripts/app/composer-mentions.ts": {
+      "category": "controller",
+      "lines": 318
+    },
+    "src/scripts/app/dialog-a11y.ts": {
+      "category": "controller",
+      "lines": 335
+    },
+    "src/scripts/app/home.ts": {
+      "category": "controller",
+      "lines": 304
+    },
+    "src/scripts/app/sidebar.ts": {
+      "category": "controller",
+      "lines": 379
+    },
+    "src/styles/boards.css": {
+      "category": "css",
+      "lines": 452
+    }
+  }
+}

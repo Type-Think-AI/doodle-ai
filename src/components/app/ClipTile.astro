@@ -1,0 +1,252 @@
+---
+/* One showcase animation: a real <video>, its doodle as the poster, one human
+ * line saying which of the two things happened, and a link that starts the same
+ * skill for the visitor.
+ *
+ * WHY THE POSTER MATTERS HERE. `poster` is the source doodle, so before a byte
+ * is fetched the tile already shows the drawing. When it then plays, the visitor
+ * watches that exact drawing start moving — the one thing this page exists to
+ * demonstrate.
+ *
+ * WHY THERE IS NO `src`. The URL is parked in data-src and only assigned on
+ * play intent. Four autoplaying files at ~1.5 MB each is 6 MB of mobile data
+ * spent before anyone asked for anything; with preload="metadata" and no src,
+ * the tile costs one poster image until the visitor hovers, scrolls it into
+ * view, or presses play.
+ *
+ * The <video> below carries `muted` and deliberately NO `autoplay` attribute:
+ * audio never starts on its own, and playback is driven entirely by the script
+ * at the bottom of this file.
+ *
+ * WORDS. This page is read by consumers, not by people who know what an API
+ * mode is. The two routes used to be labelled "Image-to-video" and
+ * "Reference-to-video" — endpoint names on a page for parents and kids. The
+ * distinction stays, because it *is* the product story; only the naming moves
+ * into human words. Nothing here says video, render, clip, mode or 480p.
+ *
+ * The shape below is declared locally rather than imported: .astro modules
+ * export only their component, and src/data/showcase-clips.json is another
+ * lane's file, so there is no shared type to reach for yet.
+ */
+interface Props {
+	id: string;
+	title: string;
+	skillId?: string;
+	/** Input route: 'image' | 'reference' | 'text'. Empty when unknown. */
+	mode?: string;
+	seconds?: number;
+	sourceImageUrl?: string;
+	cdnUrl: string;
+}
+const { id, title, skillId, mode, seconds, sourceImageUrl, cdnUrl } = Astro.props;
+
+/* Display names for the two documented animation skills. Anything else falls
+   back to a title-cased id rather than an invented name — a wrong skill name is
+   worse than a plain one. Deliberately NOT imported from src/lib/video/skills.ts:
+   that file is owned by another lane right now. */
+const SKILL_LABELS: Record<string, string> = { motion: "Doodle Motion", reel: "Doodle Reel" };
+const skillLabel = skillId ? (SKILL_LABELS[skillId] ?? skillId.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())) : "";
+
+/* The distinction the whole product turns on, said the way a visitor would say
+   it. 'image' = the drawing itself starts moving. 'reference' = the same
+   character appears in a scene nobody drew. An unknown route renders no line at
+   all instead of guessing one. */
+const ROUTES: Record<string, string> = {
+	image: "Your doodle, brought to life",
+	reference: "A brand-new scene starring your doodle",
+	text: "Made from words alone",
+};
+const routeLabel = mode ? (ROUTES[mode] ?? "") : "";
+
+const metaBits = [seconds ? `${seconds}s` : ""].filter(Boolean);
+
+/* The CTA. `/?skill=<id>` is the route the app already supports: home.ts reads
+   it, pins the skill into the composer and cleans the URL — the same link
+   /skills/[id] uses for "Use this skill". A plain <a> is deliberate, so
+   cmd-click and middle-click still open a tab, and so this needs no JS in
+   home.ts (a file this lane does not own).
+   The id is shape-checked rather than matched against a hardcoded list, so a
+   skill added by another lane gets a working CTA with no edit here. An id that
+   fails the check renders no CTA instead of a link that pins nothing. */
+const ctaHref = skillId && /^[a-z0-9][a-z0-9-]{1,40}$/.test(skillId)
+	? `/?skill=${encodeURIComponent(skillId)}`
+	: "";
+---
+
+<li class="showcase-tile" data-clip-tile data-playing="false" data-error="false">
+	<div class="showcase-media">
+		<video
+			class="showcase-video"
+			data-clip-video
+			data-clip-audio
+			data-src={cdnUrl}
+			poster={sourceImageUrl}
+			muted
+			loop
+			playsinline
+			preload="metadata"
+			aria-label={title}
+		></video>
+
+		<button type="button" class="showcase-play" data-clip-play aria-label={`Play ${title}`}>
+			<svg class="showcase-play-start" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+			<svg class="showcase-play-pause" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5.5v13M15 5.5v13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+			<span data-clip-play-label>Play</span>
+		</button>
+
+		<p class="showcase-error" data-clip-error role="status">This one could not load.</p>
+	</div>
+
+	<h2 id={`clip-${id}`}>{title}</h2>
+	<p class="showcase-prov">
+		{skillLabel && <span class="showcase-skill">{skillLabel}</span>}
+		{routeLabel && <span class="showcase-route">{routeLabel}</span>}
+		{metaBits.length > 0 && <span class="showcase-meta">{metaBits.join(" · ")}</span>}
+	</p>
+	{ctaHref && (
+		<a class="showcase-cta" href={ctaHref}>
+			Make one like this
+			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M12.5 6l5.5 6-5.5 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+		</a>
+	)}
+</li>
+
+<script>
+	/* Hoisted once per page by Astro, however many tiles render — so this is a
+	   single document-level controller, not per-instance behaviour.
+	 *
+	 * Playback policy:
+	 *   reduced motion  -> never autoplays. The poster stands, and the button is
+	 *                      the only way to start one.
+	 *   hover + fine pointer (desktop) -> hover or keyboard focus starts it,
+	 *                      leaving stops and rewinds it.
+	 *   everything else (touch) -> IntersectionObserver plays the one that is
+	 *                      most in view, ONE at a time. Never all at once.
+	 *
+	 * One the visitor started by pressing the button is "pinned": hover and
+	 * intersection stop touching it, and it gets native controls so they can
+	 * scrub or unmute themselves.
+	 *
+	 * Sound: this surface has no speaker button of its own — a pinned clip already
+	 * exposes native controls, which is a better manual control than anything we
+	 * would add. What it DOES do is honour the page-wide preference from
+	 * src/scripts/app/clip-audio.ts, so a visitor who turned sound on over on the
+	 * skills wall hears these too instead of being asked a second time. Nothing
+	 * here unmutes on its own without that explicit prior opt-in.
+	 */
+	import { applyClipSound } from "../../scripts/app/clip-audio";
+
+	const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+	const hoverPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+
+	const tiles = Array.from(document.querySelectorAll<HTMLElement>("[data-clip-tile]"));
+	let active: HTMLElement | null = null;
+
+	const videoOf = (tile: HTMLElement) => tile.querySelector<HTMLVideoElement>("[data-clip-video]");
+	const isPinned = (tile: HTMLElement) => tile.dataset.pinned === "true";
+
+	function start(tile: HTMLElement) {
+		const video = videoOf(tile);
+		if (!video || tile.dataset.error === "true") return;
+		// First play intent is what pays for the download.
+		if (!video.getAttribute("src") && video.dataset.src) video.setAttribute("src", video.dataset.src);
+		if (active && active !== tile && !isPinned(active)) stop(active);
+		active = tile;
+		tile.dataset.playing = "true";
+		setLabel(tile, "Pause");
+		/* Silent unless the visitor already opted into sound this visit. */
+		applyClipSound(video);
+		// A refused play() (a data-saver mode, a decode failure) must not leave
+		// the tile claiming to be playing.
+		void video.play().catch(() => {
+			tile.dataset.playing = "false";
+			setLabel(tile, "Play");
+		});
+	}
+
+	function stop(tile: HTMLElement, rewind = true) {
+		const video = videoOf(tile);
+		if (!video) return;
+		video.pause();
+		if (rewind && !isPinned(tile)) {
+			try { video.currentTime = 0; } catch { /* no metadata yet */ }
+		}
+		tile.dataset.playing = "false";
+		setLabel(tile, "Play");
+	}
+
+	function setLabel(tile: HTMLElement, word: "Play" | "Pause") {
+		const label = tile.querySelector<HTMLElement>("[data-clip-play-label]");
+		if (label) label.textContent = word;
+		const button = tile.querySelector<HTMLButtonElement>("[data-clip-play]");
+		const title = tile.querySelector<HTMLElement>("h2")?.textContent?.trim() ?? "this one";
+		if (button) button.setAttribute("aria-label", `${word} ${title}`);
+	}
+
+	for (const tile of tiles) {
+		const video = videoOf(tile);
+		const button = tile.querySelector<HTMLButtonElement>("[data-clip-play]");
+
+		video?.addEventListener("error", () => {
+			tile.dataset.error = "true";
+			tile.dataset.playing = "false";
+		});
+
+		button?.addEventListener("click", () => {
+			if (tile.dataset.playing === "true") {
+				stop(tile, false);
+				return;
+			}
+			// User-initiated: pin it and hand over the native controls so audio
+			// and scrubbing are theirs to choose, not ours to impose.
+			tile.dataset.pinned = "true";
+			if (video) video.controls = true;
+			start(tile);
+		});
+
+		if (!reduceMotion.matches && hoverPointer.matches) {
+			tile.addEventListener("pointerenter", () => { if (!isPinned(tile)) start(tile); });
+			tile.addEventListener("pointerleave", () => { if (!isPinned(tile)) stop(tile); });
+			tile.addEventListener("focusin", () => { if (!isPinned(tile)) start(tile); });
+			tile.addEventListener("focusout", () => {
+				if (!isPinned(tile) && !tile.contains(document.activeElement)) stop(tile);
+			});
+		}
+	}
+
+	if (tiles.length > 0 && !reduceMotion.matches && !hoverPointer.matches && "IntersectionObserver" in window) {
+		const ratios = new Map<HTMLElement, number>();
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) ratios.set(entry.target as HTMLElement, entry.intersectionRatio);
+				let best: HTMLElement | null = null;
+				let bestRatio = 0.6; // must be meaningfully on screen, not a sliver
+				for (const [tile, ratio] of ratios) {
+					if (ratio > bestRatio) { best = tile; bestRatio = ratio; }
+				}
+				for (const tile of tiles) {
+					if (isPinned(tile)) continue;
+					if (tile === best) start(tile);
+					else if (tile.dataset.playing === "true") stop(tile);
+				}
+			},
+			{ threshold: [0, 0.25, 0.6, 0.85] },
+		);
+		for (const tile of tiles) observer.observe(tile);
+	}
+
+	// Scrolled away on desktop too: a hovered tile that leaves the viewport
+	// should not keep decoding frames nobody can see.
+	if (tiles.length > 0 && hoverPointer.matches && "IntersectionObserver" in window) {
+		const offscreen = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					const tile = entry.target as HTMLElement;
+					if (!entry.isIntersecting && tile.dataset.playing === "true") stop(tile, false);
+				}
+			},
+			{ threshold: 0 },
+		);
+		for (const tile of tiles) offscreen.observe(tile);
+	}
+</script>

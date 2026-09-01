@@ -135,6 +135,43 @@ export const generation = sqliteTable(
     /** 'pending' | 'ok' | 'failed' | 'refunded' */
     status: text("status").notNull(),
     errorCode: text("error_code"),
+    /**
+     * 'image' | 'video'. Defaults to 'image' so every row written before
+     * migration 0016 keeps its meaning without a backfill.
+     *
+     * This column is load-bearing beyond display: src/lib/credits/reconcile.ts
+     * refunds a generation left `pending` too long, and "too long" is minutes
+     * apart for the two kinds — an image that has not finished in 10 minutes is
+     * a dead Worker, whereas a video is very possibly still rendering. Reading
+     * this column is what stops that sweep refunding a clip that then arrives.
+     */
+    kind: text("kind").notNull().default("image"),
+    /**
+     * PicX's generation id, from the 202 body of an async submit. The ONLY
+     * correlation key the inbound webhook has: the delivery names the work in
+     * PicX's id namespace, and the signature covers the body rather than the
+     * URL, so correlating on a path parameter instead would accept a captured
+     * delivery replayed against a different row (see migrations/0010 and 0016).
+     */
+    picxGenerationId: text("picx_generation_id"),
+    /** Clip length actually requested, after clamping to the model's 5-15s. */
+    durationSeconds: integer("duration_seconds"),
+    /** Tier actually requested, e.g. '480p'. Priced from this, not from a client value. */
+    resolution: text("resolution"),
+    /** 'text' | 'image' | 'reference' — which input route produced the clip. */
+    videoMode: text("video_mode"),
+    /**
+     * First-frame still for a clip, so any surface listing generations can paint
+     * a poster before the mp4 loads instead of a black box (migration 0018).
+     *
+     * Set ONLY where frame one is known for free and exact: videoMode 'image',
+     * whose submitted image literally IS frame one, sets this at submit time.
+     * NULL everywhere else — an image row, a pre-0018 row, and deliberately a
+     * 'reference'/'text' clip, whose frame one is a new composition that does
+     * not exist until the render finishes. A reference image is not frame one
+     * and must never be substituted here as if it were.
+     */
+    posterUrl: text("poster_url"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     completedAt: integer("completed_at", { mode: "timestamp_ms" }),
   },
@@ -142,6 +179,42 @@ export const generation = sqliteTable(
     index("generation_user_created_idx").on(t.userId, t.createdAt),
     index("generation_org_created_idx").on(t.organizationId, t.createdAt),
     index("generation_project_created_idx").on(t.projectId, t.createdAt),
+    index("generation_picx_generation_idx").on(t.picxGenerationId),
+  ],
+);
+
+/**
+ * One upstream render belonging to a `generation` (migration 0017).
+ *
+ * Images are submitted asynchronously and delivered by webhook, and a pack skill
+ * is several independent PicX calls — so the correlation key cannot live on the
+ * parent row, which has only one of them. Each frame carries the id PicX will
+ * quote back, the webhook completes frames individually, and the parent rolls up
+ * to 'ok' once none are left pending.
+ *
+ * A single-image skill has exactly one frame, so packs are not a special case.
+ */
+export const generationFrame = sqliteTable(
+  "generation_frame",
+  {
+    id: text("id").primaryKey(),
+    generationId: text("generation_id")
+      .notNull()
+      .references(() => generation.id, { onDelete: "cascade" }),
+    /** 0-based position in the finished set — fixes output_urls order. */
+    idx: integer("idx").notNull(),
+    picxGenerationId: text("picx_generation_id"),
+    prompt: text("prompt"),
+    /** 'pending' | 'ok' | 'failed' */
+    status: text("status").notNull().default("pending"),
+    outputUrl: text("output_url"),
+    errorCode: text("error_code"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+  },
+  (t) => [
+    index("generation_frame_picx_idx").on(t.picxGenerationId),
+    index("generation_frame_parent_idx").on(t.generationId, t.idx),
   ],
 );
 

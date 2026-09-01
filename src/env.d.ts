@@ -104,6 +104,31 @@ interface Env {
    * absence; only the binding is deferred.
    */
   PICX_WEBHOOK_SECRET?: SecretLike;
+
+  /**
+   * Public https origin PicX should deliver generation results to, overriding
+   * the origin of the incoming request.
+   *
+   * Exists for LOCAL DEVELOPMENT. The callback URL is normally derived from the
+   * request so staging and production each call themselves back with no config,
+   * but on localhost that derives `http://localhost:4321`, and PicX's SSRF guard
+   * refuses a host it cannot resolve publicly — so video simply cannot complete
+   * on a dev machine. Point this at a tunnel instead:
+   *
+   *   ngrok http --domain="intensely-moral-pig.ngrok-free.app" 4321
+   *   PICX_CALLBACK_ORIGIN=https://intensely-moral-pig.ngrok-free.app
+   *
+   * Leave it UNSET in staging and production. Set there, it would send every
+   * environment's callbacks to one host — including production results to a dev
+   * tunnel. A non-https value is ignored rather than trusted.
+   */
+  PICX_CALLBACK_ORIGIN?: SecretLike;
+
+  /**
+   * Dev-only: accept UNVERIFIED webhook deliveries. See the header of
+   * src/pages/api/webhooks/picx.ts before setting this.
+   */
+  PICX_WEBHOOK_INSECURE_DEV?: SecretLike;
   /**
    * Recovery hatch for platform admin access. If migrations/
    * 0008_seed_first_admin.sql matched zero rows (the account had not signed

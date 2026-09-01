@@ -191,3 +191,55 @@
 	.chat-suggestion { height: 40px; font-size: 13px; padding: 0 14px; }
 	.chat-credits-cta-btn { height: 44px; font-size: 13px; }
 }
+
+
+/* ─── Drawing placeholder ─────────────────────────────────────────
+   Shown while images generate. It reserves the SAME grid and the same 12px
+   radius the finished tiles use (.chat-bubble-images / .chat-bubble-image-wrap
+   above), so the arriving image replaces the placeholder without the layout
+   moving — the reason this exists rather than a small "Drawing…" chip.
+
+   The shimmer is a slow, low-contrast sweep, not a progress indicator: PicX
+   reports nothing between request and finished image, so anything that appeared
+   to fill up would be inventing data. Under prefers-reduced-motion it becomes a
+   flat block and the elapsed clock alone carries the wait. */
+
+.chat-bubble-drawing {
+	max-width: min(560px, 100%);
+}
+.chat-drawing-head {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	font-size: 13.5px;
+	color: var(--text-dim);
+}
+.chat-bubble-drawing .chat-bubble-images { margin-top: 10px; }
+
+.chat-skeleton-cell {
+	position: relative;
+	border-radius: 12px;
+	border: 1px solid var(--border2);
+	background: color-mix(in srgb, var(--card) 88%, var(--text) 12%);
+	overflow: hidden;
+}
+.chat-skeleton-cell::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		color-mix(in srgb, var(--text) 7%, transparent) 50%,
+		transparent 100%
+	);
+	transform: translateX(-100%);
+	animation: chatSkeletonSweep 1.6s ease-in-out infinite;
+}
+@keyframes chatSkeletonSweep {
+	to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chat-skeleton-cell::after { animation: none; opacity: 0; }
+}

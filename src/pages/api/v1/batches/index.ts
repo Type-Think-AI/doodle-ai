@@ -16,6 +16,7 @@ import { creditCostForSkill, isPackSkill } from "../../../../lib/credits/costs";
 import { spend } from "../../../../lib/credits";
 import { isGenerationMode } from "../../../../lib/batch/prompt";
 import { runBatch } from "../../../../lib/batch/run";
+import { readSecret } from "../../../../lib/secrets";
 import type { BatchDto, BatchItemDto } from "../../../../lib/api/dto";
 
 export const prerender = false;
@@ -176,7 +177,13 @@ export async function POST(context: APIContext): Promise<Response> {
 
   const ctx = (context.locals as { runtime?: { env?: Env; ctx?: ExecutionContext } })?.runtime;
   if (ctx?.env && ctx.ctx) {
-    ctx.ctx.waitUntil(runBatch(ctx.env, jobId, new URL(context.request.url).origin));
+    // Same dev-tunnel override the chat/video path uses (see src/env.d.ts):
+    // without it a local batch silently takes the synchronous fallback, because
+    // localhost can never receive a delivery.
+    const callbackOrigin =
+      (await readSecret(ctx.env.PICX_CALLBACK_ORIGIN, "PICX_CALLBACK_ORIGIN"))?.trim() ||
+      new URL(context.request.url).origin;
+    ctx.ctx.waitUntil(runBatch(ctx.env, jobId, callbackOrigin));
   }
   // No `else`: if the runtime's ExecutionContext is somehow unavailable (it
   // always is on Cloudflare, astro dev included via the platform proxy),

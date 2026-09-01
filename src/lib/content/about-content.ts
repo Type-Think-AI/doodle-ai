@@ -28,7 +28,12 @@ import { SITE_TITLE } from "../../consts";
  * assistants, so one false capability becomes thousands of wrong answers.
  */
 
-const runnable = SKILLS.filter((s) => s.runnable);
+/* Image skills only. Every figure below is derived from imageCountForSkill(),
+   which is defined over GENERATION_MODES — the per-IMAGE price table — so a
+   video skill has no answer for "how many images does one run return" and
+   asking is a hard error rather than a zero. Video is priced per second of clip
+   (src/lib/video/constants.ts) and is described separately. */
+const runnable = SKILLS.filter((s) => s.runnable && s.kind === "image");
 const noPhotoNeeded = runnable.filter((s) => !s.requiresPhoto);
 const packSkills = runnable.filter((s) => imageCountForSkill(s.id) > 1);
 const maxImages = Math.max(...runnable.map((s) => imageCountForSkill(s.id)));

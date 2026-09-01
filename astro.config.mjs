@@ -59,6 +59,23 @@ export default defineConfig({
 		},
 	}),
 	vite: {
+		server: {
+			/* Vite rejects any request whose Host header it doesn't recognise, so a
+			   tunnelled webhook delivery to `astro dev` comes back 403 "This host is
+			   not allowed" before it ever reaches /api/webhooks/picx. PicX only sees
+			   a non-2xx and retries, which reads as a broken receiver.
+
+			   Dev-server-only setting (the build ignores it), scoped to the two
+			   tunnel providers we actually use rather than `true`, which would
+			   disable the DNS-rebinding check for every host. Set DEV_ALLOWED_HOST
+			   for a different tunnel domain. */
+			allowedHosts: [
+				".ngrok-free.app",
+				".ngrok.app",
+				".trycloudflare.com",
+				...(process.env.DEV_ALLOWED_HOST ? [process.env.DEV_ALLOWED_HOST] : []),
+			],
+		},
 		build: {
 			rollupOptions: {
 				external: [

@@ -1,8 +1,8 @@
 {
 	"extends": "astro/tsconfigs/strict",
 	"include": [".astro/types.d.ts", "**/*"],
-	"//": "An explicit `exclude` REPLACES TypeScript's defaults, so node_modules has to be listed or `include: **/*` walks dependencies. dist and dist.tmp are excluded because a stale build copy compiles a duplicate of global-scope scripts alongside their source (TS2393).",
-	"exclude": ["node_modules", "dist", "dist.tmp"],
+	"//": "An explicit `exclude` REPLACES TypeScript's defaults, so node_modules has to be listed or `include: **/*` walks dependencies. dist and dist.tmp are excluded because a stale build copy compiles a duplicate of global-scope scripts alongside their source (TS2393). `tools` is excluded for the SAME reason from a different direction: it holds the standalone Manifest V3 browser extension, whose plain .js files are picked up by allowJs and are global scripts (no import/export), so its `function init()` and `$` collided in global scope with src/scripts/app/board-share.ts and reported TS2393 against OUR source while the extension was the other half. The extension has no build step and is not app source, so it is not TypeScript's business.",
+	"exclude": ["node_modules", "dist", "dist.tmp", "tools"],
 	"compilerOptions": {
 		"strictNullChecks": true
 	}

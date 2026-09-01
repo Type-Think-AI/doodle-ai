@@ -19,8 +19,14 @@ const thumb = buildSkillThumbnail(skill);
    on the card matters because it is the thing that differentiates this
    catalogue — and because it is also what the run costs (1 credit per image),
    so a user should see "9" before clicking, not after being charged. Roadmap
-   skills have no price to look up, hence the runnable guard. */
-const imageCount = skill.runnable ? imageCountForSkill(skill.id) : 1;
+   skills have no price to look up, hence the runnable guard.
+
+   An animation skill is excluded from the count entirely: imageCountForSkill()
+   is defined over the image modes and throws for one by design (the guard that
+   stops an animation being charged as a single image), and "9" would be
+   meaningless for one anyway. */
+const isMoving = skill.kind === 'video';
+const imageCount = skill.runnable && !isMoving ? imageCountForSkill(skill.id) : 1;
 
 /* Card widths: 226px in the 4-up desktop grid (1000px container), ~30vw at the
    3-up breakpoint, ~45vw at the 2-up phone breakpoint. `sizes` has to describe
@@ -30,70 +36,329 @@ const srcset = skill.thumbnailUrl ? cdnImageSrcset(skill.thumbnailUrl) : null;
 /* Fallback `src` is a resized variant too, so a browser that ignores srcset
    still never downloads the 1024px original. */
 const src = skill.thumbnailUrl ? resizedCdnImage(skill.thumbnailUrl, 440) : undefined;
+
+/* Declared intrinsic size, matching the skill's REAL output ratio rather than a
+   hardcoded square. The CSS renders at width:100%/height:auto, so these two
+   numbers only do one job: tell the browser the correct shape to reserve before
+   the image arrives. A square 440x440 here against a 3:2 image is what makes a
+   masonry column jump as tiles load. */
+const THUMB_W = 440;
+
+/* ---------------------------------------------------------------------------
+   True cover dimensions, when the cover was cut out of a real clip.
+
+   src/data/skill-video-covers.json is written by
+   scripts/extract-clip-first-frames.ts, which decodes frame one of a video
+   skill's own finished clip and records the frame's exact pixel size. That size
+   is the authority here, because `skill.aspectRatio` is only as precise as the
+   three values the loader allows (1:1, 3:2, 9:16) — a 16:9 clip has to declare
+   itself 3:2, the nearest of the three. Reserving 440x293 for a frame that
+   arrives 440x254 costs a 39px reflow per tile in a masonry column, which is the
+   exact jump the width/height attributes exist to prevent.
+
+   Read through import.meta.glob for the same reason the clips file below is: the
+   manifest is produced by a script and may be absent in a fresh checkout, and a
+   glob that matches nothing is `{}` rather than a hard build error.
+   --------------------------------------------------------------------------- */
+interface SkillCoverRecord {
+  skillId?: string;
+  width?: number;
+  height?: number;
+}
+const coverFiles = import.meta.glob<{ default: { covers?: SkillCoverRecord[] } }>(
+  '../../data/skill-video-covers.json',
+  { eager: true },
+);
+const coverRecord = (Object.values(coverFiles)[0]?.default?.covers ?? []).find(
+  (entry) => entry.skillId === skill.id && Number(entry.width) > 0 && Number(entry.height) > 0,
+);
+
+const THUMB_H = coverRecord
+  ? Math.round((THUMB_W * coverRecord.height!) / coverRecord.width!)
+  : skill.aspectRatio === '3:2' ? 293 : skill.aspectRatio === '9:16' ? 782 : 440;
+
+/* ---------------------------------------------------------------------------
+   Real animations for the tiles that have one.
+
+   src/data/showcase-clips.json is written by another lane's script and may not
+   exist in a given checkout, so it is read through `import.meta.glob` rather
+   than a static import: a glob that matches nothing resolves to `{}` and the
+   page still builds, whereas a missing static import is a hard build error.
+   Eager, so this is one build-time read shared by every card on the page.
+
+   Only the fields this tile needs are typed. The file's real shape is richer,
+   but it is another lane's contract and restating all of it here would be a
+   second copy of the truth to drift.
+   --------------------------------------------------------------------------- */
+interface ShowcaseClipEntry {
+  skillId?: string;
+  cdnUrl?: string;
+  sourceImageUrl?: string;
+}
+const clipFiles = import.meta.glob<{ default: { clips?: ShowcaseClipEntry[] } }>(
+  '../../data/showcase-clips.json',
+  { eager: true },
+);
+const allClips: ShowcaseClipEntry[] = Object.values(clipFiles)[0]?.default?.clips ?? [];
+const clip = isMoving
+  ? allClips.find((entry) => entry.skillId === skill.id && typeof entry.cdnUrl === 'string' && entry.cdnUrl.length > 0)
+  : undefined;
+
+/* Poster is the same resized still the <img> already shows, so the two share one
+   cache entry and the moving layer never flashes an unpainted black box. Falls
+   back to the animation's own source doodle when the skill has no cover yet. */
+const posterUrl = src ?? (clip?.sourceImageUrl ? resizedCdnImage(clip.sourceImageUrl, 440) : undefined);
+
+/* Alt text describes what the picture IS, in the user's words. On an animation
+   skill the cover is one frame of something that moves, and saying so is the
+   difference between "this makes a picture" and "this makes a moving doodle". */
+const altText = isMoving ? `A frame from the ${skill.name} animation` : `${skill.name} example`;
+
+/* The two accessible names the marker carries. It is a real button when there is
+   something to play, and a plain marker when there is not (or when the visitor
+   asked for reduced motion, which the script enforces at runtime) — so both
+   names are authored here and the script swaps between them rather than
+   inventing copy in JS. Consumer words: it comes to life, it does not "play a
+   video clip". */
+const playLabel = `Play the ${skill.name} animation`;
+const movesLabel = 'Comes to life as an animation';
 ---
 
-<a class="skill-card" href={`/skills/${skill.id}`} data-runnable={skill.runnable ? "true" : "false"}>
-  <div class="skill-card-thumb">
-    {skill.thumbnailUrl ? (
-      <img
-        src={src}
-        srcset={srcset ?? undefined}
-        sizes={srcset ? THUMB_SIZES : undefined}
-        alt={`${skill.name} sample output`}
-        width="440"
-        height="440"
-        loading={priority ? 'eager' : 'lazy'}
-        fetchpriority={priority ? 'high' : 'auto'}
-        decoding={priority ? 'sync' : 'async'}
-      />
-    ) : <Fragment set:html={thumb} />}
-    {imageCount > 1 && (
-      <span
-        class="skill-card-count"
-        role="img"
-        aria-label={`Returns ${imageCount} separate images`}
-        title={`Returns ${imageCount} separate images`}
-      >{imageCount}</span>
-    )}
-    {!skill.runnable && <span class="skill-card-badge">Coming soon</span>}
-  </div>
-  <div class="skill-card-meta">
-    <span class="skill-card-name">{skill.name}</span>
-    <span class="skill-card-tagline">{skill.tagline}</span>
-  </div>
-</a>
+<!-- data-skill-id is what the Home controller reads to pin this skill into the
+     sticky composer instead of navigating away (see src/scripts/app/home.ts).
+     It lives on this wrapper rather than the link because the wrapper is the
+     tile: the link covers the art, and the play marker is a SIBLING of the link,
+     not a child of it. That split is the whole point of tap-to-play — a <button>
+     nested inside an <a> is invalid (interactive content inside a link) and, more
+     practically, a tap could not then belong to one of them unambiguously.
+     The href stays a real skill URL, so the tile is still a crawlable link and
+     still works with JS off, on /skills, and via cmd-click. -->
+<div
+  class="skill-card"
+  data-runnable={skill.runnable ? "true" : "false"}
+  data-skill-id={skill.id}
+  data-has-thumb={skill.thumbnailUrl ? "true" : "false"}
+  data-moves={isMoving ? "true" : "false"}
+  data-clip={clip ? "true" : "false"}
+  data-motion-state="idle"
+>
+  <a class="skill-card-link" href={`/skills/${skill.id}`}>
+    <div class="skill-card-thumb">
+      {skill.thumbnailUrl ? (
+        <img
+          src={src}
+          srcset={srcset ?? undefined}
+          sizes={srcset ? THUMB_SIZES : undefined}
+          alt={altText}
+          width={THUMB_W}
+          height={THUMB_H}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchpriority={priority ? 'high' : 'auto'}
+          decoding={priority ? 'sync' : 'async'}
+        />
+      ) : <Fragment set:html={thumb} />}
+      <!-- The real animation, layered over its own still.
+           No `src` and no `autoplay`: the URL is parked in data-src and only
+           assigned on play intent, so a wall of 29 tiles costs zero video bytes
+           on load. `muted` with no controls and no audio track ever surfaced —
+           nothing here can make a sound. The still underneath keeps its own
+           uncropped shape and sets the tile height; this layer covers it. -->
+      {clip && (
+        <video
+          class="skill-card-motion"
+          data-skill-clip
+          data-clip-audio
+          data-src={clip.cdnUrl}
+          poster={posterUrl}
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          tabindex="-1"
+          aria-hidden="true"
+        ></video>
+      )}
+      {imageCount > 1 && (
+        <span
+          class="skill-card-count"
+          role="img"
+          aria-label={`${imageCount} pictures`}
+          title={`${imageCount} pictures`}
+        >{imageCount}</span>
+      )}
+      {!skill.runnable && <span class="skill-card-badge">Coming soon</span>}
+      <!-- An animation skill with no animation on file yet keeps the marker as a
+           pure marker: there is nothing to start, so it must not look startable. -->
+      {isMoving && !clip && (
+        <span class="skill-card-moves" role="img" aria-label={movesLabel} title={movesLabel}>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2Z"></path></svg>
+          Moves
+        </span>
+      )}
+      <!-- The label sits ON the art, over a scrim, instead of in a caption strip
+           below it. The old layout gave every tile the same silhouette — square
+           image, two lines of text — so 25 of them read as a spreadsheet no matter
+           how good the art was. Overlaying the name lets the images butt up
+           against each other and be the thing you scan. -->
+      <span class="skill-card-overlay">
+        <span class="skill-card-name">{skill.name}</span>
+      </span>
+    </div>
+  </a>
+  <!-- The one marker that makes 4 animation skills findable in a wall of 29
+       stills: amber, filled, and the only play glyph on the page. It replaces the
+       old grey "Clip" pill — "clip" is a developer's word, and a grey pill among
+       grey pills is not a marker.
+
+       On a phone it is also the ONLY way a tile ever moves: playback was gated
+       behind (hover: hover) and (pointer: fine), so a phone-first audience never
+       saw one. Tapping this pill starts THIS animation inline; tapping anywhere
+       else on the tile still follows the link, which is why it sits outside the
+       <a> and why its hit area is deliberately its own.
+
+       Rendered `disabled` and enabled by the script: with JS off there is nothing
+       to start, and a disabled pill takes no pointer events (see the CSS), so the
+       tap falls straight through to the link underneath instead of dying on a
+       dead control. The same mechanism is how reduced motion is honoured. -->
+  {isMoving && clip && (
+    <button
+      type="button"
+      class="skill-card-moves skill-card-play"
+      data-skill-play
+      data-play-label={playLabel}
+      data-idle-label={movesLabel}
+      aria-pressed="false"
+      aria-label={movesLabel}
+      title={movesLabel}
+      disabled
+    >
+      <svg class="skill-card-play-icon" width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2Z"></path></svg>
+      <svg class="skill-card-stop-icon" width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+      Moves
+    </button>
+  )}
+  <!-- Sound. Deliberately NOT amber: the amber pill is the one saturated thing
+       in the mosaic and it means "this one moves". A second amber control would
+       spend that signal twice, so this is the same translucent charcoal as the
+       count badge, and it sits top-right where that badge lives — free on an
+       animation tile, which never renders a count.
+
+       Ships disabled and enabled by the script, same contract as the play pill:
+       with JS off there is nothing to toggle, and a disabled control takes no
+       pointer events so the tap falls through to the link instead of dying. -->
+  {isMoving && clip && (
+    <button
+      type="button"
+      class="skill-card-sound"
+      data-clip-sound
+      aria-pressed="false"
+      aria-label="Turn sound on"
+      title="Turn sound on"
+      disabled
+    >
+      <svg class="skill-card-sound-off" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11 5 6.5 9H4v6h2.5L11 19V5Z" fill="currentColor"></path><path d="M16 9.5l4 5m0-5l-4 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+      <svg class="skill-card-sound-on" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11 5 6.5 9H4v6h2.5L11 19V5Z" fill="currentColor"></path><path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+    </button>
+  )}
+</div>
 
 <style is:global>
   .skill-card {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    color: inherit;
+    display: block;
+    /* The play marker is positioned against the tile, not against the thumb,
+       because it is a sibling of the link rather than a child of it. */
+    position: relative;
+    /* Mosaic member: the parent lays these out in CSS columns, and a tile must
+       never be split across a column break. */
+    break-inside: avoid;
+    margin-bottom: 12px;
   }
+  .skill-card-link { display: block; color: inherit; text-decoration: none; }
   .skill-card-thumb {
     position: relative;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
-    aspect-ratio: 1 / 1;
+    /* NO fixed aspect-ratio when there is a real thumbnail: the tile takes the
+       image's OWN shape and shows it whole.
+       A fixed box plus object-fit: cover was cropping every generated result to
+       fit the layout — on a 3x2 collage that silently ate the outer panels, which
+       is the one thing these thumbnails exist to show. The image now sets the
+       height and the mosaic column absorbs it, so nothing is trimmed.
+       The fallback below keeps a square box because the synthetic SVG has no
+       meaningful intrinsic size to hug. */
     width: 100%;
     background: var(--surface2);
-    border: 1px solid var(--border);
-    transition: border-color 0.15s ease, transform 0.15s ease;
+    /* No border. On a near-black canvas the art's own edge is the boundary; an
+       outline per tile put 25 competing rectangles on screen. */
+    border: 0;
+    transition: transform 0.18s ease, filter 0.18s ease;
   }
-  /* Hover feedback only where a real hover device is present. */
+  /* The label + its scrim. The gradient is only as tall as it needs to be to
+     keep the text legible over an arbitrary image — a full-tile overlay would
+     mute the art we are trying to show off. */
+  .skill-card-overlay {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    align-items: flex-end;
+    min-height: 84px;
+    padding: 12px 14px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.18) 55%, transparent);
+    pointer-events: none;
+  }
+  /* Hover lifts the art itself now that there is no border to light up. Keyed to
+     the tile, so hovering the play marker lifts it too. */
   @media (hover: hover) and (pointer: fine) {
-    .skill-card:hover .skill-card-thumb { border-color: var(--border3); }
+    .skill-card:hover .skill-card-thumb { transform: scale(1.014); filter: brightness(1.06); }
   }
-  /* Touch/tap feedback so the card isn't silently inert on phones. */
-  .skill-card:active .skill-card-thumb { border-color: var(--border3); transform: scale(0.98); }
-  .skill-card:focus-visible { outline: 2px solid var(--border3); outline-offset: 3px; border-radius: 14px; }
+  /* Touch/tap feedback so the card isn't silently inert on phones. Keyed to the
+     LINK, so pressing the play marker does not squash the whole tile — the two
+     taps look as different as they behave. */
+  .skill-card-link:active .skill-card-thumb { transform: scale(0.985); }
+  .skill-card-link:focus-visible { outline: 2px solid var(--border3); outline-offset: 3px; border-radius: 16px; }
+  @media (prefers-reduced-motion: reduce) {
+    .skill-card-thumb { transition: none; }
+    .skill-card:hover .skill-card-thumb,
+    .skill-card-link:active .skill-card-thumb { transform: none; }
+    /* Belt and braces: the script never starts playback under reduced motion,
+       and if one ever did start the layer stays hidden. */
+    .skill-card-motion { display: none; }
+  }
   /* Direct children only: the thumbnail itself is a direct <svg>/<img> child,
      whereas the overlay badges nest their own small icons. An unscoped
      descendant selector here inflated a badge's 11px icon to fill the card. */
-  .skill-card-thumb > svg,
-  .skill-card-thumb > img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  /* height: auto and no object-fit — the whole image, uncropped, at its own
+     aspect ratio. `width`/`height` attributes on the <img> still declare the
+     right ratio so the browser reserves the correct box and the mosaic does not
+     reflow as tiles load. */
+  .skill-card-thumb > img { width: 100%; height: auto; display: block; }
+  /* The synthetic SVG fallback has no real subject to preserve, so it keeps a
+     square box and fills it. */
+  .skill-card[data-has-thumb="false"] .skill-card-thumb { aspect-ratio: 1 / 1; }
+  .skill-card-thumb > svg { width: 100%; height: 100%; display: block; object-fit: cover; }
   .skill-card[data-runnable="false"] .skill-card-thumb > svg,
   .skill-card[data-runnable="false"] .skill-card-thumb > img { opacity: 0.45; }
+
+  /* The moving layer. Absolute, so the still underneath is still the element
+     that sets the tile's height — the uncropped full-aspect thumbnail is
+     untouched, and the mosaic never reflows when an animation starts. It is the
+     only layer that covers: an animation is 16:9 where its cover is 3:2, and
+     letterbox bars parked over the art would be worse than a few cropped pixels
+     of a moving frame. Hidden until the video is genuinely painting frames, so a
+     stalled or refused load leaves the still standing. */
+  .skill-card-motion {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    pointer-events: none;
+  }
+  .skill-card[data-motion-state="playing"] .skill-card-motion { opacity: 1; }
+
   /* Multi-image count — just the number, deliberately small. It is a glanceable
      marker of which skills return a set, not a label to read; the full meaning
      lives in the aria-label/title and on the skill page's spec row.
@@ -122,6 +387,114 @@ const src = skill.thumbnailUrl ? resizedCdnImage(skill.thumbnailUrl, 440) : unde
     backdrop-filter: blur(6px);
   }
 
+  /* The animation marker. Solid accent amber on purpose: every other chip on
+     this wall is translucent charcoal, so this is the only saturated thing in
+     the mosaic and the eye finds all four instantly. Consumes --accent /
+     --send-fg; defines nothing. */
+  .skill-card-moves {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    height: 21px;
+    padding: 0 8px 0 7px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--send-fg);
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+  /* The same pill, now a real control. Above the moving layer so it stays
+     tappable while the animation runs, and it inherits the page font because a
+     <button> would otherwise drop to the UA's. */
+  .skill-card-play {
+    z-index: 2;
+    border: 0;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* A 21px pill is a fine marker and a poor target. Rather than grow it and
+     unbalance the tile, the target grows invisibly around it — ~41px on a mouse
+     and ~50px on a touch pointer, in the one corner of the tile where a tap is
+     least likely to have meant "open this skill". */
+  .skill-card-play::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
+  .skill-card-play:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+  /* The sound toggle. Same translucent-charcoal family as the count badge so it
+     reads as a quiet utility rather than competing with the amber Moves pill. */
+  .skill-card-sound {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    z-index: 2;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(12, 12, 12, 0.8);
+    color: #fff;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Same invisible target growth as the play pill: a 25px circle is a fine
+     marker and a poor tap target. */
+  .skill-card-sound::after { content: ''; position: absolute; inset: -9px; }
+  .skill-card-sound:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .skill-card-sound:disabled { pointer-events: none; cursor: default; }
+  /* Glyph follows the pressed state, so the icon always shows what IS, not what
+     a click would do — matching the play/stop pill's convention. */
+  .skill-card-sound-on { display: none; }
+  .skill-card-sound[aria-pressed="true"] .skill-card-sound-off { display: none; }
+  .skill-card-sound[aria-pressed="true"] .skill-card-sound-on { display: inline-block; }
+  /* Sound on is worth one saturated cue, since it is the state that can surprise
+     someone in a quiet room. */
+  .skill-card-sound[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--send-fg);
+    border-color: transparent;
+  }
+  @media (pointer: coarse) {
+    .skill-card-sound { width: 29px; height: 29px; }
+    .skill-card-sound::after { inset: -11px; }
+  }
+  /* Reduced motion never starts a clip, so there is nothing to hear and the
+     control would be decorative. */
+  @media (prefers-reduced-motion: reduce) {
+    .skill-card-sound { display: none; }
+  }
+  /* Disabled means "nothing to start here": with JS off, or under reduced
+     motion. Taking it out of hit-testing is deliberate — the tap then lands on
+     the link beneath and the tile behaves like every other tile, instead of the
+     marker swallowing taps into a dead control. */
+  .skill-card-play:disabled { pointer-events: none; cursor: default; }
+  /* Glyph follows state: ▶ to start, ■ while it is running. */
+  .skill-card-stop-icon { display: none; }
+  .skill-card[data-motion-state="playing"] .skill-card-play-icon { display: none; }
+  .skill-card[data-motion-state="playing"] .skill-card-stop-icon { display: inline-block; }
+  /* While the animation is actually running the marker would be labelling the
+     obvious, so it steps back to a quiet outline instead of shouting over the
+     motion. */
+  .skill-card[data-motion-state="playing"] .skill-card-moves {
+    background: rgba(12, 12, 12, 0.72);
+    color: #fff;
+  }
+
   .skill-card-badge {
     position: absolute;
     right: 8px;
@@ -136,27 +509,209 @@ const src = skill.thumbnailUrl ? resizedCdnImage(skill.thumbnailUrl, 440) : unde
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .skill-card-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  /* Sits on the art, so it is white regardless of theme and carries a shadow
+     rather than relying on the scrim alone — these thumbnails are mostly warm
+     cream and a plain white label would smear into them. The tagline is gone
+     from the tile entirely: it was the second of two text lines that made every
+     card the same shape, and it still reads on the skill's own page. */
   .skill-card-name {
     font-size: 14.5px;
-    font-weight: 500;
-    color: var(--text);
+    font-weight: 550;
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .skill-card-tagline {
-    font-size: 12.5px;
-    color: var(--text-dimmer);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+
+  /* A coarse pointer is the case where the pill is the only route to seeing a
+     tile move, so it gets both a slightly larger pill and a larger target. */
+  @media (pointer: coarse) {
+    .skill-card-play { height: 26px; padding: 0 10px 0 9px; font-size: 11.5px; }
+    .skill-card-play::after { inset: -12px; }
   }
 
   @media (max-width: 720px) {
     .skill-card { gap: 8px; }
     .skill-card-name { font-size: 13.5px; }
-    .skill-card-tagline { font-size: 12px; -webkit-line-clamp: 2; }
+    .skill-card-overlay { min-height: 64px; padding: 10px 11px; }
+    /* 21px pills are fine as pure markers (nothing here is tappable), but the
+       amber one carries a word, so it gets a touch more room on a phone where
+       it sits on a ~170px tile. */
+    .skill-card-moves { height: 22px; font-size: 11.5px; }
   }
 </style>
+
+<script>
+  /* Hoisted once per page by Astro however many cards render, so this is a
+     single document-level controller rather than per-tile behaviour.
+   *
+   * Policy:
+   *   reduced motion               -> never starts, on any pointer. The still
+   *                                   stands, and the marker is left disabled so
+   *                                   it reads and behaves as a plain marker.
+   *   hover + fine pointer         -> pointer-enter or keyboard focus on the LINK
+   *                                   starts one tile; leaving stops and rewinds
+   *                                   it. Unchanged.
+   *   touch / coarse pointer       -> nothing autoplays, ever, and a tap on the
+   *                                   art is still the link. A tap on the amber
+   *                                   marker starts THAT one animation inline and
+   *                                   a second tap stops it. Before this, a
+   *                                   phone-first audience never saw a tile move
+   *                                   at all; the bandwidth rule that produced
+   *                                   that is kept — nothing loads until the tap.
+   *
+   * At most ONE tile plays at a time, on every path. `src` is assigned on the
+   * first play intent and never before, and playback is only revealed once the
+   * element reports it is painting frames — a refused or broken load leaves the
+   * still in place with no error text on the art. Muted on every path; no audio
+   * track is ever surfaced and there are no controls.
+   */
+  import {
+    applyClipSound,
+    syncSoundButton,
+    toggleClipSound,
+  } from '../../scripts/app/clip-audio';
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const hoverPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.skill-card[data-clip="true"]'));
+
+  if (cards.length > 0) {
+    let active: HTMLElement | null = null;
+
+    const videoOf = (card: HTMLElement) => card.querySelector<HTMLVideoElement>('video[data-skill-clip]');
+    const buttonOf = (card: HTMLElement) => card.querySelector<HTMLButtonElement>('button[data-skill-play]');
+    const soundOf = (card: HTMLElement) => card.querySelector<HTMLButtonElement>('button[data-clip-sound]');
+
+    const stop = (card: HTMLElement | null) => {
+      if (!card) return;
+      const video = videoOf(card);
+      if (video && !video.paused) video.pause();
+      if (video) {
+        try {
+          video.currentTime = 0;
+        } catch {
+          /* Seeking before metadata is loaded throws in some engines; harmless. */
+        }
+      }
+      if (card.dataset.motionState !== 'refused') card.dataset.motionState = 'idle';
+      buttonOf(card)?.setAttribute('aria-pressed', 'false');
+      if (active === card) active = null;
+    };
+
+    const start = (card: HTMLElement) => {
+      if (reduceMotion.matches) return;
+      const video = videoOf(card);
+      if (!video) return;
+      if (active && active !== card) stop(active);
+      active = card;
+      buttonOf(card)?.setAttribute('aria-pressed', 'true');
+
+      if (!video.getAttribute('src')) {
+        const url = video.dataset.src;
+        if (!url) return;
+        video.addEventListener('playing', () => {
+          card.dataset.motionState = 'playing';
+        });
+        video.addEventListener('error', () => {
+          card.dataset.motionState = 'refused';
+        });
+        video.setAttribute('src', url);
+      }
+      /* Muted unless the visitor has explicitly asked to hear clips this visit —
+         see src/scripts/app/clip-audio.ts for why the first unmute has to come
+         from a click rather than from hover. */
+      applyClipSound(video);
+      const played = video.play();
+      if (played && typeof played.catch === 'function') {
+        played.catch(() => {
+          /* Autoplay policy said no, or the file will not decode. The still is
+             already what the user is looking at, so there is nothing to undo. */
+          card.dataset.motionState = 'refused';
+          buttonOf(card)?.setAttribute('aria-pressed', 'false');
+        });
+      }
+    };
+
+    /* The marker ships disabled so that no-JS and reduced-motion visitors get a
+       marker instead of a dead control. This is the one place it turns into a
+       button, and it turns back the moment reduced motion is switched on. */
+    const syncMarkers = () => {
+      const playable = !reduceMotion.matches;
+      for (const card of cards) {
+        const button = buttonOf(card);
+        if (button) {
+          button.disabled = !playable;
+          const label = playable
+            ? button.dataset.playLabel ?? button.dataset.idleLabel ?? ''
+            : button.dataset.idleLabel ?? '';
+          if (label) {
+            button.setAttribute('aria-label', label);
+            button.title = label;
+          }
+        }
+        /* Sound is only meaningful where something can play, so it follows the
+           same reduced-motion gate as the play pill. */
+        const sound = soundOf(card);
+        if (sound) {
+          sound.disabled = !playable;
+          syncSoundButton(sound);
+        }
+      }
+    };
+    syncMarkers();
+
+    for (const card of cards) {
+      const button = buttonOf(card);
+      button?.addEventListener('click', (event) => {
+        /* Home delegates tile clicks off the grid to pin a skill into the
+           composer (src/scripts/app/home.ts). This tap means "show me it move",
+           not "use this skill", so it must not reach that listener. */
+        event.preventDefault();
+        event.stopPropagation();
+        if (reduceMotion.matches) return;
+        const video = videoOf(card);
+        if (video && !video.paused) stop(card);
+        else start(card);
+      });
+
+      /* Sound toggle. Being inside a real click is precisely what makes the
+         resulting audible playback legal, so the flip happens here and nowhere
+         else. Repaints EVERY tile's control, not just this one, because the
+         preference is page-wide. */
+      soundOf(card)?.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (reduceMotion.matches) return;
+        toggleClipSound(videoOf(card));
+        for (const other of cards) {
+          const button = soundOf(other);
+          if (button) syncSoundButton(button);
+        }
+      });
+
+      if (!hoverPointer.matches) continue;
+      /* Desktop hover-play, unchanged in behaviour. Bound to the link rather
+         than the tile so that tabbing to the play marker does not also trip the
+         focus preview — the marker is its own control now. */
+      const link = card.querySelector<HTMLAnchorElement>('a.skill-card-link');
+      card.addEventListener('pointerenter', (event) => {
+        if (event.pointerType === 'touch') return;
+        start(card);
+      });
+      card.addEventListener('pointerleave', () => stop(card));
+      /* Keyboard users get the same preview as mouse users. */
+      link?.addEventListener('focus', () => start(card));
+      link?.addEventListener('blur', () => stop(card));
+    }
+
+    /* Someone turning reduced motion on mid-session should see it take effect
+       without a reload. */
+    reduceMotion.addEventListener('change', () => {
+      if (reduceMotion.matches) stop(active);
+      syncMarkers();
+    });
+  }
+</script>

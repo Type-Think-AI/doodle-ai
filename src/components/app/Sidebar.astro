@@ -24,6 +24,7 @@ const groups = NAV_ITEMS.reduce<NavGroup[]>((acc, item) => {
 
 /** Stable per-group storage key for the persisted collapse state. */
 const groupKey = (section: string) => section.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
 ---
 
 <aside class="sidebar" id="sidebar">

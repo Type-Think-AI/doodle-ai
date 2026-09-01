@@ -4,7 +4,7 @@
 
 import { getSkill } from "../../../lib/skills";
 import { loadThread, hydrateThread, appendMessage, getThreadSkill, type ChatMessage } from "../chat-store";
-import { initLightbox } from "../lightbox";
+import { initLightbox, openLightbox } from "../lightbox";
 import { initMentions } from "../composer-mentions";
 import { initMediaPicker, initComposerDropZone } from "../media-picker";
 import { setImageSrc, guardBfcacheRestore } from "../dom-utils";
@@ -28,7 +28,9 @@ import {
   renderThinking,
   renderError,
   renderCreditsCta,
+  renderVideoCard,
   downloadImage,
+  downloadVideo,
   REFINE_PLACEHOLDER,
   type RenderContext,
 } from "./render";
@@ -39,6 +41,7 @@ import {
   handleFile,
   type TurnCallbacks,
 } from "./api-turn";
+import { startVideoJob } from "./video-job";
 import {
   createWhiteboardState,
   setWhiteboard,
@@ -48,8 +51,8 @@ import {
   backfillCanvasOnLoad,
   pushToCanvas,
   pushCanvasOps,
-  collectThreadImages,
-  invalidateThreadImagesCache,
+  collectThreadMedia,
+  invalidateThreadMediaCache,
 } from "./canvas";
 
 function initChat(): void {
@@ -113,6 +116,39 @@ function initChat(): void {
     if (fileInput) fileInput.value = "";
   }
 
+  /* Picking an existing image in the "+" media dialog
+     (ComposerMediaDialog.astro). The image is already hosted — it came from an
+     earlier upload or generation in this account — so there is nothing to
+     upload: set the attachment and show the same preview row a fresh upload
+     produces. The dialog holds no state; it only announces the choice. */
+  window.addEventListener("doodleai:media-pick", (event) => {
+    const detail = (event as CustomEvent<{ url?: string; kind?: string }>).detail;
+    const url = detail?.url;
+    if (!url) return;
+
+    /* An animation cannot be an attachment, so picking one opens it instead.
+       Two reasons, both hard rather than stylistic:
+         - the preview row's element is an <img>, and an mp4 in an <img> paints a
+           broken-image icon, which reads as the animation having been lost;
+         - the attachment travels up as `imageUrl` and is injected into the
+           prompt as "Attached photo: <url>", then handed to the image model as a
+           photo reference — an mp4 there is rejected upstream AFTER the user has
+           been charged, which is the expensive way to find out.
+       Viewing is the honest action for a finished animation today. When the
+       reference-to-video path can accept a clip, this becomes an attach. */
+    if (detail?.kind === "clip") {
+      openLightbox([{ url, isVideo: true }], url);
+      return;
+    }
+
+    doClearAttachment();
+    attachState.attachedUrl = url;
+    if (attachPreview) setImageSrc(attachPreview, url);
+    if (attachMeta) attachMeta.textContent = "Ready";
+    if (attachRow) attachRow.hidden = false;
+    doSyncSendState();
+  });
+
   /* Tapping a suggestion chip is exactly the same act as typing that text and
      pressing send, so it goes through the normal send path — one code path for
      the turn, and the chosen suggestion is stored as a real user message. */
@@ -130,24 +166,85 @@ function initChat(): void {
     onRemix: (userMsg) => void remix(userMsg),
     onDownload: (url) => void downloadImage(url),
     onSuggestion: sendSuggestion,
+    onVideoResume: (clip, precedingUserMessage) => {
+      const onRetry = precedingUserMessage
+        ? () => void remix(precedingUserMessage)
+        : lastUserMessage
+          ? () => void remix(lastUserMessage!)
+          : null;
+      if (clip.status === "ok" && clip.url) {
+        renderVideoCard(
+          thread,
+          // posterUrl (migration 0018) is persisted on the clip for 'image'-mode
+          // videos, so a reload repaints the card with its first-frame still
+          // rather than a black box until the mp4 loads.
+          { phase: "done", url: clip.url, posterUrl: clip.posterUrl },
+          { onRetry, onDownload: (url) => void downloadVideo(url) },
+        );
+      } else if (clip.status === "failed" || clip.status === "refunded") {
+        renderVideoCard(
+          thread,
+          { phase: "failed", reason: "That didn't come out. Your credits were refunded." },
+          { onRetry, onDownload: (url) => void downloadVideo(url) },
+        );
+      } else {
+        // pending — re-attach to the still-in-flight job. The clip carries its
+        // own skillId from when it was queued, so a reload can still name the
+        // thread once it lands.
+        startVideoJob({
+          thread,
+          threadId: threadId!,
+          jobId: clip.jobId,
+          estimatedSeconds: 0,
+          skillId: clip.skillId,
+          onRetry,
+        });
+      }
+    },
   };
 
   const turnCallbacks: TurnCallbacks = {
     onThinkingStart: () => {
       const bubble = renderThinking(thread);
-      return { setText: bubble.setText, setPhase: bubble.setPhase, remove: () => bubble.wrap.remove() };
+      return {
+        setText: bubble.setText,
+        setPhase: bubble.setPhase,
+        setDrawing: bubble.setDrawing,
+        remove: () => bubble.wrap.remove(),
+      };
     },
     onAssistantMessage: (msg, preceding) => {
-      const result = renderMessage(renderCtx, msg, preceding);
+      // resumeVideos=false: the live turn's clip card was already mounted by
+      // onVideo during the stream; re-mounting here would duplicate it.
+      const result = renderMessage(renderCtx, msg, preceding, false);
       if (result.hasResult) hasResult = true;
       if (msg.role === "user") lastUserMessage = msg;
       // Suggestions answer "what next" at one moment; keep them on the newest
       // reply only so the thread does not accumulate stale branches.
       pruneStaleSuggestions(thread);
-      pushToCanvas(collectThreadImages(threadId!));
+      pushToCanvas(collectThreadMedia(threadId!));
     },
     onImage: (url) => {
-      pushToCanvas([url]);
+      pushToCanvas([{ url, isVideo: false }]);
+      if (!whiteboardState.on && !whiteboardState.dismissed) {
+        setWhiteboard(whiteboardState, true, chatSplit, canvasPanel, whiteboardToggle, threadId!);
+      }
+    },
+    onVideo: (jobId, estimatedSeconds, skillId) => {
+      startVideoJob({
+        thread,
+        threadId: threadId!,
+        jobId,
+        estimatedSeconds,
+        skillId,
+        onRetry: lastUserMessage ? () => void remix(lastUserMessage!) : null,
+      });
+      /* Open the board for an animation too. Only `onImage` did this, so a turn
+         that produced just an animation left the canvas shut — the user got a
+         card in the chat column and no sign the board was where it would also
+         land. Done at queue time, not on completion, so the board is already
+         open and measured when the clip arrives (tldraw cannot initialise inside
+         a display:none container, so revealing it late is the expensive path). */
       if (!whiteboardState.on && !whiteboardState.dismissed) {
         setWhiteboard(whiteboardState, true, chatSplit, canvasPanel, whiteboardToggle, threadId!);
       }
@@ -165,7 +262,7 @@ function initChat(): void {
     },
     onCreditsBlocked: () => renderCreditsCta(thread),
     onSendStateChange: doSyncSendState,
-    invalidateImageCache: invalidateThreadImagesCache,
+    invalidateImageCache: invalidateThreadMediaCache,
   };
 
   /* ---- Skill chip ---- */
@@ -320,7 +417,7 @@ function initChat(): void {
 
   function paintHistory(messages: ChatMessage[]): void {
     thread!.querySelectorAll(".chat-msg").forEach((el) => el.remove());
-    invalidateThreadImagesCache();
+    invalidateThreadMediaCache();
     hasResult = false;
     lastUserMessage = null;
     let precedingUserMessage: ChatMessage | null = null;
@@ -337,7 +434,7 @@ function initChat(): void {
     // A repaint renders every historical reply, each of which may carry its own
     // follow-up list; only the newest set is still a live offer.
     pruneStaleSuggestions(thread!);
-    pushToCanvas(collectThreadImages(threadId!));
+    pushToCanvas(collectThreadMedia(threadId!));
   }
 
   function resumePendingTurn(messages: ChatMessage[]): void {

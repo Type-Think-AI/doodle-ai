@@ -159,7 +159,7 @@ const setAltText = z.object({
   op: z.literal("setAltText"),
   ref: refSchema,
   altText: z.string().min(1).max(500),
-}).describe("Screen-reader description for an IMAGE shape. Survives export. Ignored for other shape types.");
+}).describe("Screen-reader description for an image or video shape. Survives export. Ignored for other shape types.");
 
 const rename = z.object({
   op: z.literal("rename"),
@@ -254,7 +254,7 @@ export type CanvasColor = (typeof CANVAS_COLORS)[number];
  * business seeing ProseMirror JSON, and it would cost a lot of context. */
 export const digestShapeSchema = z.object({
   ref: refSchema,
-  type: z.enum(["image", "text", "note", "arrow", "geo", "frame", "group", "draw", "other"]),
+  type: z.enum(["image", "video", "text", "note", "arrow", "geo", "frame", "group", "draw", "other"]),
   label: z.string().optional(),
   altText: z.string().optional(),
   x: z.number(),
