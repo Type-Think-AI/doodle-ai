@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-08-31T13:52:03.129Z",
+  "fetched_at": "2026-09-01T11:40:17.066Z",
   "latestCommit": {
     "sha": "41d12f057167ccf5954dbcf49d99502cb6c84491",
     "message": "Clarify sentence regarding origins and `exposedTo` (#260)",
@@ -74,6 +74,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 111,
-  "openPRsCount": 111
+  "openIssuesCount": 113,
+  "openPRsCount": 113
 }
