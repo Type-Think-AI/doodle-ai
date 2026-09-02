@@ -248,7 +248,20 @@ const webhookSrc = readFileSync(WEBHOOK_FILE, "utf8");
 // Gate ordering: secret configured → signature valid → timestamp fresh → correlate
 assert(webhookSrc.includes("PICX_WEBHOOK_SECRET"), "References PICX_WEBHOOK_SECRET");
 assert(webhookSrc.includes("503") && webhookSrc.includes("webhook_not_configured"),
-  "Gate 1: returns 503 when secret not configured (fail closed)");
+  "Gate 1: returns 503 when NEITHER secret nor API key is configured (fail closed)");
+
+/* Confirm-by-fetch is the authentication for an unsigned delivery (a callback_url
+   submit is signed with a secret PicX never returns). These assertions pin the
+   three properties that make it safe, because losing any one of them silently
+   turns the receiver back into "trust the body". */
+assert(webhookSrc.includes("confirmWithPicx"),
+  "Unsigned deliveries are confirmed against PicX, not trusted");
+assert(/deliveryIsOurs[\s\S]{0,400}confirmWithPicx/.test(webhookSrc),
+  "Ownership is checked in our own tables BEFORE any outbound confirmation");
+assert(webhookSrc.includes("data = confirmed.data"),
+  "Confirmed record REPLACES the delivered body, so a forged payload cannot inject a URL");
+assert(webhookSrc.includes("confirmation_unavailable") && webhookSrc.includes("not_final_yet"),
+  "A transient or not-yet-final read-back asks for retry instead of settling work");
 assert(webhookSrc.includes("invalid_signature") && webhookSrc.includes("401"),
   "Gate 2: returns 401 on bad signature");
 assert(/MAX_SIGNATURE_AGE_SECONDS\s*=\s*\d+/.test(webhookSrc),

@@ -50,6 +50,12 @@ export const prerender = false;
  */
 const MAX_SIGNATURE_AGE_SECONDS = 300;
 
+/**
+ * Read-back endpoint used by the confirm-by-fetch path below. Same host and key
+ * as every submit, so it needs no new configuration.
+ */
+const PICX_GENERATION_ENDPOINT = "https://api.picxstudio.com/v1/generations";
+
 interface PicxEventData {
   generation_id?: string;
   status?: string;
@@ -90,6 +96,91 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+type ConfirmResult =
+  | { outcome: "final"; event: string; data: PicxEventData }
+  | { outcome: "not_final"; status: string }
+  | { outcome: "unknown" }
+  | { outcome: "unavailable"; detail: string };
+
+/**
+ * CONFIRM BY FETCH — the authentication used when no `PICX_WEBHOOK_SECRET` exists.
+ *
+ * A `callback_url` submit is signed with a secret PicX derives from the API key
+ * and never returns, so its HMAC is unverifiable by design (see the escape-hatch
+ * note in POST). Rather than trust the delivery or refuse it, this discards the
+ * body's payload entirely and reads the generation back from PicX over an
+ * authenticated request WE make. The delivery is then only a hint that says
+ * "look at this id"; every value that drives a credit or writes a media URL comes
+ * from this response.
+ *
+ * Why that is safe without a signature: a forger can supply an id, but not an
+ * answer. An id we never submitted is unknown to our key and returns 404
+ * (`unknown` -> ignored), and an id we DID submit resolves to the same truth it
+ * would have resolved to anyway. The one thing a signature still buys is
+ * cheapness — hence the caller only reaches here for ids already present in our
+ * own tables, so an unknown id costs a DB lookup and no outbound request.
+ *
+ * Cost: one extra round trip per delivery. On a 5-15s render that is noise.
+ */
+async function confirmWithPicx(apiKey: string, generationId: string): Promise<ConfirmResult> {
+  let res: Response;
+  try {
+    res = await fetch(`${PICX_GENERATION_ENDPOINT}/${encodeURIComponent(generationId)}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+  } catch (err) {
+    return { outcome: "unavailable", detail: err instanceof Error ? err.message : "fetch failed" };
+  }
+
+  // 404 means this id does not belong to our key: either a forged delivery or a
+  // generation from a different account. Never an error on our side.
+  if (res.status === 404) return { outcome: "unknown" };
+  if (!res.ok) return { outcome: "unavailable", detail: `HTTP ${res.status}` };
+
+  const body = (await res.json().catch(() => null)) as
+    | (PicxEventData & { status?: string })
+    | null;
+  if (!body) return { outcome: "unavailable", detail: "unparseable body" };
+
+  const status = (body.status ?? "").toLowerCase();
+  const data: PicxEventData = {
+    generation_id: generationId,
+    status,
+    type: body.type,
+    output_url: body.output_url ?? null,
+    error_message: body.error_message ?? null,
+    credits_used: body.credits_used ?? null,
+  };
+
+  /* Only two states are terminal. `pending`/`processing`/`queued` mean PicX
+     announced a completion we cannot yet read — treat as not final and let the
+     caller ask for a retry rather than settle work on a half-written record. */
+  if (status === "completed" && data.output_url) {
+    return { outcome: "final", event: "generation.completed", data };
+  }
+  if (status === "failed" || status === "error" || status === "cancelled") {
+    return { outcome: "final", event: "generation.failed", data };
+  }
+  return { outcome: "not_final", status: status || "unknown" };
+}
+
+/**
+ * Cheap ownership pre-check, so confirm-by-fetch never makes an outbound request
+ * for an id that is not ours. Mirrors the three producers the handler correlates
+ * against: a batch item, a video generation row, and an image frame row.
+ */
+async function deliveryIsOurs(db: Db, picxGenerationId: string): Promise<boolean> {
+  const [items, generations, frames] = await Promise.all([
+    db.select({ id: batchItem.id }).from(batchItem)
+      .where(eq(batchItem.picxGenerationId, picxGenerationId)).limit(1),
+    db.select({ id: generation.id }).from(generation)
+      .where(eq(generation.picxGenerationId, picxGenerationId)).limit(1),
+    db.select({ id: generationFrame.id }).from(generationFrame)
+      .where(eq(generationFrame.picxGenerationId, picxGenerationId)).limit(1),
+  ]);
+  return Boolean(items[0] || generations[0] || frames[0]);
 }
 
 /**
@@ -160,16 +251,24 @@ export async function POST(context: APIContext): Promise<Response> {
   const insecureDev =
     (await readSecret(env.PICX_WEBHOOK_INSECURE_DEV, "PICX_WEBHOOK_INSECURE_DEV"))?.trim() === "true";
 
-  if (!secret) {
-    if (!insecureDev) {
-      // Gate 1. Fail closed: accepting unverified completions would let anyone
-      // write arbitrary image URLs into a user's gallery and settle their credits.
-      console.error("[picx-webhook] PICX_WEBHOOK_SECRET is not configured; refusing delivery");
-      return json({ error: "webhook_not_configured" }, 503);
-    }
+  /* Gate 1, restated. Previously: no secret -> 503, always. That was correct
+     while the secret was the only authentication, but it made the whole feature
+     un-deployable, because a `callback_url` submit CANNOT be verified by HMAC (the
+     signing secret is derived from the API key and never returned). So a missing
+     secret now selects the confirm-by-fetch authentication instead of refusing:
+     the body becomes a hint and PicX's own authenticated record becomes the truth.
+     A configured secret still wins, and is still cheaper by one round trip. */
+  const picxKey = await readSecret(env.PICX_API_KEY, "PICX_API_KEY");
+  if (!secret && !picxKey) {
+    // Fail closed only when NEITHER authentication is available: with no secret
+    // and no key there is no way to tell a real completion from a forged one.
+    console.error("[picx-webhook] neither PICX_WEBHOOK_SECRET nor PICX_API_KEY is configured; refusing delivery");
+    return json({ error: "webhook_not_configured" }, 503);
+  }
+  if (insecureDev && !secret) {
     console.warn(
-      "[picx-webhook] UNVERIFIED delivery accepted — PICX_WEBHOOK_INSECURE_DEV=true and no secret " +
-        "is configured. Anyone who can reach this URL can forge a completion. Dev only.",
+      "[picx-webhook] PICX_WEBHOOK_INSECURE_DEV=true, but confirm-by-fetch now authenticates " +
+        "unsigned deliveries against PicX. The flag is redundant and should be removed.",
     );
   }
 
@@ -195,11 +294,47 @@ export async function POST(context: APIContext): Promise<Response> {
 
   // Fold nested-vs-flattened into one view up front so neither the batch path
   // nor the video path has to know which delivery shape arrived.
-  const data = readData(event);
+  let data = readData(event);
   const picxGenerationId = data.generation_id;
   if (!picxGenerationId) return json({ error: "missing_generation_id" }, 400);
 
   const db: Db = drizzle(env.DB, { schema });
+
+  /* Confirm-by-fetch, when the delivery carried no verifiable signature. Order
+     matters: ownership is checked against our own tables FIRST, so a flood of
+     forged ids costs indexed lookups and no outbound requests. Everything the
+     rest of this handler reads out of `data` — status, output_url, error_message
+     — is replaced by PicX's authenticated answer, so a forged body cannot inject
+     a media URL or settle a credit even if it names a real id. */
+  if (!secret) {
+    if (!(await deliveryIsOurs(db, picxGenerationId))) {
+      console.warn(`[picx-webhook] unsigned delivery for unknown generation ${picxGenerationId}; ignoring`);
+      return json({ ok: true, matched: false });
+    }
+
+    const confirmed = await confirmWithPicx(picxKey!, picxGenerationId);
+    if (confirmed.outcome === "unknown") {
+      // Our tables know this id but PicX does not — a forged body that guessed a
+      // real id, or an id from another account. Never settle work on it.
+      console.error(`[picx-webhook] generation ${picxGenerationId} not found at PicX; refusing delivery`);
+      return json({ ok: true, matched: false });
+    }
+    if (confirmed.outcome === "unavailable") {
+      // Transient: ask PicX to retry rather than dropping a real completion.
+      console.error(`[picx-webhook] could not confirm ${picxGenerationId}: ${confirmed.detail}`);
+      return json({ error: "confirmation_unavailable" }, 503);
+    }
+    if (confirmed.outcome === "not_final") {
+      /* PicX announced a completion we cannot read back yet. A non-2xx buys the
+         retry window (three attempts) which covers read lag; if it never settles,
+         the row stays pending and the reconcile sweep refunds it. */
+      console.warn(`[picx-webhook] ${picxGenerationId} still ${confirmed.status} on read-back; asking for retry`);
+      return json({ error: "not_final_yet", status: confirmed.status }, 503);
+    }
+
+    data = confirmed.data;
+    event.event = confirmed.event;
+  }
 
   // Gate 4. Correlate on the id from the signed body.
   const itemRows = await db
