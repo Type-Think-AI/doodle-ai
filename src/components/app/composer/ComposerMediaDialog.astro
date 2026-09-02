@@ -1,0 +1,287 @@
+---
+/* The "+" dialog: one entry point for every way media gets into a prompt.
+ *
+ * WHY THIS EXISTS. The toolbar used to carry a photo button AND a camera button
+ * side by side, duplicated on both the Home and Chat composers — two icons
+ * spending permanent bar space on one job, with no way to reuse an image the
+ * user had already uploaded or generated. Everything collapses into one "+"
+ * here, which buys back the bar space and adds the thing that was actually
+ * missing: seeing what you already have.
+ *
+ * WHY THE UPLOAD AND CAMERA BUTTONS KEEP THEIR OLD IDS. `${id}AttachBtn` and
+ * `${id}CameraBtn` are wired by each page's own controller (home.ts and
+ * chat/index.ts) to the file input and the camera dialog. Moving those exact
+ * ids inside this panel means the controllers need no change at all — the
+ * buttons did not become new buttons, they moved. Renaming them would have
+ * meant editing two controllers to re-point handlers that already work.
+ *
+ * The grids are filled on open rather than at build time: uploads live in the
+ * user's own localStorage moodboard and generations live in the open thread, so
+ * neither is known to the server renderer. An empty tab says so plainly instead
+ * of rendering a grid of nothing.
+ */
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+---
+
+<div
+  class="media-dialog-backdrop"
+  id={`${id}MediaDialog`}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby={`${id}MediaTitle`}
+  aria-hidden="true"
+  hidden
+>
+  <div class="media-dialog-panel">
+    <div class="media-dialog-rail">
+      <h2 class="media-dialog-title" id={`${id}MediaTitle`}>Add media</h2>
+
+      <button type="button" class="media-rail-item" data-media-tab="generations" aria-selected="false">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3.6 1.85 4.55L18.4 10l-4.55 1.85L12 16.4l-1.85-4.55L5.6 10l4.55-1.85L12 3.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path><path d="m18.2 15.4.75 1.85 1.85.75-1.85.75-.75 1.85-.75-1.85-1.85-.75 1.85-.75.75-1.85Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path></svg>
+        <span>Generations</span>
+      </button>
+
+      <button type="button" class="media-rail-item" data-media-tab="uploads" aria-selected="true">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3.5" stroke="currentColor" stroke-width="1.6"></rect><path d="M4 16.2l3.9-3.6a2 2 0 0 1 2.7 0l3.2 3M14 14.6l1.6-1.4a2 2 0 0 1 2.6 0l2 1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path><circle cx="15.3" cy="9.4" r="1.35" fill="currentColor"></circle></svg>
+        <span>Uploads</span>
+      </button>
+
+      <div class="media-rail-foot">
+        <!-- Same id the page controller already binds to the hidden file input. -->
+        <button type="button" class="media-rail-item media-rail-action" id={`${id}AttachBtn`}>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+          <span>Upload media</span>
+        </button>
+        <!-- Same id the page controller already binds to the camera dialog. -->
+        <button type="button" class="media-rail-item media-rail-action" id={`${id}CameraBtn`}>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 8.5h2.2l1.4-2h7.8l1.4 2h2.2a1.5 1.5 0 0 1 1.5 1.5v7.5a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5V10a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><circle cx="12" cy="13.6" r="3.3" stroke="currentColor" stroke-width="1.6"></circle></svg>
+          <span>Take a photo</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="media-dialog-main">
+      <div class="media-dialog-head">
+        <span class="media-dialog-heading" id={`${id}MediaHeading`}>Uploads</span>
+        <button type="button" class="media-dialog-upload" id={`${id}MediaUploadBtn`}>
+          <span aria-hidden="true">+</span> Upload
+        </button>
+        <button type="button" class="media-dialog-close" id={`${id}MediaClose`} aria-label="Close">×</button>
+      </div>
+
+      <div class="media-grid" id={`${id}MediaGrid`} role="listbox" aria-labelledby={`${id}MediaHeading`}></div>
+
+      <p class="media-empty" id={`${id}MediaEmpty`} hidden></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { loadMoodboard } from "../../../scripts/app/moodboard";
+  import { loadThread } from "../../../scripts/app/chat-store";
+  import { threadIdFromPath } from "../../../scripts/app/chat/state";
+
+  /* Self-contained, like the camera dialog: this file owns opening, tab
+     switching, grid population and picking. It never touches send/attach state
+     directly — picking a tile dispatches `doodleai:media-pick`, which home.ts and
+     chat/index.ts each listen for to set the attachment. */
+  function initMediaDialog(root: HTMLElement): void {
+    if (root.dataset.mediaInit === "true") return;
+    root.dataset.mediaInit = "true";
+    const prefix = root.dataset.id;
+    if (!prefix) return;
+
+    const $ = <T extends HTMLElement = HTMLElement>(suffix: string): T | null =>
+      document.getElementById(`${prefix}${suffix}`) as T | null;
+
+    const dialog = $(`MediaDialog`);
+    const openBtn = $(`PlusBtn`);
+    const closeBtn = $(`MediaClose`);
+    const grid = $(`MediaGrid`);
+    const heading = $(`MediaHeading`);
+    const empty = $(`MediaEmpty`);
+    const uploadBtn = $(`MediaUploadBtn`);
+    const attachBtn = $(`AttachBtn`);
+    if (!dialog || !openBtn || !grid) return;
+
+    const rail = Array.from(dialog.querySelectorAll<HTMLButtonElement>("[data-media-tab]"));
+    let activeTab: "generations" | "uploads" = "uploads";
+    let lastFocused: HTMLElement | null = null;
+
+    /* The header's "+ Upload" is a second affordance for the same job as the
+       rail's "Upload media", so it forwards rather than duplicating the wiring
+       — one handler, two places to reach it. */
+    uploadBtn?.addEventListener("click", () => attachBtn?.click());
+
+    type Tile = { url: string; label: string; kind: "image" | "clip" };
+
+    function tiles(): Tile[] {
+      if (activeTab === "uploads") {
+        /* The moodboard IS the upload/reference store. Read through its own
+           loadMoodboard() helper rather than by touching localStorage here: the
+           key is account-scoped at runtime (scopedKey()), so a hardcoded key
+           would read the wrong user's board — or nothing at all — the moment the
+           scoping changed. One owner of that key, no drift. */
+        return loadMoodboard()
+          .filter((m) => typeof m.url === "string" && m.url.length > 0)
+          .map((m) => ({ url: m.url, label: "Uploaded image", kind: "image" as const }));
+      }
+      /* Generations: everything the open thread has already produced, newest
+         first — stills first from the rendered DOM (already on the page, so no
+         fetch), then finished animations from the thread's own stored data. */
+      const seen = new Set<string>();
+      const out: Tile[] = [];
+      document.querySelectorAll<HTMLImageElement>(".chat-thread img[src]").forEach((img) => {
+        const url = img.currentSrc || img.src;
+        if (!url || seen.has(url)) return;
+        seen.add(url);
+        out.push({ url, label: img.alt || "Generated doodle", kind: "image" });
+      });
+      out.reverse();
+
+      /* Animations live as `msg.videos` on the thread, not as playable nodes in
+         the DOM (a queued or failed clip renders no <video src> to scrape), so
+         read them from the store. Include a clip ONLY when it actually finished:
+         status "ok" with a url. A queued clip has no url yet; a failed one must
+         never show up as if it were a result. Newest first, same as the stills:
+         walk messages and clips-within-a-message in reverse. */
+      const threadId = threadIdFromPath();
+      const clips: Tile[] = [];
+      if (threadId) {
+        const messages = loadThread(threadId);
+        for (let m = messages.length - 1; m >= 0; m--) {
+          const vids = messages[m].videos;
+          if (!vids) continue;
+          for (let v = vids.length - 1; v >= 0; v--) {
+            const clip = vids[v];
+            if (clip.status !== "ok" || !clip.url || seen.has(clip.url)) continue;
+            seen.add(clip.url);
+            clips.push({ url: clip.url, label: "Generated animation", kind: "clip" });
+          }
+        }
+      }
+      return [...clips, ...out];
+    }
+
+    function paint(): void {
+      const items = tiles();
+      if (heading) heading.textContent = activeTab === "uploads" ? "Uploads" : "Generations";
+      rail.forEach((btn) =>
+        btn.setAttribute("aria-selected", String(btn.dataset.mediaTab === activeTab)),
+      );
+      grid!.textContent = "";
+      if (empty) {
+        empty.hidden = items.length > 0;
+        empty.textContent =
+          activeTab === "uploads"
+            ? "Nothing uploaded yet. Use Upload media or Take a photo."
+            : "Nothing in this chat yet. Make a doodle or an animation and it shows up here.";
+      }
+      for (const item of items) {
+        const tile = document.createElement("button");
+        tile.type = "button";
+        tile.className = "media-tile";
+        tile.setAttribute("role", "option");
+        tile.setAttribute("aria-selected", "false");
+
+        if (item.kind === "clip") {
+          /* Never an <img> for an animation: an mp4 in an <img> paints a
+             broken-image icon that reads as data loss. A muted, inline <video>
+             at preload=metadata shows the first frame as a still thumbnail
+             without downloading the whole file or autoplaying in the grid.
+             `.media-tile img` in composer-styles.css does not reach a <video>,
+             so the fill rules are set inline here. */
+          const video = document.createElement("video");
+          video.src = item.url;
+          video.muted = true;
+          video.playsInline = true;
+          video.preload = "metadata";
+          video.setAttribute("aria-label", item.label);
+          video.style.width = "100%";
+          video.style.height = "100%";
+          video.style.objectFit = "cover";
+          video.style.display = "block";
+          tile.appendChild(video);
+
+          /* Small play badge so a paused first-frame reads as an animation, not
+             a still. Built inline for the same reason — no rule in the shared
+             stylesheet targets these JS-created nodes. */
+          const badge = document.createElement("span");
+          badge.setAttribute("aria-hidden", "true");
+          badge.style.position = "absolute";
+          badge.style.bottom = "6px";
+          badge.style.right = "6px";
+          badge.style.width = "22px";
+          badge.style.height = "22px";
+          badge.style.display = "flex";
+          badge.style.alignItems = "center";
+          badge.style.justifyContent = "center";
+          badge.style.borderRadius = "50%";
+          badge.style.background = "rgba(10, 10, 10, 0.66)";
+          badge.style.border = "1px solid rgba(255, 255, 255, 0.24)";
+          badge.style.pointerEvents = "none";
+          badge.innerHTML =
+            '<svg width="10" height="10" viewBox="0 0 12 12" fill="#dddddd" aria-hidden="true"><path d="M3 2.2v7.6a.5.5 0 0 0 .77.42l6-3.8a.5.5 0 0 0 0-.84l-6-3.8A.5.5 0 0 0 3 2.2Z"/></svg>';
+          tile.appendChild(badge);
+        } else {
+          const img = document.createElement("img");
+          img.src = item.url;
+          img.alt = item.label;
+          img.loading = "lazy";
+          img.decoding = "async";
+          tile.appendChild(img);
+        }
+
+        tile.dataset.mediaKind = item.kind;
+        tile.addEventListener("click", () => {
+          window.dispatchEvent(
+            new CustomEvent("doodleai:media-pick", { detail: { url: item.url, kind: item.kind } }),
+          );
+          close();
+        });
+        grid!.appendChild(tile);
+      }
+    }
+
+    function open(): void {
+      lastFocused = document.activeElement as HTMLElement | null;
+      paint();
+      dialog!.hidden = false;
+      dialog!.setAttribute("aria-hidden", "false");
+      closeBtn?.focus();
+    }
+
+    function close(): void {
+      dialog!.hidden = true;
+      dialog!.setAttribute("aria-hidden", "true");
+      lastFocused?.focus();
+    }
+
+    openBtn.addEventListener("click", open);
+    closeBtn?.addEventListener("click", close);
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dialog!.hidden) close();
+    });
+    rail.forEach((btn) =>
+      btn.addEventListener("click", () => {
+        activeTab = btn.dataset.mediaTab === "generations" ? "generations" : "uploads";
+        paint();
+      }),
+    );
+    /* Picking upload or camera hands off to a flow that owns its own UI, so this
+       panel gets out of the way rather than sitting behind it. */
+    attachBtn?.addEventListener("click", () => close());
+    $(`CameraBtn`)?.addEventListener("click", () => close());
+  }
+
+  document.querySelectorAll<HTMLElement>(".composer").forEach(initMediaDialog);
+  document.addEventListener("astro:page-load", () => {
+    document.querySelectorAll<HTMLElement>(".composer").forEach(initMediaDialog);
+  });
+</script>

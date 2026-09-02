@@ -1,0 +1,39 @@
+-- 0018 — a persistent poster (first-frame still) for a video generation.
+--
+-- WHY THIS COLUMN EXISTS.
+-- A finished clip is an mp4 and nothing else: the `generation` row records its
+-- `output_url`, but there is no still to paint before those bytes load. Every
+-- surface that LISTS generations — the chat thread on repaint, the board, a
+-- share page — therefore has two bad options for a video tile: show a black box
+-- until the browser has fetched and decoded enough of the mp4 to render a frame,
+-- or fetch the whole clip it did not otherwise need just to show one frame. A
+-- poster is the still those surfaces paint immediately, so a video reads as a
+-- picture-of-something the instant the list renders and only streams on play.
+--
+-- WHY IT IS NULLABLE, AND STAYS THAT WAY.
+-- Most rows never have one and never can. It is set only where frame one is
+-- KNOWN for free and exactly:
+--   • video_mode = 'image'  — the submitted image IS literally frame one of the
+--                             clip (PicX H3 Max image mode), so poster_url is set
+--                             to that URL at SUBMIT time. Free and exact.
+--   • video_mode = 'reference' / 'text' — frame one is a NEW composition that
+--                             does not exist until the render finishes, so there
+--                             is no honest still to record and poster_url stays
+--                             NULL. A reference image is NOT frame one and must
+--                             never be substituted as if it were — that would be
+--                             wrong data dressed as a thumbnail.
+--   • every image generation, and every row written before this migration,
+--     never has one.
+-- SQLite/D1 also cannot add a NOT NULL column without a default and cannot later
+-- promote a nullable column to NOT NULL without a full table rebuild, so an
+-- additively-added column on a live product table is nullable by construction.
+-- Readers already treat a video with no poster as the normal case.
+--
+-- WHY THERE IS NO FOREIGN KEY.
+-- poster_url is a PicX CDN URL — an address in PicX's storage, not an id in our
+-- database — so there is nothing local to point a reference at. This is the same
+-- reason `output_url`, `source_asset_url` and the video columns in 0016 carry no
+-- FK, and consistent with 0006_drop_foreign_keys.sql: this schema does not rely
+-- on D1 enforcing foreign keys.
+
+ALTER TABLE generation ADD COLUMN poster_url TEXT;

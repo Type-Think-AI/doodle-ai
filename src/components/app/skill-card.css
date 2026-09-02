@@ -1,0 +1,286 @@
+/* Skill tile presentation.
+ *
+ * Split out of SkillCard.astro to bring that component back under the 300-line
+ * limit. Imported from the component's frontmatter, which in Astro emits GLOBAL
+ * css exactly as the previous `<style is:global>` block did — the selectors are
+ * unscoped either way, and several of them are matched against markup rendered by
+ * OTHER components (the mosaic parent sets the columns these tiles sit in), which
+ * is why scoping was never an option here.
+ */
+.skill-card {
+  display: block;
+  /* The play marker is positioned against the tile, not against the thumb,
+     because it is a sibling of the link rather than a child of it. */
+  position: relative;
+  /* Mosaic member: the parent lays these out in CSS columns, and a tile must
+     never be split across a column break. */
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+.skill-card-link { display: block; color: inherit; text-decoration: none; }
+.skill-card-thumb {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  /* NO fixed aspect-ratio when there is a real thumbnail: the tile takes the
+     image's OWN shape and shows it whole.
+     A fixed box plus object-fit: cover was cropping every generated result to
+     fit the layout — on a 3x2 collage that silently ate the outer panels, which
+     is the one thing these thumbnails exist to show. The image now sets the
+     height and the mosaic column absorbs it, so nothing is trimmed.
+     The fallback below keeps a square box because the synthetic SVG has no
+     meaningful intrinsic size to hug. */
+  width: 100%;
+  background: var(--surface2);
+  /* No border. On a near-black canvas the art's own edge is the boundary; an
+     outline per tile put 25 competing rectangles on screen. */
+  border: 0;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+/* The label + its scrim. The gradient is only as tall as it needs to be to
+   keep the text legible over an arbitrary image — a full-tile overlay would
+   mute the art we are trying to show off. */
+.skill-card-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: flex-end;
+  min-height: 84px;
+  padding: 12px 14px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.18) 55%, transparent);
+  pointer-events: none;
+}
+/* Hover lifts the art itself now that there is no border to light up. Keyed to
+   the tile, so hovering the play marker lifts it too. */
+@media (hover: hover) and (pointer: fine) {
+  .skill-card:hover .skill-card-thumb { transform: scale(1.014); filter: brightness(1.06); }
+}
+/* Touch/tap feedback so the card isn't silently inert on phones. Keyed to the
+   LINK, so pressing the play marker does not squash the whole tile — the two
+   taps look as different as they behave. */
+.skill-card-link:active .skill-card-thumb { transform: scale(0.985); }
+.skill-card-link:focus-visible { outline: 2px solid var(--border3); outline-offset: 3px; border-radius: 16px; }
+@media (prefers-reduced-motion: reduce) {
+  .skill-card-thumb { transition: none; }
+  .skill-card:hover .skill-card-thumb,
+  .skill-card-link:active .skill-card-thumb { transform: none; }
+  /* Belt and braces: the script never starts playback under reduced motion,
+     and if one ever did start the layer stays hidden. */
+  .skill-card-motion { display: none; }
+}
+/* Direct children only: the thumbnail itself is a direct <svg>/<img> child,
+   whereas the overlay badges nest their own small icons. An unscoped
+   descendant selector here inflated a badge's 11px icon to fill the card. */
+/* height: auto and no object-fit — the whole image, uncropped, at its own
+   aspect ratio. `width`/`height` attributes on the <img> still declare the
+   right ratio so the browser reserves the correct box and the mosaic does not
+   reflow as tiles load. */
+.skill-card-thumb > img { width: 100%; height: auto; display: block; }
+/* The synthetic SVG fallback has no real subject to preserve, so it keeps a
+   square box and fills it. */
+.skill-card[data-has-thumb="false"] .skill-card-thumb { aspect-ratio: 1 / 1; }
+.skill-card-thumb > svg { width: 100%; height: 100%; display: block; object-fit: cover; }
+.skill-card[data-runnable="false"] .skill-card-thumb > svg,
+.skill-card[data-runnable="false"] .skill-card-thumb > img { opacity: 0.45; }
+
+/* The moving layer. Absolute, so the still underneath is still the element
+   that sets the tile's height — the uncropped full-aspect thumbnail is
+   untouched, and the mosaic never reflows when an animation starts. It is the
+   only layer that covers: an animation is 16:9 where its cover is 3:2, and
+   letterbox bars parked over the art would be worse than a few cropped pixels
+   of a moving frame. Hidden until the video is genuinely painting frames, so a
+   stalled or refused load leaves the still standing. */
+.skill-card-motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+.skill-card[data-motion-state="playing"] .skill-card-motion { opacity: 1; }
+
+/* Multi-image count — just the number, deliberately small. It is a glanceable
+   marker of which skills return a set, not a label to read; the full meaning
+   lives in the aria-label/title and on the skill page's spec row.
+   Top-right so it never collides with the bottom-right "Coming soon" badge,
+   and light-on-translucent-dark because these thumbnails are mostly
+   cream/warm-white and nothing else stays legible across all of them. */
+.skill-card-count {
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(12, 12, 12, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  backdrop-filter: blur(6px);
+}
+
+/* The animation marker. Solid accent amber on purpose: every other chip on
+   this wall is translucent charcoal, so this is the only saturated thing in
+   the mosaic and the eye finds all four instantly. Consumes --accent /
+   --send-fg; defines nothing. */
+.skill-card-moves {
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  height: 21px;
+  padding: 0 8px 0 7px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--send-fg);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+/* The same pill, now a real control. Above the moving layer so it stays
+   tappable while the animation runs, and it inherits the page font because a
+   <button> would otherwise drop to the UA's. */
+.skill-card-play {
+  z-index: 2;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+/* A 21px pill is a fine marker and a poor target. Rather than grow it and
+   unbalance the tile, the target grows invisibly around it — ~41px on a mouse
+   and ~50px on a touch pointer, in the one corner of the tile where a tap is
+   least likely to have meant "open this skill". */
+.skill-card-play::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+.skill-card-play:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* The sound toggle. Same translucent-charcoal family as the count badge so it
+   reads as a quiet utility rather than competing with the amber Moves pill. */
+.skill-card-sound {
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  z-index: 2;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(12, 12, 12, 0.8);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
+}
+/* Same invisible target growth as the play pill: a 25px circle is a fine
+   marker and a poor tap target. */
+.skill-card-sound::after { content: ''; position: absolute; inset: -9px; }
+.skill-card-sound:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.skill-card-sound:disabled { pointer-events: none; cursor: default; }
+/* Glyph follows the pressed state, so the icon always shows what IS, not what
+   a click would do — matching the play/stop pill's convention. */
+.skill-card-sound-on { display: none; }
+.skill-card-sound[aria-pressed="true"] .skill-card-sound-off { display: none; }
+.skill-card-sound[aria-pressed="true"] .skill-card-sound-on { display: inline-block; }
+/* Sound on is worth one saturated cue, since it is the state that can surprise
+   someone in a quiet room. */
+.skill-card-sound[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--send-fg);
+  border-color: transparent;
+}
+@media (pointer: coarse) {
+  .skill-card-sound { width: 29px; height: 29px; }
+  .skill-card-sound::after { inset: -11px; }
+}
+/* Reduced motion never starts a clip, so there is nothing to hear and the
+   control would be decorative. */
+@media (prefers-reduced-motion: reduce) {
+  .skill-card-sound { display: none; }
+}
+/* Disabled means "nothing to start here": with JS off, or under reduced
+   motion. Taking it out of hit-testing is deliberate — the tap then lands on
+   the link beneath and the tile behaves like every other tile, instead of the
+   marker swallowing taps into a dead control. */
+.skill-card-play:disabled { pointer-events: none; cursor: default; }
+/* Glyph follows state: ▶ to start, ■ while it is running. */
+.skill-card-stop-icon { display: none; }
+.skill-card[data-motion-state="playing"] .skill-card-play-icon { display: none; }
+.skill-card[data-motion-state="playing"] .skill-card-stop-icon { display: inline-block; }
+/* While the animation is actually running the marker would be labelling the
+   obvious, so it steps back to a quiet outline instead of shouting over the
+   motion. */
+.skill-card[data-motion-state="playing"] .skill-card-moves {
+  background: rgba(12, 12, 12, 0.72);
+  color: #fff;
+}
+
+.skill-card-badge {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(15, 15, 15, 0.72);
+  color: #fff;
+  font-size: 11px;
+  max-width: calc(100% - 16px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Sits on the art, so it is white regardless of theme and carries a shadow
+   rather than relying on the scrim alone — these thumbnails are mostly warm
+   cream and a plain white label would smear into them. The tagline is gone
+   from the tile entirely: it was the second of two text lines that made every
+   card the same shape, and it still reads on the skill's own page. */
+.skill-card-name {
+  font-size: 14.5px;
+  font-weight: 550;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A coarse pointer is the case where the pill is the only route to seeing a
+   tile move, so it gets both a slightly larger pill and a larger target. */
+@media (pointer: coarse) {
+  .skill-card-play { height: 26px; padding: 0 10px 0 9px; font-size: 11.5px; }
+  .skill-card-play::after { inset: -12px; }
+}
+
+@media (max-width: 720px) {
+  .skill-card { gap: 8px; }
+  .skill-card-name { font-size: 13.5px; }
+  .skill-card-overlay { min-height: 64px; padding: 10px 11px; }
+  /* 21px pills are fine as pure markers (nothing here is tappable), but the
+     amber one carries a word, so it gets a touch more room on a phone where
+     it sits on a ~170px tile. */
+  .skill-card-moves { height: 22px; font-size: 11.5px; }
+}

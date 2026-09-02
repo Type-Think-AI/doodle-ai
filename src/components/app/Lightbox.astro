@@ -10,6 +10,15 @@
 	</button>
 	<figure class="lightbox-figure">
 		<img id="lightboxImg" alt="Doodle, full view" width="512" height="512" />
+		<video
+			id="lightboxVideo"
+			class="lightbox-video"
+			controls
+			playsinline
+			loop
+			preload="metadata"
+			aria-label="Animated doodle, full view"
+			hidden></video>
 	</figure>
 	<button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Next doodle">
 		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>
@@ -38,7 +47,8 @@
 		align-items: center;
 		justify-content: center;
 	}
-	.lightbox-figure img {
+	.lightbox-figure img,
+	.lightbox-figure video {
 		max-width: 100%;
 		max-height: 82vh;
 		border-radius: 10px;
@@ -46,7 +56,13 @@
 		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 		object-fit: contain;
 		display: block;
+		background: #141414;
 	}
+	/* The <img> and <video> are mutually exclusive; whichever is not the
+	   current item carries the `hidden` attribute and must stay gone even
+	   though the rule above sets display:block. */
+	.lightbox-figure img[hidden],
+	.lightbox-figure video[hidden] { display: none; }
 	.lightbox-close,
 	.lightbox-nav {
 		position: absolute;
@@ -87,7 +103,8 @@
 			max-width: 100vw;
 			max-height: 100dvh;
 		}
-		.lightbox-figure img {
+		.lightbox-figure img,
+		.lightbox-figure video {
 			max-height: 100dvh;
 			border-radius: 0;
 			border: none;

@@ -39,6 +39,12 @@ Store ID: `801d9480d51848d69033ff869398bcbe`
 | `GOOGLE_CLIENT_SECRET` | `GOOGLE_CLIENT_SECRET` | `GOOGLE_CLIENT_SECRET` | yes |
 | `BETTER_AUTH_SECRET_PROD` | `BETTER_AUTH_SECRET` | — | **no** |
 | `BETTER_AUTH_SECRET_STAGING` | — | `BETTER_AUTH_SECRET` | **no** |
+| `PICX_WEBHOOK_SECRET` *(not yet provisioned)* | `PICX_WEBHOOK_SECRET` | `PICX_WEBHOOK_SECRET` | yes |
+
+`PICX_WEBHOOK_SECRET` is **not yet in the store** — until it is created and
+bound, the async generation path is disabled and video cannot work. See
+[PICX_WEBHOOK_SECRET — required for async video](#picx_webhook_secret--required-for-async-video)
+below for what it gates and how to obtain the value.
 
 The **binding name is identical** in both environments (`BETTER_AUTH_SECRET`);
 only the `secret_name` it points at differs. That is what keeps the split out
@@ -59,6 +65,74 @@ https://dev.doodleai.art/api/auth/callback/google
 
 A missing staging redirect URI produces `redirect_uri_mismatch` *after* the
 user picks their Google account — the app looks fine until that point.
+
+## PICX_WEBHOOK_SECRET — required for async video
+
+This one is called out on its own because getting it wrong is **invisible**:
+everything appears to work while it is unset, and only video is broken.
+
+### What it gates
+
+The async submit path is gated on `PICX_WEBHOOK_SECRET` being set. It signs
+inbound deliveries to `POST /api/webhooks/picx`, which is public (PicX carries
+no session) so the signature IS the authentication. While it is **blank or
+missing**:
+
+- **Image batches** silently fall back to the **synchronous** path — each
+  render blocks its request, the previous behaviour. Still works, so a blank
+  secret looks fine.
+- **`POST /api/webhooks/picx`** refuses every delivery with **503**
+  (`webhook_not_configured`) — it fails closed, never accepting an unverifiable
+  completion "just this once".
+- **Video has no synchronous fallback.** A clip is submitted async and is
+  completed *only* by the inbound webhook. So with this secret blank, **video
+  simply cannot work** — the clip is submitted, the credits are reserved, and
+  nothing ever completes it (the hourly sweep in
+  `src/lib/credits/reconcile.ts` eventually refunds it as a video timeout).
+
+In `.dev.vars` the value is currently **present but empty**, which reads as
+"configured" but behaves as "off". That empty string is what disables video.
+
+### How to get the value (format `whsec_<hex>`)
+
+Two sources — pick one:
+
+1. **Per-request `callback_url`** (what this app uses). The signing secret is
+   the deterministic **inline secret derived from the API key**. Read it from
+   the API key's **detail endpoint** in the PicX developer console — it appears
+   as a `whsec_`-prefixed value tied to that key and is stable for the key. No
+   general API returns it beyond the key detail view.
+2. **Registered webhook.** Create a webhook in the PicX console instead; it
+   issues its **own** `whsec_` secret, shown **once** at creation — copy it
+   then, it is not retrievable afterward.
+
+Do not invent a value: the webhook computes `HMAC-SHA256` over
+`{timestamp}.{rawBody}` and compares constant-time, so a wrong secret fails
+*every* delivery with `401 invalid_signature`, which looks identical to "not
+configured" from the outside.
+
+### Where it belongs (project rule)
+
+Same rule as every other secret here, stated explicitly because this is the
+first one being provisioned since the video work:
+
+- **Deployed Workers:** Cloudflare Secrets Store, bound via
+  `secrets_store_secrets` in `wrangler.json` for **both** prod (top-level) and
+  staging (`env.staging`). **Create the store secret BEFORE adding the
+  binding** — a binding that references a secret which does not yet exist fails
+  the deploy with **error 10182**, and that failure blocks **every later
+  deploy** of that Worker, including git-connected auto-deploys. Use the
+  commands under [Adding or rotating a secret](#adding-or-rotating-a-secret)
+  with `--name PICX_WEBHOOK_SECRET`, then add both bindings.
+- **Locally:** `.dev.vars` only, then `pnpm secrets:seed-local` so the local
+  Miniflare store holds it (the binding shadows `.dev.vars` — see
+  [Local development](#local-development)).
+- **Never** in a tracked file, and **never** as a `PUBLIC_`-prefixed
+  build-time var: it is a server-side signing key and must not reach the
+  browser bundle.
+
+Also add `PICX_WEBHOOK_SECRET: SecretLike` to `Env` in `src/env.d.ts` (typed
+`SecretLike`, not `string`, so both mechanisms resolve through `readSecret()`).
 
 ## Adding or rotating a secret
 

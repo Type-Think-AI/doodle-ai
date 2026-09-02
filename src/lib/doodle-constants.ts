@@ -47,6 +47,19 @@ export const GENERATION_MODES = [
      lane" (Tier C), where demand is gifting rather than social sharing. */
   "family",
   "occupation",
+  /* Anime-genre single-image skills (Sep 2026, docs/anime-expansion-brief.md
+     lane D). 23 of the 30 skills before these were stills, so anime needed
+     first-class still coverage and not only the 7 animation skills. Their
+     builders live in src/lib/prompts/ (pirate-voyage.ts, ninja-village.ts,
+     monster-tamer.ts) and are registered in SKILL_PROMPT_BUILDERS.
+
+     Named by GENRE, never by franchise — "pirate" not a series, "ninja" not a
+     village name, "tamer" not a creature brand. That is the §1 legal line in
+     the brief: a named character's likeness is the copyright exposure, and
+     upstream models refuse many named-character prompts outright. */
+  "pirate",
+  "ninja",
+  "tamer",
 ] as const;
 export type GenerationMode = (typeof GENERATION_MODES)[number];
 

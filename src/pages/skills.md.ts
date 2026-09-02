@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { SKILLS, SKILL_CATEGORIES } from "../lib/skills";
 import { imageCountForSkill, creditCostForSkill } from "../lib/credits/costs";
+import { VIDEO_CREDITS_PER_SECOND } from "../lib/video/constants";
 import { mdLink, mdPageResponse, mdTable, resolveSite } from "../lib/markdown/page-md";
 
 /**
@@ -33,8 +34,15 @@ export const GET: APIRoute = ({ site }) => {
 					mdLink(s.name, new URL(`/skills/${s.id}.md`, base).href),
 					s.tagline,
 					s.requiresPhoto ? "Required" : "Not needed",
-					String(imageCountForSkill(s.id)),
-					String(creditCostForSkill(s.id)),
+					/* A video skill returns a clip, not a frame count, and it is priced
+					   per second rather than per image — imageCountForSkill() is defined
+					   only over the image modes and throws for anything else, which is
+					   deliberate (it is the same guard that stops a video skill being
+					   charged as one image). */
+					s.kind === "video" ? "1 clip (5-15s)" : String(imageCountForSkill(s.id)),
+					s.kind === "video"
+						? `${VIDEO_CREDITS_PER_SECOND["480p"]} per second`
+						: String(creditCostForSkill(s.id)),
 				]),
 			);
 			return `## ${category.label} (${items.length})\n\n${table}`;

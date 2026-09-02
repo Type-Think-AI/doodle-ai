@@ -24,6 +24,12 @@ import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import SkillCard from '../../components/app/SkillCard.astro';
 import { SKILLS, buildSkillThumbnail, relatedSkills } from '../../lib/skills';
 import { creditCostForSkill, imageCountForSkill } from '../../lib/credits/costs';
+import {
+  DEFAULT_VIDEO_SECONDS,
+  MAX_VIDEO_SECONDS,
+  MIN_VIDEO_SECONDS,
+  videoCreditCost,
+} from '../../lib/video/constants';
 
 export async function getStaticPaths() {
 	const docs = await getCollection('skillDocs');
@@ -52,10 +58,24 @@ const heroImage = skill.thumbnailUrl;
    restated here, so a pack skill's page can never advertise the wrong price.
    Roadmap skills aren't in GENERATION_MODES yet, so they have no price to
    look up — guarded rather than defaulted to a number that would be a guess. */
-const imageCount = skill.runnable ? imageCountForSkill(skill.id) : 1;
-const cost = skill.runnable ? creditCostForSkill(skill.id) : 1;
+const isVideo = skill.kind === 'video';
+/* Video is excluded from both lookups, not defaulted: imageCountForSkill() and
+   creditCostForSkill() are defined over GENERATION_MODES (the per-image table)
+   and throw for a clip by design — the same guard that stops a clip being
+   charged as one image. A clip is priced per second, at a duration the user
+   picks, so the card shows the rate rather than a single number. */
+const imageCount = skill.runnable && !isVideo ? imageCountForSkill(skill.id) : 1;
+const cost = isVideo
+  ? videoCreditCost(DEFAULT_VIDEO_SECONDS)
+  : skill.runnable
+    ? creditCostForSkill(skill.id)
+    : 1;
 const ratioLabel = skill.aspectRatio === '1:1' ? 'square 1:1' : 'landscape 3:2';
-const outputLabel = imageCount > 1 ? `${imageCount} images, ${ratioLabel}` : `Single ${ratioLabel}`;
+const outputLabel = isVideo
+  ? `${MIN_VIDEO_SECONDS}-${MAX_VIDEO_SECONDS}s clip with sound, ${ratioLabel}`
+  : imageCount > 1
+    ? `${imageCount} images, ${ratioLabel}`
+    : `Single ${ratioLabel}`;
 
 const specs: { label: string; value: string }[] = [
 	{ label: 'Your photo', value: skill.requiresPhoto ? 'Required' : 'Not needed' },

@@ -1,16 +1,70 @@
 ---
 import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import SkillCard from '../../components/app/SkillCard.astro';
-import { SKILLS } from '../../lib/skills';
+import { SKILLS, type Skill } from '../../lib/skills';
+import { ART_FAMILIES } from '../../lib/art-families';
+/* One copy of the family rule for every surface that filters by it — the home
+   rail imports the same module. Two copies drifted the moment three genre
+   families were added and only one list learned about them. */
+import { familiesForSkill } from '../../lib/skill-families';
 import { OG_IMAGE } from '../../consts';
 
 const site = 'https://doodleai.art';
 const runnableSkills = SKILLS.filter((s) => s.runnable);
 
+/* ── Art-family filter ──────────────────────────────────────────────────────
+   Someone who arrived here for anime should be able to see only anime, without
+   knowing which of 30 skill names happens to be anime.
+
+   A skill package has no `family` field today — `category` is the other axis
+   (what SHAPE of output), and adding a field to every SKILL.md is another lane's
+   file. So membership is DERIVED from the words a skill already carries: its
+   name, tagline, description and tags, matched against a keyword set per family.
+   Word-START matching (`\bink` catches "inked", never "pink"), so a chip cannot
+   silently collect a skill because of a substring.
+
+   This is a seam, not a destination: the day a package declares its family, this
+   map is deleted and `skill.family` is read instead. Until then the derivation
+   is self-adjusting — a new anime skill named for its genre lands in the right
+   chip with no edit here.
+
+   A skill matching nothing is `doodle`, which is also the default family. That
+   keeps the existing catalogue exactly where it is today. */
+/* Every term here is DISTINCTIVE to its family. The first pass used the obvious
+   words — action, hero, power, tiny, crayon, nostalgia — and mislabelled a third
+   of the catalogue: "Full-Body Action Collage" is a doodle skill that happens to
+   say "dynamic action", "Crayon Self" is not 90s cel because it says crayon, and
+   "Childhood Me" is not retro because it says nostalgia. A filter chip that shows
+   the wrong skills is worse than no chip, so a term earns its place only if a
+   skill containing it really is in that family. Generic mood and medium words are
+   deliberately absent, which is why some families have exactly one term. */
+const skillFamilies = new Map(SKILLS.map((skill) => [skill.id, familiesForSkill(skill)]));
+
+/* Only offer a chip that has something behind it. A filter chip that returns an
+   empty wall is a dead control, and there is no honest disabled state for one —
+   the answer is not to render it. */
+const familyChips = ART_FAMILIES.filter((family) =>
+	[...skillFamilies.values()].some((ids) => ids.includes(family.id)),
+);
+/* One chip plus "All" is not a filter, it is decoration. The row appears the
+   moment a second family has a skill in it. */
+const showFamilyChips = familyChips.length > 1;
+
 /* First grid row is above the fold and holds the LCP candidate — see the same
    constant in src/pages/index.astro. This grid is wider (1180px container), but
    four still lands inside the first row at every breakpoint. */
 const PRIORITY_SKILL_COUNT = 4;
+
+/* Animation skills first.
+   Their SKILL.md `order` values are 40+, so in catalogue order the four that
+   move land at the very END of a wall of 25 stills — the one genuinely new
+   capability, in the last place anyone looks. Sorting here rather than
+   renumbering `order` keeps the authored sequence intact for every other
+   surface (and src/lib/skill-loader.ts is not this lane's file). Array#sort is
+   stable, so the stills keep their existing relative order. */
+const orderedSkills = [...SKILLS].sort(
+	(a, b) => Number(b.kind === 'video') - Number(a.kind === 'video'),
+);
 
 const collectionSchema = {
 	'@context': 'https://schema.org',
@@ -33,7 +87,7 @@ const collectionSchema = {
 
 <AppShellLayout
 	title="AI Doodle Skills — Doodle AI"
-	description="Browse every AI doodle skill: turn photos into cartoon avatars, sticker sheets, collages, pet portraits, expression packs, and gift cards — all in hand-drawn style."
+	description="Browse every AI doodle skill: turn photos into cartoon avatars, sticker sheets, collages, pet portraits and gift cards in hand-drawn style — or watch your doodle come to life as an animation."
 	image={OG_IMAGE.skills}
 	active="skills"
 	markdownUrl="/skills.md"
@@ -49,19 +103,73 @@ const collectionSchema = {
 			</div>
 		</div>
 
-		<p class="skills-intro">Each skill turns a photo or idea into a specific hand-drawn style — avatars, collages, stickers, pet portraits, and gifts. Pick one to generate, or let the AI agent choose for you.</p>
+		<!-- One line, and it doubles as the legend for the amber marker on the
+		     tiles. The old paragraph listed five categories the wall itself shows
+		     and ended in "generate" — a word from the API, not from a person. -->
+		<p class="skills-intro">
+			Pick a style, add a photo.
+			<span class="skills-intro-key">
+				<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2Z"></path></svg>
+				Moves
+			</span>
+			= comes to life.
+		</p>
+
+		<div class="skills-families" role="group" aria-label="Filter skills">
+			<!-- Type first: "does it move" is the question a visitor asks before
+			     "which style", and it is the one distinction the catalogue could not
+			     express before — 26 stills and 7 animations looked alike in a wall. -->
+			<button type="button" class="skills-kind-chip skills-family-chip" data-kind="video" aria-pressed="false">
+				<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+				Moves
+			</button>
+			<button type="button" class="skills-kind-chip skills-family-chip" data-kind="image" aria-pressed="false">
+				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.6" y="5.2" width="16.8" height="13.6" rx="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><path d="M4.6 17.4 8.9 13l3 3 2.4-2.3 4.6 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+				Pictures
+			</button>
+			<span class="skills-chip-rule" aria-hidden="true"></span>
+			{showFamilyChips && (
+			<Fragment>
+				<button type="button" class="skills-family-chip" data-family-id="" aria-pressed="true">All styles</button>
+				{familyChips.map((family) => (
+					<button
+						type="button"
+						class="skills-family-chip"
+						data-family-id={family.id}
+						aria-pressed="false"
+						title={family.blurb}
+					>
+						{family.label}
+					</button>
+				))}
+			</Fragment>
+			)}
+		</div>
 
 		<div class="skills-grid" id="skillsGrid">
-			{SKILLS.map((skill, i) => (
-				<div class="skills-grid-item" data-search={`${skill.name} ${skill.desc}`.toLowerCase()}>
+			{orderedSkills.map((skill, i) => (
+				<div
+					class="skills-grid-item"
+					data-kind={skill.kind}
+					data-families={(skillFamilies.get(skill.id) ?? []).join(' ')}
+					data-search={`${skill.name} ${skill.desc} ${skill.kind === 'video' ? 'animation animated moving move video' : ''}`.toLowerCase()}
+				>
 					<SkillCard skill={skill} priority={i < PRIORITY_SKILL_COUNT} />
 				</div>
 			))}
 		</div>
-		<p class="skills-empty" id="skillsEmpty" hidden>No skills match "<span id="skillsEmptyTerm"></span>".</p>
+		<!-- Filled by the filter script below, because the sentence depends on
+		     WHICH filter emptied the wall: a search term, a style, or both. -->
+		<p class="skills-empty" id="skillsEmpty" hidden></p>
 	</div>
 </AppShellLayout>
 
+<!-- Search AND art-style filter, in ONE module. Wave 3 inlined this here to stop
+     two scripts racing on `item.hidden`, which orphaned skills-search.ts; the
+     logic now lives back in that module and the page just includes it, so there
+     is one copy of search rather than two. The module reads only the
+     `data-search` / `data-families` attributes rendered above, so the page
+     remains the only place that decides what a tile is. -->
 <script src="../../scripts/app/skills-search.ts"></script>
 
 <style>
@@ -90,19 +198,92 @@ const collectionSchema = {
 		font-size: 14px;
 		font-family: inherit;
 	}
-	.skills-intro { font-size: 15px; line-height: 1.6; color: var(--text-dim); margin: 0 0 26px; max-width: 640px; }
-	.skills-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+	.skills-intro { font-size: 15px; line-height: 1.6; color: var(--text-dim); margin: 0 0 18px; max-width: 640px; }
+	/* Style filter — one scrolling row, same flat outlined pill as the composer's
+	   family chips (composer-styles.css) so the two rows read as the same idea in
+	   two places. Height matches the search field it sits under: 38px beside a
+	   mouse, 44px on a touch pointer and at the phone breakpoint, which is the
+	   rule .skills-search already follows. */
+	.skills-families {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		margin: 0 0 22px;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: none;
+		padding: 2px 2px 4px;
+	}
+	.skills-families::-webkit-scrollbar { display: none; }
+	.skills-family-chip {
+		flex: 0 0 auto;
+		min-height: 38px;
+		padding: 0 14px;
+		border-radius: 999px;
+		border: 1px solid var(--border2);
+		background: none;
+		color: var(--text-dim);
+		font-family: inherit;
+		font-size: 13.5px;
+		font-weight: 500;
+		white-space: nowrap;
+		cursor: pointer;
+		transition: color .15s, background .15s, border-color .15s;
+	}
+	.skills-family-chip { display: inline-flex; align-items: center; gap: 5px; }
+	.skills-chip-rule { flex: 0 0 auto; width: 1px; height: 20px; margin: 0 3px; background: var(--border2); }
+	.skills-family-chip:hover { color: var(--text); border-color: var(--border3); background: var(--hover); }
+	.skills-family-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+	/* Pressed on three channels — text weight, border colour and an accent wash —
+	   so the state does not depend on telling two greys apart. */
+	.skills-family-chip[aria-pressed="true"] {
+		color: var(--text);
+		font-weight: 600;
+		border-color: var(--accent);
+		background: color-mix(in srgb, var(--bg) 86%, var(--accent) 14%);
+	}
+	@media (pointer: coarse) {
+		.skills-family-chip { min-height: 44px; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.skills-family-chip { transition: none; }
+	}
+	/* The same amber pill the animation tiles carry, inline in the sentence, so
+	   the marker is explained once and never again. Consumes --accent/--send-fg. */
+	.skills-intro-key {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		height: 20px;
+		padding: 0 8px 0 7px;
+		border-radius: 999px;
+		background: var(--accent);
+		color: var(--send-fg);
+		font-size: 11.5px;
+		font-weight: 650;
+		vertical-align: middle;
+	}
+	/* Same masonry as Home (see src/pages/index.astro for the reasoning): columns
+	   rather than grid so each tile keeps the shape of what its skill produces. */
+	.skills-grid { columns: 4; column-gap: 12px; }
+	/* The search filter hides items, and a hidden column child must not leave a
+	   gap behind it. */
+	.skills-grid-item { break-inside: avoid; }
 	.skills-grid-item[hidden] { display: none; }
 	.skills-empty { color: var(--text-dimmer); font-size: 14px; margin-top: 24px; }
 
 	@media (max-width: 980px) {
-		.skills-grid { grid-template-columns: repeat(3, 1fr); }
+		.skills-grid { columns: 3; }
 	}
 	@media (max-width: 720px) {
 		.skills-page { padding: 20px; }
 		.skills-head { flex-wrap: wrap; }
 		.skills-search { width: 100%; height: 44px; }
 		.skills-search input { font-size: 16px; }
-		.skills-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+		/* Same 44px the search field takes here — a narrow window with a mouse is
+		   not `pointer: coarse`, so that rule alone would miss this case. */
+		.skills-family-chip { min-height: 44px; }
+		.skills-families { margin-bottom: 18px; }
+		.skills-grid { columns: 2; column-gap: 10px; }
 	}
 </style>

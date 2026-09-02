@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../../../../../../db/client";
 import { invitation } from "../../../../../../db/schema/auth";
 import { apiError, apiJson } from "../../../../../../lib/auth/guards";
+import { safeError } from "../../../../../../lib/http/errors";
 import { createAuth } from "../../../../../../lib/auth";
 import { isOrgRole } from "../../../../../../lib/auth/org-access";
 import { optStr, readJson } from "../../../../../../lib/api/body";
@@ -75,7 +76,13 @@ export async function POST(context: APIContext): Promise<Response> {
     })) as { id?: string } | null;
     createdId = created?.id ?? null;
   } catch (err) {
-    return apiError("invite_failed", messageOf(err, "Couldn't create that invite."), 400);
+    // Same reasoning as POST /api/v1/orgs: Better Auth's message would land
+    // verbatim in the invite dialog. Log it, answer with our own wording.
+    return safeError("POST /api/v1/orgs/:id/invites", err, {
+      code: "invite_failed",
+      message: "Couldn't create that invite.",
+      status: 400,
+    });
   }
   if (!createdId) return apiError("invite_failed", "Couldn't create that invite.", 500);
 
@@ -85,13 +92,6 @@ export async function POST(context: APIContext): Promise<Response> {
 
   const inviteUrl = `${originOf(context)}/join/i-${row.id}`;
   return apiJson({ invitation: toInvitationDto(row, inviteUrl) }, 201);
-}
-
-function messageOf(err: unknown, fallback: string): string {
-  if (err && typeof err === "object" && typeof (err as { message?: unknown }).message === "string") {
-    return (err as { message: string }).message;
-  }
-  return fallback;
 }
 
 /** Re-exported so [inviteId].ts's cancel route shares the same DTO shape. */

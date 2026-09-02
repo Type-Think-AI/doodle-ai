@@ -30,6 +30,9 @@ import { buildFestivalPack } from "./festival-pack";
 import { buildWebtoonCaricature } from "./webtoon-caricature";
 import { buildFamilyPortrait } from "./family-portrait";
 import { buildOccupationCaricature } from "./occupation-caricature";
+import { buildPirateVoyage } from "./pirate-voyage";
+import { buildNinjaVillage } from "./ninja-village";
+import { buildMonsterTamer } from "./monster-tamer";
 import type { PackSkillId } from "../credits/costs";
 
 /** Everything a prompt builder is allowed to see. Never credentials. */
@@ -129,6 +132,15 @@ export const SKILL_PROMPT_BUILDERS: Record<string, PromptBuilder> = {
   // documents that field as free-text guidance, and the builder falls back to a
   // neutral setting rather than guessing a profession when it is absent.
   occupation: (input) => buildOccupationCaricature(input),
+  /* Anime-genre image skills (Sep 2026). Each takes the wrapped themeHint as a
+     subordinate palette clause: the anime craft signature is the product, and
+     the palette theme is a second dial on top of it — same treatment as
+     `family`, not the theme-ignoring treatment `faceless` needs. Every string
+     in these builders names a GENRE and a LOOK, never a series, studio, artist
+     or character (docs/anime-expansion-brief.md §1). */
+  pirate: (input) => buildPirateVoyage(input),
+  ninja: (input) => buildNinjaVillage(input),
+  tamer: (input) => buildMonsterTamer(input),
 };
 
 export function promptBuilderFor(skillId: string): PromptBuilder | undefined {

@@ -6,6 +6,7 @@ import ComposerDropOverlay from "./composer/ComposerDropOverlay.astro";
 import ComposerToolbar from "./composer/ComposerToolbar.astro";
 import ComposerHints from "./composer/ComposerHints.astro";
 import ComposerCameraDialog from "./composer/ComposerCameraDialog.astro";
+import ComposerMediaDialog from "./composer/ComposerMediaDialog.astro";
 import "../app/composer/composer-styles.css";
 import "../app/composer/camera-dialog-styles.css";
 
@@ -64,6 +65,7 @@ const {
 
   <ComposerHints />
   <ComposerCameraDialog id={id} />
+  <ComposerMediaDialog id={id} />
 
   <p class="composer-status" id={`${id}Status`} role="status" aria-live="polite"></p>
 </div>

@@ -45,6 +45,7 @@
  */
 import { SKILLS } from '../../lib/skills';
 import { imageCountForSkill } from '../../lib/credits/costs';
+import { MAX_VIDEO_SECONDS, MIN_VIDEO_SECONDS } from '../../lib/video/constants';
 
 const runnable = SKILLS.filter((s) => s.runnable);
 
@@ -57,7 +58,13 @@ const skillCatalogue = runnable.map((skill) => ({
   url: `/skills/${skill.id}/`,
   requiresPhoto: skill.requiresPhoto,
   aspectRatio: skill.aspectRatio,
-  images: imageCountForSkill(skill.id),
+  kind: skill.kind,
+  /* Image skills report a frame count; a video skill has none. imageCountForSkill()
+     is defined over GENERATION_MODES only and throws for a video id on purpose —
+     that guard is what stops a clip being priced as one image — so it is only
+     called for the kind it applies to. A clip advertises its length instead. */
+  images: skill.kind === 'video' ? null : imageCountForSkill(skill.id),
+  clipSeconds: skill.kind === 'video' ? `${MIN_VIDEO_SECONDS}-${MAX_VIDEO_SECONDS}` : null,
 }));
 
 /* A short factual summary, NOT the 7,028-char /llms.txt. Agents that want the full

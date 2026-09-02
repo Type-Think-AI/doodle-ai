@@ -7,7 +7,7 @@
  * - `count` is the true pre-truncation total; `truncated` set accordingly.
  * - All coordinates rounded to integers.
  * - richText flattened to plain text for `label`.
- * - Includes altText for image shapes.
+ * - Includes altText for image and video shapes.
  * - Carries author from meta.author.
  * - Assigns a ref to any shape lacking one.
  */
@@ -23,6 +23,8 @@ function mapType(
   switch (type) {
     case "image":
       return "image";
+    case "video":
+      return "video";
     case "text":
       return "text";
     case "note":
@@ -142,8 +144,14 @@ export function buildDigest(editor: Editor): CanvasDigest {
     const label = extractLabel(shape);
     if (label) entry.label = label;
 
-    // altText for image shapes
-    if (shape.type === "image" && typeof props.altText === "string" && props.altText.length > 0) {
+    // altText for image and video shapes — tldraw 5.3.2's video shape carries
+    // props.altText (see VideoShapeUtil.getAriaDescriptor), same as image.
+    // Only emit when non-empty so we never surface a fabricated/empty string.
+    if (
+      (shape.type === "image" || shape.type === "video") &&
+      typeof props.altText === "string" &&
+      props.altText.length > 0
+    ) {
       entry.altText = props.altText;
     }
 

@@ -2,6 +2,7 @@
    Pure state getters/setters with no DOM or network IO. */
 
 import { STYLE_THEME_STORAGE_KEY } from "../../../lib/doodle-constants";
+import { ART_FAMILY_STORAGE_KEY, DEFAULT_ART_FAMILY_ID } from "../../../lib/art-families";
 import { getSkill } from "../../../lib/skills";
 import {
   clearThreadSkill,
@@ -21,6 +22,22 @@ export function getStyleId(): string {
     return localStorage.getItem(STYLE_THEME_STORAGE_KEY) || "pastel";
   } catch {
     return "pastel";
+  }
+}
+
+/**
+ * The art family the composer's chip row has selected — the "what does it look
+ * like" dial (doodle / anime styles), read from the same key ComposerFamilyChips
+ * writes. Separate from getStyleId(), which is the palette.
+ *
+ * Falls back to the doodle default on a missing key OR a localStorage throw
+ * (Safari private mode), so the send path can never fail on a style read.
+ */
+export function getArtFamilyId(): string {
+  try {
+    return localStorage.getItem(ART_FAMILY_STORAGE_KEY) || DEFAULT_ART_FAMILY_ID;
+  } catch {
+    return DEFAULT_ART_FAMILY_ID;
   }
 }
 

@@ -1,7 +1,19 @@
 ---
-import { buildSkillThumbnail, type Skill } from '../../lib/skills';
-import { cdnImageSrcset, resizedCdnImage } from '../../lib/cdn-image';
-import { imageCountForSkill } from '../../lib/credits/costs';
+/* One tile in the skills mosaic.
+ *
+ * This file is deliberately markup and nothing else. Three things used to live
+ * here and now do not, because together they pushed it to 717 lines against a
+ * 300-line component limit:
+ *   • the derivation (which URL, which size, which manifest) -> src/lib/skill-card-view.ts
+ *   • the presentation                                        -> ./skill-card.css
+ *   • the playback + sound controller                         -> src/scripts/app/skill-card-motion.ts
+ * The CSS import emits global css exactly as the previous `<style is:global>`
+ * block did, and the script import is hoisted once per page exactly as the
+ * previous inline `<script>` was. Neither move changes a byte of rendered output.
+ */
+import { buildSkillCardView, THUMB_SIZES } from '../../lib/skill-card-view';
+import type { Skill } from '../../lib/skills';
+import './skill-card.css';
 
 interface Props {
   skill: Skill;
@@ -14,149 +26,162 @@ interface Props {
   priority?: boolean;
 }
 const { skill, priority = false } = Astro.props;
-const thumb = buildSkillThumbnail(skill);
-/* Pack skills return several separate images from one run. Surfacing the count
-   on the card matters because it is the thing that differentiates this
-   catalogue — and because it is also what the run costs (1 credit per image),
-   so a user should see "9" before clicking, not after being charged. Roadmap
-   skills have no price to look up, hence the runnable guard. */
-const imageCount = skill.runnable ? imageCountForSkill(skill.id) : 1;
 
-/* Card widths: 226px in the 4-up desktop grid (1000px container), ~30vw at the
-   3-up breakpoint, ~45vw at the 2-up phone breakpoint. `sizes` has to describe
-   that or the browser picks the largest candidate and the srcset buys nothing. */
-const THUMB_SIZES = '(max-width: 720px) 45vw, (max-width: 980px) 30vw, 226px';
-const srcset = skill.thumbnailUrl ? cdnImageSrcset(skill.thumbnailUrl) : null;
-/* Fallback `src` is a resized variant too, so a browser that ignores srcset
-   still never downloads the 1024px original. */
-const src = skill.thumbnailUrl ? resizedCdnImage(skill.thumbnailUrl, 440) : undefined;
+const {
+  isMoving,
+  imageCount,
+  fallbackSvg,
+  src,
+  srcset,
+  thumbWidth,
+  thumbHeight,
+  clip,
+  posterUrl,
+  altText,
+  playLabel,
+  movesLabel,
+} = buildSkillCardView(skill);
 ---
 
-<a class="skill-card" href={`/skills/${skill.id}`} data-runnable={skill.runnable ? "true" : "false"}>
-  <div class="skill-card-thumb">
-    {skill.thumbnailUrl ? (
-      <img
-        src={src}
-        srcset={srcset ?? undefined}
-        sizes={srcset ? THUMB_SIZES : undefined}
-        alt={`${skill.name} sample output`}
-        width="440"
-        height="440"
-        loading={priority ? 'eager' : 'lazy'}
-        fetchpriority={priority ? 'high' : 'auto'}
-        decoding={priority ? 'sync' : 'async'}
-      />
-    ) : <Fragment set:html={thumb} />}
-    {imageCount > 1 && (
-      <span
-        class="skill-card-count"
-        role="img"
-        aria-label={`Returns ${imageCount} separate images`}
-        title={`Returns ${imageCount} separate images`}
-      >{imageCount}</span>
-    )}
-    {!skill.runnable && <span class="skill-card-badge">Coming soon</span>}
-  </div>
-  <div class="skill-card-meta">
-    <span class="skill-card-name">{skill.name}</span>
-    <span class="skill-card-tagline">{skill.tagline}</span>
-  </div>
-</a>
+<!-- data-skill-id is what the Home controller reads to pin this skill into the
+     sticky composer instead of navigating away (see src/scripts/app/home.ts).
+     It lives on this wrapper rather than the link because the wrapper is the
+     tile: the link covers the art, and the play marker is a SIBLING of the link,
+     not a child of it. That split is the whole point of tap-to-play — a <button>
+     nested inside an <a> is invalid (interactive content inside a link) and, more
+     practically, a tap could not then belong to one of them unambiguously.
+     The href stays a real skill URL, so the tile is still a crawlable link and
+     still works with JS off, on /skills, and via cmd-click. -->
+<div
+  class="skill-card"
+  data-runnable={skill.runnable ? "true" : "false"}
+  data-skill-id={skill.id}
+  data-has-thumb={skill.thumbnailUrl ? "true" : "false"}
+  data-moves={isMoving ? "true" : "false"}
+  data-clip={clip ? "true" : "false"}
+  data-motion-state="idle"
+>
+  <a class="skill-card-link" href={`/skills/${skill.id}`}>
+    <div class="skill-card-thumb">
+      {skill.thumbnailUrl ? (
+        <img
+          src={src}
+          srcset={srcset ?? undefined}
+          sizes={srcset ? THUMB_SIZES : undefined}
+          alt={altText}
+          width={thumbWidth}
+          height={thumbHeight}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchpriority={priority ? 'high' : 'auto'}
+          decoding={priority ? 'sync' : 'async'}
+        />
+      ) : <Fragment set:html={fallbackSvg} />}
+      <!-- The real animation, layered over its own still.
+           No `src` and no `autoplay`: the URL is parked in data-src and only
+           assigned on play intent, so a wall of 29 tiles costs zero video bytes
+           on load. Muted at rest; sound is opt-in once via the speaker control
+           and then remembered for the visit (src/scripts/app/clip-audio.ts). The
+           still underneath keeps its own uncropped shape and sets the tile
+           height; this layer covers it. -->
+      {clip && (
+        <video
+          class="skill-card-motion"
+          data-skill-clip
+          data-clip-audio
+          data-src={clip.cdnUrl}
+          poster={posterUrl}
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          tabindex="-1"
+          aria-hidden="true"
+        ></video>
+      )}
+      {imageCount > 1 && (
+        <span
+          class="skill-card-count"
+          role="img"
+          aria-label={`${imageCount} pictures`}
+          title={`${imageCount} pictures`}
+        >{imageCount}</span>
+      )}
+      {!skill.runnable && <span class="skill-card-badge">Coming soon</span>}
+      <!-- An animation skill with no animation on file yet keeps the marker as a
+           pure marker: there is nothing to start, so it must not look startable. -->
+      {isMoving && !clip && (
+        <span class="skill-card-moves" role="img" aria-label={movesLabel} title={movesLabel}>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2Z"></path></svg>
+          Moves
+        </span>
+      )}
+      <!-- The label sits ON the art, over a scrim, instead of in a caption strip
+           below it. The old layout gave every tile the same silhouette — square
+           image, two lines of text — so 25 of them read as a spreadsheet no matter
+           how good the art was. Overlaying the name lets the images butt up
+           against each other and be the thing you scan. -->
+      <span class="skill-card-overlay">
+        <span class="skill-card-name">{skill.name}</span>
+      </span>
+    </div>
+  </a>
+  <!-- The one marker that makes 4 animation skills findable in a wall of 29
+       stills: amber, filled, and the only play glyph on the page. It replaces the
+       old grey "Clip" pill — "clip" is a developer's word, and a grey pill among
+       grey pills is not a marker.
 
-<style is:global>
-  .skill-card {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    color: inherit;
-  }
-  .skill-card-thumb {
-    position: relative;
-    border-radius: 14px;
-    overflow: hidden;
-    aspect-ratio: 1 / 1;
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    transition: border-color 0.15s ease, transform 0.15s ease;
-  }
-  /* Hover feedback only where a real hover device is present. */
-  @media (hover: hover) and (pointer: fine) {
-    .skill-card:hover .skill-card-thumb { border-color: var(--border3); }
-  }
-  /* Touch/tap feedback so the card isn't silently inert on phones. */
-  .skill-card:active .skill-card-thumb { border-color: var(--border3); transform: scale(0.98); }
-  .skill-card:focus-visible { outline: 2px solid var(--border3); outline-offset: 3px; border-radius: 14px; }
-  /* Direct children only: the thumbnail itself is a direct <svg>/<img> child,
-     whereas the overlay badges nest their own small icons. An unscoped
-     descendant selector here inflated a badge's 11px icon to fill the card. */
-  .skill-card-thumb > svg,
-  .skill-card-thumb > img { width: 100%; height: 100%; display: block; object-fit: cover; }
-  .skill-card[data-runnable="false"] .skill-card-thumb > svg,
-  .skill-card[data-runnable="false"] .skill-card-thumb > img { opacity: 0.45; }
-  /* Multi-image count — just the number, deliberately small. It is a glanceable
-     marker of which skills return a set, not a label to read; the full meaning
-     lives in the aria-label/title and on the skill page's spec row.
-     Top-right so it never collides with the bottom-right "Coming soon" badge,
-     and light-on-translucent-dark because these thumbnails are mostly
-     cream/warm-white and nothing else stays legible across all of them. */
-  .skill-card-count {
-    position: absolute;
-    right: 7px;
-    top: 7px;
-    min-width: 21px;
-    height: 21px;
-    padding: 0 5px;
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background: rgba(12, 12, 12, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: #fff;
-    font-size: 11.5px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    backdrop-filter: blur(6px);
-  }
+       On a phone it is also the ONLY way a tile ever moves: playback was gated
+       behind (hover: hover) and (pointer: fine), so a phone-first audience never
+       saw one. Tapping this pill starts THIS animation inline; tapping anywhere
+       else on the tile still follows the link, which is why it sits outside the
+       <a> and why its hit area is deliberately its own.
 
-  .skill-card-badge {
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: rgba(15, 15, 15, 0.72);
-    color: #fff;
-    font-size: 11px;
-    max-width: calc(100% - 16px);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .skill-card-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-  .skill-card-name {
-    font-size: 14.5px;
-    font-weight: 500;
-    color: var(--text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .skill-card-tagline {
-    font-size: 12.5px;
-    color: var(--text-dimmer);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+       Rendered `disabled` and enabled by the script: with JS off there is nothing
+       to start, and a disabled pill takes no pointer events (see the CSS), so the
+       tap falls straight through to the link underneath instead of dying on a
+       dead control. The same mechanism is how reduced motion is honoured. -->
+  {isMoving && clip && (
+    <button
+      type="button"
+      class="skill-card-moves skill-card-play"
+      data-skill-play
+      data-play-label={playLabel}
+      data-idle-label={movesLabel}
+      aria-pressed="false"
+      aria-label={movesLabel}
+      title={movesLabel}
+      disabled
+    >
+      <svg class="skill-card-play-icon" width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12 8 5.2Z"></path></svg>
+      <svg class="skill-card-stop-icon" width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+      Moves
+    </button>
+  )}
+  <!-- Sound. Deliberately NOT amber: the amber pill is the one saturated thing
+       in the mosaic and it means "this one moves". A second amber control would
+       spend that signal twice, so this is the same translucent charcoal as the
+       count badge, and it sits top-right where that badge lives — free on an
+       animation tile, which never renders a count.
 
-  @media (max-width: 720px) {
-    .skill-card { gap: 8px; }
-    .skill-card-name { font-size: 13.5px; }
-    .skill-card-tagline { font-size: 12px; -webkit-line-clamp: 2; }
-  }
-</style>
+       Ships disabled and enabled by the script, same contract as the play pill:
+       with JS off there is nothing to toggle, and a disabled control takes no
+       pointer events so the tap falls through to the link instead of dying. -->
+  {isMoving && clip && (
+    <button
+      type="button"
+      class="skill-card-sound"
+      data-clip-sound
+      aria-pressed="false"
+      aria-label="Turn sound on"
+      title="Turn sound on"
+      disabled
+    >
+      <svg class="skill-card-sound-off" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11 5 6.5 9H4v6h2.5L11 19V5Z" fill="currentColor"></path><path d="M16 9.5l4 5m0-5l-4 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+      <svg class="skill-card-sound-on" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11 5 6.5 9H4v6h2.5L11 19V5Z" fill="currentColor"></path><path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+    </button>
+  )}
+</div>
+
+<script>
+  import '../../scripts/app/skill-card-motion';
+</script>

@@ -1,0 +1,103 @@
+{
+  "generatedAt": "2026-09-01T21:54:21.412Z",
+  "covers": [
+    {
+      "skillId": "creature",
+      "packageName": "doodle-creature",
+      "thumbnailUrl": "https://cdn.picxstudio.com/uploads/api/creature-first-frame_caf944d0-8b47-44cc-9e9f-0f729510b3e5.jpg",
+      "clipUrl": "https://cdn.picxstudio.com/agent/videos/video_5a4d0bbecad2_0cb41dbd-29b4-4818-864c-46ab7a579ca8.mp4",
+      "clipId": "vertical-creature",
+      "picxGenerationId": "d6076514-223d-4d3d-a8d6-0ea509b138ce",
+      "sourceImageUrl": "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png",
+      "frameTime": 10,
+      "width": 480,
+      "height": 832,
+      "bytes": 63549,
+      "extractedAt": "2026-09-01T21:54:21.403Z"
+    },
+    {
+      "skillId": "dash",
+      "packageName": "doodle-dash",
+      "thumbnailUrl": "https://cdn.picxstudio.com/uploads/api/dash-first-frame_3516d6a5-a58b-4352-9b72-9014ebbd9cb3.jpg",
+      "clipUrl": "https://cdn.picxstudio.com/agent/videos/video_467b7829c99c_82e68265-61d4-40cd-a9cd-b661bd0412a2.mp4",
+      "clipId": "dash-run",
+      "picxGenerationId": "a3256685-bbdf-402e-8208-d40fc9202b74",
+      "sourceImageUrl": "https://cdn.picxstudio.com/api/generated/image_889bf322-8840-44d1-82ea-fac82be13d77.png",
+      "frameTime": 3.5,
+      "width": 832,
+      "height": 480,
+      "bytes": 69909,
+      "extractedAt": "2026-09-01T21:38:46.419Z"
+    },
+    {
+      "skillId": "daydream",
+      "packageName": "doodle-daydream",
+      "thumbnailUrl": "https://cdn.picxstudio.com/uploads/api/daydream-first-frame_b1d9ee2a-c9c5-4ed8-9437-581a23a8d6cd.jpg",
+      "clipUrl": "https://cdn.picxstudio.com/agent/videos/video_4d1b04a70fb2_0aa620a7-c60a-4be0-9ff2-dbe6577063db.mp4",
+      "clipId": "daydream-quiet",
+      "picxGenerationId": "82ced4b7-d946-4c8c-a193-5c99218cc03a",
+      "sourceImageUrl": "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png",
+      "frameTime": 0,
+      "width": 480,
+      "height": 480,
+      "bytes": 57401,
+      "extractedAt": "2026-09-01T20:55:41.973Z"
+    },
+    {
+      "skillId": "gadget",
+      "packageName": "doodle-gadget",
+      "thumbnailUrl": "https://cdn.picxstudio.com/uploads/api/gadget-first-frame_b83908fa-034f-4bd5-8538-d722ff2260f7.jpg",
+      "clipUrl": "https://cdn.picxstudio.com/agent/videos/video_023a1b85c08e_34a6212f-14b6-450c-8641-d440ffab79df.mp4",
+      "clipId": "vertical-gadget",
+      "picxGenerationId": "119ab9e8-4d22-412d-9ba0-0df06318c54b",
+      "sourceImageUrl": "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png",
+      "frameTime": 0,
+      "width": 480,
+      "height": 832,
+      "bytes": 95634,
+      "extractedAt": "2026-09-01T21:52:02.332Z"
+    },
+    {
+      "skillId": "intro",
+      "packageName": "doodle-intro",
+      "thumbnailUrl": "https://cdn.picxstudio.com/uploads/api/intro-first-frame_fb9333ef-669f-4c73-9821-7fed1bd84932.jpg",
+      "clipUrl": "https://cdn.picxstudio.com/agent/videos/video_900ea4ae8a8c_982f4b7d-de2c-414b-b866-bb35d109f554.mp4",
+      "clipId": "intro-titles",
+      "picxGenerationId": "6ed9e540-19c9-4e2d-9aac-70b7d273c8d9",
+      "sourceImageUrl": "https://cdn.picxstudio.com/api/edited/image_12e6d35b-56e0-458c-9300-cefae33bcf46.png",
+      "frameTime": 0,
+      "width": 832,
+      "height": 480,
+      "bytes": 44935,
+      "extractedAt": "2026-09-01T20:55:46.342Z"
+    },
+    {
+      "skillId": "stealth",
+      "packageName": "doodle-stealth",
+      "thumbnailUrl": "https://cdn.picxstudio.com/uploads/api/stealth-first-frame_53498050-3e8e-485d-9a5d-ab42b6b83433.jpg",
+      "clipUrl": "https://cdn.picxstudio.com/agent/videos/video_b35014bae750_008b35b2-9e17-4d4a-9658-fa15f3c1429a.mp4",
+      "clipId": "vertical-stealth",
+      "picxGenerationId": "f29ac425-1110-4d7c-a2cd-5ed79537ef7e",
+      "sourceImageUrl": "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png",
+      "frameTime": 0,
+      "width": 480,
+      "height": 832,
+      "bytes": 44481,
+      "extractedAt": "2026-09-01T21:51:53.208Z"
+    },
+    {
+      "skillId": "voyage",
+      "packageName": "doodle-voyage",
+      "thumbnailUrl": "https://cdn.picxstudio.com/uploads/api/voyage-first-frame_e0e7587f-aa6e-4462-b525-e6e24c694eb8.jpg",
+      "clipUrl": "https://cdn.picxstudio.com/agent/videos/video_a0cd01394a68_11a65b53-a1d7-4447-8664-e082114899cd.mp4",
+      "clipId": "vertical-voyage",
+      "picxGenerationId": "f048c6df-0eb4-40cc-9671-24cc8be3b915",
+      "sourceImageUrl": "https://cdn.picxstudio.com/api/generated/image_6397c145-1063-406c-b44a-49416cc92322.png",
+      "frameTime": 9,
+      "width": 480,
+      "height": 832,
+      "bytes": 62728,
+      "extractedAt": "2026-09-01T21:54:15.019Z"
+    }
+  ]
+}

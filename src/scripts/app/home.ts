@@ -11,6 +11,7 @@
    without creating a thread until send. */
 
 import { MAX_IMAGE_BYTES } from "../../lib/doodle-constants";
+import { ART_FAMILIES, ART_FAMILY_STORAGE_KEY } from "../../lib/art-families";
 import { getCharacter } from "./character-store";
 import { getSkill } from "../../lib/skills";
 import { loadMoodboard } from "./moodboard";
@@ -86,6 +87,28 @@ function initHome(): void {
     attachMeta!.textContent = character.name;
     attachRow!.hidden = false;
   }
+
+  /* Picking an existing image in the "+" media dialog
+     (ComposerMediaDialog.astro). It is already hosted — it came from a previous
+     upload or generation — so this is the character path without the upload:
+     set the attachment and show the same preview row a fresh upload produces.
+     The dialog owns no state of its own; it only announces the choice. */
+  window.addEventListener("doodleai:media-pick", (event) => {
+    const detail = (event as CustomEvent<{ url?: string; kind?: string }>).detail;
+    const url = detail?.url;
+    if (!url) return;
+    /* The dialog only lists animations for an OPEN thread, and this page has
+       none, so a clip should never arrive here. Guarded anyway because the
+       failure would be silent and misleading: the preview element is an <img>,
+       which cannot decode an mp4 and would paint a broken-image icon. */
+    if (detail?.kind === "clip") return;
+    clearAttachment();
+    attachedUrl = url;
+    if (attachPreview) setImageSrc(attachPreview, url);
+    if (attachMeta) attachMeta.textContent = "Ready";
+    if (attachRow) attachRow.hidden = false;
+    syncSendState();
+  });
 
   async function handleFile(file: File): Promise<void> {
     if (!file.type.startsWith("image/")) {
@@ -187,6 +210,34 @@ function initHome(): void {
   $("homeCharacterBtn")?.addEventListener("click", () => mentions.triggerFor("@"));
   $("homeSkillBtn")?.addEventListener("click", () => mentions.triggerFor("/"));
 
+  /* Skill tiles are the page's main call to action.
+     Tapping one used to navigate to /skills/<id>, where the only thing to do was
+     press "Use this skill" and come straight back — a round trip to set a value
+     the composer was already showing. On Home the tile now pins the skill right
+     here and puts the cursor in the input, which is possible only because the
+     composer is sticky and therefore still on screen while you browse.
+     Delegated from the grid so tiles rendered or filtered later are covered, and
+     it deliberately does NOT preventDefault on a modified click: cmd/ctrl/middle
+     click, and "open in new tab", must still reach the real skill page. The href
+     is untouched, so this degrades to plain navigation with JS off. */
+  document.querySelector(".home-skills-grid")?.addEventListener("click", (event) => {
+    const mouseEvent = event as MouseEvent;
+    if (mouseEvent.metaKey || mouseEvent.ctrlKey || mouseEvent.shiftKey || mouseEvent.button !== 0) return;
+    const tile = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-skill-id]");
+    const skillId = tile?.dataset.skillId;
+    if (!skillId) return;
+    const skill = getSkill(skillId);
+    // A roadmap preview has nothing to pin, so let it navigate to its page.
+    if (!skill?.runnable) return;
+    event.preventDefault();
+    pendingSkillId = skillId;
+    syncSkillChip();
+    input?.focus();
+    window.dispatchEvent(
+      new CustomEvent("doodleai:toast", { detail: { text: `${skill.name} ready — describe your doodle` } }),
+    );
+  });
+
   initMediaPicker({
     trigger: attachBtn as HTMLButtonElement,
     cameraButton: $("homeCameraBtn") as HTMLButtonElement,
@@ -262,6 +313,32 @@ function initHome(): void {
   const boardFromUrl = params.get("board")?.trim();
   if (boardFromUrl) pendingBoardId = boardFromUrl;
 
+  // ?family=<id> preselects an art family, so a style landing page can send
+  // someone straight in already set to the look they came for — the same move
+  // ?skill= makes for the skill chip. The chip row lives with the SKILL RAIL
+  // (index.astro), not in the composer: it is a filter for the browser, and a
+  // filter inside the input was the wrong place for it.
+  //
+  // Written through the SAME localStorage key the chip row itself uses, so there
+  // is one source of truth and no second "pending" variable to keep in sync. The
+  // chips are then repainted directly rather than waiting for a reload, because
+  // this runs alongside the component's own script and the two hoisted bundles
+  // have no guaranteed order: whichever runs second reads the same stored value
+  // and lands on the same chip.
+  const familyFromUrl = params.get("family")?.trim();
+  const knownFamily = familyFromUrl && ART_FAMILIES.some((f) => f.id === familyFromUrl);
+  if (familyFromUrl && knownFamily) {
+    try {
+      localStorage.setItem(ART_FAMILY_STORAGE_KEY, familyFromUrl);
+    } catch {
+      /* storage unavailable — the repaint below still applies it to this view */
+    }
+    document.querySelectorAll<HTMLElement>(".home-family-chip").forEach((chip) => {
+      chip.setAttribute("aria-pressed", String(chip.dataset.familyId === familyFromUrl));
+    });
+    window.dispatchEvent(new CustomEvent("doodleai:art-family", { detail: { id: familyFromUrl } }));
+  }
+
   const promptFromUrl = params.get("prompt");
   if (promptFromUrl) {
     // The composer is contenteditable; textContent is the plain-text path and
@@ -285,7 +362,7 @@ function initHome(): void {
     attachRow!.hidden = false;
   }
 
-  if (skillFromUrl || boardFromUrl || promptFromUrl || refFromUrl) {
+  if (skillFromUrl || boardFromUrl || promptFromUrl || refFromUrl || familyFromUrl) {
     // Keep the URL clean, but only AFTER the values are captured in state.
     //
     // Strip the QUERY, never the PATH. This used to hardcode "/" because the

@@ -80,9 +80,21 @@
 
 /* ─── Composer box ────────────────────────────────────────────── */
 
+/* Flat, not a floating card.
+   The box used to paint --card-hover with an inset white highlight and a wide
+   drop shadow, which made a lighter slab sitting on the canvas — the panel read
+   as the subject and the text inside it read as secondary. It is now the SAME
+   tone as the canvas with a single hairline border: the only thing with contrast
+   inside the composer is the user's own text. The border brightens on focus,
+   which is enough of a state change without re-introducing elevation. */
 .composer-box {
   position: relative;
   border-radius: 22px;
+  /* RESTORED to the shipped treatment (2026-09-01).
+     This went transparent, then --prompt-bg, chasing a "flat" composer. Both were
+     wrong: the deployed design already had the tonal step — a --card-hover panel
+     on a --bg canvas — which is exactly the page-vs-input contrast that was being
+     asked for. Reverted rather than re-invented. */
   background: var(--card-hover);
   border: 1px solid var(--border3);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 28px rgba(0, 0, 0, 0.22);
@@ -237,54 +249,142 @@
 .composer-toolbar { display: flex; align-items: center; gap: 7px; margin-top: 11px; }
 .composer-compact .composer-toolbar { margin-top: 6px; }
 
+/* Bare icons, not four outlined pucks.
+   Each button used to carry its own border and fill, so the bar was a row of
+   competing circles — five bordered shapes inside an already-bordered box. The
+   hit area is unchanged; only the decoration is gone, and hover is now the only
+   thing that paints a background. */
 .composer-icon-btn {
   width: 34px;
   height: 34px;
   flex: 0 0 34px;
-  border-radius: 50%;
-  border: 1px solid var(--border2);
-  background: var(--bg);
+  border-radius: 10px;
+  border: 0;
+  background: none;
   color: var(--text-dim);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color .15s, border-color .15s, background .15s;
+  transition: color .15s, background .15s;
 }
-.composer-compact .composer-icon-btn { width: 30px; height: 30px; flex-basis: 30px; border-radius: 50%; }
-.composer-icon-btn:hover { color: var(--text); border-color: var(--border3); background: color-mix(in srgb, var(--bg) 82%, var(--text) 18%); }
+.composer-compact .composer-icon-btn { width: 32px; height: 32px; flex-basis: 32px; }
+.composer-icon-btn:hover { color: var(--text); background: color-mix(in srgb, var(--bg) 84%, var(--text) 16%); }
+.composer-icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The one control that opens a whole panel reads slightly stronger than its
+   neighbours, since it is the primary way media enters a prompt. */
+.composer-plus { color: var(--text); }
+
+/* Pushes the trailing send/stop group right. This used to be the style pill's
+   job via `margin-left:auto`; the pill has moved into the left group, so the
+   spacing is now explicit instead of a side effect of where that pill sat. */
+.composer-spacer { flex: 1 1 auto; }
+
+/* Touch: 34px is comfortable with a mouse but under the 44px guidance for a
+   finger, so the coarse-pointer case gets the larger target without changing
+   the desktop rhythm. */
+@media (pointer: coarse) {
+  .composer-icon-btn,
+  .composer-compact .composer-icon-btn {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+}
 
 /* ─── Style picker (Style Gallery) ────────────────────────────── */
 
-/* Owns the toolbar's single `margin-left: auto`, which is what pushes the
-   trailing controls right. */
+/* Sits in the LEFT group with the other icons now. It no longer owns the
+   toolbar's spacing — `.composer-spacer` does — because a preference control
+   should not be what holds the layout together. */
 .composer-style {
   position: relative;
-  margin-left: auto;
 }
 
 /* One trigger instead of a row of loose colour dots: four bare swatches read as
    decoration and never said what they were for. This shows the ACTIVE palette
    plus its name, and opens the full list on click. */
+/* An icon button that matches its neighbours exactly, with the active palette
+   shown as a small dot in the corner rather than as a word. */
 .composer-style-trigger {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  width: 34px;
   height: 34px;
-  padding: 0 10px 0 8px;
-  border-radius: 999px;
-  border: 1px solid var(--border2);
-  background: var(--bg);
+  border-radius: 10px;
+  border: 0;
+  background: none;
   color: var(--text-dim);
   font: inherit;
-  font-size: 13px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s;
+}
+.composer-compact .composer-style-trigger { width: 32px; height: 32px; }
+@media (pointer: coarse) {
+  .composer-style-trigger,
+  .composer-compact .composer-style-trigger { width: 44px; height: 44px; }
+}
+.composer-settings-icon { width: 18px; height: 18px; }
+/* The palette dot: bottom-right of the icon, small enough to be a status light
+   rather than a second control.
+ *
+ * DESCENDANT SELECTOR ON PURPOSE. `.composer-style-chip` (further down this file)
+ * is the full 26x20 palette swatch used in the menu rows, and this element
+ * carries BOTH classes. At equal specificity the later rule wins, so a plain
+ * `.composer-style-chip-mini` block here lost every shared property to that base
+ * — the button rendered as a 26x20 block filled with the theme's paper colour,
+ * covering the settings icon completely. Qualifying with the trigger raises
+ * specificity so this wins wherever it sits in the file.
+ *
+ * The colour is painted on this element rather than on the inner dot because the
+ * inner dot has its own base sizing for the menu rows; at 10px there is no room
+ * for a swatch inside a swatch, so the dot is hidden and this IS the dot. */
+.composer-style-trigger .composer-style-chip-mini {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  /* The theme's ink colour, which is the part of a palette worth showing at 10px.
+     Falls back to text colour for "None", which has no accent. */
+  background: var(--swatch-accent, var(--text-dim));
+  /* Ring in the composer's own surface tone so the dot reads as separate from
+     the icon without drawing a halo. */
+  border: 1.5px solid var(--card-hover);
+  overflow: visible;
+}
+.composer-style-trigger .composer-style-chip-mini .composer-style-chip-dot,
+.composer-style-trigger .composer-style-chip-mini .composer-style-chip-line {
+  display: none;
 }
 .composer-style-trigger:hover {
   color: var(--text);
-  border-color: var(--border3);
-  background: color-mix(in srgb, var(--bg) 82%, var(--text) 18%);
+  background: color-mix(in srgb, var(--bg) 84%, var(--text) 16%);
+}
+/* Screen-reader-only label, so the active style is still announced now that it
+   is no longer printed in the bar. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.composer-style-menu-title {
+  margin: 2px 10px 8px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dimmer);
 }
 .composer-style-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .composer-style-trigger[aria-expanded="true"] {
@@ -332,18 +432,29 @@
 }
 .composer-style-menu .composer-style-chip { width: 34px; height: 26px; flex-basis: 34px; }
 
+/* Left-aligned now that the trigger lives in the left icon group — anchored to
+   `right: 0` it would have opened off toward the send button, away from the
+   control that opened it. A popover on desktop rather than a drawer: this is a
+   small preference list attached to a specific button, and a sheet sliding up
+   from the bottom of a desktop window for four palettes is a mobile pattern
+   worn in the wrong place. */
 .composer-style-menu {
   position: absolute;
   bottom: calc(100% + 10px);
-  right: 0;
+  left: 0;
   z-index: 60;
   min-width: 252px;
   padding: 6px;
   border-radius: 15px;
   border: 1px solid var(--border2);
-  background: linear-gradient(180deg, var(--card-hover), var(--card));
-  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.4);
+  background: var(--card);
   animation: composerRise 0.16s ease;
+}
+/* Phones: the trigger can sit close enough to the left edge that a fixed
+   min-width popover would clip, so it becomes a full-width sheet-ish panel
+   pinned inside the composer instead of overflowing the viewport. */
+@media (max-width: 420px) {
+  .composer-style-menu { left: 0; right: 0; min-width: 0; }
 }
 .composer-style-menu[hidden] { display: none; }
 
@@ -655,6 +766,261 @@
   .composer-style-menu { min-width: 240px; }
 }
 
-@media (max-width: 380px) {
-  .composer-icon-btn[id$="ExpandBtn"] { display: none; }
+/* The narrow-screen rule that used to hide the expand button is gone with the
+   button itself — there is nothing left in the bar worth dropping at 380px now
+   that it holds three icons instead of six. */
+
+/* ─── Media dialog ("+") ──────────────────────────────────────── */
+
+.media-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(2px);
+}
+.media-dialog-backdrop[hidden] { display: none; }
+
+/* Flat panel: one hairline border, one tone, no elevation stack. */
+.media-dialog-panel {
+  display: flex;
+  width: min(920px, 100%);
+  max-height: min(560px, 82vh);
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: var(--card);
+}
+
+.media-dialog-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 208px;
+  flex: 0 0 208px;
+  padding: 14px 10px;
+  border-right: 1px solid var(--border2);
+}
+.media-dialog-title {
+  margin: 2px 8px 10px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dimmer);
+}
+.media-rail-foot { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border2); }
+
+.media-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.media-rail-item:hover { color: var(--text); background: color-mix(in srgb, var(--card) 82%, var(--text) 18%); }
+.media-rail-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.media-rail-item[aria-selected="true"] {
+  color: var(--text);
+  background: color-mix(in srgb, var(--card) 78%, var(--text) 22%);
+}
+
+.media-dialog-main { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.media-dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--border2);
+}
+.media-dialog-heading { flex: 1 1 auto; font-size: 14px; color: var(--text); }
+.media-dialog-upload {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border3);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.media-dialog-upload:hover { background: color-mix(in srgb, var(--card) 82%, var(--text) 18%); }
+.media-dialog-close {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-dim);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.media-dialog-close:hover { color: var(--text); background: color-mix(in srgb, var(--card) 82%, var(--text) 18%); }
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+  padding: 14px;
+  overflow-y: auto;
+}
+.media-tile {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+  cursor: pointer;
+}
+.media-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-tile:hover { border-color: var(--text-dimmer); }
+.media-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.media-empty { margin: 0; padding: 0 16px 18px; font-size: 13px; color: var(--text-dim); }
+.media-empty[hidden] { display: none; }
+
+/* Phones: the rail becomes a horizontal strip above the grid rather than eating
+   208px of a 375px screen. Recomposed, not hidden. */
+@media (max-width: 620px) {
+  .media-dialog-backdrop { padding: 0; align-items: flex-end; }
+  .media-dialog-panel {
+    flex-direction: column;
+    max-height: 88vh;
+    width: 100%;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+  }
+  .media-dialog-rail {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    flex: 0 0 auto;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border2);
+    padding: 10px;
+  }
+  .media-dialog-title { display: none; }
+  .media-rail-item { width: auto; white-space: nowrap; }
+  .media-rail-foot {
+    display: flex;
+    gap: 2px;
+    margin: 0 0 0 auto;
+    padding: 0 0 0 8px;
+    border-top: 0;
+    border-left: 1px solid var(--border2);
+  }
+  .media-rail-item span { display: none; }
+  .media-rail-item[aria-selected] span, .media-dialog-heading { display: inline; }
+  .media-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+}
+
+/* Motion is decorative here; the panel must still arrive for anyone who has
+   asked the OS to stop animating things. */
+@media (prefers-reduced-motion: reduce) {
+  .composer-style-menu { animation: none; }
+}
+
+
+/* ─── Art-family chips ────────────────────────────────────────── */
+
+/* Sits between the input and the toolbar (ComposerFamilyChips.astro), so the
+   style decision is next to the words it applies to rather than behind the
+   settings icon that holds the palette picker.
+
+   ONE row, always. It scrolls horizontally instead of wrapping: a wrapping set
+   of 7 chips grows the composer by a whole line at 375px and pushes the send
+   button off the thumb zone, and the row is a browse-and-pick control — a
+   horizontal scroll is the honest shape for it. No custom properties are
+   defined here; every colour is an existing token or a color-mix of two. */
+.composer-families {
+  margin-top: 10px;
+}
+.composer-compact .composer-families {
+  margin-top: 6px;
+}
+.composer-families-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Momentum scrolling can drift a chip half out of view; snapping to the start
+     of a chip means a flick always lands on a readable row. */
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  /* Room for the focus ring, which is drawn 2px outside the chip and would
+     otherwise be clipped by this scroll container. */
+  padding: 2px 2px 4px;
+}
+.composer-families-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* A thin outlined pill, flat — no fill, no shadow, no elevation. 44px minimum
+   on every pointer type, not just coarse: this row is the most-tapped control
+   in the composer after send. */
+.composer-family-chip {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.composer-family-chip:hover {
+  color: var(--text);
+  border-color: var(--border3);
+  background: var(--hover);
+}
+.composer-family-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Pressed reads through THREE channels, not just colour: the border goes
+   accent, the text goes full-strength, and the fill is a wash of the accent.
+   Colour alone would leave the state invisible to anyone who cannot separate
+   these two greys. */
+.composer-family-chip[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--bg) 86%, var(--accent) 14%);
+  font-weight: 600;
+}
+.composer-family-chip[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--bg) 80%, var(--accent) 20%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer-family-chip {
+    transition: none;
+  }
 }

@@ -84,13 +84,12 @@ export function buildBatchPrompt(
   }
 }
 
-export interface PicxCallResult {
-  ok: boolean;
-  url?: string;
-  error?: string;
-}
+/* `callPicx`, the synchronous render, was DELETED 2026-09-01. Every image in this
+   app is now submitted with a callback_url and delivered by webhook — one
+   mechanism, no configuration-dependent behaviour, no Worker held open for the
+   length of a render. Do not reintroduce a blocking variant. */
 
-/** Endpoint and body for one PicX image call, shared by the sync and async paths. */
+/** Endpoint and body for one PicX image submit. */
 function buildRequest(
   built: BuiltPrompt,
   images: { sourceUrl?: string | null; refUrl?: string | null },
@@ -109,38 +108,6 @@ function buildRequest(
       }
     : { prompt: built.prompt, size: "1K", aspect_ratio: built.aspectRatio };
   return { url, payload };
-}
-
-/**
- * One PicX call, same endpoints and body shapes as generate-doodle.ts.
- * Never throws — a batch item's failure is data (an `error_code` on the row),
- * not an exception that should abort the sibling items running alongside it.
- *
- * This is the SYNCHRONOUS path: it waits out the whole render. Still used when
- * no webhook secret is configured — see `submitPicxAsync` and the branch in
- * run.ts for why that fallback exists.
- */
-export async function callPicx(
-  platformKey: string,
-  built: BuiltPrompt,
-  images: { sourceUrl?: string | null; refUrl?: string | null },
-): Promise<PicxCallResult> {
-  const { url, payload } = buildRequest(built, images);
-
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${platformKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = (await res.json().catch(() => ({}))) as { url?: string; detail?: string; message?: string };
-    if (!res.ok || !data.url) {
-      return { ok: false, error: data.detail || data.message || `PicX API error: ${res.status}` };
-    }
-    return { ok: true, url: data.url };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Generation failed" };
-  }
 }
 
 export interface PicxSubmitResult {

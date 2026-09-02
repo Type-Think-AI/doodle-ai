@@ -69,6 +69,7 @@ const articles = defineCollection({
 			"coloring",
 			"festival",
 			"learn",
+			"video",
 		]),
 
 		/**

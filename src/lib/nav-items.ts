@@ -9,6 +9,7 @@ export type NavKey =
   | "characters"
   | "boards"
   | "skills"
+  | "showcase"
   | "settings"
   | "roadmap";
 
@@ -59,6 +60,19 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Skills",
     shortLabel: "Skills",
     icon: '<circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="16" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 13.6 13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  },
+  {
+    key: "showcase",
+    href: "/showcase",
+    label: "Showcase",
+    shortLabel: "Clips",
+    /* Sits next to Skills because both answer the same question — "what can this
+       thing make?" — and it is deliberately IN the mobile tab bar rather than
+       desktop-only. 23 of 27 skills output stills, so a phone visitor who never
+       sees a clip play has no way to learn that the app animates anything, which
+       is the entire reason this page exists. Fifth tab, which is the width this
+       bar was designed for (see shortLabel's doc comment above). */
+    icon: '<rect x="3.5" y="5" width="17" height="14" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M10.5 9.8v4.4l4-2.2-4-2.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
   },
   {
     key: "roadmap",

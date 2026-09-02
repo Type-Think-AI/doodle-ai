@@ -1,0 +1,107 @@
+/* Async video clip card — global styles for the elements video-job.ts /
+   render.ts build client-side (Astro's scoped-CSS attribute never reaches
+   JS-created nodes, so these must be global). Matches the chat bubble surfaces
+   in chat-bubbles.css: flat, dark-neutral, no drop shadows, no elevated panels.
+
+   States: RENDERING (spinner + elapsed/estimate text, no fake progress bar),
+   DONE (a real <video>, never an <img>), FAILED (reason + refund + retry). */
+
+/* The card is an assistant bubble; inherit its tint/border, just widen it a
+   touch so a landscape clip isn't cramped. Never overflow at 375px. */
+.chat-video-card {
+	max-width: 100%;
+	width: min(100%, 420px);
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+/* ---- RENDERING ---- */
+.chat-video-progress {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--text-dim);
+	font-size: 13.5px;
+	line-height: 1.5;
+	min-height: 44px;
+}
+.chat-video-progress-label { min-width: 0; }
+.chat-video-spinner {
+	width: 16px;
+	height: 16px;
+	flex: 0 0 16px;
+	border-radius: 50%;
+	border: 2px solid var(--border3);
+	border-top-color: var(--text-dim);
+	animation: chat-video-spin 0.7s linear infinite;
+}
+
+/* A long wait should not look frantic.
+ *
+ * The 0.7s spin reads as "any second now", which is right for the first twenty
+ * seconds and wrong at four minutes — a fast spinner next to "taking much longer
+ * than usual" is the animation arguing with the text. Slowing it keeps the
+ * element honest as an activity indicator without implying imminent arrival.
+ * Bands are set by render.ts on the bubble as data-wait. */
+.chat-video-card[data-wait="slow"] .chat-video-spinner {
+	animation-duration: 1.4s;
+}
+.chat-video-card[data-wait="stalled"] .chat-video-spinner {
+	animation-duration: 2.2s;
+	border-top-color: var(--text-dimmer);
+}
+/* The stalled copy is two sentences, so let it breathe rather than clamp. */
+.chat-video-card[data-wait="stalled"] .chat-video-progress {
+	align-items: flex-start;
+}
+@keyframes chat-video-spin { to { transform: rotate(360deg); } }
+
+/* ---- DONE ---- */
+.chat-video-el {
+	width: 100%;
+	max-width: 100%;
+	display: block;
+	border-radius: 12px;
+	border: 1px solid var(--border2);
+	background: var(--stage);
+	/* A clip whose intrinsic ratio is unknown until metadata loads shouldn't
+	   collapse to zero height; cap it so a portrait clip can't run off screen. */
+	max-height: 70vh;
+	object-fit: contain;
+}
+
+/* ---- FAILED ---- */
+.chat-video-card.chat-video-failed {
+	border-color: color-mix(in srgb, var(--red) 40%, var(--border));
+	background: color-mix(in srgb, var(--red) 8%, var(--card));
+}
+.chat-video-reason {
+	margin: 0;
+	color: var(--text);
+	font-size: 14px;
+	line-height: 1.5;
+}
+.chat-video-refund {
+	margin: 0;
+	color: var(--text-dim);
+	font-size: 12.5px;
+	line-height: 1.5;
+}
+
+/* Touch targets: the shared .chat-bubble-actions button rule already bumps to
+   44px under 860px, but pin the video card's own actions to 44px everywhere so
+   Download / Try again are always comfortably tappable. */
+.chat-video-card .chat-bubble-actions button { min-height: 44px; }
+
+/* Reduced motion: no autoplay pulse, no spinner rotation. The clip still shows
+   with controls (JS also skips autoplay under this preference); the wait state
+   keeps its text and just stops the spinner from rotating. */
+@media (prefers-reduced-motion: reduce) {
+	.chat-video-spinner { animation: none; }
+}
+
+@media (max-width: 860px) {
+	.chat-video-card { width: 100%; }
+	.chat-video-progress { font-size: 13px; }
+}

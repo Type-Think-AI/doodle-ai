@@ -2,6 +2,7 @@ import { Agent } from "@mastra/core/agent";
 import { DOODLE_SKILLS } from "../skills";
 import { RUNNABLE_SKILL_DEFINITIONS } from "../../lib/skill-loader";
 import { generateDoodleTool } from "../tools/generate-doodle";
+import { generateVideoTool } from "../tools/generate-video";
 import { canvasReadTool } from "../tools/canvas-read";
 import { canvasEditTool } from "../tools/canvas-edit";
 
@@ -41,12 +42,27 @@ const openRouterModel = configuredOpenRouterModel.startsWith("openrouter/")
   ? configuredOpenRouterModel
   : `openrouter/${configuredOpenRouterModel}`;
 
-/** One roster line per runnable skill, e.g. `- doodle-avatar -> skill id "normal" (needs a photo): …` */
-const SKILL_ROSTER = RUNNABLE_SKILL_DEFINITIONS.map(
-  (skill) =>
-    `- ${skill.name} -> generateDoodle skill id "${skill.id}" ` +
-    `(${skill.requiresPhoto ? "needs a photo" : "no photo needed"}): ${skill.description}`,
-).join("\n");
+/**
+ * Roster lines, split by kind so each skill names the tool that actually runs
+ * it — image skills go through generateDoodle, video skills through
+ * generateVideo. Handing a video skill id to generateDoodle (or vice versa)
+ * would fail, so the prompt keeps the two lists visibly separate.
+ */
+const IMAGE_SKILL_ROSTER = RUNNABLE_SKILL_DEFINITIONS.filter((skill) => skill.kind === "image")
+  .map(
+    (skill) =>
+      `- ${skill.name} -> generateDoodle skill id "${skill.id}" ` +
+      `(${skill.requiresPhoto ? "needs a photo" : "no photo needed"}): ${skill.description}`,
+  )
+  .join("\n");
+
+const VIDEO_SKILL_ROSTER = RUNNABLE_SKILL_DEFINITIONS.filter((skill) => skill.kind === "video")
+  .map(
+    (skill) =>
+      `- ${skill.name} -> generateVideo skill id "${skill.id}" ` +
+      `(${skill.requiresPhoto ? "needs a photo" : "no photo needed"}): ${skill.description}`,
+  )
+  .join("\n");
 
 export const doodleAgent = new Agent({
   id: "doodle-agent",
@@ -57,7 +73,20 @@ hand-drawn doodle-style artwork. You are warm, brief, and concrete.
 
 ## Your skills
 
-${SKILL_ROSTER}
+### Image skills — call generateDoodle
+
+${IMAGE_SKILL_ROSTER}
+
+### Video skills — call generateVideo (short animated clips, with sound)
+
+${VIDEO_SKILL_ROSTER}
+
+Image skills produce still doodles via generateDoodle. Video skills produce a short animated
+clip via generateVideo and charge per second of clip (5-15s). The two video skills differ in one
+way that is easy to get wrong: doodle-reel makes a NEW scene STARRING the character (the doodle is
+a likeness reference), doodle-motion animates THAT EXACT doodle as frame one (the picture comes to
+life in place). Pick motion when the user wants the picture they have to move; pick reel when they
+want a fresh little scene of the same character.
 
 Each skill has full instructions you can load with your skill tools (skill / skill_read /
 skill_search), plus reference files covering the house style, the 3x2 grid spec, pose ideas, and
@@ -154,6 +183,7 @@ Hard rules:
 ## Tool results
 
 - "ok": the doodle is ready. The app renders the image itself, so never paste or repeat the URL.
+- "queued" (generateVideo only): the clip is rendering, NOT ready yet. Say in ONE short sentence that it's on its way and will show up here. Do NOT state how long it will take, and do NOT describe what it will contain — the card directly below your message already shows a live timer, and an upstream render can stall for minutes, so any duration you promise is one the screen will visibly contradict. Never claim it's ready, never paste a URL, and do NOT call the tool again to "check" — the finished clip arrives on its own.
 - "needs-photo": ask the user to attach a photo.
 - "insufficient-credits": tell them how many credits the team needs for this and that the team is out — an owner or producer can add more when billing is available. These are shared team credits, not personal ones, so don't say "your credits".
 - "org-cap-reached": tell them the team has hit its monthly credit cap and that a team owner can raise it in team settings. Don't suggest retrying.
@@ -168,5 +198,10 @@ Hard rules:
 `.trim(),
   model: openRouterModel,
   skills: DOODLE_SKILLS,
-  tools: { generateDoodle: generateDoodleTool, readCanvas: canvasReadTool, editCanvas: canvasEditTool },
+  tools: {
+    generateDoodle: generateDoodleTool,
+    generateVideo: generateVideoTool,
+    readCanvas: canvasReadTool,
+    editCanvas: canvasEditTool,
+  },
 });

@@ -360,14 +360,19 @@ function applySingleOp(
       if (!targetId) return `op ${index} (setAltText): unknown ref '${op.ref}'`;
 
       const shape = editor.getShape(targetId);
-      if (!shape || shape.type !== "image") {
-        // No-op for non-image shapes as specified
-        return true;
+      if (!shape) return `op ${index} (setAltText): shape not found for '${op.ref}'`;
+
+      // tldraw 5.3.2: both image and video shapes carry props.altText.
+      // For anything else, report an honest skip rather than a silent no-op —
+      // a silent success would tell the model it described a note/geo/text that
+      // has no altText field, and it would trust that false confirmation.
+      if (shape.type !== "image" && shape.type !== "video") {
+        return `op ${index} (setAltText): '${op.ref}' is a ${shape.type} shape, which has no alt text — only image and video shapes accept it`;
       }
 
       editor.updateShape({
         id: targetId,
-        type: "image",
+        type: shape.type,
         props: { altText: op.altText },
       });
       return true;

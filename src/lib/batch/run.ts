@@ -25,10 +25,10 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../../db/schema";
 import type { Db } from "../../db/client";
 import { readSecret } from "../secrets";
-import { asset, batchItem, batchJob, generation } from "../../db/schema/product";
+import { batchItem, batchJob } from "../../db/schema/product";
 import { refund } from "../credits";
 import { creditCostForSkill } from "../credits/costs";
-import { buildBatchPrompt, callPicx, submitPicxAsync } from "./prompt";
+import { buildBatchPrompt, submitPicxAsync } from "./prompt";
 
 /**
  * How many PicX calls are in flight at once. The Worker CPU limit is about
@@ -91,10 +91,13 @@ export async function runBatch(env: Env, jobId: string, publicOrigin?: string): 
   // and production each call themselves back without a per-environment variable.
   // It is absent when a sweep resumes a job from cron (no request), which simply
   // means a resumed job runs synchronously.
-  const webhookSecret = await readSecret(env.PICX_WEBHOOK_SECRET, "PICX_WEBHOOK_SECRET");
+  /* Webhook delivery is the ONLY path. The synchronous fallback that used to run
+     when no webhook secret was configured was deleted 2026-09-01: two delivery
+     mechanisms for one job meant behaviour changed silently with configuration,
+     and the sync path held a Worker open per render. A batch with nowhere to
+     deliver to now fails its items instead of quietly rendering inline. */
   const origin = (publicOrigin ?? "").trim().replace(/\/$/, "");
-  const callbackUrl =
-    webhookSecret && origin.startsWith("https://") ? `${origin}/api/webhooks/picx` : undefined;
+  const callbackUrl = origin.startsWith("https://") ? `${origin}/api/webhooks/picx` : undefined;
 
   for (let i = 0; i < queued.length; i += CONCURRENCY) {
     const chunk = queued.slice(i, i + CONCURRENCY);
@@ -157,77 +160,35 @@ async function processItem(
 
   const images = { sourceUrl: job.sourceAssetUrl, refUrl: job.refAssetUrl };
 
-  if (callbackUrl) {
-    // Async: hand the render to PicX and stop. The item stays 'running' and
-    // src/pages/api/webhooks/picx.ts completes it when the result is delivered.
-    //
-    // The prompt and PicX's generation id are recorded BEFORE the item can be
-    // completed, because the webhook needs both: the id is the only correlation
-    // key, and the prompt cannot be reconstructed later (the builders randomize).
-    // Writing them after the submit rather than before is safe — a delivery
-    // cannot arrive before its own submit returns — while writing them first
-    // would leave a generation id on the row for a call that never happened.
-    const submitted = await submitPicxAsync(platformKey, built, images, callbackUrl);
-    if (!submitted.ok || !submitted.generationId) {
-      await failItem(db, job, item, cost, submitted.error ?? "submit_failed");
-      return;
-    }
-    await db
-      .update(batchItem)
-      .set({ picxGenerationId: submitted.generationId, prompt: built.prompt })
-      .where(and(eq(batchItem.id, item.id), eq(batchItem.status, "running")));
+  /* No delivery target means this item cannot be completed by anyone, so fail it
+     now and refund. It does NOT fall back to rendering inline — that fallback was
+     the second mechanism and is gone. */
+  if (!callbackUrl) {
+    await failItem(db, job, item, cost, "no_public_callback_origin");
     return;
   }
 
-  const result = await callPicx(platformKey, built, images);
-
-  if (!result.ok || !result.url) {
-    await failItem(db, job, item, cost, result.error ?? "generation_failed");
+  // Hand the render to PicX and stop. The item stays 'running' and
+  // src/pages/api/webhooks/picx.ts completes it when the result is delivered.
+  //
+  // The prompt and PicX's generation id are recorded BEFORE the item can be
+  // completed, because the webhook needs both: the id is the only correlation
+  // key, and the prompt cannot be reconstructed later (the builders randomize).
+  // Writing them after the submit rather than before is safe — a delivery
+  // cannot arrive before its own submit returns — while writing them first
+  // would leave a generation id on the row for a call that never happened.
+  const submitted = await submitPicxAsync(platformKey, built, images, callbackUrl);
+  if (!submitted.ok || !submitted.generationId) {
+    await failItem(db, job, item, cost, submitted.error ?? "submit_failed");
     return;
   }
-
-  const now = new Date();
-  const generationId = crypto.randomUUID();
-  // The generation row is written already-'ok': unlike the single-generation
-  // path there is no window to protect — the image exists by the time we get
-  // here, and the credit was reserved by the route long before. Writing it
-  // 'pending' first would only expose it to reconcile.ts's stuck-pending
-  // refund and double-refund the item.
-  await db.insert(generation).values({
-    id: generationId,
-    userId: job.createdBy,
-    organizationId: job.organizationId,
-    projectId: job.projectId,
-    skillId: job.skillId,
-    styleId: job.styleId,
-    prompt: built.prompt,
-    sourceAssetUrl: job.sourceAssetUrl,
-    refAssetUrl: job.refAssetUrl,
-    creditsCharged: cost,
-    status: "ok",
-    outputUrl: result.url,
-    createdAt: now,
-    completedAt: now,
-  });
-
-  if (job.projectId) {
-    await db.insert(asset).values({
-      id: crypto.randomUUID(),
-      organizationId: job.organizationId,
-      projectId: job.projectId,
-      url: result.url,
-      kind: "generation",
-      generationId,
-      reviewState: "draft",
-      createdBy: job.createdBy,
-      createdAt: now,
-    });
-  }
-
   await db
     .update(batchItem)
-    .set({ status: "ok", outputUrl: result.url, generationId, completedAt: now })
+    .set({ picxGenerationId: submitted.generationId, prompt: built.prompt })
     .where(and(eq(batchItem.id, item.id), eq(batchItem.status, "running")));
+  // Nothing else happens here. The item is completed by the webhook, which is
+  // also what writes its `generation` and `asset` rows — that used to be done
+  // inline by the deleted synchronous branch.
 }
 
 /**

@@ -22,9 +22,21 @@
    are "added to the generated bundle at build time".) */
 
 import { GENERATION_MODES } from "./doodle-constants";
+import { VIDEO_SKILL_IDS } from "./video/skills";
 import { parseSkillFile, type Frontmatter, type FrontmatterScalar } from "./skill-frontmatter";
 
 export type SkillCategory = "avatars" | "collages" | "freeform" | "packs";
+
+/**
+ * What a skill produces. Absent from frontmatter means "image", so all of the
+ * original packages validate unchanged — and, more importantly, so a new image
+ * skill cannot accidentally be treated as a video one by forgetting a field.
+ *
+ * This is not cosmetic: it selects which registry the skill's id must appear in
+ * (GENERATION_MODES vs VIDEO_SKILL_IDS), which tool the agent runs it with, and
+ * which pricing function applies — per image, or per second.
+ */
+export type SkillKind = "image" | "video";
 
 export interface SkillDefinition {
   /* ---- Agent-facing (Agent Skills spec fields) ---- */
@@ -51,8 +63,10 @@ export interface SkillDefinition {
   tags: string[];
   /** false = a roadmap preview: shown in the UI, never attached to the agent. */
   runnable: boolean;
+  /** 'image' (default) or 'video'. See SkillKind. */
+  kind: SkillKind;
   requiresPhoto: boolean;
-  aspectRatio: "1:1" | "3:2";
+  aspectRatio: "1:1" | "3:2" | "9:16";
   /** Index into SAMPLE_PRESETS (doodle-constants.ts), for a synthetic preview thumbnail. */
   sampleIndex: number;
   /**
@@ -88,7 +102,10 @@ const REFERENCE_FILES = import.meta.glob("../mastra/skills/*/references/*.md", {
 }) as Record<string, string>;
 
 const CATEGORIES: SkillCategory[] = ["avatars", "collages", "freeform", "packs"];
-const ASPECT_RATIOS = ["1:1", "3:2"] as const;
+/* 9:16 exists for the vertical clip skills: their output IS portrait, so a
+   square or landscape cover would misrepresent the shape of what you get. */
+const ASPECT_RATIOS = ["1:1", "3:2", "9:16"] as const;
+const SKILL_KINDS = ["image", "video"] as const;
 
 function requireBlock(frontmatter: Frontmatter, key: string, path: string): Record<string, FrontmatterScalar> {
   const value = frontmatter[key];
@@ -194,6 +211,9 @@ function loadSkillDefinitions(): SkillDefinition[] {
       category: requireOneOf(metadata, "category", CATEGORIES, path),
       tags: requireStringArray(metadata, "tags", path),
       runnable: requireBoolean(metadata, "runnable", path),
+      // Optional on purpose: omitting it means 'image', which is what all 23
+      // original packages are. Only a video package has to say so.
+      kind: metadata.kind === undefined ? "image" : requireOneOf(metadata, "kind", SKILL_KINDS, path),
       requiresPhoto: requireBoolean(metadata, "requiresPhoto", path),
       aspectRatio: requireOneOf(metadata, "aspectRatio", ASPECT_RATIOS, path),
       sampleIndex: requireNumber(metadata, "sampleIndex", path),
@@ -214,24 +234,47 @@ function loadSkillDefinitions(): SkillDefinition[] {
 }
 
 /**
- * A skill marked `runnable: true` promises the generateDoodle tool can
- * execute its `metadata.id`. Check both directions at load time so adding a
- * runnable skill without a matching generation mode (or retiring a mode and
- * leaving the skill behind) fails the build instead of erroring mid-chat.
+ * A skill marked `runnable: true` promises a tool can actually execute its
+ * `metadata.id`. Which tool depends on the kind, so the check is per-kind:
+ *
+ *   kind 'image' -> generateDoodle, id must be in GENERATION_MODES
+ *   kind 'video' -> generateVideo,  id must be in VIDEO_SKILL_IDS
+ *
+ * Both directions are checked, in both registries. Adding a runnable skill with
+ * no executable mode, retiring a mode and leaving its skill behind, or filing a
+ * video skill under kind 'image' (where it would be handed to the image endpoint
+ * and priced per image) all fail the BUILD rather than erroring mid-chat.
  */
 function assertRunnableIdsMatchGenerationModes(definitions: SkillDefinition[]): void {
-  const runnableIds = definitions.filter((d) => d.runnable).map((d) => d.id);
-  const missingMode = runnableIds.filter((id) => !(GENERATION_MODES as readonly string[]).includes(id));
+  const runnable = definitions.filter((d) => d.runnable);
+  const imageIds = runnable.filter((d) => d.kind === "image").map((d) => d.id);
+  const videoIds = runnable.filter((d) => d.kind === "video").map((d) => d.id);
+
+  const missingMode = imageIds.filter((id) => !(GENERATION_MODES as readonly string[]).includes(id));
   if (missingMode.length > 0) {
     throw new Error(
-      `Runnable skill id(s) ${missingMode.join(", ")} have no generation mode in doodle-constants.ts ` +
+      `Runnable image skill id(s) ${missingMode.join(", ")} have no generation mode in doodle-constants.ts ` +
         `(GENERATION_MODES: ${GENERATION_MODES.join(", ")})`,
     );
   }
-  const missingSkill = GENERATION_MODES.filter((mode) => !runnableIds.includes(mode));
+  const missingSkill = GENERATION_MODES.filter((mode) => !imageIds.includes(mode));
   if (missingSkill.length > 0) {
     throw new Error(
       `Generation mode(s) ${missingSkill.join(", ")} have no runnable SKILL.md package under src/mastra/skills/`,
+    );
+  }
+
+  const missingVideoMode = videoIds.filter((id) => !(VIDEO_SKILL_IDS as readonly string[]).includes(id));
+  if (missingVideoMode.length > 0) {
+    throw new Error(
+      `Runnable video skill id(s) ${missingVideoMode.join(", ")} are not registered in src/lib/video/skills.ts ` +
+        `(VIDEO_SKILL_IDS: ${VIDEO_SKILL_IDS.join(", ")})`,
+    );
+  }
+  const missingVideoSkill = VIDEO_SKILL_IDS.filter((id) => !videoIds.includes(id));
+  if (missingVideoSkill.length > 0) {
+    throw new Error(
+      `Video skill id(s) ${missingVideoSkill.join(", ")} have no runnable SKILL.md package with \`kind: video\``,
     );
   }
 }

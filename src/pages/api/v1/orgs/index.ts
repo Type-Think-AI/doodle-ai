@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../../../../db/client";
 import { creditBalanceOrg } from "../../../../db/schema/billing";
 import { apiError, apiJson, requireOrg } from "../../../../lib/auth/guards";
+import { safeError } from "../../../../lib/http/errors";
 import { createAuth } from "../../../../lib/auth";
 import { newId, optStr, readJson } from "../../../../lib/api/body";
 import { listOrgsForUser, orgDtoFor } from "../../../../lib/org/list";
@@ -60,7 +61,14 @@ export async function POST(context: APIContext): Promise<Response> {
       headers: context.request.headers,
     })) as { id: string } | null;
   } catch (err) {
-    return apiError("create_failed", messageOf(err, "Couldn't create that team."), 400);
+    // Better Auth's own message is not ours to forward: it is written for a
+    // server log, and team-settings.ts renders `error.message` straight into
+    // the page. Log it, answer with our own wording.
+    return safeError("POST /api/v1/orgs", err, {
+      code: "create_failed",
+      message: "Couldn't create that team.",
+      status: 400,
+    });
   }
   if (!created?.id) return apiError("create_failed", "Couldn't create that team.", 500);
 
@@ -122,13 +130,6 @@ function slugify(name: string): string {
       .replace(/^-+|-+$/g, "")
       .slice(0, 32) || "team";
   return `${base}-${crypto.randomUUID().slice(0, 6)}`;
-}
-
-function messageOf(err: unknown, fallback: string): string {
-  if (err && typeof err === "object" && typeof (err as { message?: unknown }).message === "string") {
-    return (err as { message: string }).message;
-  }
-  return fallback;
 }
 
 function fallbackDto(id: string, name: string): OrgDto {

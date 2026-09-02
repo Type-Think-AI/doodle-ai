@@ -15,12 +15,14 @@ import {
   VIRAL_MOOD_WORDS,
 } from "../../lib/doodle-constants";
 import { resolveStyle } from "../../lib/style-choice";
+import { resolveFamilyHint } from "../../lib/art-families";
 import { refund, spend } from "../../lib/credits";
 import { packBuilderFor, promptBuilderFor, type PackVariant } from "../../lib/prompts";
 import { CREDITS_PER_IMAGE, creditCostForSkill, imageCountForSkill } from "../../lib/credits/costs";
 import { kvIncrement } from "../../lib/kv-counter";
 import type { Db } from "../../db/client";
-import { asset, generation } from "../../db/schema/product";
+import { generation, generationFrame } from "../../db/schema/product";
+import { submitImage } from "../../lib/media/submit-image";
 import { orgLimits } from "../../db/schema/billing";
 import { creditLedger } from "../../db/schema/billing";
 
@@ -49,15 +51,18 @@ const inputSchema = z.object({
 
 const outputSchema = z.union([
   z.object({
-    status: z.literal("ok"),
-    /** The first image. Kept as a scalar so existing callers keep working. */
-    url: z.string(),
     /**
-     * Every image produced, in display order — one entry for a single-image
-     * skill, several for a pack. Shorter than the skill's nominal image count
-     * when some frames failed; the unproduced ones are refunded.
+     * Queued upstream, NOT finished. Images are delivered by webhook, so this
+     * tool returns as soon as PicX accepts the submit — there is no synchronous
+     * render to wait for. The app shows a placeholder and swaps in each image as
+     * it is delivered.
      */
-    urls: z.array(z.string()),
+    status: z.literal("queued"),
+    /** The `generation` row id. The client watches GET /api/v1/videos/<jobId>. */
+    jobId: z.string(),
+    /** How many images this run will produce. */
+    frames: z.number(),
+    credits: z.number(),
   }),
   z.object({ status: z.literal("needs-photo"), message: z.string() }),
   z.object({ status: z.literal("insufficient-credits"), message: z.string(), balance: z.number(), required: z.number() }),
@@ -70,6 +75,14 @@ interface RequestContextValues {
   /** Server-owned key used for every authenticated generation. */
   platformPicxKey?: string;
   styleId?: string;
+  /**
+   * Selected art-family id (src/lib/art-families.ts). Orthogonal to `styleId`,
+   * which is the palette dial: this is the "what does it look like" dial. Absent
+   * or unknown resolves to no hint (the doodle default), so a request that never
+   * sets it produces the exact prompt it did before. Set from the composer's
+   * family chip the same way `styleId` is set from the theme picker.
+   */
+  familyId?: string;
   userId?: string;
   /** The acting member's team — every generation is charged to this org's pool, never the user's. */
   organizationId?: string;
@@ -83,6 +96,12 @@ interface RequestContextValues {
    * already exposes directly.
    */
   sessions?: KVNamespace;
+  /**
+   * Public https origin PicX delivers finished images to. Required: images are
+   * webhook-only now, so without somewhere to deliver to there is no way to
+   * complete a generation and the request is refused before any credit is spent.
+   */
+  publicOrigin?: string;
 }
 
 /** Generations a single signed-in user may start per minute. */
@@ -122,11 +141,14 @@ async function checkRateLimit(sessions: KVNamespace, key: string, limit: number)
 export const generateDoodleTool = createTool({
   id: "generate-doodle",
   description:
-    "Generates actual doodle image(s) for the given skill. Call this once you know which skill fits " +
-    "and (for photo skills) have an uploaded photo's imageUrl. Returns hosted image URLs in `urls` on " +
-    "success (`url` is the first of them). Most skills return exactly one image. The pack skills return " +
-    "several from a single call and cost one credit per image: 'moods' and 'seasonal' return 4, " +
-    "'expressions' returns 9. Call this ONCE for a pack — do not call it repeatedly to build up a set.",
+    "Starts doodle image generation for the given skill. Call this once you know which skill fits " +
+    "and (for photo skills) have an uploaded photo's imageUrl. This is ASYNCHRONOUS: it returns " +
+    "immediately with status 'queued' and a jobId, and the finished image appears in the user's chat " +
+    "by itself a few seconds later. Tell the user it is being drawn and then STOP — do not call this " +
+    "again for the same request, do not claim the image is ready, and never paste a URL (you have not " +
+    "seen the result). Most skills produce one image. The pack skills produce several from a single " +
+    "call and cost one credit per image: 'moods' and 'seasonal' produce 4, 'expressions' 9. Call this " +
+    "ONCE for a pack — do not call it repeatedly to build up a set.",
   inputSchema,
   outputSchema,
   execute: async (input, toolContext) => {
@@ -139,10 +161,24 @@ export const generateDoodleTool = createTool({
     const projectId = requestContext?.get("projectId");
     const db = requestContext?.get("db");
     const sessions = requestContext?.get("sessions");
+    const publicOrigin = (requestContext?.get("publicOrigin") ?? "").trim().replace(/\/$/, "");
 
     if (!platformKey || !platformKey.trim()) {
       return { status: "error" as const, message: "Image generation is not configured on this server." };
     }
+    /* Checked before any spend. Images are delivered by webhook only, so a
+       non-public origin means the result could never come back — better to refuse
+       than to charge for a render nobody can receive. Locally this is what
+       PICX_CALLBACK_ORIGIN + a tunnel provides. */
+    if (!publicOrigin.startsWith("https://")) {
+      return {
+        status: "error" as const,
+        message:
+          "Image generation needs a public https address to receive finished images. " +
+          "Set PICX_CALLBACK_ORIGIN to your tunnel URL for local development.",
+      };
+    }
+    const callbackUrl = `${publicOrigin}/api/webhooks/picx`;
     if (!userId || !db) {
       return { status: "error" as const, message: "Sign in to generate a doodle." };
     }
@@ -188,7 +224,17 @@ export const generateDoodleTool = createTool({
     /* Resolved centrally so "none" and "custom:#RRGGBB" are honoured. A bare
        THEMES.find(...) || THEMES[0] here would silently render both as Pastel. */
     const resolvedStyle = resolveStyle(styleId);
-    const themeHint = resolvedStyle.themeHint;
+    /* The art family is the second, orthogonal dial (see src/lib/art-families.ts):
+       the palette/theme says what colours, the family says what it LOOKS like.
+       Empty for the doodle default and for any unset/unknown id, so folding it in
+       is a no-op on the no-selection path — an existing user sees zero change.
+       Appended to BOTH hints so every downstream builder (pack, modular, the
+       original switch, surprise and the default doodle) inherits it without a
+       per-branch edit, exactly the way one family chip is meant to change every
+       still at once. */
+    const familyHint = resolveFamilyHint(requestContext?.get("familyId"), "image");
+    const themeHint = familyHint ? `${resolvedStyle.themeHint}\n\n${familyHint}` : resolvedStyle.themeHint;
+    const styleHint = familyHint ? `${resolvedStyle.styleHint}\n\n${familyHint}` : resolvedStyle.styleHint;
     /**
      * Every image this run will produce, in display order. Single-image skills
      * yield exactly one entry, so the fan-out below has no special case for
@@ -200,7 +246,7 @@ export const generateDoodleTool = createTool({
     // Pack skills first: they own the multi-image path. Then single-image
     // modular skills (src/lib/prompts/), then the original seven's switch.
     if (packBuilder) {
-      variants = packBuilder({ themeHint, styleHint: resolvedStyle.styleHint, description: input.description });
+      variants = packBuilder({ themeHint, styleHint, description: input.description });
       aspectRatio = "1:1";
     } else {
       const modularBuilder = promptBuilderFor(input.skill);
@@ -208,7 +254,7 @@ export const generateDoodleTool = createTool({
         variants = [
           {
             label: input.skill,
-            prompt: modularBuilder({ themeHint, styleHint: resolvedStyle.styleHint, description: input.description }),
+            prompt: modularBuilder({ themeHint, styleHint, description: input.description }),
           },
         ];
         // Every modular skill is square today. A future 3:2 one must declare its
@@ -340,114 +386,98 @@ export const generateDoodleTool = createTool({
       refAssetUrl: input.refImageUrl ?? null,
       creditsCharged: cost,
       status: "pending",
+      kind: "image",
       createdAt: new Date(),
     });
 
     try {
-      const endpoint =
-        requiresPhoto && input.imageUrl
-          ? "https://api.picxstudio.com/v1/images/edit"
-          : "https://api.picxstudio.com/v1/images/generate";
-
       /**
-       * One PicX call per variant, all in flight together — PicX has no `n`
-       * parameter, so a pack is N independent calls. Settled rather than
-       * all-or-nothing: a 9-frame pack losing one frame should still deliver
-       * the other eight and refund only the frame that failed.
+       * One SUBMIT per variant, all in flight together — PicX has no `n`
+       * parameter, so a pack is N independent renders. Each submit returns a PicX
+       * generation id in milliseconds; nothing here waits for an image.
+       *
+       * Settled rather than all-or-nothing: a 9-frame pack whose second submit is
+       * rejected should still queue the other eight and refund only that frame.
        */
-      const settled = await Promise.all(
-        variants.map(async (variant): Promise<string | null> => {
-          const payload =
-            requiresPhoto && input.imageUrl
-              ? {
-                  model: "openai/gpt-image-2",
-                  instruction: variant.prompt,
-                  image_urls: [input.imageUrl, input.refImageUrl].filter((u): u is string => Boolean(u)),
-                  size: "1K",
-                  aspect_ratio: aspectRatio,
-                }
-              : { prompt: variant.prompt, size: "1K", aspect_ratio: aspectRatio };
-          try {
-            const res = await fetch(endpoint, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${platformKey}`, "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-            const data = (await res.json().catch(() => ({}))) as {
-              url?: string;
-              detail?: string;
-              message?: string;
-            };
-            if (!res.ok || !data.url) return null;
-            return data.url;
-          } catch {
-            return null;
-          }
-        }),
+      const submitted = await Promise.all(
+        variants.map((variant) =>
+          submitImage(
+            platformKey,
+            {
+              prompt: variant.prompt,
+              aspectRatio,
+              imageUrl: requiresPhoto ? input.imageUrl : undefined,
+              refImageUrl: requiresPhoto ? input.refImageUrl : undefined,
+            },
+            callbackUrl,
+          ),
+        ),
       );
 
-      const urls = settled.filter((u): u is string => Boolean(u));
+      const accepted = submitted.filter((s) => s.ok).length;
 
-      // Nothing came back — refund the whole run, exactly as the single-image
-      // path always did.
-      if (urls.length === 0) {
-        const message = `PicX returned no image for ${variants.length === 1 ? "this generation" : `any of the ${variants.length} frames`}.`;
+      // Nothing was even accepted upstream, so there is nothing to wait for —
+      // refund the whole run now rather than leaving a row for the sweep.
+      if (accepted === 0) {
+        const firstError = submitted.find((s) => !s.ok);
+        const reason = firstError && !firstError.ok ? firstError.error : "submit_failed";
+        const message =
+          reason === "picx_platform_credits_exhausted"
+            ? "Image generation is temporarily unavailable on this server."
+            : `Couldn't start this generation (${reason}). Your credits weren't charged.`;
         await refundGeneration(db, generationId, organizationId, userId, message);
         return { status: "error" as const, message };
       }
 
-      // Partial pack: credits were debited for every frame up front, so give
-      // back the ones that never produced an image. Distinct idempotency key
-      // from the full refund above, so the two can never collide — and safe to
-      // retry, since applyDelta is keyed.
-      const missing = variants.length - urls.length;
-      if (missing > 0) {
+      /* One frame row per variant, carrying the id the webhook will correlate on.
+         Written after the submits because a delivery cannot arrive before its own
+         submit returns, and writing them first would leave frame rows for calls
+         that never happened. */
+      const now = new Date();
+      await db.insert(generationFrame).values(
+        variants.map((variant, idx) => {
+          const result = submitted[idx];
+          return {
+            id: crypto.randomUUID(),
+            generationId,
+            idx,
+            picxGenerationId: result.ok ? result.picxGenerationId : null,
+            prompt: variant.prompt,
+            status: result.ok ? ("pending" as const) : ("failed" as const),
+            errorCode: result.ok ? null : result.error.slice(0, 200),
+            createdAt: now,
+          };
+        }),
+      );
+
+      /* Frames PicX refused will never be delivered, so refund them immediately
+         instead of making the user wait for a sweep. Keyed distinctly from the
+         whole-run refund so the two can never collide. */
+      const rejected = variants.length - accepted;
+      if (rejected > 0) {
         await refund(db, {
           organizationId,
           userId,
-          amount: missing * CREDITS_PER_IMAGE,
+          amount: rejected * CREDITS_PER_IMAGE,
           refId: generationId,
-          idempotencyKey: `refund:${generationId}:partial`,
+          idempotencyKey: `refund:${generationId}:submit-rejected`,
         });
+        await db
+          .update(generation)
+          .set({ creditsCharged: cost - rejected * CREDITS_PER_IMAGE })
+          .where(eq(generation.id, generationId));
       }
 
-      await db
-        .update(generation)
-        .set({
-          status: "ok",
-          // First frame stays in output_url so every existing reader is
-          // unaffected; the full set goes in output_urls (migration 0012).
-          outputUrl: urls[0],
-          outputUrls: variants.length > 1 ? JSON.stringify(urls) : null,
-          creditsCharged: cost - missing * CREDITS_PER_IMAGE,
-          completedAt: new Date(),
-        })
-        .where(eq(generation.id, generationId));
-      // When this generation belongs to a project, it's also a project
-      // deliverable — file it as a draft asset. Not batched with the update
-      // above (mixed insert/update batches fight Drizzle's D1 batch typing
-      // without real benefit here): this is a non-credit write, so a crash
-      // between the two statements leaves an approved generation without an
-      // asset row rather than corrupting the ledger — recoverable by
-      // re-adding it to the project manually, not a correctness bug.
-      // One row per frame, so a pack's frames are individually reviewable.
-      if (projectId) {
-        await db.insert(asset).values(
-          urls.map((url) => ({
-            id: crypto.randomUUID(),
-            organizationId,
-            projectId,
-            url,
-            kind: "generation" as const,
-            generationId,
-            reviewState: "draft" as const,
-            createdBy: userId,
-            createdAt: new Date(),
-          })),
-        );
-      }
-
-      return { status: "ok" as const, url: urls[0], urls };
+      /* The row stays 'pending'. src/pages/api/webhooks/picx.ts completes each
+         frame as it is delivered and rolls the generation up to 'ok' — including
+         the project asset rows, which now belong to the delivery path rather than
+         here, because that is where a URL first exists. */
+      return {
+        status: "queued" as const,
+        jobId: generationId,
+        frames: accepted,
+        credits: cost - rejected * CREDITS_PER_IMAGE,
+      };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Generation failed";
       await refundGeneration(db, generationId, organizationId, userId, message);

@@ -56,6 +56,9 @@ export async function GET(context: APIContext) {
     // that completes the visitor's job rather than describing a capability.
     { path: "/tools/", lastmod: newestArticle, changefreq: "weekly", priority: "0.9" },
     { path: "/skills/", changefreq: "weekly", priority: "0.9" },
+    // Real generated clips, fully public and static — the one page that shows
+    // rather than describes what the app makes, so it ranks with the galleries.
+    { path: "/showcase/", changefreq: "weekly", priority: "0.9" },
     { path: "/learn/", lastmod: newestArticle, changefreq: "weekly", priority: "0.8" },
     { path: "/about/", changefreq: "monthly", priority: "0.6" },
     // Genuinely public content, and a page people look for by name ("is X

@@ -1,0 +1,153 @@
+---
+/* Art-family chip row — the "what does it look like" dial, made visible.
+ *
+ * WHY THIS EXISTS: `ART_FAMILIES` (src/lib/art-families.ts) feeds a styleHint
+ * into both the image prompt and every animation builder, but until now the only
+ * style dial in the composer was the PALETTE picker hidden behind the settings
+ * icon in the toolbar. A family is a bigger decision than a palette — it changes
+ * the whole look — so it belongs in front of the person, one tap from the input,
+ * not behind an icon.
+ *
+ * This is a SECOND axis, not a replacement:
+ *   - the skill chip above answers "what am I making"
+ *   - this row answers "what should it look like"
+ *   - the palette picker in the toolbar still answers "which colours"
+ * All three compose, and none of them is the skill `category` field.
+ *
+ * STATE: exactly like the palette picker — one string in localStorage under the
+ * key art-families.ts owns, handed to the client as a data attribute so this
+ * component and the module that reads the value back cannot drift. Nothing is
+ * sent anywhere from here; a `doodleai:art-family` event is dispatched on every
+ * change for anything that wants to react live.
+ *
+ * DEFAULT: the doodle look. Someone who never touches this row gets the exact
+ * prompt they got before — `resolveFamilyHint` returns "" for it by design.
+ *
+ * ACCESSIBILITY: every chip is a real <button> with `aria-pressed`, so it is
+ * tab-reachable, Enter/Space activated, and announced as a toggle. Left/Right
+ * arrows move between chips (roving, same as the palette menu's Up/Down) and
+ * scroll the chip into view, because a horizontally scrollable row is otherwise
+ * a trap for keyboard users — focus moves off-screen with no way to see it.
+ * 44px minimum height on every pointer type.
+ */
+import { ART_FAMILIES, ART_FAMILY_STORAGE_KEY, DEFAULT_ART_FAMILY_ID } from "../../../lib/art-families";
+
+interface Props {
+  /** Same id prefix every other composer part takes, e.g. "home". */
+  id: string;
+}
+const { id } = Astro.props;
+
+/* Only families that apply to a still are offered here. Every family currently
+   applies to both, so this filters nothing today — it is here so that adding a
+   video-only family later cannot silently put an unusable chip in front of
+   someone typing a prompt for a still. */
+const families = ART_FAMILIES.filter((family) => family.appliesTo.includes("image"));
+---
+
+{families.length > 0 && (
+<div
+  class="composer-families"
+  id={`${id}Families`}
+  data-family-key={ART_FAMILY_STORAGE_KEY}
+  data-family-default={DEFAULT_ART_FAMILY_ID}
+>
+  <!-- A group, not a radiogroup: `aria-pressed` toggles are what these are, and
+       a radiogroup would promise arrow-key selection semantics (moving focus
+       CHANGES the value) that would fire a style change on every arrow press. -->
+  <div class="composer-families-row" role="group" aria-label="Art style">
+    {
+      families.map((family) => (
+        <button
+          type="button"
+          class="composer-family-chip"
+          data-family-id={family.id}
+          aria-pressed={family.id === DEFAULT_ART_FAMILY_ID ? "true" : "false"}
+          title={family.blurb}
+        >
+          {family.label}
+        </button>
+      ))
+    }
+  </div>
+</div>
+)}
+
+<script>
+  /* Selection + persistence for the family chip row.
+     Scoped per `.composer-families` found on the page (Home, a tool landing page
+     and Chat each render one composer), and guarded by a dataset flag so an
+     Astro script re-execution or a bfcache restore cannot double-bind. */
+  function initFamilyChips(root: HTMLElement): void {
+    if (root.dataset.familyInit === "true") return;
+    root.dataset.familyInit = "true";
+
+    const storageKey = root.dataset.familyKey;
+    const defaultId = root.dataset.familyDefault ?? "";
+    const chips = Array.from(root.querySelectorAll<HTMLButtonElement>(".composer-family-chip"));
+    if (chips.length === 0) return;
+
+    const read = (): string | null => {
+      if (!storageKey) return null;
+      try {
+        return localStorage.getItem(storageKey);
+      } catch {
+        /* private mode / storage disabled — the choice still applies to this view */
+        return null;
+      }
+    };
+    const persist = (value: string): void => {
+      if (!storageKey) return;
+      try {
+        localStorage.setItem(storageKey, value);
+      } catch {
+        /* same: not fatal, the row just stops remembering */
+      }
+    };
+
+    /** Paint one chip pressed. Falls back to the default when the stored id is
+        stale — a family that has since been retired must not leave the row with
+        nothing pressed, which would read as "no style" when a style is applied. */
+    function paint(activeId: string | null): string {
+      let resolved = activeId;
+      if (!resolved || !chips.some((chip) => chip.dataset.familyId === resolved)) {
+        resolved = defaultId || chips[0]!.dataset.familyId!;
+      }
+      chips.forEach((chip) => {
+        chip.setAttribute("aria-pressed", String(chip.dataset.familyId === resolved));
+      });
+      return resolved;
+    }
+
+    /* Bring the pressed chip into view on first paint. Without this, someone who
+       picked the last family sees an apparently unselected row on reload —
+       the pressed chip is real, just scrolled past the right edge. `auto`
+       behaviour, not smooth: this is initial layout, not a transition. */
+    const active = paint(read());
+    const activeChip = chips.find((chip) => chip.dataset.familyId === active);
+    if (activeChip && activeChip !== chips[0]) {
+      activeChip.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+
+    chips.forEach((chip, index) => {
+      chip.addEventListener("click", () => {
+        const familyId = chip.dataset.familyId;
+        if (!familyId) return;
+        persist(familyId);
+        paint(familyId);
+        window.dispatchEvent(new CustomEvent("doodleai:art-family", { detail: { id: familyId } }));
+      });
+
+      chip.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+        event.preventDefault();
+        const delta = event.key === "ArrowRight" ? 1 : -1;
+        const next = chips[(index + delta + chips.length) % chips.length];
+        next?.focus();
+        next?.scrollIntoView({ block: "nearest", inline: "nearest" });
+      });
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>(".composer-families").forEach(initFamilyChips);
+</script>

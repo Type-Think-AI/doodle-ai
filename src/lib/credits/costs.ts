@@ -59,6 +59,11 @@ const IMAGES_PER_RUN: Record<GenerationMode, number> = {
   /* Single-image gifting skills. */
   family: 1,
   occupation: 1,
+  /* Anime-genre skills (Sep 2026). One key illustration each — the appeal is a
+     single strong hero image to post, not a set, so none of these is a pack. */
+  pirate: 1,
+  ninja: 1,
+  tamer: 1,
 };
 
 /**

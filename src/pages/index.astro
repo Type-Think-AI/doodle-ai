@@ -3,13 +3,34 @@ import AppShellLayout from '../layouts/AppShellLayout.astro';
 import SkillCard from '../components/app/SkillCard.astro';
 import PromptComposer from '../components/app/PromptComposer.astro';
 import { SKILLS } from '../lib/skills';
+import { ART_FAMILIES, ART_FAMILY_STORAGE_KEY } from '../lib/art-families';
+import { familiesForSkill } from '../lib/skill-families';
 import { OG_IMAGE } from '../consts';
 
 /* The homepage shows the catalogue almost in full — 20 of 21 — so a visitor can
    see the range without a second click, with the trailing "See all" row as the
    handoff to /skills for the remainder. */
 const HOME_SKILL_COUNT = 20;
-const featuredSkills = SKILLS.slice(0, HOME_SKILL_COUNT);
+
+/* Animation skills first — and on this page it is not a nicety.
+   Their SKILL.md `order` values are 40+, so in catalogue order all four fell
+   past the 20-tile cut and the homepage did not show a single one of them.
+   Sorting locally (rather than renumbering `order`, which lives in another
+   lane's files) puts them in the first row; Array#sort is stable, so the stills
+   keep their authored sequence behind them. */
+/* Style filter for the rail below. A chip is offered only when a skill on this
+   page is actually in that family — a filter that empties the wall is a dead
+   control, and there is no honest disabled state for one. */
+const skillFamilies = new Map(SKILLS.map((skill) => [skill.id, familiesForSkill(skill)]));
+
+const orderedSkills = [...SKILLS].sort(
+	(a, b) => Number(b.kind === 'video') - Number(a.kind === 'video'),
+);
+const featuredSkills = orderedSkills.slice(0, HOME_SKILL_COUNT);
+
+/* Only families represented on THIS page get a chip. */
+const shownFamilyIds = new Set(featuredSkills.flatMap((skill) => skillFamilies.get(skill.id) ?? []));
+const familyChips = ART_FAMILIES.filter((family) => shownFamilyIds.has(family.id));
 
 /* The first grid row is above the fold and holds the LCP candidate, so those
    cards load eagerly with fetchpriority=high; the other 16 stay lazy. Four
@@ -30,20 +51,43 @@ const PRIORITY_SKILL_COUNT = 4;
 	<div class="home-page">
 		<div class="home-hero">
 			<h1>What should we doodle?</h1>
-			<p class="home-sub">Attach a photo and tell me what you want, or just describe a character for a surprise.</p>
+			<p class="home-sub">Add a photo, or just describe a character.</p>
 			<PromptComposer id="home" variant="hero" placeholder="Describe a doodle or attach a photo" />
 		</div>
 
 		<div class="home-skills">
 			<div class="home-skills-head">
 				<h2>Skills</h2>
-				<a href="/skills">Browse all {SKILLS.length}
+				<div class="home-filters" data-family-key={ART_FAMILY_STORAGE_KEY} role="group" aria-label="Filter skills">
+					<button type="button" class="home-chip" data-filter="all" aria-pressed="true">All</button>
+					<button type="button" class="home-chip" data-kind="video" aria-pressed="false">
+						<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+						Moves
+					</button>
+					<button type="button" class="home-chip" data-kind="image" aria-pressed="false">
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.6" y="5.2" width="16.8" height="13.6" rx="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><path d="M4.6 17.4 8.9 13l3 3 2.4-2.3 4.6 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+						Pictures
+					</button>
+					{familyChips.length > 1 && <span class="home-chip-rule" aria-hidden="true"></span>}
+					{familyChips.map((family) => (
+						<button type="button" class="home-chip" data-family-id={family.id} title={family.blurb} aria-pressed="false">{family.label}</button>
+					))}
+				</div>
+				<a class="home-skills-link" href="/skills">Browse all {SKILLS.length}
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
 				</a>
 			</div>
 			<div class="home-skills-grid">
-				{featuredSkills.map((skill, i) => <SkillCard skill={skill} priority={i < PRIORITY_SKILL_COUNT} />)}
+				{featuredSkills.map((skill, i) => (
+					<div class="home-skill-item" data-kind={skill.kind} data-families={(skillFamilies.get(skill.id) ?? []).join(' ')}>
+						<SkillCard skill={skill} priority={i < PRIORITY_SKILL_COUNT} />
+					</div>
+				))}
 			</div>
+			<p class="home-families-empty" hidden>
+				Nothing here matches that filter.
+				<a href="/skills">Browse all {SKILLS.length} skills</a>
+			</p>
 			<a class="home-skills-more" href="/skills">
 				See all {SKILLS.length} skills
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
@@ -54,17 +98,176 @@ const PRIORITY_SKILL_COUNT = 4;
 
 <script src="../scripts/app/home.ts"></script>
 
+<script>
+	/* Style filter for the skill rail. It also PERSISTS the choice under the same
+	   key the prompt path reads (getArtFamilyId in scripts/app/chat/state.ts), so
+	   filtering to a style is also choosing it for the next generation — one
+	   control, not two that can disagree. "All styles" stores "", which the reader
+	   treats as the doodle default. */
+	const root = document.querySelector<HTMLElement>('.home-filters');
+	const items = Array.from(document.querySelectorAll<HTMLElement>('.home-skill-item'));
+	const empty = document.querySelector<HTMLElement>('.home-families-empty');
+	if (root && items.length) {
+		const key = root.dataset.familyKey ?? 'doodleai-art-family';
+		const chips = Array.from(root.querySelectorAll<HTMLButtonElement>('.home-chip'));
+
+		/* Two independent axes — WHAT it makes (kind) and WHAT IT LOOKS LIKE
+		   (family) — because "an animation" and "chibi" are not alternatives: a
+		   visitor who wants a chibi animation needs both at once. `All` clears
+		   both, and a pressed chip pressed again clears its own axis, so there is
+		   no separate "All styles" chip eating room in the row. */
+		let kind = '';
+		let family = '';
+
+		const apply = () => {
+			let shown = 0;
+			for (const item of items) {
+				const families = (item.dataset.families ?? '').split(' ').filter(Boolean);
+				const match = (!kind || item.dataset.kind === kind) && (!family || families.includes(family));
+				item.hidden = !match;
+				if (match) shown++;
+			}
+			if (empty) empty.hidden = shown > 0;
+			for (const chip of chips) {
+				const pressed = chip.dataset.filter === 'all'
+					? !kind && !family
+					: chip.dataset.kind
+						? chip.dataset.kind === kind
+						: (chip.dataset.familyId ?? '') === family && family !== '';
+				chip.setAttribute('aria-pressed', String(pressed));
+			}
+		};
+
+		/* Filtering to a style also SELECTS it for the next generation — same
+		   localStorage key the send path reads (getArtFamilyId in
+		   scripts/app/chat/state.ts) — so one control, not two that can disagree.
+		   An empty value is read as the doodle default. The kind axis is view-only:
+		   it never writes, because "show me animations" is not a style choice. */
+		const persist = () => {
+			try {
+				localStorage.setItem(key, family);
+			} catch {
+				/* Private mode: the filter still works for this session. */
+			}
+			window.dispatchEvent(new CustomEvent('doodleai:art-family', { detail: { id: family } }));
+		};
+
+		for (const chip of chips) {
+			chip.addEventListener('click', () => {
+				if (chip.dataset.filter === 'all') {
+					kind = '';
+					family = '';
+				} else if (chip.dataset.kind) {
+					kind = chip.dataset.kind === kind ? '' : chip.dataset.kind;
+				} else {
+					const id = chip.dataset.familyId ?? '';
+					family = id === family ? '' : id;
+				}
+				persist();
+				apply();
+			});
+		}
+
+		let stored = '';
+		try {
+			stored = localStorage.getItem(key) ?? '';
+		} catch {
+			stored = '';
+		}
+		/* A stored id with no chip on this page would hide the whole wall. */
+		if (chips.some((chip) => (chip.dataset.familyId ?? '') === stored && stored !== '')) family = stored;
+		apply();
+	}
+</script>
+
 <style>
 	.home-page { max-width: 1000px; margin: 0 auto; padding: 48px 20px 64px; }
 
-	.home-hero { max-width: 680px; margin: 0 auto 56px; text-align: left; }
+	/* Normal flow, NOT sticky.
+	   A sticky composer was tried and removed on 2026-09-01: pinned to the top it
+	   floated over the skill mosaic, covering four tiles at any scroll position,
+	   and a dark panel parked in the middle of the artwork is worse than having to
+	   scroll back up. The tile-click-to-pin behaviour in home.ts does not depend on
+	   it — the toast confirms the skill was pinned even when the composer is off
+	   screen. Do not re-add position: sticky here. */
+	/* 24px, not 56px. The visible gap under the composer is bigger than this
+	   number: the hint row adds 10px above itself and .composer-status reserves
+	   a 24px band (8px margin + 16px min-height) so a status message cannot
+	   shift the page when it appears. 56px on top of that read as a dead
+	   screenful between the input and the wall. */
+	.home-hero { max-width: 680px; margin: 0 auto 24px; text-align: left; }
 	.home-hero h1 { font-size: 34px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); margin: 0 0 8px; text-align: center; }
 	.home-sub { font-size: 14px; color: var(--text-dimmer); margin: 0 0 26px; text-align: center; }
 
-	.home-skills-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-	.home-skills-head h2 { font-size: 18px; font-weight: 600; color: var(--text); margin: 0; }
-	.home-skills-head a { margin-left: auto; display: flex; align-items: center; gap: 6px; min-height: 44px; color: var(--text); font-size: 13.5px; }
-	.home-skills-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+	/* Heading, filters and the browse link share ONE row: the filters were their
+	   own full-width band, which cost a whole row of vertical space above the wall
+	   for six small controls. The middle column is the only one allowed to grow,
+	   and it scrolls, so adding families never pushes the wall down the page. */
+	.home-skills-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+	.home-skills-head h2 { flex: 0 0 auto; font-size: 18px; font-weight: 600; color: var(--text); margin: 0; }
+	.home-skills-link { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; min-height: 44px; color: var(--text); font-size: 13.5px; white-space: nowrap; }
+	/* Masonry via CSS columns, not grid.
+	   A grid forces every tile into the same row height, which is exactly what
+	   made this wall look like a table of contents. Columns let each tile keep
+	   its own aspect ratio and stagger naturally, which is the reference layout's
+	   entire effect. No JS and no library — the tiles set break-inside: avoid. */
+	/* Style filter row. Flat outlined pills matching /skills, one scrolling line so
+	   ten chips never wrap into three rows and push the wall down the page. 38px
+	   beside a mouse, 44px on touch — the rule the rest of this page follows. */
+	.home-filters {
+		flex: 1 1 auto;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: none;
+		padding: 2px;
+	}
+	.home-filters::-webkit-scrollbar { display: none; }
+	/* Deliberately smaller than a primary control: these are filters sitting beside
+	   an 18px heading, and at the old 38px they read as the loudest thing on the
+	   page. 28px keeps them inside the heading's own line height. */
+	.home-chip {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		min-height: 28px;
+		padding: 0 11px;
+		border-radius: 999px;
+		border: 1px solid var(--border2);
+		background: none;
+		color: var(--text-dim);
+		font-family: inherit;
+		font-size: 12.5px;
+		font-weight: 500;
+		white-space: nowrap;
+		cursor: pointer;
+		transition: color .15s, background .15s, border-color .15s;
+	}
+	.home-chip:hover { color: var(--text); border-color: var(--border3); background: var(--hover); }
+	.home-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+	/* Pressed on three channels — weight, border and an accent wash — so the state
+	   never depends on telling two greys apart. */
+	.home-chip[aria-pressed='true'] {
+		color: var(--text);
+		font-weight: 600;
+		border-color: color-mix(in srgb, var(--accent) 55%, var(--border3));
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
+	}
+	/* Separates the two axes (type / style) without a second row or a label. */
+	.home-chip-rule { flex: 0 0 auto; width: 1px; height: 18px; margin: 0 3px; background: var(--border2); }
+	.home-families-empty { font-size: 14px; color: var(--text-dim); margin: 4px 0 0; }
+	.home-families-empty a { color: var(--text); text-decoration: underline; }
+	.home-skill-item { break-inside: avoid; }
+	.home-skill-item[hidden] { display: none; }
+	/* Touch: 34px is the compromise — a 44px chip here would be taller than the
+	   heading beside it, and these are filters, not the page's primary action.
+	   The row is a wide scroll target rather than a set of small ones. */
+	@media (pointer: coarse) { .home-chip { min-height: 34px; padding: 0 13px; } }
+	.home-skills-grid { columns: 4; column-gap: 12px; }
 
 	/* Second, wider handoff to /skills below the grid. The header link is easy
 	   to miss once you have scrolled past it, and this is the point at which a
@@ -88,11 +291,20 @@ const PRIORITY_SKILL_COUNT = 4;
 	.home-skills-more:focus-visible { outline: 2px solid var(--border3); outline-offset: 3px; }
 
 	@media (max-width: 980px) {
-		.home-skills-grid { grid-template-columns: repeat(3, 1fr); }
+		.home-skills-grid { columns: 3; }
+	}
+	/* Below this the three columns stop fitting on one line: the heading and the
+	   browse link keep line one, the filter rail takes line two full-width. Still
+	   one scrolling line, so the cost is one row on a phone and none on desktop. */
+	@media (max-width: 700px) {
+		.home-skills-head { flex-wrap: wrap; row-gap: 8px; }
+		.home-skills-head h2 { order: 1; }
+		.home-skills-link { order: 2; margin-left: auto; }
+		.home-filters { order: 3; flex-basis: 100%; margin: 0 -2px; }
 	}
 	@media (max-width: 720px) {
 		.home-page { padding: 32px 16px 48px; }
 		.home-hero h1 { font-size: 26px; }
-		.home-skills-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+		.home-skills-grid { columns: 2; column-gap: 10px; }
 	}
 </style>
