@@ -259,7 +259,12 @@ assert(webhookSrc.includes("confirmWithPicx"),
 assert(/deliveryIsOurs[\s\S]{0,400}confirmWithPicx/.test(webhookSrc),
   "Ownership is checked in our own tables BEFORE any outbound confirmation");
 assert(webhookSrc.includes("data = confirmed.data"),
-  "Confirmed record REPLACES the delivered body, so a forged payload cannot inject a URL");
+  "Confirmed record REPLACES the folded data view");
+/* Both views must be replaced. The image-frame path reads `event.data?.output_url`
+   directly rather than the folded view, so substituting only `data` left a forged
+   URL reachable on the busiest delivery path. */
+assert(webhookSrc.includes("event.data = confirmed.data"),
+  "Confirmed record also replaces event.data, which the frame path reads directly");
 assert(webhookSrc.includes("confirmation_unavailable") && webhookSrc.includes("not_final_yet"),
   "A transient or not-yet-final read-back asks for retry instead of settling work");
 assert(webhookSrc.includes("invalid_signature") && webhookSrc.includes("401"),

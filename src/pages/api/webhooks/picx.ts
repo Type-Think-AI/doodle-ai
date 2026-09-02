@@ -332,7 +332,14 @@ export async function POST(context: APIContext): Promise<Response> {
       return json({ error: "not_final_yet", status: confirmed.status }, 503);
     }
 
+    /* Overwrite BOTH views, not just the folded one. `data` is what most of this
+       handler reads, but the image-frame path reads `event.data?.output_url` and
+       `event.data?.error_message` directly — so replacing only `data` would leave
+       the untrusted body reachable on the busiest path and let a forged URL be
+       written to a frame. Substituting at the source closes that for every
+       present and future reader. */
     data = confirmed.data;
+    event.data = confirmed.data;
     event.event = confirmed.event;
   }
 
