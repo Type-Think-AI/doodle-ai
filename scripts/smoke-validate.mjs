@@ -23,6 +23,13 @@ const WEBHOOK_FILE = join(ROOT, "src/pages/api/webhooks/picx.ts");
 const CHAT_FILE = join(ROOT, "src/pages/api/chat.ts");
 const AGENT_FILE = join(ROOT, "src/pages/api/agent.ts");
 const CREDITS_FILE = join(ROOT, "src/lib/credits/index.ts");
+/* src/lib/skill-loader.ts is the build-time authority on what a SKILL.md may
+   declare (CATEGORIES, ASPECT_RATIOS, SKILL_KINDS) and on the per-kind runnable
+   check. This suite reads those lists FROM it rather than restating them — a
+   hardcoded copy is what let `packs`, `9:16` and every video skill read as
+   invalid here while the real build accepted them. */
+const LOADER_FILE = join(ROOT, "src/lib/skill-loader.ts");
+const VIDEO_SKILLS_FILE = join(ROOT, "src/lib/video/skills.ts");
 
 let passed = 0;
 let failed = 0;
@@ -50,13 +57,46 @@ section("1. Skill Loading");
 
 // Parse GENERATION_MODES from doodle-constants.ts
 const constantsSrc = readFileSync(CONSTANTS_FILE, "utf8");
-const modesMatch = constantsSrc.match(/GENERATION_MODES\s*=\s*\[([^\]]+)\]/);
+/* Match to the `] as const` terminator, not the first `]`: the array's own
+   comments mention types like `PackVariant[]`, and a `[^\]]+` body stopped dead
+   at that bracket — truncating the mode list halfway through. */
+const modesMatch = constantsSrc.match(/GENERATION_MODES\s*=\s*\[([\s\S]*?)\]\s*as const/);
 assert(modesMatch, "GENERATION_MODES array found in doodle-constants.ts");
 const GENERATION_MODES = modesMatch[1]
+  /* Strip comments BEFORE splitting on commas. GENERATION_MODES carries block
+     comments documenting each authoring wave, and the prose commas inside them
+     were being read as mode names — so the check demanded a credit cost for
+     phantom modes made of sentence fragments. */
+  .replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(/\/\/[^\n]*/g, "")
   .split(",")
   .map((s) => s.trim().replace(/['"]/g, ""))
   .filter(Boolean);
 assert(GENERATION_MODES.length > 0, `GENERATION_MODES has ${GENERATION_MODES.length} entries`);
+
+/* Read a `const NAME = [...]` string-literal list out of a source file, ignoring
+   comments. Used for the loader's own enums and for VIDEO_SKILL_IDS. */
+function parseStringList(src, name) {
+  const m = src.match(new RegExp(`${name}[^=]*=\\s*\\[([\\s\\S]*?)\\]`));
+  if (!m) return null;
+  return m[1]
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "")
+    .split(",")
+    .map((s) => s.trim().replace(/['"]/g, ""))
+    .filter(Boolean);
+}
+
+const loaderSrc = readFileSync(LOADER_FILE, "utf8");
+const CATEGORIES = parseStringList(loaderSrc, "CATEGORIES");
+const ASPECT_RATIOS = parseStringList(loaderSrc, "ASPECT_RATIOS");
+const SKILL_KINDS = parseStringList(loaderSrc, "SKILL_KINDS");
+assert(CATEGORIES?.length > 0, `CATEGORIES parsed from skill-loader (${CATEGORIES?.join(", ")})`);
+assert(ASPECT_RATIOS?.length > 0, `ASPECT_RATIOS parsed from skill-loader (${ASPECT_RATIOS?.join(", ")})`);
+assert(SKILL_KINDS?.length > 0, `SKILL_KINDS parsed from skill-loader (${SKILL_KINDS?.join(", ")})`);
+
+const VIDEO_SKILL_IDS = parseStringList(readFileSync(VIDEO_SKILLS_FILE, "utf8"), "VIDEO_SKILL_IDS");
+assert(VIDEO_SKILL_IDS?.length > 0, `VIDEO_SKILL_IDS has ${VIDEO_SKILL_IDS?.length} entries`);
 
 // Discover skill directories
 const skillDirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
@@ -66,6 +106,12 @@ assert(skillDirs.length > 0, `Found ${skillDirs.length} skill directories`);
 
 // Validate each SKILL.md
 const runnableIds = [];
+/* Runnable ids split by kind: an image skill is executed by generateDoodle and
+   must exist in GENERATION_MODES, a video skill by generateVideo and must exist
+   in VIDEO_SKILL_IDS. Pooling them is what made every video skill look like a
+   missing generation mode. */
+const runnableImageIds = [];
+const runnableVideoIds = [];
 const allIds = [];
 const allOrders = [];
 
@@ -93,6 +139,13 @@ for (const dir of skillDirs) {
   const runnable = runnableMatch?.[1] === "true";
   if (runnable && id) runnableIds.push(id);
 
+  /* `kind` is optional in SKILL.md and defaults to image — same default the
+     loader applies, so an older still-skill with no kind keeps working. */
+  const kindMatch = raw.match(/^\s+kind:\s*(\w+)$/m);
+  const kind = kindMatch?.[1] ?? "image";
+  assert(SKILL_KINDS.includes(kind), `${dir}: kind is valid ("${kind}")`);
+  if (runnable && id) (kind === "video" ? runnableVideoIds : runnableImageIds).push(id);
+
   // Extract order
   const orderMatch = raw.match(/^\s+order:\s*(\d+)$/m);
   if (orderMatch) allOrders.push(Number(orderMatch[1]));
@@ -100,10 +153,12 @@ for (const dir of skillDirs) {
   // Structural checks
   const hasBody = raw.split("\n---")[1]?.trim().length > 0;
   assert(hasBody, `${dir}: has instruction body below frontmatter`);
-  assert(/^\s+category:\s*(avatars|collages|freeform)$/m.test(raw),
-    `${dir}: category is valid`);
-  assert(/^\s+aspectRatio:\s*['"]?(1:1|3:2)['"]?$/m.test(raw),
-    `${dir}: aspectRatio is valid`);
+  const categoryMatch = raw.match(/^\s+category:\s*['"]?([\w-]+)['"]?$/m);
+  assert(CATEGORIES.includes(categoryMatch?.[1]),
+    `${dir}: category is valid ("${categoryMatch?.[1]}")`);
+  const ratioMatch = raw.match(/^\s+aspectRatio:\s*['"]?([\d:]+)['"]?$/m);
+  assert(ASPECT_RATIOS.includes(ratioMatch?.[1]),
+    `${dir}: aspectRatio is valid ("${ratioMatch?.[1]}")`);
 }
 
 // Cross-checks
@@ -116,16 +171,29 @@ assert(
   `All skill orders are unique (${allOrders.length} orders, ${new Set(allOrders).size} unique)`
 );
 
-// Runnable ↔ GENERATION_MODES bidirectional match
-const missingMode = runnableIds.filter((id) => !GENERATION_MODES.includes(id));
+/* Runnable ↔ registry, bidirectional, PER KIND — mirroring the loader's
+   assertRunnableSkillsAreExecutable(). A video skill listed under GENERATION_MODES
+   would be handed to the image endpoint and 422 after charging, which is exactly
+   why the two registries are kept separate. */
+const missingMode = runnableImageIds.filter((id) => !GENERATION_MODES.includes(id));
 assert(
   missingMode.length === 0,
-  `Every runnable skill has a GENERATION_MODE (missing: ${missingMode.join(", ") || "none"})`
+  `Every runnable image skill has a GENERATION_MODE (missing: ${missingMode.join(", ") || "none"})`
 );
-const missingSkill = GENERATION_MODES.filter((m) => !runnableIds.includes(m));
+const missingSkill = GENERATION_MODES.filter((m) => !runnableImageIds.includes(m));
 assert(
   missingSkill.length === 0,
-  `Every GENERATION_MODE has a runnable skill (orphans: ${missingSkill.join(", ") || "none"})`
+  `Every GENERATION_MODE has a runnable image skill (orphans: ${missingSkill.join(", ") || "none"})`
+);
+const missingVideoMode = runnableVideoIds.filter((id) => !VIDEO_SKILL_IDS.includes(id));
+assert(
+  missingVideoMode.length === 0,
+  `Every runnable video skill is in VIDEO_SKILL_IDS (missing: ${missingVideoMode.join(", ") || "none"})`
+);
+const missingVideoSkill = VIDEO_SKILL_IDS.filter((id) => !runnableVideoIds.includes(id));
+assert(
+  missingVideoSkill.length === 0,
+  `Every VIDEO_SKILL_ID has a runnable skill (orphans: ${missingVideoSkill.join(", ") || "none"})`
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
