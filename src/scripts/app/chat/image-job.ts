@@ -14,7 +14,7 @@
  * A pack skill reveals progressively: the route returns the frames that have
  * landed so far, so 9 images appear as they arrive instead of all at the end.
  */
-import { VIDEO_TIMEOUT_MINUTES } from "../../../lib/video/constants";
+import { describeGenerationFailure } from "./generation-error";
 
 interface GenerationResponse {
   video?: {
@@ -32,13 +32,31 @@ interface GenerationResponse {
    watcher and widens less. */
 const FIRST_INTERVAL_MS = 1_500;
 const MAX_INTERVAL_MS = 5_000;
-/* Generous ceiling: a 9-frame pack is 9 independent renders and the last one can
-   land well after the first. Reuses the video budget rather than inventing a
-   second timeout constant. */
-const TIMEOUT_MS = VIDEO_TIMEOUT_MINUTES * 60_000;
+/**
+ * How long to keep watching before telling the user we stopped.
+ *
+ * This used to reuse VIDEO_TIMEOUT_MINUTES (30) "rather than inventing a second
+ * timeout constant", which was the wrong economy: a clip legitimately renders for
+ * tens of minutes, an image is seconds, and the file's own comment two lines up
+ * said so. The result was a spinner observed counting past 545 seconds with 21
+ * more minutes to go and no error in sight.
+ *
+ * 8 minutes is deliberately just under the server's own 10-minute stuck-pending
+ * threshold (STUCK_PENDING_MINUTES in src/lib/credits/reconcile.ts). Sitting
+ * below it means the user is told something before the sweep is even eligible to
+ * act, so the interface is never the last to know.
+ *
+ * A 9-frame pack is 9 independent renders and the last can land well after the
+ * first, which is what the generous side of this budget is for.
+ */
+const IMAGE_TIMEOUT_MINUTES = 8;
+const TIMEOUT_MS = IMAGE_TIMEOUT_MINUTES * 60_000;
 const TERMINAL = new Set(["ok", "failed", "refunded"]);
 
 const active = new Map<string, () => void>();
+/* Kept separate from `active`: a page teardown must stop watchers SILENTLY,
+   whereas a user pressing stop needs a message. Same jobs, two exits. */
+const cancels = new Map<string, () => void>();
 
 export interface StartImageJobOptions {
   jobId: string;
@@ -72,8 +90,25 @@ export function startImageJob(options: StartImageJobOptions): () => void {
     stopped = true;
     if (timer) clearTimeout(timer);
     active.delete(jobId);
+    cancels.delete(jobId);
     options.onSettled?.();
   };
+
+  /* Stopping because the USER asked, which is a different thing from the page
+     going away: it needs a line on screen, or pressing stop just freezes the
+     spinner at whatever second it had reached. Deliberately does not claim a
+     refund — the work may well still land, and the sweep settles the money either
+     way, so promising anything here would be a guess. */
+  const cancel = (): void => {
+    if (stopped) return;
+    if (seen.size === 0) {
+      onFailed(
+        "Stopped. If it had already started, your credits come back automatically when it settles.",
+      );
+    }
+    stop();
+  };
+  cancels.set(jobId, cancel);
 
   const emitNew = (urls: string[]): void => {
     for (const url of urls) {
@@ -91,8 +126,8 @@ export function startImageJob(options: StartImageJobOptions): () => void {
          it never does the hourly sweep refunds it. Claiming either outcome here
          would be a guess. */
       onFailed(
-        `This is taking longer than ${VIDEO_TIMEOUT_MINUTES} minutes, so we stopped watching. ` +
-          `If it never finishes, the credits are returned automatically — reload later to check.`,
+        `This is taking longer than ${IMAGE_TIMEOUT_MINUTES} minutes, so we stopped waiting. ` +
+          `If it never finishes, your credits come back automatically — reload later to check.`,
       );
       stop();
       return;
@@ -115,7 +150,13 @@ export function startImageJob(options: StartImageJobOptions): () => void {
           emitNew(row.outputUrls ?? (row.outputUrl ? [row.outputUrl] : []));
           if (TERMINAL.has(row.status)) {
             if (row.status !== "ok" && seen.size === 0) {
-              onFailed("That didn't come out. Your credits were refunded — want to try again?");
+              /* The row has always carried WHY this failed and the read route has
+                 always returned it; this is the first thing to actually read it,
+                 so an unreadable photo no longer reads as a generic flop with
+                 "try again" as the only advice. */
+              onFailed(
+                describeGenerationFailure(row.errorCode, row.status === "refunded").message,
+              );
             }
             stop();
             return;
@@ -135,9 +176,23 @@ export function startImageJob(options: StartImageJobOptions): () => void {
   return stop;
 }
 
-/** Stop every watcher, so no timer outlives the page it belongs to. */
+/** Stop every watcher silently, so no timer outlives the page it belongs to. */
 export function stopAllImageJobs(): void {
   for (const stop of [...active.values()]) stop();
+  cancels.clear();
+}
+
+/**
+ * Stop every watcher BECAUSE THE USER ASKED, leaving a line on screen for each.
+ *
+ * This is what the composer's stop button needs. Before this it only called
+ * `sendState.activeAbort.abort()`, which cuts the response stream and does
+ * nothing whatsoever to this poll loop — the loop reads our own D1 row over a
+ * separate request, so the spinner kept counting after stop was pressed.
+ */
+export function cancelAllImageJobs(): void {
+  for (const cancel of [...cancels.values()]) cancel();
+  cancels.clear();
 }
 
 if (typeof window !== "undefined") {

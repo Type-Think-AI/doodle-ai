@@ -36,6 +36,25 @@
 	border-top-color: var(--text-dim);
 	animation: chat-video-spin 0.7s linear infinite;
 }
+
+/* A long wait should not look frantic.
+ *
+ * The 0.7s spin reads as "any second now", which is right for the first twenty
+ * seconds and wrong at four minutes — a fast spinner next to "taking much longer
+ * than usual" is the animation arguing with the text. Slowing it keeps the
+ * element honest as an activity indicator without implying imminent arrival.
+ * Bands are set by render.ts on the bubble as data-wait. */
+.chat-video-card[data-wait="slow"] .chat-video-spinner {
+	animation-duration: 1.4s;
+}
+.chat-video-card[data-wait="stalled"] .chat-video-spinner {
+	animation-duration: 2.2s;
+	border-top-color: var(--text-dimmer);
+}
+/* The stalled copy is two sentences, so let it breathe rather than clamp. */
+.chat-video-card[data-wait="stalled"] .chat-video-progress {
+	align-items: flex-start;
+}
 @keyframes chat-video-spin { to { transform: rotate(360deg); } }
 
 /* ---- DONE ---- */

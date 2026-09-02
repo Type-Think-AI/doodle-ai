@@ -91,7 +91,7 @@ export async function requestAssistantReply(
   const images: string[] = [];
   /* Clips queued this turn, persisted onto the assistant message so a reload
      re-attaches to the in-flight job by jobId rather than losing the card. */
-  const videos: { jobId: string; status: string; skillId?: string }[] = [];
+  const videos: { jobId: string; status: string; skillId?: string; queuedAt?: number }[] = [];
   let streamError: string | null = null;
   /* Set by a `notice` event when the doodle tool refused for lack of credits.
      Read after the reply renders, so the CTA lands under the agent's
@@ -212,7 +212,9 @@ export async function requestAssistantReply(
           if (threadId && skillName) setThreadThumbnail(threadId, event.url, skillName);
         } else if (event.type === "video" && event.jobId) {
           const skillId = event.skillId ?? skillPinState.pinnedSkillId;
-          videos.push({ jobId: event.jobId, status: "pending", skillId });
+          // queuedAt is stamped here, at the moment the job is known to exist,
+          // so the wait the user is shown survives a reload (see chat-store).
+          videos.push({ jobId: event.jobId, status: "pending", skillId, queuedAt: Date.now() });
           callbacks.onVideo(
             event.jobId,
             event.estimatedSeconds ?? 0,

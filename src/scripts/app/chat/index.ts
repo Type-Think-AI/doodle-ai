@@ -41,7 +41,8 @@ import {
   handleFile,
   type TurnCallbacks,
 } from "./api-turn";
-import { startVideoJob } from "./video-job";
+import { startVideoJob, stopAllVideoJobs } from "./video-job";
+import { cancelAllImageJobs } from "./image-job";
 import {
   createWhiteboardState,
   setWhiteboard,
@@ -197,6 +198,9 @@ function initChat(): void {
           jobId: clip.jobId,
           estimatedSeconds: 0,
           skillId: clip.skillId,
+          // The persisted submit time, so a reload continues the real wait
+          // rather than restarting the clock at zero.
+          queuedAt: clip.queuedAt,
           onRetry,
         });
       }
@@ -396,6 +400,14 @@ function initChat(): void {
       sendState.activeAbort.abort();
       sendState.activeAbort = null;
     }
+    /* Aborting the response stream is NOT enough. A queued picture is watched by
+       a poll loop against our own row (src/scripts/app/chat/image-job.ts), on a
+       separate request from the stream — so before this, pressing stop cut the
+       stream and left the spinner counting. Both watchers are cancelled here so
+       stop means stopped, and each leaves a line on screen rather than a frozen
+       placeholder. */
+    cancelAllImageJobs();
+    stopAllVideoJobs();
   });
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {

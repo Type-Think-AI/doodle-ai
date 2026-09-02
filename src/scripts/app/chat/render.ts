@@ -7,6 +7,10 @@ import { addToMoodboard } from "../moodboard";
 import { landOnBoard } from "../board-target";
 import type { ChatMessage } from "../chat-store";
 import { pushToCanvas } from "./canvas";
+import {
+  VIDEO_SLOW_AFTER_SECONDS,
+  VIDEO_STALLED_AFTER_SECONDS,
+} from "../../../lib/video/constants";
 import { parseSuggestions, renderSuggestions } from "./suggestions";
 import { getSkill } from "../../../lib/skills";
 import { imageCountForSkill } from "../../../lib/credits/costs";
@@ -60,7 +64,7 @@ export interface RenderContext {
   /** Re-attach a persisted clip on history repaint: pending -> resume polling,
       ok -> show the clip, failed/refunded -> show the failure. Mounts its own
       card row (video cards are separate chat-msg rows, not bubble children). */
-  onVideoResume?: (clip: { jobId: string; url?: string; status: string; skillId?: string; posterUrl?: string }, precedingUserMessage: ChatMessage | null) => void;
+  onVideoResume?: (clip: { jobId: string; url?: string; status: string; skillId?: string; posterUrl?: string; queuedAt?: number }, precedingUserMessage: ChatMessage | null) => void;
 }
 
 export function renderMessage(
@@ -421,6 +425,22 @@ export function renderCreditsCta(thread: HTMLElement): void {
   thread.scrollTop = thread.scrollHeight;
 }
 
+/**
+ * A wait a person can read at a glance.
+ *
+ * Past a minute, raw seconds stop being legible — "247s" makes you do division
+ * to find out you have been waiting four minutes. Switches to minutes once there
+ * is more than one, and stays in whole units because a stalled render does not
+ * need decimal precision.
+ */
+function formatWait(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (minutes < 2) return rest ? `1 min ${rest}s` : "1 min";
+  return `${minutes} min`;
+}
+
 /* ---- Video card ----
    Async clips are rendered by their own card, not the image grid: there is no
    url at first (the job is queued upstream and resolves by webhook into our D1
@@ -429,7 +449,10 @@ export function renderCreditsCta(thread: HTMLElement): void {
    DONE (muted/loop/playsinline/controls + download), FAILED (reason + retry). */
 
 export type VideoCardState =
-  | { phase: "rendering"; estimatedSeconds: number }
+  /** `startedAt` is when the job was QUEUED (epoch ms), not when this card was
+   *  mounted. They differ after a reload, and using mount time made the clock
+   *  restart at 0 and under-report a long wait — the opposite of honest. */
+  | { phase: "rendering"; estimatedSeconds: number; startedAt: number }
   | { phase: "done"; url: string; posterUrl?: string }
   | { phase: "failed"; reason: string };
 
@@ -484,12 +507,43 @@ export function renderVideoCard(
       row.appendChild(label);
       bubble.appendChild(row);
 
-      const started = Date.now();
+      /* Counted from when the job was QUEUED, so a reload shows the real wait
+         instead of starting over at 0. */
+      const started = state.startedAt;
       const tick = (): void => {
-        const elapsed = Math.floor((Date.now() - started) / 1000);
-        // Honest wait: seconds counting up against the estimate, never a fake
-        // determinate bar (we have no real progress signal from the model).
-        label.textContent = `Bringing your doodle to life… ${elapsed}s (usually under ${state.estimatedSeconds}s)`;
+        const elapsed = Math.max(0, Math.floor((Date.now() - started) / 1000));
+
+        /* Still no progress bar and still no percentage — the provider reports
+           no progress, so any bar would be an animation pretending to be data.
+           What DOES change is the sentence, because "usually under 20s" stops
+           being information the moment we are past 20s and becomes a claim the
+           screen is actively contradicting. Three honest bands:
+
+           within estimate — the normal case, state the expectation;
+           slow           — drop the expectation, say plainly it is running long;
+           stalled        — say it may take a while AND that they can leave, which
+                            is true: the clip arrives by webhook onto our own row
+                            and the thread re-attaches to it on next load.
+
+           `data-wait` is exposed so CSS can calm the spinner down in the later
+           bands without this function knowing anything about styling. */
+        let text: string;
+        let band: "normal" | "slow" | "stalled";
+        if (elapsed >= VIDEO_STALLED_AFTER_SECONDS) {
+          band = "stalled";
+          text =
+            `Still working on it — ${formatWait(elapsed)} so far. ` +
+            `This one is taking much longer than usual. You can close this and come back; ` +
+            `it will be here when it is ready.`;
+        } else if (elapsed >= VIDEO_SLOW_AFTER_SECONDS) {
+          band = "slow";
+          text = `Still working on it — ${formatWait(elapsed)} so far, longer than it usually takes.`;
+        } else {
+          band = "normal";
+          text = `Bringing your doodle to life… ${elapsed}s (usually under ${state.estimatedSeconds}s)`;
+        }
+        label.textContent = text;
+        bubble.dataset.wait = band;
       };
       tick();
       elapsedTimer = window.setInterval(tick, 1000);

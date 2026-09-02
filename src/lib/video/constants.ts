@@ -48,11 +48,35 @@ export const MAX_VIDEO_SECONDS = 15;
 export const DEFAULT_VIDEO_SECONDS = 5;
 
 /**
- * Combined reference cap. H3 Max allows 12 files across images+videos+audio;
- * PicX's public schema caps `reference_urls` at 10, so 10 is the real ceiling.
+ * Reference-IMAGE cap. Three different ceilings apply and the smallest binds:
+ * fal allows 12 files combined across images+videos+audio, PicX's public schema
+ * caps `reference_urls` at 10, and MiniMax — the model vendor — documents
+ * "Reference entry / Images: <= 9" (platform.minimax.io/docs/guides/video-generation,
+ * read 2026-09-02). We only ever send images, so 9 is the real ceiling; sending
+ * a 10th would satisfy both our own schema and PicX and still be rejected (or
+ * silently truncated) upstream, after the clip was charged.
  * References are cited in prompt order as "Image 1", "Image 2", …
  */
-export const MAX_VIDEO_REFERENCES = 10;
+export const MAX_VIDEO_REFERENCES = 9;
+
+/**
+ * Documented bounds on a reference image, from the same MiniMax page: every
+ * side in [256, 5760] px, file <= 30 MB, format one of JPG/JPEG/PNG/WEBP/HEIC/HEIF.
+ * WebP IS supported — a webp reference is not a format error. These are here so
+ * a reference can be rejected BEFORE credits are charged rather than 422'd
+ * upstream afterwards (picx-studio has already shipped that bug once: a 250x312
+ * reference returned `image_too_small` on a paid request).
+ */
+export const MIN_REFERENCE_IMAGE_PX = 256;
+export const MAX_REFERENCE_IMAGE_PX = 5760;
+export const MAX_REFERENCE_IMAGE_BYTES = 30 * 1024 * 1024;
+export const REFERENCE_IMAGE_FORMATS = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+] as const;
 
 /**
  * Internal credits per second of finished video, per tier.
@@ -96,6 +120,27 @@ export const VIDEO_HAS_AUDIO = true;
  */
 export const VIDEO_ESTIMATED_SECONDS = 20;
 export const VIDEO_TIMEOUT_MINUTES = 30;
+
+/**
+ * When the wait stops being normal, and when it stops being reassuring.
+ *
+ * WHY THESE EXIST. The estimate above is measured off renders that land in
+ * 4.5-7.6s, so "usually under 20s" is true almost always. But the upstream
+ * render can stall — observed 2026-09-02: a 5s clip sat at `processing` on the
+ * provider for over seven minutes, and an image sat at `pending` for
+ * thirty-seven. Through all of that the card kept saying "usually under 20s",
+ * which is the one thing it must not do: past the estimate that sentence is no
+ * longer information, it is a claim the product is contradicting on screen.
+ *
+ * So the copy escalates instead of repeating. These are the boundaries.
+ * `SLOW` is 2x the estimate — comfortably past the real distribution, so it does
+ * not fire on a merely unlucky render. `STALLED` is the point where we stop
+ * saying "nearly there" and tell the user the truth: it may take a while, and
+ * they do not have to sit here, because delivery is a webhook writing our own
+ * row and the thread re-attaches to it on load.
+ */
+export const VIDEO_SLOW_AFTER_SECONDS = VIDEO_ESTIMATED_SECONDS * 2;
+export const VIDEO_STALLED_AFTER_SECONDS = 180;
 
 export function isVideoMode(value: unknown): value is VideoMode {
   return typeof value === "string" && (VIDEO_MODES as readonly string[]).includes(value);

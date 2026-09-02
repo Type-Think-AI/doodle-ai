@@ -45,7 +45,19 @@ export interface ChatMessage {
    * to the in-flight job by jobId rather than losing it; its `status`/`url` are
    * updated in place as the poll (video-job.ts) resolves it to `ok`/`failed`.
    */
-  videos?: { jobId: string; url?: string; status: string; skillId?: string; posterUrl?: string }[];
+  /** `queuedAt` (epoch ms) is when the job was submitted. Persisted so a reload
+   *  shows the REAL elapsed wait instead of restarting the clock at zero —
+   *  without it, a clip stalled upstream for eight minutes still reported "15s"
+   *  after a refresh. Optional: clips recorded before this field existed have
+   *  none, and the card falls back to its own mount time for those. */
+  videos?: {
+    jobId: string;
+    url?: string;
+    status: string;
+    skillId?: string;
+    posterUrl?: string;
+    queuedAt?: number;
+  }[];
   createdAt: number;
 }
 

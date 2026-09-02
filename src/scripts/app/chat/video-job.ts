@@ -69,6 +69,10 @@ export interface StartVideoJobOptions {
   /** The skill that produced this clip, used to name the thread. Optional: a
    *  reload re-attach may not know it, and a missing name simply skips naming. */
   skillId?: string;
+  /** When the job was submitted (epoch ms), for a wait clock that survives a
+   *  reload. Falls back to now when absent (a clip queued before this shipped),
+   *  which is the old behaviour rather than a wrong number. */
+  queuedAt?: number;
 }
 
 /** Tell the shell a clip is in flight / settled.
@@ -102,7 +106,7 @@ export function startVideoJob(options: StartVideoJobOptions): VideoCardHandle {
 
   const card = renderVideoCard(
     thread,
-    { phase: "rendering", estimatedSeconds },
+    { phase: "rendering", estimatedSeconds, startedAt: options.queuedAt ?? Date.now() },
     { onRetry, onDownload: (url) => void downloadVideo(url) },
   );
   announcePhase("rendering");
