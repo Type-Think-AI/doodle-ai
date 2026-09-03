@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-02T11:19:21.056Z",
+  "fetched_at": "2026-09-03T11:15:28.407Z",
   "latestCommit": {
-    "sha": "41d12f057167ccf5954dbcf49d99502cb6c84491",
-    "message": "Clarify sentence regarding origins and `exposedTo` (#260)",
-    "date": "2026-08-26T20:22:29Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/41d12f057167ccf5954dbcf49d99502cb6c84491"
+    "sha": "55fb7ee2289679fbbbf3b1f8fc2f92daf96e6ba9",
+    "message": "Update implementation status to include agent support (#283)",
+    "date": "2026-09-02T14:06:42Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/55fb7ee2289679fbbbf3b1f8fc2f92daf96e6ba9"
   },
   "files": {
     "index.bs": {
@@ -15,9 +15,9 @@
       "bytes": 79561
     },
     "README.md": {
-      "hash": "6502112d59a47da0b55f267c5e62ffe6d2238e3b948d80bcee78b0fbc5c8eea7",
+      "hash": "6705d5028575cca38d11bff143aa11597f4041d22f2b41b833dc56918c608d97",
       "exists": true,
-      "bytes": 31867
+      "bytes": 31877
     },
     "declarative-api-explainer.md": {
       "hash": "adc121fff82e357471e9eb578fdd6427204eb03f475ec43cdf6bce21f0fa436c",
@@ -25,9 +25,9 @@
       "bytes": 10411
     },
     "implementation-status.md": {
-      "hash": "41956527ccd39a4dad7751a652988777c1f7050b3f9a2a20c47c5d735625250f",
+      "hash": "8f542a891d460b2bb6ccabbae74e75f7c6adb8b3c944a4ff5af2529b31dc2f0d",
       "exists": true,
-      "bytes": 2229
+      "bytes": 2258
     },
     "security-privacy-questionnaire.md": {
       "hash": "33907b97fc85fe2277f47eca8f72f5c0522b0444ebfd2be9b65b0110c475a247",
@@ -74,6 +74,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 113,
-  "openPRsCount": 113
+  "openIssuesCount": 116,
+  "openPRsCount": 116
 }
