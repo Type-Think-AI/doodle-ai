@@ -9,12 +9,17 @@
  * Astro's build as-is and adds the one export Astro can't produce: the hourly
  * reconciliation pass from docs/architecture.md § "Failure modes".
  *
- * This imports `dist/_worker.js/index.js`, which only exists after `astro
- * build` has run — true for `wrangler deploy` (always builds first, see the
- * `deploy`/`deploy:staging` scripts) and for `wrangler dev --remote`
- * (scripts/dev.mjs builds before starting it). Wrangler bundles this file
- * and its import together at that point, so the relative path resolves fine
- * despite living outside `src/`.
+ * As of the astro 7 / `@astrojs/cloudflare` 14 migration this composes
+ * Astro's SSR handler by importing the adapter's published server
+ * entrypoint (`@astrojs/cloudflare/entrypoints/server`, whose default export
+ * is `{ fetch }`) rather than the old `dist/_worker.js/index.js` file. The v14
+ * adapter builds through `@cloudflare/vite-plugin`, which reads `wrangler.json`'s
+ * `main` (this file) as THE Worker entry and bundles it directly — it no longer
+ * emits a standalone `dist/_worker.js` for a separate wrangler pass to wrap. The
+ * server entrypoint pulls in the adapter's `virtual:astro-cloudflare:config`
+ * and `cloudflare:workers` virtual modules, which resolve only inside that
+ * plugin's build; bundling this file through the adapter is what makes them
+ * (and the relative `../src/*` imports below) resolve.
  */
 import { routeAgentRequest } from "agents";
 import { drizzle } from "drizzle-orm/d1";
@@ -27,7 +32,7 @@ import { syncIndexNow } from "../src/lib/seo/submit";
 import { SITE_ORIGIN, fetchPageInventory } from "../src/lib/seo/inventory";
 import { refreshBingIndex } from "../src/lib/seo/refresh";
 import type { SecretLike } from "../src/lib/secrets";
-import astroWorker from "../dist/_worker.js/index.js";
+import astroWorker from "@astrojs/cloudflare/entrypoints/server";
 
 /**
  * The roadmap board's tldraw sync server. Durable Object classes must be

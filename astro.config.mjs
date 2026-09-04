@@ -40,23 +40,49 @@ export default defineConfig({
 		   navigation starts to outweigh the saved round trips. */
 		inlineStylesheets: 'always',
 	},
-	// `astro dev`'s own dev server (via platformProxy below) is NOT how this
-	// project develops against the database — see package.json's `dev`
+	// `astro dev`'s own dev server (via the adapter's local bindings) is NOT how
+	// this project develops against the database — see package.json's `dev`
 	// script. Wrangler's mixed-mode "remote bindings" (one binding proxied to
 	// the real Cloudflare resource while `astro dev` serves everything else
 	// locally) turned out to be broken for this account: Cloudflare's preview
 	// session exchange returns an HTML challenge page instead of JSON. `pnpm
 	// dev` instead builds the Worker and runs it under `wrangler dev
 	// --remote --env staging`, Wrangler's older and fully reliable full-remote
-	// mode, which needs no per-binding config here at all. `platformProxy`
-	// stays enabled only so `astro dev` remains available as a manual escape
-	// hatch for UI-only iteration (ephemeral local-emulated D1/KV, no shared
-	// data) if anyone ever wants fast Vite HMR and doesn't need real data.
+	// mode, which needs no per-binding config here at all. `configPath` below
+	// keeps `astro dev` available as a manual escape hatch for UI-only iteration
+	// (ephemeral local-emulated D1/KV, no shared data) if anyone ever wants fast
+	// Vite HMR and doesn't need real data.
 	adapter: cloudflare({
-		platformProxy: {
-			enabled: true,
-			configPath: "wrangler.local.json",
-		},
+		// astro 7 / @astrojs/cloudflare 14 dropped the v12 `platformProxy` option:
+		// the adapter now builds through `@cloudflare/vite-plugin`, which reads the
+		// wrangler config directly. Unlike v12's `platformProxy.configPath` (which
+		// scoped a config to DEV-ONLY binding emulation), v14's `configPath` is the
+		// config the WHOLE adapter uses — including the deploy config it emits into
+		// dist/server/wrangler.json and the redirect at .wrangler/deploy/config.json.
+		// It must therefore stay on the real deploy config (wrangler.json, the
+		// default), which is where the Durable Object bindings, cron trigger and
+		// Secrets Store bindings live. Pointing it at wrangler.local.json — the
+		// minimal DB+KV-only escape-hatch config — silently stripped all three from
+		// the built config and produced a binding-less deploy. `configPath` is left
+		// unset so it defaults to wrangler.json; `pnpm dev:local` still passes
+		// wrangler.local.json explicitly to its own migration step, and `astro dev`
+		// simply sees the full bindings (harmless — the real dev path is `pnpm dev`).
+		//
+		// Run the build-time prerender pass in Node, not in a workerd worker.
+		//
+		// astro 7 / @astrojs/cloudflare 14 default `prerenderEnvironment` to
+		// "workerd", which boots the REAL deployed Worker (via miniflare) to
+		// render static routes. That worker imports this project's entry
+		// (src-worker/entry.ts), whose re-exported Durable Objects — RoadmapRoom,
+		// BoardRoom (extends `DurableObject` from cloudflare:workers) and
+		// VoiceRoom (extends `Agent` from `agents`) — are instantiated by
+		// miniflare's DO wrapper at startup. In that prerender worker the
+		// `cloudflare:workers` base class resolves to `undefined`, so the wrapper
+		// dies with `Class extends value undefined is not a constructor` before a
+		// single page renders. The DO classes are only needed by the DEPLOYED
+		// worker (for binding resolution); prerendering never touches them. Running
+		// the pass in Node skips the workerd boot entirely and the failure with it.
+		prerenderEnvironment: "node",
 	}),
 	vite: {
 		resolve: {
