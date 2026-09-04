@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-03T11:15:28.407Z",
+  "fetched_at": "2026-09-04T11:18:50.342Z",
   "latestCommit": {
-    "sha": "55fb7ee2289679fbbbf3b1f8fc2f92daf96e6ba9",
-    "message": "Update implementation status to include agent support (#283)",
-    "date": "2026-09-02T14:06:42Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/55fb7ee2289679fbbbf3b1f8fc2f92daf96e6ba9"
+    "sha": "7b3f50f31848b529e69bedbbdf8da0edccba055f",
+    "message": "Add `consequentialHint` to `ToolAnnotations` (#217)",
+    "date": "2026-09-03T18:22:05Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/7b3f50f31848b529e69bedbbdf8da0edccba055f"
   },
   "files": {
     "index.bs": {
-      "hash": "48b076e033e510017fb9609bd38a8ed4161b71aeb456889adea45d32c0069cad",
+      "hash": "f5421348772cb38b854ddad7a2114db3a6ed8c7827f3a1d267c01c45a7868e56",
       "exists": true,
-      "bytes": 79561
+      "bytes": 80922
     },
     "README.md": {
       "hash": "6705d5028575cca38d11bff143aa11597f4041d22f2b41b833dc56918c608d97",
@@ -52,6 +52,7 @@
     "ToolExecuteCallback",
     "ToolExecuteCallbackOptions",
     "annotations",
+    "consequentialHint",
     "description",
     "execute",
     "executeTool",
