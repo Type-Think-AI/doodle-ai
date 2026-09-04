@@ -7,6 +7,7 @@ import DoodleCanvas from '../../components/app/DoodleCanvas.tsx';
 import { resolveTldrawLicenseKey } from '../../lib/tldraw-license';
 import '../../styles/chat-page.css';
 import '../../styles/chat-bubbles.css';
+import '../../styles/voice-mode.css';
 
 // Scopes the canvas's local persistence so each conversation keeps its own
 // board. Route param only — the thread's contents still live in localStorage
@@ -31,6 +32,7 @@ const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 		class="chat-split"
 		id="chatSplit"
 		data-whiteboard="true"
+		data-mode="chat"
 		style="--bg:#141414;--stage:#0a0a0a;--surface:#141414;--surface2:#141414;--card:#1a1a1a;--card-hover:#1f1f1f;--prompt-bg:#1c1c1e;--icon-hover:#2a2a2d;--border:#262626;--border2:#292929;--border3:#3a3a3a;--hover:#1f1f1f;--text:#dddddd;--text-dim:#999999;--text-dimmer:#8a8a8a;color:#dddddd;"
 	>
 		<div class="chat-page" id="chatPage" style="color:#dddddd;">
@@ -69,6 +71,34 @@ const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 				<div class="canvas-empty-hint" id="canvasEmptyHint">
 					<p>Your doodles will appear here as you generate them.<br/>Pan, zoom, resize, draw on them — it's your infinite canvas.</p>
 				</div>
+
+				<!-- Chat | Talk mode toggle. Talk mode hides the chat column and
+				     mounts the voice HUD so the user just speaks and watches
+				     doodles land on the canvas. Both modes share this one canvas
+				     and the one agent — it is a different input surface, not a
+				     second app. -->
+				<div class="mode-toggle" id="modeToggle" role="tablist" aria-label="Chat or Talk">
+					<button type="button" class="mode-toggle-btn" id="modeChatBtn" role="tab" aria-selected="true" data-mode="chat">
+						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16v11H8l-4 4V5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+						<span>Chat</span>
+					</button>
+					<button type="button" class="mode-toggle-btn" id="modeTalkBtn" role="tab" aria-selected="false" data-mode="voice">
+						<!-- doodle-style wave squiggle -->
+						<svg width="17" height="15" viewBox="0 0 28 24" fill="none" aria-hidden="true"><path d="M2 12c2-6 4 6 6 0s4-9 6 0 4 6 6 0 4-4 6 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						<span>Talk</span>
+					</button>
+				</div>
+
+				<!-- Voice HUD island — floats over the canvas in Talk mode. It
+				     surfaces the DO's canvas events to handleVoiceCanvasEvent
+				     (VoiceMode wrapper), which renders them through the same
+				     tldraw path the typed chat uses. -->
+				<!-- Voice HUD mounts here as a standalone React root (see
+				     scripts/app/voice/mount.ts), NOT an Astro island — a second
+				     client:only React island on this tldraw page breaks the
+				     Cloudflare adapter's asset relocation. -->
+				<div class="voice-mode-layer" id="voiceModeLayer" hidden></div>
+
 				<button type="button" class="canvas-close" id="whiteboardClose" aria-label="Close canvas">
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
 				</button>
@@ -80,3 +110,50 @@ const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 </AppShellLayout>
 
 <script src="../../scripts/app/chat/index.ts"></script>
+
+<script>
+	/* Chat | Talk mode toggle. Flips data-mode on the split (CSS hides the chat
+	   column in voice mode and reveals the voice HUD layer). Talk mode also
+	   forces the canvas open — it is the only content surface there. The HUD's
+	   own Start control opens the socket; entering Talk mode does not, so no
+	   mic permission is requested until the user taps Talk-to-it. */
+	const split = document.getElementById("chatSplit");
+	const chatBtn = document.getElementById("modeChatBtn");
+	const talkBtn = document.getElementById("modeTalkBtn");
+	const voiceLayer = document.getElementById("voiceModeLayer");
+
+	function setMode(mode: "chat" | "voice") {
+		if (!split) return;
+		split.dataset.mode = mode;
+		const voice = mode === "voice";
+		chatBtn?.setAttribute("aria-selected", String(!voice));
+		talkBtn?.setAttribute("aria-selected", String(voice));
+		if (voiceLayer) voiceLayer.hidden = !voice;
+		// Talk mode needs the board visible (tldraw won't init in a hidden
+		// container, and it's the whole surface here).
+		if (voice) {
+			split.dataset.whiteboard = "true";
+			window.dispatchEvent(new Event("resize"));
+			/* Flag FIRST, then event. The canvas island is ~1MB and hydrates after
+			   this runs (especially for the ?voice=1 deep-link, which executes
+			   during page parse), so an event alone is lost before its listener
+			   exists. The island also reads this flag on mount. */
+			(window as unknown as { __doodleVoiceOpen?: boolean }).__doodleVoiceOpen = true;
+			window.dispatchEvent(new Event("doodleai:voice-open"));
+		} else {
+			(window as unknown as { __doodleVoiceOpen?: boolean }).__doodleVoiceOpen = false;
+		}
+	}
+
+	chatBtn?.addEventListener("click", () => setMode("chat"));
+	talkBtn?.addEventListener("click", () => setMode("voice"));
+	// The HUD's own Done / Back-to-typing controls return the page to chat mode.
+	window.addEventListener("doodleai:voice-close", () => setMode("chat"));
+
+	// Deep-link from the home "Talk to your doodle" button: /c/new?voice=1 opens
+	// straight into Talk mode so voice is reachable in one tap from the landing
+	// page, not buried behind the in-canvas toggle.
+	if (new URLSearchParams(window.location.search).get("voice") === "1") {
+		setMode("voice");
+	}
+</script>

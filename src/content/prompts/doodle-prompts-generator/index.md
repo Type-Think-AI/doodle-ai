@@ -4,7 +4,6 @@ description: "The doodle prompts generator at doodleai.art draws a fictional doo
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
 heroImage: "https://cdn.picxstudio.com/api/generated/image_79a7b119-8750-4b2e-8974-fa2fc7a82144.jpg"
-category: "prompts"
 cluster: "learn"
 skill: "surprise"
 primaryKeyword: "doodle prompts generator"

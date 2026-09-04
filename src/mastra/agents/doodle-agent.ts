@@ -32,11 +32,11 @@ import { canvasEditTool } from "../tools/canvas-edit";
  *
  * Model: routed through OpenRouter's gateway syntax (openrouter/<provider>/
  * <model>), reading OPENROUTER_API_KEY and OPENROUTER_MODEL from env. The
- * default model is Google's `google/gemini-3.7-flash`; set OPENROUTER_MODEL
+ * default model is Google's `google/gemini-3.8-flash`; set OPENROUTER_MODEL
  * to another OpenRouter model ID in `.dev.vars` or Worker secrets to change it.
  */
 
-const DEFAULT_OPENROUTER_MODEL = "google/gemini-3.7-flash";
+const DEFAULT_OPENROUTER_MODEL = "google/gemini-3.8-flash";
 const configuredOpenRouterModel = process.env.OPENROUTER_MODEL?.trim() || DEFAULT_OPENROUTER_MODEL;
 const openRouterModel = configuredOpenRouterModel.startsWith("openrouter/")
   ? configuredOpenRouterModel

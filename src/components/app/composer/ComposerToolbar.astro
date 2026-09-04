@@ -172,9 +172,41 @@ const STYLE_OPTIONS = THEMES.map((theme) => ({
   <button class="composer-stop" id={`${id}StopBtn`} type="button" aria-label="Stop generation" hidden>
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="6.5" y="6.5" width="11" height="11" rx="2.5" fill="currentColor"/></svg>
   </button>
+  <!-- Talk mode. Sits immediately left of Send because speaking is the OTHER
+       way to make the same request — the two belong in one glance. Clicking it
+       opens the full-screen voice surface where the agent greets you and you
+       just talk. -->
+  <button class="composer-talk" id={`${id}TalkBtn`} type="button" aria-label="Talk instead of typing" title="Talk to your doodle">
+    <svg width="18" height="13" viewBox="0 0 22 14" fill="none" aria-hidden="true"><path d="M1 7.5c1.6-4.2 2.8 3.6 4.4-.4 1.5-3.9 2.9 5.4 4.5 1.1 1.6-4.3 2.7 4.2 4.3.3C15.7 4.9 17.1 9.6 21 6.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+  </button>
   <button class="composer-send" id={`${id}Send`} type="button" aria-label="Send">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 19.5V5m0 0-6.2 6.2M12 5l6.2 6.2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
   </button>
 </div>
+
+<script>
+  /* Talk button → open voice mode.
+     On /c/[id] the canvas island is already there, so we just raise the flag +
+     event. On the home page (no canvas) we navigate into a fresh thread in
+     voice mode. The flag is a BACKLOG: the React island may hydrate after this
+     click (tldraw is ~1MB), and an event fired before its listener attaches is
+     lost — the same race the canvas-add queue already solves. */
+  document.querySelectorAll<HTMLButtonElement>('[id$="TalkBtn"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const split = document.getElementById("chatSplit");
+      if (!split) {
+        window.location.href = "/c/new?voice=1";
+        return;
+      }
+      (window as unknown as { __doodleVoiceOpen?: boolean }).__doodleVoiceOpen = true;
+      split.dataset.mode = "voice";
+      split.dataset.whiteboard = "true";
+      document.getElementById("modeTalkBtn")?.setAttribute("aria-selected", "true");
+      document.getElementById("modeChatBtn")?.setAttribute("aria-selected", "false");
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("doodleai:voice-open"));
+    });
+  });
+</script>
 
 <div class="mention-popover" id={`${id}MentionPopover`} hidden></div>

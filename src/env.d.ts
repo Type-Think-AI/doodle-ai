@@ -46,6 +46,20 @@ interface Env {
    */
   BOARD_ROOM: DurableObjectNamespace<import("./boards/BoardRoom").BoardRoom>;
   /**
+   * One live voice session per call (src/voice/VoiceRoom.ts). Built on
+   * @cloudflare/voice's withVoice(Agent) mixin: SQLite-backed conversation
+   * history, a per-call Flux STT transcriber, and Aura TTS — all off the
+   * keyless AI binding below. The DO terminates the browser's audio WebSocket
+   * and runs the existing Mastra doodleAgent inside onTurn().
+   */
+  VOICE_ROOM: DurableObjectNamespace<import("./voice/VoiceRoom").VoiceRoom>;
+  /**
+   * Workers AI binding — keyless, account-level. Voice mode uses it for both
+   * ears (@cf/deepgram/flux STT via WorkersAIFluxSTT) and mouth
+   * (@cf/deepgram/aura-1 TTS via WorkersAITTS). No API key or secret required.
+   */
+  AI: Ai;
+  /**
    * Images, screenshots and video pasted onto the roadmap board. R2 rather than
    * D1 or the DO's SQLite: these are large binaries, and a screenshot with an
    * arrow drawn on it is the single most useful piece of feedback an artist can

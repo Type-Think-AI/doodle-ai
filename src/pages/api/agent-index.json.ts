@@ -1,4 +1,4 @@
-import { getCollection } from "astro:content";
+import { getEditorialEntries } from "../../lib/content/editorial";
 import { idToPath } from "../../lib/content/reserved-routes";
 import { getArticleLinks } from "../../lib/content/articles";
 
@@ -78,7 +78,8 @@ export async function GET() {
 
   // Bodies, read once and keyed by the same id -> path mapping the helper uses,
   // so the excerpt lines up with each link without re-globbing per article.
-  const entries = await getCollection("articles");
+  // Both collections, so a prompt page is not silently missing its body/excerpt.
+  const entries = await getEditorialEntries();
   const bodyByPath = new Map<string, string | undefined>(
     entries.map((entry) => [idToPath(entry.id), entry.body]),
   );

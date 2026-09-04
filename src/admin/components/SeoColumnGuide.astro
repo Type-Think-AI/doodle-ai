@@ -1,0 +1,55 @@
+---
+/* The "what these columns mean" explainer.
+ *
+ * Collapsed by default and deliberately so. The distinction it draws — that
+ * being submitted and being indexed are different facts — is load-bearing, and
+ * it was originally two always-open bordered panels above the table. It is a
+ * thing you read once, not a banner that should own the top of the page forever,
+ * so it became a <details> the moment it stopped earning that space.
+ */
+---
+
+<details class="seo-explain">
+	<summary>What these columns mean</summary>
+	<dl>
+		<dt>IndexNow</dt>
+		<dd>
+			Whether we told the engines about this URL. A <code>200</code> means received, not
+			indexed — those are different facts. One push reaches Bing, Yandex, Seznam, Naver, Yep,
+			the Internet Archive and Amazonbot.
+		</dd>
+		<dt>Bing / Google</dt>
+		<dd>
+			Whether the engine actually indexed it. Read from a separate API that is not wired up
+			yet, so these stay <code>—</code> for now. Google has no URL-submission API at all, so
+			it will only ever be a status column here.
+		</dd>
+		<dt>Sync now vs Resend all</dt>
+		<dd>
+			<strong>Sync now</strong> rediscovers pages from the sitemap and pushes only what is new
+			or changed since its last successful push — the same rule the hourly cron uses, so
+			pressing it twice is a no-op. <strong>Resend all</strong> ignores that rule; it is for
+			the first seed only, because bulk-resubmitting unchanged URLs is what earns a host a
+			rate-limit.
+		</dd>
+	</dl>
+</details>
+
+<style>
+	.seo-explain { font-size: 12px; max-width: 92ch; }
+	.seo-explain summary {
+		cursor: pointer; color: var(--text-dim); font-size: 12px;
+		padding: 4px 0; width: fit-content;
+	}
+	.seo-explain summary:hover { color: var(--text); }
+	.seo-explain summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+	.seo-explain dl { margin: 6px 0 0; display: grid; gap: 10px; }
+	/* Uppercase micro-label rather than bold body text: at 12px a weight change
+	   alone did not read as a heading against the paragraph beneath it. */
+	.seo-explain dt {
+		color: var(--text-dim); font-size: 10px;
+		text-transform: uppercase; letter-spacing: .06em;
+	}
+	.seo-explain dd { margin: 2px 0 0; color: var(--text-dimmer); line-height: 1.55; }
+	.seo-explain code { font-size: 11px; padding: 1px 4px; border-radius: 4px; background: var(--hover); }
+</style>

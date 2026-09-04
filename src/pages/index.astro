@@ -53,6 +53,17 @@ const PRIORITY_SKILL_COUNT = 4;
 			<h1>What should we doodle?</h1>
 			<p class="home-sub">Add a photo, or just describe a character.</p>
 			<PromptComposer id="home" variant="hero" placeholder="Describe a doodle or attach a photo" />
+
+			<!-- Flagship voice mode entry point. Jumps to a fresh chat in Talk
+			     mode, where the user just speaks and the doodle appears on the
+			     canvas as the agent talks back. The composer above stays the
+			     default typed path; this is the "or talk to it" alternative. -->
+			<a class="home-talk" href="/c/new?voice=1">
+				<span class="home-talk-wave" aria-hidden="true">
+					<svg width="20" height="14" viewBox="0 0 22 14" fill="none"><path d="M1 7.5c1.6-4.2 2.8 3.6 4.4-.4 1.5-3.9 2.9 5.4 4.5 1.1 1.6-4.3 2.7 4.2 4.3.3C15.7 4.9 17.1 9.6 21 6.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</span>
+				Talk to your doodle
+			</a>
 		</div>
 
 		<div class="home-skills">
@@ -197,6 +208,28 @@ const PRIORITY_SKILL_COUNT = 4;
 	   screenful between the input and the wall. */
 	.home-hero { max-width: 680px; margin: 0 auto 24px; text-align: left; }
 	.home-hero h1 { font-size: 34px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); margin: 0 0 8px; text-align: center; }
+	/* "Talk to your doodle" — the flagship voice entry, centered under the
+	   composer. Warm doodle accent (never blue/violet), quiet until hovered. */
+	.home-talk {
+		display: inline-flex;
+		align-items: center;
+		gap: 9px;
+		margin: 14px auto 0;
+		padding: 9px 16px 9px 14px;
+		border: 1px solid color-mix(in srgb, #f0b357 40%, var(--border, #262626));
+		border-radius: 999px;
+		background: color-mix(in srgb, #f0b357 8%, transparent);
+		color: var(--text, #ddd);
+		font-size: 14px;
+		text-decoration: none;
+		width: fit-content;
+		transition: background 140ms ease, border-color 140ms ease;
+	}
+	/* The hero is text-align:left on its container; center this pill under it. */
+	.home-hero { display: flex; flex-direction: column; }
+	.home-talk { align-self: center; }
+	.home-talk:hover { background: color-mix(in srgb, #f0b357 16%, transparent); border-color: #f0b357; }
+	.home-talk-wave { display: inline-flex; color: #f0b357; }
 	.home-sub { font-size: 14px; color: var(--text-dimmer); margin: 0 0 26px; text-align: center; }
 
 	/* Heading, filters and the browse link share ONE row: the filters were their

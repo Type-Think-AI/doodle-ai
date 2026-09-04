@@ -98,11 +98,44 @@ function scheduleRebuild(changedPath) {
   debounceTimer = setTimeout(build, DEBOUNCE_MS);
 }
 
+/**
+ * Drop miniflare's emulated Cache API state before starting the runtime.
+ *
+ * WHY: this machine has two wranglers — the project's pinned devDependency and a
+ * newer global one. They disagree on the internal `_cf_ALARM` schema (the newer
+ * writes 3 columns: actor_id, scheduled_time, actor_name; the pinned one supplies
+ * 2). If the global wrangler ever touches this state dir, the pinned runtime then
+ * dies at startup with a FATAL, before serving anything:
+ *
+ *   Fatal uncaught kj::Exception: SENTRY_DO SQLite failed;
+ *   table _cf_ALARM has 3 columns but 2 values were supplied
+ *
+ * That reads as "voice mode is broken" when it is really a stale local cache file.
+ * This directory only holds the emulated Cache API — no app data — and is rebuilt
+ * on boot, so clearing it every start is free insurance. Deliberately scoped to
+ * `cache/` ONLY: `d1/` holds local test rows, `do/` holds board state, and `kv/`
+ * holds sessions. None of those are touched.
+ */
+function clearStaleCacheState() {
+  const cacheState = join(root, ".wrangler", "state", "v3", "cache");
+  if (!existsSync(cacheState)) return;
+  try {
+    rmSync(cacheState, { recursive: true, force: true });
+    console.log("▶ Cleared stale miniflare cache state (emulated Cache API only).");
+  } catch (error) {
+    // Never block dev on this — worst case the FATAL above returns and the
+    // message tells the next reader exactly which directory to remove.
+    console.warn(`⚠ Could not clear ${cacheState}:`, error?.message ?? error);
+  }
+}
+
 async function main() {
   console.log("▶ Migrating shared staging D1 schema…");
   await run("pnpm", ["run", "db:migrate:staging"]);
 
   await build();
+
+  clearStaleCacheState();
 
   console.log("▶ Starting wrangler dev --remote --env staging …");
   const wrangler = spawn("pnpm", ["exec", "wrangler", "dev", "--remote", "--env", "staging"], {

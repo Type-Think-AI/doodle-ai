@@ -1,42 +1,39 @@
-import { getCollection, type CollectionEntry } from "astro:content";
-import { idToPath } from "./reserved-routes";
-
-export type Article = CollectionEntry<"articles">;
-export type Category = Article["data"]["category"];
-export type Cluster = Article["data"]["cluster"];
-
-/** Human labels for the editorial formats. Used as the article eyebrow and on /learn/. */
-export const CATEGORY_LABEL: Record<Category, string> = {
-	tool: "Free tool",
-	guide: "Guide",
-	explainer: "Explainer",
-	prompts: "Prompts",
-	studios: "For studios",
-};
-
-/** Order the categories appear in on /learn/, highest search intent first. */
-export const CATEGORY_ORDER: readonly Category[] = ["tool", "guide", "explainer", "prompts", "studios"];
-
-export const CATEGORY_BLURB: Record<Category, string> = {
-	tool: "Open one, describe it, generate. The skill is already selected.",
-	guide: "Step-by-step processes for one photo and one result.",
-	explainer: "What a term actually means, and which job you have.",
-	prompts: "Copyable prompt patterns for the runnable skills.",
-	studios: "Production workflows for studios and filmmakers.",
-};
-
-/**
- * Sitemap priority per format. Tool pages rank highest because they are the only
- * ones where the page itself completes the searcher's job rather than describing
- * how to complete it.
+/* The editorial link graph: one flat list of links, shared by the sitemap, the
+ * /learn/ index, related reading, breadcrumbs, RSS and the agent endpoints.
+ *
+ * Every function here reads BOTH editorial collections through
+ * `getEditorialEntries()`. That is not incidental: prompt pages moved into their
+ * own collection while keeping their existing root URLs, so anything that reads
+ * only `articles` would drop four indexed pages out of the sitemap, the /learn/
+ * index and the related-reading graph — building cleanly the whole time. See
+ * src/lib/content/editorial.ts for the full argument.
+ *
+ * The file keeps its name and its exports, including the CATEGORY_* maps it now
+ * re-exports from ./taxonomy.ts, so the ten or so importers did not have to
+ * change when the collection split landed.
  */
-export const CATEGORY_PRIORITY: Record<Category, string> = {
-	tool: "0.9",
-	guide: "0.8",
-	explainer: "0.8",
-	prompts: "0.7",
-	studios: "0.6",
-};
+import { idToPath } from "./reserved-routes";
+import { entryCategory, getEditorialEntries, type EditorialEntry } from "./editorial";
+import {
+	CATEGORY_BLURB,
+	CATEGORY_LABEL,
+	CATEGORY_ORDER,
+	type Category,
+	type Cluster,
+} from "./taxonomy";
+
+export type { ArticleCategory, Category, Cluster } from "./taxonomy";
+export {
+	ARTICLE_CATEGORIES,
+	CATEGORY_BLURB,
+	CATEGORY_LABEL,
+	CATEGORY_ORDER,
+	CATEGORY_PRIORITY,
+	CLUSTERS,
+} from "./taxonomy";
+
+/** An entry from either editorial collection. Kept for existing importers. */
+export type Article = EditorialEntry;
 
 export interface ArticleLink {
 	path: string;
@@ -54,14 +51,16 @@ export interface ArticleLink {
 	primaryKeyword?: string;
 }
 
-function toLink(entry: Article): ArticleLink {
+function toLink(entry: EditorialEntry): ArticleLink {
 	const path = idToPath(entry.id);
 	return {
 		path,
 		url: `/${path}/`,
 		title: entry.data.title,
 		description: entry.data.description,
-		category: entry.data.category,
+		// Injected from the collection for a prompt page, which carries no
+		// `category` field — see `entryCategory`.
+		category: entryCategory(entry),
 		cluster: entry.data.cluster,
 		pubDate: entry.data.pubDate,
 		updatedDate: entry.data.updatedDate,
@@ -71,15 +70,21 @@ function toLink(entry: Article): ArticleLink {
 	};
 }
 
-/** Every article as a flat link list, newest first. */
+/** Every editorial page — articles AND prompts — as a flat link list, newest first. */
 export async function getArticleLinks(): Promise<ArticleLink[]> {
-	const entries = await getCollection("articles");
+	const entries = await getEditorialEntries();
 	return entries
 		.map(toLink)
 		.sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
 }
 
-/** Articles grouped by editorial format, in CATEGORY_ORDER. */
+/**
+ * Editorial pages grouped by format, in CATEGORY_ORDER.
+ *
+ * The `prompts` group is still populated here even though prompt pages are no
+ * longer articles: dropping them would orphan four indexed URLs from /learn/,
+ * which is their main internal-link source.
+ */
 export async function getArticlesByCategory(): Promise<
 	{ category: Category; label: string; blurb: string; items: ArticleLink[] }[]
 > {

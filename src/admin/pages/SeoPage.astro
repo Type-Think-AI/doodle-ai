@@ -1,0 +1,213 @@
+---
+import { getDb } from '../../db/client';
+import { canMutateAdmin } from '../../lib/auth/admin-guard';
+import { loadSeoTable } from '../../lib/seo/table';
+import { resolveIndexNowConfig, runtimeEnvFrom } from '../../lib/seo/config';
+import SeoSyncBar from '../components/SeoSyncBar.astro';
+import SeoColumnGuide from '../components/SeoColumnGuide.astro';
+import StatusPill from '../components/StatusPill.astro';
+
+const db = getDb(Astro);
+const { rows, summary } = await loadSeoTable(db);
+const canSync = canMutateAdmin(Astro.locals.admin!.platformRole);
+
+/* Resolved on every load, which is what lets "Sync now" simply reload: the fresh
+   row counts and the current push state are both re-read server-side, so one
+   navigation tells the whole story without the client tracking any of it.
+
+   Surfaced rather than swallowed, because "nothing to push" and "we have never
+   been able to push" look identical from a table of zeroes. */
+const indexnow = await resolveIndexNowConfig(runtimeEnvFrom(Astro), Astro.url.origin);
+const pushBlocked = 'unavailable' in indexnow ? indexnow.unavailable : null;
+
+const stats = [
+	{ value: String(summary.live), label: 'Tracked' },
+	{ value: String(summary.pending), label: 'Pending push' },
+	{ value: String(summary.neverSubmitted), label: 'Never sent' },
+	{ value: String(summary.removed), label: 'Dropped' },
+	{ value: when(summary.lastSyncAt), label: 'Last sync UTC', muted: true },
+];
+
+function shortPath(path: string): string {
+	if (path === '/') return '/';
+	return path.replace(/^\/|\/$/g, '');
+}
+
+type Pill = { label: string; tone: 'green' | 'red' | 'blue' | 'neutral' };
+
+/* Returns null for "we have never asked", which the template renders as a plain
+   dim dash rather than a pill. A null verdict is NOT "not indexed" — showing it
+   red would invent a fact about every page on the site — but it is also not a
+   state worth a chip: 149 rows x 2 columns of neutral pills reading "—" was 298
+   chips carrying no information, and on mobile each one took a labelled row. */
+function verdictPill(verdict: string | null): Pill | null {
+	if (verdict === null) return null;
+	if (verdict === 'indexed') return { label: 'Indexed', tone: 'green' };
+	if (verdict === 'crawled_not_indexed') return { label: 'Crawled, not indexed', tone: 'red' };
+	if (verdict === 'duplicate') return { label: 'Duplicate', tone: 'red' };
+	if (verdict === 'not_indexed') return { label: 'Not indexed', tone: 'red' };
+	if (verdict === 'excluded') return { label: 'Excluded', tone: 'blue' };
+	return { label: 'Error', tone: 'red' };
+}
+
+function submissionPill(row: (typeof rows)[number]): Pill {
+	if (row.lastSubmittedAt === null) return { label: 'Never sent', tone: 'neutral' };
+	if (row.lastSubmissionOk === false) return { label: 'Failed', tone: 'red' };
+	return { label: 'Sent', tone: 'green' };
+}
+
+function when(value: Date | null): string {
+	if (!value) return '—';
+	return value.toISOString().slice(0, 16).replace('T', ' ');
+}
+---
+
+<div class="seo-page">
+	<SeoSyncBar stats={stats} canSync={canSync} />
+
+	{pushBlocked && (
+		<p class="seo-flag">
+			<span>Push unavailable</span>
+			{pushBlocked}
+		</p>
+	)}
+
+	<SeoColumnGuide />
+
+	{rows.length === 0 ? (
+		<div class="admin-empty">
+			<strong>Nothing tracked yet.</strong>
+			<span>Press “Sync now” to read the sitemap and populate the table.</span>
+		</div>
+	) : (
+		<div class="admin-table-card">
+			<div class="admin-table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>Page</th>
+							<th>URL</th>
+							<th>IndexNow</th>
+							<th>Bing</th>
+							<th>Google</th>
+							<th>Updated</th>
+							<th>Last sent</th>
+						</tr>
+					</thead>
+					<tbody>
+						{rows.map((row) => {
+							const sent = submissionPill(row);
+							const bing = verdictPill(row.bingVerdict);
+							const google = verdictPill(row.googleVerdict);
+							/* `data-label` feeds the ≤720px block layout below, where a 7-column
+							   table cannot fit and silently clips mid-word. Same cells,
+							   recomposed — not a desktop table with columns hidden. */
+							return (
+								<tr class:list={[row.removedAt && 'dropped']}>
+									<td class="cell-title" data-label="Page">
+										<strong>{row.title ?? shortPath(row.path)}</strong>
+										{row.removedAt && <span class="tag">Not in sitemap</span>}
+									</td>
+									<td class="cell-path" data-label="URL">
+										<a href={row.path} target="_blank" rel="noopener">{shortPath(row.path)}</a>
+									</td>
+									<td data-label="IndexNow">
+										<StatusPill status={sent.label} tone={sent.tone} />
+										{row.lastSubmissionError && (
+											<span class="err">{row.lastSubmissionError}</span>
+										)}
+									</td>
+									<td data-label="Bing">
+										{bing ? <StatusPill status={bing.label} tone={bing.tone} /> : <span class="unknown" title="Not checked yet">—</span>}
+									</td>
+									<td data-label="Google">
+										{google ? <StatusPill status={google.label} tone={google.tone} /> : <span class="unknown" title="Not checked yet">—</span>}
+									</td>
+									<td class="cell-time" data-label="Updated">{when(row.contentLastmod)}</td>
+									<td class="cell-time" data-label="Last sent">{when(row.lastSubmittedAt)}</td>
+								</tr>
+							);
+						})}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	)}
+</div>
+
+<style>
+	.seo-page { display: flex; flex-direction: column; gap: 16px; }
+
+	/* A left rule instead of a bordered card — states the condition without
+	   building a second surface on top of the page. */
+	.seo-flag {
+		margin: 0; padding: 2px 0 2px 12px;
+		border-left: 2px solid var(--red);
+		color: var(--text-dim); font-size: 12px; line-height: 1.5; max-width: 92ch;
+	}
+	.seo-flag span { display: block; color: var(--text); font-size: 12px; }
+
+	.unknown { color: var(--text-dimmer); font-size: 12px; }
+
+	.cell-title { min-width: 190px; }
+	.cell-title strong { color: var(--text); font-size: 13px; display: block; }
+	.cell-title .tag { color: var(--red); font-size: 10px; }
+	.cell-path a { color: var(--text-dim); font-size: 12px; text-decoration: none; }
+	.cell-path a:hover { color: var(--text); text-decoration: underline; }
+	.cell-time { color: var(--text-dimmer); font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+	tr.dropped { opacity: .55; }
+
+	/* `white-space: normal` is load-bearing: the shared admin table sets nowrap on
+	   cells, so without it the failure reason rendered as one long line straight
+	   across the Bing and Google columns instead of wrapping inside its own. */
+	.err {
+		display: block; color: var(--red); font-size: 10px;
+		margin-top: 3px; max-width: 240px; line-height: 1.4;
+		white-space: normal;
+	}
+
+	@media (max-width: 720px) {
+		/* The table recomposed as one block per page. A 7-column table at 390px
+		   scrolls inside .admin-table-wrap, which is technically not overflow but
+		   reads as a row clipped mid-word with no affordance that anything is
+		   hidden. Each row becomes a labelled block instead: the title leads, then
+		   one label/value line per field. `thead` goes because every cell now
+		   carries its own label — the header is not lost, it is relocated. */
+		.admin-table-card { border-radius: 10px; }
+		.admin-table-wrap thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+		.admin-table-wrap table,
+		.admin-table-wrap tbody,
+		.admin-table-wrap tr,
+		.admin-table-wrap td { display: block; width: auto; }
+		.admin-table-wrap tr { padding: 12px 14px; border-bottom: 1px solid var(--border2); }
+		.admin-table-wrap tr:last-child { border-bottom: 0; }
+		.admin-table-wrap td { border: 0; padding: 0; }
+
+		/* Field rows: label left, value right. */
+		.admin-table-wrap td:not(.cell-title) {
+			display: flex; align-items: baseline; justify-content: space-between;
+			gap: 12px; padding: 5px 0 0; white-space: normal;
+		}
+		.admin-table-wrap td:not(.cell-title)::before {
+			content: attr(data-label);
+			color: var(--text-dimmer); font-size: 10px;
+			text-transform: uppercase; letter-spacing: .06em;
+			flex: 0 0 auto;
+		}
+
+		/* The title is the block's heading, so it takes no label row. The
+		   white-space reset matters for the same reason as .err above. */
+		.cell-title { min-width: 0; padding-bottom: 2px; }
+		.cell-title strong {
+			font-size: 13px; line-height: 1.35;
+			white-space: normal; overflow-wrap: anywhere;
+		}
+		.cell-path a { font-size: 12px; text-align: right; overflow-wrap: anywhere; }
+
+		/* The IndexNow cell holds a pill AND a failure reason. As a single flex row
+		   the reason was squeezed past the right edge, so it drops onto its own
+		   full-width line beneath the pill. */
+		.admin-table-wrap td[data-label='IndexNow'] { flex-wrap: wrap; }
+		.err { max-width: none; width: 100%; margin-top: 4px; text-align: left; }
+	}
+</style>

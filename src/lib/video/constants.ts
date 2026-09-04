@@ -21,8 +21,9 @@
  * that doodle character is `reference`.
  *
  * RESOLUTION, AND WHY 480p IS THE ONLY TIER HERE.
- * H3 Max renders 480P and 768P natively. PicX prices both (30 and 52 credits per
- * second). But the public API's request schema pins `resolution` to
+ * The H3 Max family renders 480P and 768P natively. PicX prices Turbo at 26
+ * credits per second (plain H3 Max is 52). But the public API's request schema
+ * pins `resolution` to
  * ^(480p|720p|1080p)$ — so 768p is rejected at parse time (422) and 720p is
  * rejected as unpriced for this model (400, "Resolution '720p' is not available").
  * 480p is therefore the only tier reachable from here today. `768p` is listed
@@ -30,8 +31,14 @@
  * change on both sides, not a re-derivation — but it is NOT selectable until then.
  */
 
-/** PicX model id. The user-facing name is "MiniMax H3 Max"; there is no "S3". */
-export const VIDEO_MODEL = "minimax/h3-max";
+/** PicX model id. The user-facing name is "MiniMax H3 Max Turbo"; there is no "S3".
+ *
+ * Turbo, not plain H3 Max: same family and the same three modes, but PicX prices
+ * it at 26 credits/second against H3 Max's 52 — half the cost per clip for this
+ * app's dominant path (a short 480p animation of a doodle we just drew). Verified
+ * against PicX's live model list (`GET /v1/models`) rather than assumed, because
+ * an invented model id fails at submit time AFTER the credit gate has run. */
+export const VIDEO_MODEL = "minimax/h3-max-turbo";
 
 /** How a clip sources its visual input — PicX's `mode` field, verbatim. */
 export const VIDEO_MODES = ["text", "image", "reference"] as const;
@@ -88,8 +95,10 @@ export const REFERENCE_IMAGE_FORMATS = [
  * margin images carry, with room for the reference-token surcharge fal adds on
  * heavy reference inputs (which PicX does not itemise back to us).
  *
- * 768p is priced here for the day the upstream regex admits it: it costs 52
- * PicX credits per second, so it is 2 internal credits per second.
+ * 768p is priced here for the day the upstream regex admits it. Internal rates
+ * are unchanged by the move to Turbo — Turbo costs PicX 26 credits/second where
+ * plain H3 Max cost 52, so the same internal charge now carries roughly double
+ * the margin rather than needing a re-derivation.
  */
 export const VIDEO_CREDITS_PER_SECOND: Record<VideoResolution | "768p", number> = {
   "480p": 1,

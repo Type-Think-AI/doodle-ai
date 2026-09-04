@@ -21,7 +21,7 @@
  * src/lib/canvas/media.ts). Position is auto-flowed left-to-right in rows so a
  * multi-item batch reads as a set rather than a stack.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import {
   Tldraw,
   type Editor,
@@ -44,6 +44,38 @@ import { applyCanvasOps } from "./canvas/apply-ops";
 import { CanvasVideoToolbar } from "./canvas/CanvasVideoToolbar";
 import { publishDigest } from "./canvas/digest";
 import { assignRef, autoRef } from "./canvas/refs";
+
+/* Voice ("Talk") mode HUD. Rendered INSIDE this island — the app's single React
+ * graph — rather than as its own client:only island or page <script>. That is
+ * load-bearing: a second React client graph on this page makes @astrojs/cloudflare's
+ * post-build asset-relocation step reference a shared client chunk as a worker
+ * asset and fail with ENOENT. React.lazy keeps @cloudflare/voice/react in its own
+ * async chunk so none of the voice JS (or its socket) loads until Talk mode opens. */
+const VoiceHud = lazy(() => import("./voice/VoiceHud"));
+
+/* Forward a voice-generated event onto the board. The HUD hands us the raw
+   event the Voice DO sent; we route image/video/canvas onto the SAME window
+   CustomEvents the typed chat uses (doodleai:canvas-add / :canvas-ops), which
+   this island already listens for — so a spoken doodle lands exactly like a
+   typed one. Kept as a thin dispatcher here to avoid a static import of the
+   bridge's chat/canvas + media chain, which the Worker graph also touches. */
+function handleVoiceCanvasEvent(raw: unknown): void {
+  if (!raw || typeof raw !== "object") return;
+  const ev = raw as { type?: string; url?: string; posterUrl?: string; ops?: CanvasOp[]; label?: string };
+  if (ev.type === "image" && ev.url) {
+    window.dispatchEvent(
+      new CustomEvent("doodleai:canvas-add", { detail: { items: [{ url: ev.url, isVideo: false }] } }),
+    );
+  } else if (ev.type === "video" && ev.url) {
+    window.dispatchEvent(
+      new CustomEvent("doodleai:canvas-add", {
+        detail: { items: [{ url: ev.url, isVideo: true, posterUrl: ev.posterUrl }] },
+      }),
+    );
+  } else if (ev.type === "canvas" && ev.ops?.length) {
+    window.dispatchEvent(new CustomEvent("doodleai:canvas-ops", { detail: { ops: ev.ops, label: ev.label } }));
+  }
+}
 
 /* Chrome we deliberately remove from tldraw's default UI.
  *
@@ -251,6 +283,25 @@ export default function DoodleCanvas({ threadId, initialMedia = [], licenseKey }
    *     the start with no toggle involved. */
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
+  /* Voice mode: false until the user opens Talk mode (the mode toggle in
+     c/[id].astro fires "doodleai:voice-open"). Gating the lazy VoiceHud on this
+     means @cloudflare/voice/react and the voice socket load only on demand. */
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  useEffect(() => {
+    const onVoiceOpen = () => setVoiceOpen(true);
+    window.addEventListener("doodleai:voice-open", onVoiceOpen);
+    /* Backlog check, not just the event. This island is ~1MB (tldraw) and
+       hydrates well after first paint, so a Talk click — or the ?voice=1
+       deep-link, which fires during page parse — happens BEFORE this listener
+       exists and the event is lost forever. That was the "I click Talk and
+       nothing happens" bug. The opener also sets a window flag, so we catch the
+       case where the intent arrived early. Same pattern as the canvas-add
+       backlog queue above. */
+    if ((window as unknown as { __doodleVoiceOpen?: boolean }).__doodleVoiceOpen) {
+      setVoiceOpen(true);
+    }
+    return () => window.removeEventListener("doodleai:voice-open", onVoiceOpen);
+  }, []);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -566,6 +617,22 @@ export default function DoodleCanvas({ threadId, initialMedia = [], licenseKey }
           components={CANVAS_COMPONENTS}
           onMount={handleMount}
         />
+      )}
+      {voiceOpen && (
+        <Suspense fallback={null}>
+          {/* Voice generations arrive as the SAME events the typed chat uses, so
+              the HUD forwards them straight onto this canvas via the existing
+              window CustomEvents (doodleai:canvas-add / :canvas-ops). */}
+          <VoiceHud
+            onCanvasEvent={handleVoiceCanvasEvent}
+            onExit={() => {
+              setVoiceOpen(false);
+              // Hand the page back to chat mode so the composer returns.
+              (window as unknown as { __doodleVoiceOpen?: boolean }).__doodleVoiceOpen = false;
+              window.dispatchEvent(new Event("doodleai:voice-close"));
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );

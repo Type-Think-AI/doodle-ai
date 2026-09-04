@@ -238,3 +238,28 @@ the specific secret name and reason.
   `import("../../mastra")` that constructs the agent. Mastra reads
   `process.env` synchronously, so a late bridge silently falls back to the
   default model.
+
+
+
+## Why `TLDRAW_LICENSE_KEY` is a Secrets Store binding
+
+This rationale used to live as a `"//"` pseudo-comment inside `wrangler.json`.
+Wrangler validates that file as strict JSON and warned about the unexpected
+field on every single `wrangler dev` / `deploy` run, so the note moved here.
+
+The tldraw licence key is **not secret** — tldraw validates it in the browser, so
+it is served to every visitor. It is bound through the Secrets Store anyway for
+two reasons:
+
+1. It is **configuration that must not be committed** to a public repo.
+2. A Secrets Store binding is **validated at deploy time**. A Worker whose canvas
+   key is missing now fails to deploy, instead of shipping a canvas that blanks
+   itself five seconds after mount.
+
+Staging and production reference the **same store entry** deliberately: one
+licence, one source of truth, no drifting copies.
+
+Related: the licence is read per request via `readSecret()` and handed to the
+tldraw island as a prop from an SSR (`prerender = false`) page — never as a
+`PUBLIC_*` build-time var, which would bake whatever the build machine had into
+the bundle. See `src/lib/tldraw-license.ts`.

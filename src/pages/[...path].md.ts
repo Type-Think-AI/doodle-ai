@@ -1,5 +1,4 @@
 import type { APIRoute } from "astro";
-import type { CollectionEntry } from "astro:content";
 
 /**
  * `<article-url>.md` — a clean Markdown view of every editorial page.
@@ -33,12 +32,14 @@ import type { CollectionEntry } from "astro:content";
  * derivation is therefore shared code, and the reserved-segment collision guard
  * still runs from the HTML route, which fails the build before this one renders.
  */
-import { getCollection } from "astro:content";
+import { getEditorialEntries, editorialPageData, type EditorialEntry } from "../lib/content/editorial";
 import { idToPath } from "../lib/content/reserved-routes";
 import { markdownResponse, mdFrontmatter, resolveSite } from "../lib/markdown/page-md";
 
 export async function getStaticPaths() {
-  const entries = await getCollection("articles");
+  // Both collections — the .md twin of a prompt page must exist wherever the
+  // HTML one does, or /doodle-prompts.md 404s while /doodle-prompts/ works.
+  const entries = await getEditorialEntries();
   return entries.map((entry) => {
     const path = idToPath(entry.id);
     return { params: { path }, props: { entry, path } };
@@ -46,7 +47,7 @@ export async function getStaticPaths() {
 }
 
 interface Props {
-  entry: CollectionEntry<"articles">;
+  entry: EditorialEntry;
   path: string;
 }
 
@@ -62,7 +63,7 @@ function isoDay(date: Date): string {
 
 export const GET: APIRoute<Props> = ({ props, site }) => {
   const { entry, path } = props;
-  const data = entry.data;
+  const data = editorialPageData(entry);
   const base = resolveSite(site);
   const canonical = new URL(`/${path}/`, base).href;
 

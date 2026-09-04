@@ -15,6 +15,15 @@ const copy = ADMIN_PAGE_COPY[active] ?? ADMIN_PAGE_COPY.overview;
 // the old behaviour and it taught people the icon does nothing.
 const EXPORTABLE = new Set(['users', 'projects', 'credits', 'billing', 'feedback', 'audit']);
 const canExport = EXPORTABLE.has(active);
+
+// Same argument as EXPORTABLE, applied to the search box: it submits `?q=` and
+// only the pages listed here actually read that param, so everywhere else it was
+// an input that accepted typing, navigated, and changed nothing. A control that
+// does nothing teaches people the control does nothing. Verified by grepping for
+// `searchParams.get('q')` across src/admin/pages — add a page here the moment it
+// starts honouring the param.
+const SEARCHABLE = new Set(['credits']);
+const canSearch = SEARCHABLE.has(active);
 ---
 
 <header class="admin-header">
@@ -23,21 +32,25 @@ const canExport = EXPORTABLE.has(active);
 		<p>{copy.subtitle}</p>
 	</div>
 	<div class="header-actions">
-		<form class="search-box" method="get" action={`/admin/${active === 'overview' ? 'users' : active}`}>
-			<svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-				<circle cx="11" cy="11" r="6.4" stroke="var(--text-dim)" stroke-width="1.7"></circle>
-				<path d="m16 16 4 4" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round"></path>
-			</svg>
-			<label class="sr-only" for="admin-search">Search</label>
-			<input
-				id="admin-search"
-				name="q"
-				type="search"
-				placeholder="Search name or email…"
-				value={Astro.url.searchParams.get('q') ?? ''}
-				autocomplete="off"
-			/>
-		</form>
+		{
+			canSearch && (
+				<form class="search-box" method="get" action={`/admin/${active}`}>
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+						<circle cx="11" cy="11" r="6.4" stroke="var(--text-dim)" stroke-width="1.7" />
+						<path d="m16 16 4 4" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round" />
+					</svg>
+					<label class="sr-only" for="admin-search">Search</label>
+					<input
+						id="admin-search"
+						name="q"
+						type="search"
+						placeholder="Search name or email…"
+						value={Astro.url.searchParams.get('q') ?? ''}
+						autocomplete="off"
+					/>
+				</form>
+			)
+		}
 		{
 			canExport && (
 				<a class="ghost-btn" title="Export this page as CSV" href={`/api/admin/export/${active}${Astro.url.search}`}>

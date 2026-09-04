@@ -1,5 +1,5 @@
 import type { APIContext } from "astro";
-import { getCollection } from "astro:content";
+import { getEditorialEntries } from "../../../lib/content/editorial";
 import { idToPath } from "../../../lib/content/reserved-routes";
 import { getArticleLinks } from "../../../lib/content/articles";
 import { splitIntoSections, countWords } from "../../../lib/content/article-sections";
@@ -86,7 +86,8 @@ export async function GET({ url }: APIContext) {
     );
   }
 
-  const entries = await getCollection("articles");
+  // Both collections, so a prompt page is not silently missing its body/excerpt.
+  const entries = await getEditorialEntries();
   const entry = entries.find((e) => idToPath(e.id) === wanted);
   const body = entry?.body ?? "";
   const sections = splitIntoSections(body);

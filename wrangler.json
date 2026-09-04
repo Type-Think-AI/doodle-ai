@@ -23,6 +23,12 @@
       "migrations_dir": "migrations"
     }
   ],
+  "alias": {
+    "unicorn-magic": "./src-worker/shims/unicorn-magic.mjs"
+  },
+  "ai": {
+    "binding": "AI"
+  },
   "durable_objects": {
     "bindings": [
       {
@@ -32,6 +38,10 @@
       {
         "name": "BOARD_ROOM",
         "class_name": "BoardRoom"
+      },
+      {
+        "name": "VOICE_ROOM",
+        "class_name": "VoiceRoom"
       }
     ]
   },
@@ -46,6 +56,12 @@
       "tag": "v2",
       "new_sqlite_classes": [
         "BoardRoom"
+      ]
+    },
+    {
+      "tag": "v3",
+      "new_sqlite_classes": [
+        "VoiceRoom"
       ]
     }
   ],
@@ -93,7 +109,6 @@
       "secret_name": "BETTER_AUTH_SECRET_PROD"
     },
     {
-      "//": "Not secret — tldraw validates this in the browser, so it is served to every visitor. It lives here anyway because it is CONFIGURATION that must not be committed to a public repo, and because a Secrets Store binding is validated at deploy time: a Worker whose canvas key is missing now fails to deploy instead of shipping a canvas that blanks itself five seconds after mount.",
       "binding": "TLDRAW_LICENSE_KEY",
       "store_id": "801d9480d51848d69033ff869398bcbe",
       "secret_name": "TLDRAW_LICENSE_KEY"
@@ -127,6 +142,9 @@
           "id": "56a2808c8d0640789b98d567f0221701"
         }
       ],
+      "ai": {
+        "binding": "AI"
+      },
       "durable_objects": {
         "bindings": [
           {
@@ -136,6 +154,10 @@
           {
             "name": "BOARD_ROOM",
             "class_name": "BoardRoom"
+          },
+          {
+            "name": "VOICE_ROOM",
+            "class_name": "VoiceRoom"
           }
         ]
       },
@@ -177,7 +199,6 @@
           "secret_name": "BETTER_AUTH_SECRET_STAGING"
         },
         {
-          "//": "Same store entry as production: one licence, one source of truth, no drifting copies.",
           "binding": "TLDRAW_LICENSE_KEY",
           "store_id": "801d9480d51848d69033ff869398bcbe",
           "secret_name": "TLDRAW_LICENSE_KEY"

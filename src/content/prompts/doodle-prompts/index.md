@@ -4,7 +4,6 @@ description: "Doodle prompts at doodleai.art: describe a subject and the Surpris
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
 heroImage: "https://cdn.picxstudio.com/api/generated/image_be2e3b63-f40b-4c51-87b4-493d31bb9059.jpg"
-category: "prompts"
 cluster: "learn"
 skill: "surprise"
 primaryKeyword: "doodle prompts"

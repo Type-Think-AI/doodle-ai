@@ -4,7 +4,6 @@ description: "The doodle idea generator at doodleai.art sparks an idea and draws
 pubDate: 2026-08-29
 updatedDate: 2026-08-29
 heroImage: "https://cdn.picxstudio.com/api/generated/image_c7bb2813-cc56-4e8d-a88d-476ffa66dd82.jpg"
-category: "prompts"
 cluster: "learn"
 skill: "surprise"
 primaryKeyword: "doodle idea generator"

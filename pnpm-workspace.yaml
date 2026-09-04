@@ -1,10 +1,29 @@
 packages: []
+
+# ---------------------------------------------------------------------------
+# Voice mode dependency note.
+#
+# `agents@0.22.0` (the base for @cloudflare/voice) declares a `vite` PEER
+# (`>=6.0.0 <9.0.0`) plus a `yaml` dependency, which made pnpm fork a SECOND
+# vite@6.4.3 closure (and a second astro/@astrojs-cloudflare closure with it).
+# Astro's `.astro` Vite plugin lived on one vite instance while Vite's
+# dependency pre-scanner ran on the other, so the scanner parsed `.astro`
+# markup as raw JS and threw a spurious `Expected ";"` on a valid `href={...}`
+# in SkillCard.astro — blocking `astro dev` entirely.
+#
+# THE FIX lives in package.json: `vite@6.4.3` is now a direct devDependency, so
+# the app's own vite is the top-level singleton and agents' peer resolves to it
+# instead of forking. If that devDependency is removed, the fork (and the dev
+# error) returns.
 allowBuilds:
+  core-js-pure: false
   esbuild: true
   sharp: true
   workerd: true
 minimumReleaseAgeExclude:
   - simple-icons@16.29.0
+  - '@astrojs/cloudflare@14.3.0'
+  - astro@7.3.1
 onlyBuiltDependencies:
   - esbuild
   - sharp

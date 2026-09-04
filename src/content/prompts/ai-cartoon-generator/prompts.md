@@ -4,8 +4,8 @@ description: "A doodleai.art prompt library mapped to live skills. Learn what yo
 pubDate: 2026-08-25
 updatedDate: 2026-08-25
 heroImage: "https://cdn.picxstudio.com/api/generated/image_3519428d-094e-4689-b931-2d1b8ac304fb.jpg"
-category: "prompts"
 cluster: "cartoon"
+primaryKeyword: "ai cartoon generator prompts"
 ---
 
 **Direct answer:** On [doodleai.art](https://doodleai.art), a useful prompt names one live skill, attaches the right input, and leaves house style to the skill. The photo carries likeness. Chat text mainly routes the Mastra agent. Gift scans occasion words. Surprise uses your character brief. Copy one pattern below, then generate on that skill.

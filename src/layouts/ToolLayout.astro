@@ -60,6 +60,7 @@ import ToolAppSchema from "../components/tool/ToolAppSchema.astro";
 import Lightbox from "../components/app/Lightbox.astro";
 import { getBreadcrumbs, getRelatedArticles } from "../lib/content/articles";
 import { getToolExamples } from "../lib/content/tool-examples";
+import type { EditorialPageData } from "../lib/content/editorial";
 import { getSkill } from "../lib/skills";
 import "../styles/app.css";
 import "../styles/page.css";
@@ -72,7 +73,7 @@ import "../styles/tool-gallery.css";
 
 interface Props {
 	path: string;
-	data: CollectionEntry<"articles">["data"];
+	data: EditorialPageData;
 }
 
 const { path, data } = Astro.props;

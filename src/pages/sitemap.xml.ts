@@ -1,6 +1,5 @@
 import type { APIContext } from "astro";
-import { SKILLS } from "../lib/skills";
-import { CATEGORY_PRIORITY, getArticleLinks } from "../lib/content/articles";
+import { listIndexablePages } from "../lib/seo/pages";
 
 export const prerender = false;
 
@@ -9,88 +8,15 @@ export const prerender = false;
  *
  * Hand-built so we control exactly what is listed and what `lastmod` says.
  *
- * Only indexable pages appear here; private API routes are excluded
- * because they are not public content, and listing them in a sitemap
- * sends search engines contradictory signals.
- *
- * Editorial articles are read from the `articles` collection, so a new keyword
- * hub appears here the moment its markdown file lands — no manual edit.
+ * The entry list itself now lives in src/lib/seo/pages.ts, because /admin/seo
+ * submits the same set of URLs to IndexNow and two copies of "what is
+ * indexable" would drift on the first new article. This route is only the XML
+ * serialiser; every inclusion/exclusion decision (and the reasoning behind it)
+ * is documented there.
  */
-
-interface Entry {
-  path: string;
-  lastmod?: Date;
-  changefreq: "daily" | "weekly" | "monthly" | "yearly";
-  priority: string;
-}
-
 export async function GET(context: APIContext) {
   const site = context.site ?? new URL("https://doodleai.art");
-
-  const articles = await getArticleLinks();
-
-  // Newest article date doubles as the /learn/ directory's lastmod.
-  const newestArticle = articles
-    .map((a) => a.updatedDate ?? a.pubDate)
-    .sort((a, b) => b.getTime() - a.getTime())[0];
-
-  const studioArticles = articles.filter((a) => a.path.startsWith("for-studios/"));
-  const newestStudioArticle = studioArticles
-    .map((a) => a.updatedDate ?? a.pubDate)
-    .sort((a, b) => b.getTime() - a.getTime())[0];
-
-  const entries: Entry[] = [
-    /* "/" IS listed. An earlier revision excluded it on the grounds that the
-       homepage is a per-browser chat surface with no unique public content, but
-       that reasoning does not hold: the page server-renders an H1, the 20-card
-       skill grid, and the full marketing footer, and it is the URL that earns
-       the site name and every brand query. Google indexes it regardless via
-       internal links, so omitting it from our own sitemap only discards a signal
-       we control.
-       /boards is still excluded, and that exclusion IS correct — it is
-       account-scoped and renders a sign-in state to an anonymous crawler, so
-       listing it would submit a thin page for indexing. Same for /c/[id] and
-       /b/[id], which robots.txt also disallows. */
-    { path: "/", changefreq: "weekly", priority: "1.0" },
-    // The tool rack ranks above the skill gallery: every entry on it is a page
-    // that completes the visitor's job rather than describing a capability.
-    { path: "/tools/", lastmod: newestArticle, changefreq: "weekly", priority: "0.9" },
-    { path: "/skills/", changefreq: "weekly", priority: "0.9" },
-    // Real generated clips, fully public and static — the one page that shows
-    // rather than describes what the app makes, so it ranks with the galleries.
-    { path: "/showcase/", changefreq: "weekly", priority: "0.9" },
-    { path: "/learn/", lastmod: newestArticle, changefreq: "weekly", priority: "0.8" },
-    { path: "/about/", changefreq: "monthly", priority: "0.6" },
-    // Genuinely public content, and a page people look for by name ("is X
-    // down"). Daily rather than hourly: the page's *contents* change every
-    // check, but re-crawling it hourly would gain a search engine nothing.
-    { path: "/status/", changefreq: "daily", priority: "0.4" },
-    { path: "/terms-of-service/", changefreq: "yearly", priority: "0.3" },
-    { path: "/privacy-policy/", changefreq: "yearly", priority: "0.3" },
-    ...SKILLS.filter((s) => s.runnable).map((skill) => ({
-      path: `/skills/${skill.id}/`,
-      changefreq: "monthly" as const,
-      priority: "0.7",
-    })),
-    // The B2B namespace index only exists while it has children.
-    ...(studioArticles.length > 0
-      ? [
-          {
-            path: "/for-studios/",
-            lastmod: newestStudioArticle,
-            changefreq: "monthly" as const,
-            priority: "0.6",
-          },
-        ]
-      : []),
-    // Keyword-first article URLs, priority by editorial format.
-    ...articles.map((article) => ({
-      path: article.url,
-      lastmod: article.updatedDate ?? article.pubDate,
-      changefreq: "monthly" as const,
-      priority: CATEGORY_PRIORITY[article.category],
-    })),
-  ];
+  const entries = await listIndexablePages();
 
   const urls = entries
     .map((e) => {

@@ -1024,3 +1024,31 @@
     transition: none;
   }
 }
+
+
+/* ---- Talk (voice mode) button ------------------------------------------- */
+/* Sits immediately left of Send. Amber wave mark so it reads as the "speak"
+   alternative to the neutral send arrow, without shouting — it is a peer of
+   Send, not a bigger primary. Matches .composer-send's geometry so the pair
+   sits on one baseline at both sizes. */
+.composer-talk {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  margin-right: 6px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, #f0b357 38%, var(--border2));
+  background: color-mix(in srgb, #f0b357 10%, transparent);
+  color: #f0b357;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.composer-talk:hover {
+  background: color-mix(in srgb, #f0b357 20%, transparent);
+  border-color: #f0b357;
+}
+.composer-talk:focus-visible { outline: 2px solid #f0b357; outline-offset: 2px; }
+.composer-compact .composer-talk { width: 30px; height: 30px; flex-basis: 30px; }

@@ -116,7 +116,18 @@ function initAccountMenu(): void {
   async function switchTeam(org: OrgDto): Promise<void> {
     menu?.hidePopover?.();
     try {
-      const res = await fetch(`/api/v1/orgs/${org.id}/switch`, { method: "POST", credentials: "include" });
+      // JSON content type on a bodyless POST: without one the request is a
+      // CORS-"simple" form-shaped POST, and the remote preview layer `pnpm dev`
+      // (`wrangler dev --remote`) proxies through rejects those with its own
+      // CSRF guard before the Worker runs — 403 "Cross-site POST form
+      // submissions are forbidden", measured on this exact route. Inert in
+      // production; without it the team switcher is dead in local dev.
+      const res = await fetch(`/api/v1/orgs/${org.id}/switch`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
       if (!res.ok) throw new Error();
       showToast(`Switched to ${org.isPersonal ? "your workspace" : org.name}`);
       // Hard reload rather than in-place rescoping — every store caches its

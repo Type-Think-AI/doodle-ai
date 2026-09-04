@@ -1,0 +1,259 @@
+---
+/* The stat row, the two sync actions, and the result line — plus the client
+ * script that drives them.
+ *
+ * Split out of SeoPage.astro when that file crossed the 300-LOC component
+ * limit, but the seam is a real one rather than a size dodge: this script only
+ * ever touches elements this component renders, so keeping them together means
+ * a change to the buttons cannot leave a handler in another file wired to an id
+ * that no longer exists.
+ */
+interface Stat {
+	value: string;
+	label: string;
+	/** Rendered smaller. For a figure that is wide but not important. */
+	muted?: boolean;
+}
+
+interface Props {
+	stats: Stat[];
+	canSync: boolean;
+}
+
+const { stats, canSync } = Astro.props;
+---
+
+<div class="seo-bar">
+	<div class="seo-stats">
+		{stats.map((stat) => (
+			<div class:list={[stat.muted && 'stat-time']}>
+				<strong>{stat.value}</strong><span>{stat.label}</span>
+			</div>
+		))}
+	</div>
+	<div class="seo-actions">
+		<span class="sync-msg" id="seo-msg" role="status" aria-live="polite"></span>
+		<button id="seo-sync" type="button" disabled={!canSync}>Sync now</button>
+		<button id="seo-check-bing" type="button" class="ghost" disabled={!canSync}>Check Bing</button>
+		<button id="seo-sync-force" type="button" class="ghost" disabled={!canSync}>Resend all</button>
+	</div>
+</div>
+
+<script>
+	/* Why a `skipped` run reloads instead of raising an error:
+	   `syncIndexNow` runs DISCOVERY FIRST and only then checks whether it may
+	   push. So a run with no usable key still writes every discovered page to the
+	   database and returns a real `discovered` report alongside `skipped`.
+
+	   The first version of this handler threw on `skipped` and never reloaded,
+	   which meant pressing "Sync now" on a local origin populated the table and
+	   then showed an alert over a stale page still reading "Nothing tracked yet" —
+	   the work had happened and the UI denied it. Only a request-level failure is
+	   an error now; anything the server actually reported is shown, and the page
+	   reloads so the fresh counts and push state are re-read server-side. */
+	const allButtons = () => document.querySelectorAll<HTMLButtonElement>('.seo-actions button');
+
+	function setMessage(text: string, tone: string) {
+		const msg = document.getElementById('seo-msg');
+		if (!msg) return;
+		msg.textContent = text;
+		msg.dataset.tone = tone;
+	}
+
+	/** The shape POST /api/admin/seo/sync returns (SyncReport in src/lib/seo/submit.ts). */
+	interface SyncReport {
+		discovered?: { total: number; added: number; updated: number; removed: number };
+		submitted?: number;
+		ok?: boolean;
+		statusCode?: number | null;
+		error?: string;
+		skipped?: string;
+	}
+
+	function describe(report: SyncReport | null): { text: string; tone: string } {
+		const parts: string[] = [];
+		const found = report?.discovered;
+		if (found) {
+			parts.push(`${found.total} pages checked`);
+			if (found.added) parts.push(`${found.added} new`);
+			if (found.updated) parts.push(`${found.updated} updated`);
+			if (found.removed) parts.push(`${found.removed} dropped`);
+		}
+		if (report?.skipped) {
+			parts.push('no push');
+		} else if (report?.ok) {
+			parts.push(report.submitted ? `${report.submitted} sent to IndexNow` : 'nothing to send');
+		} else {
+			parts.push(`push failed: ${report?.error ?? `status ${report?.statusCode ?? '?'}`}`);
+		}
+		return { text: parts.join(' · '), tone: report?.ok ? 'ok' : 'warn' };
+	}
+
+	function wire(id: string, force: boolean) {
+		const button = document.getElementById(id) as HTMLButtonElement | null;
+		if (!button) return;
+
+		button.addEventListener('click', async () => {
+			if (
+				force &&
+				!window.confirm(
+					'Resend every tracked URL to IndexNow? Use this for the first seed only — repeatedly resubmitting unchanged URLs is what gets a host rate-limited.',
+				)
+			) {
+				return;
+			}
+
+			const label = button.textContent;
+			allButtons().forEach((b) => (b.disabled = true));
+			button.textContent = 'Syncing…';
+			setMessage('', '');
+
+			try {
+				const response = await fetch('/api/admin/seo/sync', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ force }),
+				});
+				const report = (await response.json().catch(() => null)) as SyncReport | null;
+				if (!response.ok) {
+					throw new Error(report?.error?.message || `Sync failed (${response.status}).`);
+				}
+				/* sessionStorage rather than a query param: the URL stays clean and a
+				   later refresh does not replay a stale result. */
+				sessionStorage.setItem('seo-sync-result', JSON.stringify(describe(report)));
+				window.location.reload();
+			} catch (error) {
+				allButtons().forEach((b) => (b.disabled = false));
+				button.textContent = label;
+				setMessage(error instanceof Error ? error.message : 'Sync failed.', 'bad');
+			}
+		});
+	}
+
+	/** The read side: asks Bing what it did with the URLs we already pushed. */
+	interface RefreshReport {
+		matched?: number;
+		missing?: number;
+		absenceRecorded?: boolean;
+		written?: number;
+		calls?: number;
+		ok?: boolean;
+		error?: string;
+		skipped?: string;
+	}
+
+	function describeRefresh(report: RefreshReport | null): { text: string; tone: string } {
+		if (report?.skipped) return { text: report.skipped, tone: 'warn' };
+		if (!report?.ok) return { text: report?.error ?? 'Bing read failed.', tone: 'bad' };
+		const parts = [`${report.matched ?? 0} matched in Bing`];
+		if (report.missing) {
+			/* Said explicitly, because the two cases mean very different things: on a
+			   partial sweep the missing URLs were LEFT ALONE rather than marked, and a
+			   reader who assumes otherwise will think those pages are fine. */
+			parts.push(
+				report.absenceRecorded
+					? `${report.missing} absent (recorded as not indexed)`
+					: `${report.missing} not returned (left unchecked — sweep was partial)`,
+			);
+		}
+		parts.push(`${report.calls ?? 0} API calls`);
+		return { text: parts.join(' · '), tone: 'ok' };
+	}
+
+	function wireRefresh() {
+		const button = document.getElementById('seo-check-bing') as HTMLButtonElement | null;
+		if (!button) return;
+		button.addEventListener('click', async () => {
+			const label = button.textContent;
+			allButtons().forEach((b) => (b.disabled = true));
+			button.textContent = 'Checking…';
+			setMessage('', '');
+			try {
+				// JSON content type on a bodyless POST — see the note in
+				// src/scripts/app/account-menu.ts: a POST with no content type reads as
+				// a form submission and the remote preview layer behind `pnpm dev`
+				// (`wrangler dev --remote`) 403s it before the Worker runs.
+				const response = await fetch('/api/admin/seo/refresh', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: '{}',
+				});
+				const report = (await response.json().catch(() => null)) as RefreshReport | null;
+				if (!response.ok) {
+					throw new Error((report as { error?: { message?: string } })?.error?.message || `Bing read failed (${response.status}).`);
+				}
+				sessionStorage.setItem('seo-sync-result', JSON.stringify(describeRefresh(report)));
+				window.location.reload();
+			} catch (error) {
+				allButtons().forEach((b) => (b.disabled = false));
+				button.textContent = label;
+				setMessage(error instanceof Error ? error.message : 'Bing read failed.', 'bad');
+			}
+		});
+	}
+
+	wire('seo-sync', false);
+	wire('seo-sync-force', true);
+	wireRefresh();
+
+	// Replay the result of the sync that caused this load, then clear it.
+	const stored = sessionStorage.getItem('seo-sync-result');
+	if (stored) {
+		sessionStorage.removeItem('seo-sync-result');
+		try {
+			const { text, tone } = JSON.parse(stored) as { text: string; tone: string };
+			setMessage(text, tone);
+		} catch {
+			/* A malformed entry is not worth surfacing; the table itself is the result. */
+		}
+	}
+</script>
+
+<style>
+	/* Flat: a single hairline under the row, no panel, no radius, no fill. */
+	.seo-bar {
+		display: flex; flex-wrap: wrap; gap: 16px 24px;
+		align-items: flex-end; justify-content: space-between;
+		padding-bottom: 14px; border-bottom: 1px solid var(--border2);
+	}
+	.seo-stats { display: flex; flex-wrap: wrap; gap: 24px; }
+	.seo-stats div { display: flex; flex-direction: column; gap: 3px; }
+	.seo-stats strong { color: var(--text); font-size: 17px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+	.seo-stats span { color: var(--text-dimmer); font-size: 11px; }
+	/* The timestamp is the least important figure here and the widest, so at 17px
+	   it dominated a row of counts that actually matter. */
+	.seo-stats .stat-time strong { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+
+	.seo-actions { display: flex; align-items: center; gap: 10px; }
+	.seo-actions button {
+		min-height: 34px; padding: 8px 14px;
+		border: 1px solid var(--accent); border-radius: 8px;
+		background: var(--accent); color: #141414;
+		font: inherit; font-size: 12px; cursor: pointer;
+	}
+	.seo-actions button.ghost { background: transparent; border-color: var(--border2); color: var(--text-dim); }
+	.seo-actions button:hover:not(:disabled) { filter: brightness(1.07); }
+	.seo-actions button.ghost:hover:not(:disabled) { color: var(--text); border-color: var(--text-dimmer); }
+	.seo-actions button:disabled { opacity: .5; cursor: not-allowed; }
+	.seo-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+	.sync-msg { font-size: 11px; color: var(--text-dimmer); max-width: 34ch; line-height: 1.4; }
+	.sync-msg[data-tone='ok'] { color: var(--green); }
+	.sync-msg[data-tone='warn'] { color: var(--text-dim); }
+	.sync-msg[data-tone='bad'] { color: var(--red); }
+
+	@media (max-width: 720px) {
+		.seo-bar { align-items: flex-start; }
+		.seo-stats { gap: 14px 20px; }
+		.seo-actions { width: 100%; flex-wrap: wrap; }
+		.sync-msg { order: 3; max-width: none; width: 100%; }
+		/* 34px is fine for a mouse and too small for a thumb. Only the primary
+		   stretches: letting "Resend all" match its width gave the one action that
+		   can earn a rate-limit the same visual weight as the safe one. */
+		.seo-actions button { min-height: 44px; padding: 10px 18px; }
+		.seo-actions button:not(.ghost) { flex: 1 1 auto; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.seo-actions button { transition: none; }
+	}
+</style>

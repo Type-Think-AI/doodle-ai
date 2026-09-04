@@ -21,13 +21,14 @@ import {
 	getHubChildren,
 	getRelatedArticles,
 } from "../lib/content/articles";
+import type { EditorialPageData } from "../lib/content/editorial";
 import { getSkill } from "../lib/skills";
 import "../styles/app.css";
 import "../styles/page.css";
 
 interface Props {
 	path: string;
-	data: CollectionEntry<"articles">["data"];
+	data: EditorialPageData;
 	headings: { depth: number; slug: string; text: string }[];
 }
 

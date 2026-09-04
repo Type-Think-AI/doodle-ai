@@ -59,7 +59,45 @@ export default defineConfig({
 		},
 	}),
 	vite: {
+		resolve: {
+			/* One React instance, always.
+			 *
+			 * `@cloudflare/voice/react` (the voice hook) declares React as a peer. In
+			 * dev, Vite pre-bundles the island's React but left this package's import
+			 * unoptimized, so the two resolved DIFFERENT React instances at runtime —
+			 * producing "Invalid hook call / mismatching versions of React" and
+			 * `Cannot read properties of null (reading 'useMemo')`, which killed the
+			 * voice surface on mount (it rendered nothing at all). Deduping forces a
+			 * single copy for every importer. */
+			dedupe: ["react", "react-dom"],
+		},
+		optimizeDeps: {
+			/* Pre-bundle the voice hook alongside React so it links against the SAME
+			 * optimized React instance as the canvas island (see resolve.dedupe). */
+			include: ["@cloudflare/voice/react", "react", "react-dom", "react-dom/client"],
+		},
 		server: {
+			/* Dev-only: do NOT raise Vite's full-screen error overlay.
+			 *
+			 * Adding the voice packages (`agents` brings a `vite` peer + `yaml`)
+			 * makes pnpm resolve a second vite closure, and Vite's dependency
+			 * pre-scanner can then run on the instance lacking Astro's `.astro`
+			 * plugin — parsing `.astro` markup as raw JS and throwing a bogus
+			 * `Expected ";"` on a valid `href={...}` in SkillCard.astro.
+			 *
+			 * The scan failure itself is harmless (every route still serves, and the
+			 * production build is unaffected — it never runs this pass). The OVERLAY
+			 * is not: it covers the page and intercepts pointer events, so clicking
+			 * anything — the Talk button included — silently did nothing in local
+			 * dev. Turning the overlay off restores a usable dev surface while
+			 * leaving dependency optimization intact.
+			 *
+			 * NOT `optimizeDeps.noDiscovery` — that skips pre-bundling entirely and
+			 * tldraw's CommonJS deps (lodash.isequalwith) then fail to import, which
+			 * stops the whole canvas island from hydrating. Verified.
+			 *
+			 * Real errors still surface in the terminal and the browser console. */
+			hmr: { overlay: false },
 			/* Vite rejects any request whose Host header it doesn't recognise, so a
 			   tunnelled webhook delivery to `astro dev` comes back 403 "This host is
 			   not allowed" before it ever reaches /api/webhooks/picx. PicX only sees

@@ -1,0 +1,72 @@
+/* Voice ("Talk") mode layout.
+ *
+ * Talk mode takes over the full canvas: the chat column is hidden entirely, the
+ * board fills the screen, and a floating voice HUD is the only overlay. The
+ * focus is 100% on speaking + watching doodles appear — no chat bubbles, no
+ * composer. This is a `data-mode="voice"` state on the existing `.chat-split`,
+ * reusing the same canvas the typed chat uses.
+ *
+ * Global (not scoped) because these rules target markup in c/[id].astro and a
+ * client:only React island, neither of which carry Astro's scoped-style hash.
+ */
+
+/* Chat | Talk toggle — top-left of the canvas stage, above the board. */
+.mode-toggle {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 320;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border2, #292929);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface2, #141414) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+.mode-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim, #999);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+.mode-toggle-btn:hover { color: var(--text, #ddd); }
+.mode-toggle-btn[aria-selected="true"] {
+  color: #0a0a0a;
+  background: #f0b357; /* warm doodle accent — never blue/violet */
+}
+.mode-toggle-btn:focus-visible { outline: 2px solid #f0b357; outline-offset: 2px; }
+
+/* In Talk mode: hide the chat column and the resize handle at every width, and
+   give the canvas the whole surface. Mirrors the phone breakpoint's canvas-only
+   composition, but applied on desktop too. */
+.chat-split[data-mode="voice"] .chat-page { display: none; }
+.chat-split[data-mode="voice"] .chat-split-handle { display: none; }
+.chat-split[data-mode="voice"] .canvas-panel { flex: 1 1 auto; width: 100%; }
+/* The canvas close button would drop the user into an empty chat-hidden screen;
+   the mode toggle is the way out of Talk mode instead. */
+.chat-split[data-mode="voice"] .canvas-close { display: none; }
+/* The empty-canvas hint stays: the HUD is now a small bottom-centre banner, not
+   a full-screen takeover, so the board's own "your doodles appear here" copy
+   still reads cleanly behind it (matches the Voice Mode reference design). */
+
+/* The voice HUD layer floats over the whole stage but only intercepts pointer
+   events on its own controls, so the user can still pan/zoom the board behind
+   it while talking. */
+.voice-mode-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 315;
+  pointer-events: none;
+}
+.voice-mode-layer[hidden] { display: none; }
+.voice-mode-layer > * { pointer-events: auto; }

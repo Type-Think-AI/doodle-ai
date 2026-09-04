@@ -62,6 +62,10 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { key: "billing", label: "Billing", href: "/admin/billing" },
       { key: "marketing", label: "Marketing", href: "/admin/marketing" },
+      // Search-index tracking. adminOnly because "Sync now" pushes URLs to a
+      // third party under this host's identity and spends a shared rate-limit
+      // budget — the page is unusable to 'support' without that button.
+      { key: "seo", label: "Search index", href: "/admin/seo", adminOnly: true },
     ],
   },
   {
@@ -91,6 +95,10 @@ export const ADMIN_PAGE_COPY: Record<string, { title: string; subtitle: string }
   batches: { title: "Batch jobs", subtitle: "Variant runs, their items, and anything stuck." },
   billing: { title: "Billing", subtitle: "Subscriptions, invoices, and revenue." },
   marketing: { title: "Marketing", subtitle: "Articles, SEO performance, and campaigns." },
+  seo: {
+    title: "Search index",
+    subtitle: "Every indexable page, what we pushed to IndexNow, and what the engines report back.",
+  },
   feedback: { title: "Feedback", subtitle: "What users told us, and what we did about it." },
   audit: { title: "Audit log", subtitle: "Every privileged admin action, append-only." },
 };

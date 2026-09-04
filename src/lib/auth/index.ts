@@ -72,12 +72,139 @@ export async function createAuth(context: APIContext) {
         "is the only sign-in method.",
     );
   }
-  const isLocalDevelopment = new URL(context.request.url).hostname === "localhost";
+  /**
+   * Is this a developer's own machine?
+   *
+   * Checked against every loopback form, not just the literal string "localhost".
+   * The previous `hostname === "localhost"` missed `127.0.0.1` and `[::1]`, so
+   * opening the app on http://127.0.0.1:8787 silently fell through to the
+   * PRODUCTION rate limits (5 sign-ins/hour) and answered
+   * `POST /api/auth/sign-in/social` with "Too many requests" after a handful of
+   * attempts — while the config looked like it had local dev covered.
+   */
+  const localHostnames = new Set(["localhost", "127.0.0.1", "::1", "[::1]", "0.0.0.0"]);
+  const requestUrl = new URL(context.request.url);
+
+  /**
+   * The browser's real origin, e.g. "http://localhost:8787".
+   *
+   * THIS is the reliable local-dev signal, not the request URL's hostname.
+   * `pnpm dev` runs `wrangler dev --remote`, which executes the Worker on
+   * Cloudflare's EDGE and proxies your localhost request to it — so inside the
+   * Worker `new URL(context.request.url).hostname` is NOT "localhost". Every
+   * hostname-based check therefore evaluated false during local development,
+   * which is what produced both long-running bugs:
+   *
+   *   - `trustedOrigins` collapsed to `[]` → nothing trusted → Better Auth
+   *     answered "Invalid origin: http://localhost:8787" on every sign-in.
+   *   - the rate limiter stayed ON and keyed counters to the developer's PUBLIC
+   *     IP (auth:152.59.46.226|/sign-in/social), which was the visible proof
+   *     that the request had gone through the edge rather than loopback.
+   *
+   * The Origin header is set by the browser and travels intact through the edge,
+   * so it reports loopback correctly in every runtime.
+   */
+  const requestOrigin = context.request.headers.get("origin") ?? "";
+  const isLoopbackOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(:\d+)?$/i.test(
+    requestOrigin,
+  );
+  const isLoopbackHostname =
+    localHostnames.has(requestUrl.hostname) || requestUrl.hostname.endsWith(".localhost");
+
+  /**
+   * Where this server thinks it lives — the ONLY local-dev signal that is
+   * identical on every request of an OAuth flow.
+   *
+   * The two per-request signals above are both unusable on the Google callback,
+   * which is the single request where getting this wrong breaks sign-in:
+   *
+   *   - `isLoopbackHostname` is false under `pnpm dev` (= `wrangler dev
+   *     --remote`), because the Worker executes on Cloudflare's edge and
+   *     `context.request.url` carries the edge host, not localhost.
+   *   - `isLoopbackOrigin` is false too, because `/api/auth/callback/google` is
+   *     reached by a top-level CROSS-SITE GET redirect from accounts.google.com,
+   *     and browsers do not send an `Origin` header on those. It is only sent on
+   *     the `POST /api/auth/sign-in/social` fetch that STARTS the flow.
+   *
+   * So every setting keyed to `isLocalDevelopment` silently flipped to
+   * production behaviour half-way through the flow, which is what produced the
+   * `state_mismatch` loop:
+   *
+   *   1. sign-in POST  → Origin present → local  → state cookie written as
+   *      `better-auth.state` (not `Secure`, correct for http://localhost).
+   *   2. Google callback → Origin ABSENT → "production" → `useSecureCookies`
+   *      true → Better Auth looks for `__Secure-better-auth.state`, which the
+   *      browser never had, and `skipStateCookieCheck` false → the signed-cookie
+   *      re-check runs and throws `state_security_mismatch`, which Better Auth
+   *      rewrites to `state_mismatch` (better-auth/dist/oauth2/state.mjs).
+   *
+   * Proven against the running dev server: replaying the callback with the same
+   * signed value under the `__Secure-` name reached `error=invalid_code` (i.e.
+   * straight through the state check to Google's token exchange), while the
+   * plain name alone returned `error=state_mismatch` — with the `verification`
+   * row present and unexpired in D1 both times, ruling out the DB lookup.
+   *
+   * `BETTER_AUTH_URL` is pinned to http://localhost:8787 in `.dev.vars` and, by
+   * policy, is never set in staging or production (there is no `vars` block in
+   * wrangler.json, and .dev.vars.example says so) — so a loopback baseURL means
+   * a developer's machine, on the callback as much as on the sign-in request.
+   *
+   * The Origin header is deliberately NOT part of this decision any more. It is
+   * client-supplied, so the old code let anyone disable production behaviour on
+   * the deployed Worker just by sending `Origin: http://localhost:8787` —
+   * including `rateLimit.enabled`, the guard that exists to stop bots farming
+   * the `signup_grant` credits below.
+   */
+  const resolvedBaseURL = env.BETTER_AUTH_URL || requestUrl.origin;
+  const isLoopbackBaseURL = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(:\d+)?$/i.test(
+    resolvedBaseURL,
+  );
+  const isLocalDevelopment = isLoopbackBaseURL || isLoopbackHostname;
   const db = drizzle(env.DB, { schema });
 
   return betterAuth({
     secret,
-    baseURL: env.BETTER_AUTH_URL || new URL(context.request.url).origin,
+    baseURL: resolvedBaseURL,
+
+    /**
+     * Origins Better Auth will accept. It rejects anything not listed with a bare
+     * "Invalid origin", which is what blocked local sign-in.
+     *
+     * ALWAYS starts with the app's own origin. The previous version passed `[]`
+     * for the non-local branch, which does NOT mean "use the default" — it
+     * OVERRIDES the default `[baseURL]` with an empty allowlist, so once the
+     * local check misfired (see the Origin-header note above) every single origin
+     * was untrusted, including the correct one.
+     *
+     * When the caller's Origin header is loopback we additionally trust that
+     * exact origin plus the ports this project actually serves:
+     *   - 8787        → `wrangler dev` (`pnpm dev`) — the ONLY port where voice
+     *                   mode works (Durable Object + AI bindings live in the
+     *                   Worker runtime, not in `astro dev`)
+     *   - 4321 / 4322 → `astro dev` (`pnpm dev:local`)
+     *
+     * A deployed browser sends its real https origin, so the loopback branch
+     * never activates in production; and an attacker forging
+     * `Origin: http://localhost` would only be trusting their own machine, where
+     * no victim cookie exists.
+     */
+    trustedOrigins: [
+      resolvedBaseURL,
+      // The caller's own loopback origin, but only once the SERVER has been
+      // established as local by `resolvedBaseURL` above. Gating it that way
+      // matters: keyed off the Origin header alone, a request to the deployed
+      // Worker carrying `Origin: http://localhost:8787` added localhost to
+      // production's allowlist and then passed its own CSRF check.
+      ...(isLocalDevelopment && isLoopbackOrigin ? [requestOrigin] : []),
+      ...(isLocalDevelopment
+        ? [
+            "http://localhost:8787",
+            "http://127.0.0.1:8787",
+            "http://localhost:4321",
+            "http://localhost:4322",
+          ]
+        : []),
+    ],
 
     database: drizzleAdapter(db, {
       provider: "sqlite",
@@ -199,6 +326,50 @@ export async function createAuth(context: APIContext) {
     // password storage, no reset-flow, and no email provider to stand up.
     socialProviders: { google: { clientId: googleId, clientSecret: googleSecret } },
 
+    /**
+     * Persist the OAuth `verification` record to D1, not only to KV.
+     *
+     * The default state strategy is "database", but once `secondaryStorage`
+     * (KV) is configured Better Auth writes the verification record ONLY to
+     * secondary storage and skips the database entirely (documented at
+     * better-auth.com/docs/reference/errors/state_mismatch). The record is
+     * what the Google callback looks up to prove the `state` parameter belongs
+     * to the browser that started the flow. Writing it to D1 as well gives the
+     * callback a durable, co-located record — verified present in D1 during a
+     * real sign-in probe (the `state` from `/sign-in/social` was found in the
+     * `verification` table with its callbackURL + codeVerifier intact).
+     */
+    verification: { storeInDatabase: true },
+
+    account: {
+      /**
+       * Skip the redundant signed-state-COOKIE check on localhost.
+       *
+       * Better Auth's database state strategy verifies the callback TWICE
+       * (better-auth/dist/state.mjs → parseGenericState):
+       *   1. the `state` query param must match the `oauthState` stored in the
+       *      D1 verification record — the real CSRF guard, and
+       *   2. a SEPARATE signed cookie (`better-auth.state`, signed with
+       *      BETTER_AUTH_SECRET) must ALSO round-trip and re-verify.
+       *
+       * Check (2) is what fails here: `pnpm dev` runs `wrangler dev --remote`,
+       * so every request executes on Cloudflare's edge and BETTER_AUTH_SECRET
+       * resolves from the Secrets Store binding per-invocation. The Google
+       * callback is a top-level CROSS-SITE redirect, and the signed-cookie
+       * re-verification across that hop throws `state_security_mismatch`, which
+       * Better Auth rewrites to the `state_mismatch` you kept hitting — proven
+       * by reproducing the exact 302 → /api/auth/error?error=state_mismatch
+       * against the running server WITH the correct state + cookie present.
+       *
+       * Skipping check (2) does NOT weaken CSRF protection: check (1) — the
+       * `oauthState` match against the server-side D1 record, which an attacker
+       * cannot forge — still runs and still fails closed. Localhost only; a
+       * deployed browser is same-site https on the callback and keeps the
+       * stricter cookie check.
+       */
+      skipStateCookieCheck: isLocalDevelopment,
+    },
+
     session: {
       expiresIn: 60 * 60 * 24 * 30, // 30 days
       updateAge: 60 * 60 * 24, // refresh the expiry at most once a day
@@ -262,21 +433,40 @@ export async function createAuth(context: APIContext) {
     //    user row after Google's redirect back). Localhost uses a temporary
     //    60-attempt/hour allowance for manual QA; deployed environments retain
     //    the stricter 5/8-attempt production limits.
+    /**
+     * OFF on localhost, unchanged in production.
+     *
+     * The previous "generous" local allowance (60 sign-ins/hour) still ran out
+     * during a long manual QA session and then answered
+     * `POST /api/auth/sign-in/social` with 429 for the rest of the hour — with no
+     * way to clear it except deleting keys out of the miniflare KV sqlite. A rate
+     * limit on a single developer's own machine protects nothing; it only blocks
+     * the person testing. Deployed environments keep the strict 5/8-per-hour
+     * account-creation limits, which is where abuse actually happens.
+     */
     rateLimit: {
-      enabled: true,
+      enabled: !isLocalDevelopment,
       window: 60,
       max: 100,
       storage: "secondary-storage",
       customRules: {
-        "/sign-in/social": { window: 60 * 60, max: isLocalDevelopment ? 60 : 5 },
-        "/callback/:id": { window: 60 * 60, max: isLocalDevelopment ? 60 : 8 },
+        "/sign-in/social": { window: 60 * 60, max: 5 },
+        "/callback/:id": { window: 60 * 60, max: 8 },
       },
     },
 
     advanced: {
-      // The Worker always serves over HTTPS in production; `astro dev` over
-      // http://localhost is exempted by Better Auth's own dev handling.
-      useSecureCookies: true,
+      /**
+       * HTTPS in production, plain HTTP on localhost.
+       *
+       * This used to be unconditionally `true` with a note that Better Auth
+       * exempts localhost. It does not exempt `wrangler dev`: on
+       * http://localhost:8787 the browser silently DROPS a `Secure` cookie, so
+       * sign-in appeared to succeed and then every authenticated request behaved
+       * as anonymous (403 on POST /api/voice/token). Gating on the hostname keeps
+       * production strict while making the voice-capable local server usable.
+       */
+      useSecureCookies: !isLocalDevelopment,
       ipAddress: {
         // Better Auth's default IP source is `x-forwarded-for` alone, which
         // is spoofable and not what Cloudflare actually guarantees. Prefer

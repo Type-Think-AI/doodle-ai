@@ -1,11 +1,12 @@
 import type { APIContext } from 'astro';
-import { getCollection } from 'astro:content';
+import { entryCategory, getEditorialEntries } from "../lib/content/editorial";
 
 export const prerender = true;
 
 export async function GET(context: APIContext) {
   const site = context.site ?? new URL('https://doodleai.art');
-  const articles = await getCollection('articles');
+  // Both collections: a prompt page is editorial content and belongs in the index.
+  const articles = await getEditorialEntries();
 
   const header = '# Doodle AI -- Full Content Index\n\n> All editorial content from https://doodleai.art for LLM ingestion.\n> See also: /llms.txt (short index)\n\n---\n\n';
 
@@ -18,7 +19,7 @@ export async function GET(context: APIContext) {
       return [
         `## ${article.data.title}`,
         `URL: ${url}`,
-        `Category: ${article.data.category} | Cluster: ${article.data.cluster}`,
+        `Category: ${entryCategory(article)} | Cluster: ${article.data.cluster}`,
         `Published: ${article.data.pubDate.toISOString().split('T')[0]}`,
         article.data.updatedDate ? `Updated: ${article.data.updatedDate.toISOString().split('T')[0]}` : null,
         '',

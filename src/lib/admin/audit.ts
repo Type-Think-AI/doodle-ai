@@ -21,12 +21,23 @@ export type AuditAction =
   | "user.role.change"
   | "skill.state.change"
   | "feedback.triage"
-  | "org.limits.change";
+  | "org.limits.change"
+  // Pushing URLs to IndexNow reaches a third party under this host's identity
+  // and spends a shared rate-limit budget, so it is audited like any other
+  // privileged action. The forced variant is a separate action rather than a
+  // flag in `detail`: it is the one that can plausibly earn a 429, and it should
+  // be greppable in the log without opening every row.
+  | "seo.indexnow.sync"
+  | "seo.indexnow.sync.force"
+  // Reading Bing index status spends a third-party API budget and writes
+  // verdicts, so it is audited like the push side.
+  | "seo.bing.refresh";
 
 export interface AuditWrite {
   actorUserId: string;
   action: AuditAction;
-  targetType?: "user" | "organization" | "skill" | "generation" | "feedback";
+  /** 'seo' targets a sync batch id rather than a row in one of the other tables. */
+  targetType?: "user" | "organization" | "skill" | "generation" | "feedback" | "seo";
   targetId?: string;
   detail?: Record<string, unknown>;
   /** Taken from CF-Connecting-IP; see `clientIp`. */
