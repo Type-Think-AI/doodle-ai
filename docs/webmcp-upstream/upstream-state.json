@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-04T11:18:50.342Z",
+  "fetched_at": "2026-09-05T10:36:02.264Z",
   "latestCommit": {
-    "sha": "7b3f50f31848b529e69bedbbdf8da0edccba055f",
-    "message": "Add `consequentialHint` to `ToolAnnotations` (#217)",
-    "date": "2026-09-03T18:22:05Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/7b3f50f31848b529e69bedbbdf8da0edccba055f"
+    "sha": "50c4b7fd6c4402731271649bc544b662b061ed44",
+    "message": "Explicitly document that headless use cases are in scope (#296)",
+    "date": "2026-09-04T20:29:17Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/50c4b7fd6c4402731271649bc544b662b061ed44"
   },
   "files": {
     "index.bs": {
@@ -15,19 +15,19 @@
       "bytes": 80922
     },
     "README.md": {
-      "hash": "6705d5028575cca38d11bff143aa11597f4041d22f2b41b833dc56918c608d97",
+      "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
       "exists": true,
-      "bytes": 31877
+      "bytes": 36415
     },
     "declarative-api-explainer.md": {
-      "hash": "adc121fff82e357471e9eb578fdd6427204eb03f475ec43cdf6bce21f0fa436c",
+      "hash": "ece80645d71b1a1e2ec9564067662ce56a7c2f2052ea8bab20449b5009893fc9",
       "exists": true,
-      "bytes": 10411
+      "bytes": 10413
     },
     "implementation-status.md": {
-      "hash": "8f542a891d460b2bb6ccabbae74e75f7c6adb8b3c944a4ff5af2529b31dc2f0d",
+      "hash": "fea441e56055009fcb20332c24f47a9a730e4c8083bb80fe15bd9b134176c4a8",
       "exists": true,
-      "bytes": 2258
+      "bytes": 2395
     },
     "security-privacy-questionnaire.md": {
       "hash": "33907b97fc85fe2277f47eca8f72f5c0522b0444ebfd2be9b65b0110c475a247",
@@ -35,9 +35,9 @@
       "bytes": 9237
     },
     "docs/service-workers.md": {
-      "hash": "f56085fecc1b01a8ece4da1845785b66e7ce29c4ea7016f5d21a181fa5a7191a",
+      "hash": "4d84c70fdb3e6bdfef49a3c9dee4655948372fc2117f49ffd93a3e47f77ac8e9",
       "exists": true,
-      "bytes": 21815
+      "bytes": 21808
     }
   },
   "idlNames": [
@@ -75,6 +75,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 116,
-  "openPRsCount": 116
+  "openIssuesCount": 114,
+  "openPRsCount": 114
 }
