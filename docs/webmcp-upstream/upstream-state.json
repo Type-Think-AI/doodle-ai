@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-07T12:33:49.356Z",
+  "fetched_at": "2026-09-08T11:20:04.932Z",
   "latestCommit": {
     "sha": "50c4b7fd6c4402731271649bc544b662b061ed44",
     "message": "Explicitly document that headless use cases are in scope (#296)",
@@ -75,6 +75,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 120,
-  "openPRsCount": 120
+  "openIssuesCount": 122,
+  "openPRsCount": 122
 }
