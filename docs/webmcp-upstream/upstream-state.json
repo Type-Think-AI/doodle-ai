@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-08T11:20:04.932Z",
+  "fetched_at": "2026-09-09T11:24:37.618Z",
   "latestCommit": {
     "sha": "50c4b7fd6c4402731271649bc544b662b061ed44",
     "message": "Explicitly document that headless use cases are in scope (#296)",
