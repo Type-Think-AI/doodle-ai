@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-09T11:24:37.618Z",
+  "fetched_at": "2026-09-10T11:20:52.104Z",
   "latestCommit": {
-    "sha": "50c4b7fd6c4402731271649bc544b662b061ed44",
-    "message": "Explicitly document that headless use cases are in scope (#296)",
-    "date": "2026-09-04T20:29:17Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/50c4b7fd6c4402731271649bc544b662b061ed44"
+    "sha": "94c0a3aeebcfb84829751d143e1b7f4aa9d6c35f",
+    "message": "Include origin in observation tool map via observed tool collection struct (#281)",
+    "date": "2026-09-09T19:37:46Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/94c0a3aeebcfb84829751d143e1b7f4aa9d6c35f"
   },
   "files": {
     "index.bs": {
-      "hash": "f5421348772cb38b854ddad7a2114db3a6ed8c7827f3a1d267c01c45a7868e56",
+      "hash": "c5ff4ae980f044aa274badc387f6c340ccba7584be944e98edd88adadd728e20",
       "exists": true,
-      "bytes": 80922
+      "bytes": 81362
     },
     "README.md": {
       "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
