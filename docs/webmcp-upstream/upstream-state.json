@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-10T11:20:52.104Z",
+  "fetched_at": "2026-09-11T11:22:04.936Z",
   "latestCommit": {
-    "sha": "94c0a3aeebcfb84829751d143e1b7f4aa9d6c35f",
-    "message": "Include origin in observation tool map via observed tool collection struct (#281)",
-    "date": "2026-09-09T19:37:46Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/94c0a3aeebcfb84829751d143e1b7f4aa9d6c35f"
+    "sha": "97da8f515427594c856307e3476c0a0db9698fbb",
+    "message": "Change `executeTool()` inputObject type from `object` to `any` (#251)",
+    "date": "2026-09-10T18:38:06Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/97da8f515427594c856307e3476c0a0db9698fbb"
   },
   "files": {
     "index.bs": {
-      "hash": "c5ff4ae980f044aa274badc387f6c340ccba7584be944e98edd88adadd728e20",
+      "hash": "417c057e768e5dcc9612cd01f2fe90e6e4a501fc39a9b4b97f23bb75f8e5f031",
       "exists": true,
-      "bytes": 81362
+      "bytes": 81503
     },
     "README.md": {
       "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
