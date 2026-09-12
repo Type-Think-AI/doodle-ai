@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-11T11:22:04.936Z",
+  "fetched_at": "2026-09-12T10:47:57.427Z",
   "latestCommit": {
     "sha": "97da8f515427594c856307e3476c0a0db9698fbb",
     "message": "Change `executeTool()` inputObject type from `object` to `any` (#251)",
@@ -75,6 +75,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 122,
-  "openPRsCount": 122
+  "openIssuesCount": 123,
+  "openPRsCount": 123
 }
