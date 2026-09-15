@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-14T12:48:44.805Z",
+  "fetched_at": "2026-09-15T11:45:04.251Z",
   "latestCommit": {
-    "sha": "97da8f515427594c856307e3476c0a0db9698fbb",
-    "message": "Change `executeTool()` inputObject type from `object` to `any` (#251)",
-    "date": "2026-09-10T18:38:06Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/97da8f515427594c856307e3476c0a0db9698fbb"
+    "sha": "cc45efcaf094021b337e0fb87fcc5332707695b1",
+    "message": "Validate tool name before description in `registerTool()` (#302)",
+    "date": "2026-09-14T14:36:25Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/cc45efcaf094021b337e0fb87fcc5332707695b1"
   },
   "files": {
     "index.bs": {
-      "hash": "417c057e768e5dcc9612cd01f2fe90e6e4a501fc39a9b4b97f23bb75f8e5f031",
+      "hash": "419abc200cc385f8b93c556d5435b530f288f946c845dfafc27214ce0312b75f",
       "exists": true,
-      "bytes": 81503
+      "bytes": 81499
     },
     "README.md": {
       "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
