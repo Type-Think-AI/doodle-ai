@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-15T11:45:04.251Z",
+  "fetched_at": "2026-09-16T11:35:08.979Z",
   "latestCommit": {
-    "sha": "cc45efcaf094021b337e0fb87fcc5332707695b1",
-    "message": "Validate tool name before description in `registerTool()` (#302)",
-    "date": "2026-09-14T14:36:25Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/cc45efcaf094021b337e0fb87fcc5332707695b1"
+    "sha": "df2d824e2cd2cbf8e15e25dad9dfe85d20e25082",
+    "message": "Document Permissions Policy as a security mitigation (#275)",
+    "date": "2026-09-15T17:29:58Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/df2d824e2cd2cbf8e15e25dad9dfe85d20e25082"
   },
   "files": {
     "index.bs": {
-      "hash": "419abc200cc385f8b93c556d5435b530f288f946c845dfafc27214ce0312b75f",
+      "hash": "f8366972d7c4442d1467580f489783fe82bff739b0c5cc618f845f4893fc1cf9",
       "exists": true,
-      "bytes": 81499
+      "bytes": 82370
     },
     "README.md": {
       "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
@@ -75,6 +75,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 123,
-  "openPRsCount": 123
+  "openIssuesCount": 121,
+  "openPRsCount": 121
 }
