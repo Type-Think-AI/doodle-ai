@@ -83,6 +83,8 @@ The full, always-current catalogue — including the newer **Coloring Page** (`c
 
 ## 🏗️ Architecture
 
+Docs index: [docs/README.md](docs/README.md).
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │  Browser (Astro 5 SSG + client scripts)             │
