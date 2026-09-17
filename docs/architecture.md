@@ -1,5 +1,7 @@
 # Doodle AI — SaaS Architecture
 
+> See also [docs/README.md](./README.md) for the docs index and the `dev`-accurate overview.
+
 > **Status:** target architecture with the Phase 6 platform-credit generation path implemented. Persistence and billing details below include planned follow-up work.
 > **Prerequisite:** [tech-stack.md](./tech-stack.md) — D1 + Drizzle + Better Auth + Stripe.
 > **Companions:** [roadmap.md](./roadmap.md) · [mobile-strategy.md](./mobile-strategy.md)
