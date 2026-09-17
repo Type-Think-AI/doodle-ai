@@ -1,7 +1,7 @@
 # Talk mode — fal.ai Grok Voice realtime + our MCP
 
-**Status:** proposed, pending Ajay / Doodle CTO approval. **Docs only — do not
-implement from this PR.**
+**Status:** proposed, with Ajay / founder locks recorded below. **Docs only
+— do not implement from this PR.**
 **Supersedes:** [voice-mode-plan.md](./voice-mode-plan.md) (Cloudflare
 `@cloudflare/voice` Flux STT → Mastra → Aura TTS).
 **Companion:** [mcp-doodle-tools.md](./mcp-doodle-tools.md) (tool schemas +
@@ -65,6 +65,16 @@ Locked product constraints:
   `VoiceRoom` migration history.
 - Do not claim paid plans or video as marketing-ready. Do not put
   `generateVideo` on v1 `allowed_tools`.
+- Talk v1 is **single-image only**: no pack skills and no `generateVideo`
+  in `session.tools` `allowed_tools`. Pack confirmation / packs are a
+  later open or Phase 4+ decision.
+- Consumer name stays **Elsa**. The voice brain is Grok (fal
+  `xai/grok-voice/realtime`). Do not rename Elsa away. Do not say Grok
+  in the HUD.
+- **Shared `FAL_KEY`** for prod + staging (one fal account) unless later
+  spend dashboards force a split.
+- Build priority: **our doodle MCP foundation before full Talk UI**
+  (ping + `generateDoodle` ahead of fal HUD polish).
 - Credits: free signup grant (`SIGNUP_GRANT_CREDITS = 10` in
   `src/lib/credits/costs.ts`), **1 credit per image**
   (`CREDITS_PER_IMAGE = 1`). Video remains **1 credit per second**, internal.
@@ -277,13 +287,15 @@ Optional faint caption in the HUD, off by default.
 
 ### 3.2 HUD states
 
-Keep Elsa as the spoken name unless brand changes it (today
-`AGENT_NAME = "Elsa"` in VoiceHud **and** `VOICE_AGENT_NAME` in
-VoiceRoom — they must stay in sync). Greeting stays one short sentence,
-heard **and** shown: *Hey, I'm Elsa. Tell me what to doodle.*
+**Elsa stays.** Founder lock: Elsa is the consumer UX / spoken name
+(today `AGENT_NAME = "Elsa"` in VoiceHud **and** `VOICE_AGENT_NAME` in
+VoiceRoom — they stay in sync). The voice **brain** is Grok on fal
+`xai/grok-voice/realtime`. Do **not** rename Elsa away. Greeting stays
+one short sentence, heard **and** shown: *Hey, I'm Elsa. Tell me what
+to doodle.*
 
 Map Grok/fal events onto consumer states. Never say WebSocket, STT, TTS,
-JWT, MCP, fal, Grok, model, PCM, latency.
+JWT, MCP, fal, Grok, model, PCM, latency. The user talks to Elsa.
 
 | HUD | User copy | Driver |
 |---|---|---|
@@ -337,10 +349,17 @@ Full schemas: [mcp-doodle-tools.md](./mcp-doodle-tools.md).
 v1 `allowed_tools` (default `session.update`, Phases 2–4): `generateDoodle`,
 `readCanvas`, `editCanvas`.
 
-`generateVideo` is **not** in that list. Keep the schema documented as
-Phase 5 / internal-only wire-up — not day-one discoverable. The hard gate
-is **omitting it from `allowed_tools`** (and from the minted token `scp`)
-until Phase 5. Documenting the tool is not enough if Grok can still see it.
+Talk v1 `generateDoodle` is **single-image only**. Pack skills (`moods`,
+`seasonal`, `expressions`, `style-roll`, `childhood`, `festival`,
+`webtoon` in `GENERATION_MODES`) are out: reject them in the MCP handler
+and omit them from Talk instructions. Pack confirmation / enabling packs
+is a later open or Phase 4+ decision — not a v1 requirement.
+
+`generateVideo` is **not** in `allowed_tools`. Keep the schema documented
+as Phase 5 / internal-only wire-up — not day-one discoverable. The hard
+gate is **omitting it from `allowed_tools`** (and from the minted token
+`scp`) until Phase 5. Documenting the tool is not enough if Grok can
+still see it.
 
 Implementation rule: **extract** the Mastra `execute` bodies into
 `src/lib/tools/run-*.ts` (or equivalent) callable from both Mastra
@@ -463,7 +482,7 @@ vs a fal-specific wrapper.
   "type": "session.update",
   "session": {
     "voice": "eve",
-    "instructions": "<Talk system prompt: Elsa, warm, brief, call doodle tools, never read URLs, never claim a doodle is finished when status is queued, ask for a photo when the skill needs one, do not pitch paid plans or video as a product>",
+    "instructions": "<Talk system prompt: you are Elsa (never say Grok/fal); warm, brief, single-image doodle tools only, no packs, no video; never read URLs, never claim a doodle is finished when status is queued, ask for a photo when the skill needs one, do not pitch paid plans>",
     "turn_detection": {
       "type": "server_vad",
       "silence_duration_ms": 600,
@@ -494,10 +513,11 @@ set `turn_detection.idle_timeout_ms` once the spike shows the field is
 honoured on fal, so a silent tab does not bill audio forever.
 
 Instructions should be a **Talk-specific** subset of `doodle-agent.ts`
-(skill roster, photo prefix, canvas rules, queued-not-ready). Do not load
-the full Mastra skill-file machinery in Voice. If Grok needs richer skill
-text later, that is an open question (MCP `skill_read` vs baking the
-roster into instructions).
+(single-image skill roster only, photo prefix, canvas rules,
+queued-not-ready). Do not load the full Mastra skill-file machinery in
+Voice. Do not bake pack skills into the roster. If Grok needs richer
+single-image skill text later, that is an open question (MCP `skill_read`
+vs baking the roster into instructions).
 
 ### 5.3 Timeout and reconnect
 
@@ -556,10 +576,11 @@ Video remains 1 credit per second and is **not** on the Talk allowlist
 until Phase 5. Grok must not volunteer clips in v1 because it cannot
 see `generateVideo`. Still not a marketed feature.
 
-Signup: 10 free credits, 1 per image. Packs (expressions = 9, festival =
-6, etc.) can empty a new account in one spoken ask — same as chat. Elsa
-should confirm before a pack in Talk ("that uses nine credits — go?").
-Put that in instructions; do not change pricing.
+Signup: 10 free credits, 1 per image. **Talk v1 does not run pack
+skills** (expressions = 9, festival = 6, etc.), so a spoken ask cannot
+empty a new account in one pack. Chat still can. Pack confirmation
+("that uses nine credits — go?") and enabling packs in Talk are a
+**later open or Phase 4+ decision** — not v1. Do not change pricing.
 
 ---
 
@@ -572,9 +593,10 @@ Put that in instructions; do not change pricing.
 | `FAL_KEY` | Secrets Store `801d9480d51848d69033ff869398bcbe` | `FAL_KEY` | `FAL_KEY` |
 
 Format is fal's `key_id:key_secret`. Scope: API (model calls + platform
-token mint), not an ADMIN key. Shared across prod/staging is OK (same
-fal account) **or** split later if we want separate spend dashboards —
-open question.
+token mint), not an ADMIN key. **Locked default: one shared `FAL_KEY`
+for prod + staging** (one fal account, same Secrets Store secret bound
+in both envs). Split only if later spend dashboards force it — not the
+starting plan.
 
 Also add `FAL_KEY: SecretLike` on `Env` (`src/env.d.ts`) and
 `.dev.vars.example`. Seed local via `pnpm secrets:seed-local`.
@@ -690,7 +712,8 @@ When implementation starts (not this PR):
 3. **Canvas digest freshness.** Chat sends digest per HTTP turn. Talk must
    POST digest on Start, after local edits, and after we apply agent ops.
    Stale digest → bad `editCanvas`.
-4. **Faster credit burn** and pack-skill one-shots (9 credits).
+4. **Faster credit burn** on single-image Talk (v1 omits packs, which
+   removes the 6–9 credit one-shot; still easy to ask for many singles).
 5. **`@fal-ai/client` + Astro 7 / Workers bundle.** Same class of risk as
    Mastra (`vite.ssr.external`). Spike must `astro build` +
    `wrangler deploy --dry-run`.
@@ -708,13 +731,15 @@ When implementation starts (not this PR):
    actually send?
 3. Staging Access vs public `/mcp` — hostname, path exception, or
    separate `mcp-dev.doodleai.art`?
-4. Shared vs split `FAL_KEY` for prod/staging spend?
-5. Bake skill roster into Grok instructions vs extra MCP `listSkills` /
-   `readSkill` tools?
-6. Confirm pack skills in Talk (yes + confirmation), or Talk-only
-   single-image allowlist for v1?
-7. Function-tool fallback if remote MCP is blocked?
-8. Keep the name Elsa?
+4. Bake **single-image** skill roster into Elsa/Grok instructions vs
+   extra MCP `listSkills` / `readSkill` tools?
+5. Packs in Talk (confirmation UX vs still-omitted) — **Phase 4+ /
+   later**, not v1. v1 is single-image only.
+6. Function-tool fallback if remote MCP is blocked?
+
+Locked (no longer open): Elsa stays; shared `FAL_KEY` prod+staging;
+Talk v1 = single-image + no `generateVideo`; MCP foundation before
+full Talk UI.
 
 ---
 
@@ -723,9 +748,18 @@ When implementation starts (not this PR):
 Serialize. Host is memory-tight; the tldraw island is contested. One
 owner for `DoodleCanvas.tsx` / `VoiceHud.tsx` at a time.
 
+**Build priority (founder lock):** implement **our doodle MCP
+foundation before full Talk UI**. After secrets/token mint, Phases 2–3
+(`/mcp` ping + `generateDoodle` on the thread-bound VoiceSession DO)
+are ahead of fal HUD polish (Phase 4). Phase 1 is a **thin**
+speech-to-speech spike only (hear Elsa, no tools, no waveform/copy
+polish). Do not expand VoiceHud cosmetics until ping + `generateDoodle`
+accept.
+
 ### Phase 0 — Secrets and token mint (no product UI)
 
-- Create `FAL_KEY` in Secrets Store, then bind in prod + `env.staging`.
+- Create **one shared** `FAL_KEY` in Secrets Store, then bind the same
+  secret in prod + `env.staging`.
 - `POST /api/fal/realtime-token` behind `requireOrg`.
 - `.dev.vars.example` + `Env` type + seed script awareness.
 
@@ -767,17 +801,19 @@ call 401. Wrong `sid` 401. Token from org A cannot read org B's session.
   SSE.
 - HUD subscribes and handles `status` / `media` / `notice` / `credits`
   using chat's job watcher.
-- Surprise (no photo) first; then attach-photo + a photo skill.
+- Surprise (no photo) first; then attach-photo + a **single-image**
+  photo skill. No pack skills.
 - `allowed_tools`: `generateDoodle` (and `ping` if still needed). No
-  `generateVideo`.
+  `generateVideo`. MCP handler rejects pack `skill` ids.
 
 **Accept:** "draw me a tiny red dragon" (surprise) spends 1 org credit,
 placeholder appears, webhook frame lands on the **same** tldraw board
 (`persistenceKey doodleai-canvas-${threadId}` for the open `/c/[id]`,
 `VoiceSession.threadId` matches). Not an orphaned sid. Balance updates.
 Second spoken ask rate-limits with the same KV bucket as chat.
-Insufficient credits → notice, no silent charge. Chat `/api/chat` still
-generates.
+Insufficient credits → notice, no silent charge. Spoken pack request
+does **not** run a pack. Chat `/api/chat` still generates (including
+packs).
 
 ### Phase 4 — Full Talk UI
 
@@ -788,12 +824,15 @@ generates.
 - Reconnect + 3600s cap + session close on exit.
 - Optional Talk session gen cap.
 - `allowed_tools`: `generateDoodle`, `readCanvas`, `editCanvas` only.
+  Still no `generateVideo`. Packs remain a Phase 4+ / later decision —
+  default is still single-image.
 
 **Accept:** Chat ↔ Talk toggle never remounts a second tldraw.
-Arranging after a pack works (digest not empty) on the bound thread
-board. Reconnect after a forced socket drop keeps the same `threadId`
-board. Reduced-motion static blob. No vendor words in the UI. Grok
-cannot call `generateVideo`.
+Arranging after a single doodle / local edit works (digest not empty)
+on the bound thread board. Reconnect after a forced socket drop keeps
+the same `threadId` board. Reduced-motion static blob. User-facing
+copy still says Elsa, never Grok/fal. Grok cannot call `generateVideo`
+or pack skills unless a later decision opens packs.
 
 ### Phase 5 — Remove Cloudflare voice
 
@@ -825,20 +864,24 @@ PRs, not in this one.
 | threadId ↔ sid | `VoiceSession` stores the open `/c/[id]` `threadId`; HUD Start mints with it; Talk doodles/ops land on `persistenceKey doodleai-canvas-${threadId}`, never an orphaned session |
 | VoiceSession | Durable Object (SSE fanout + event log + digest + `threadId`); wrangler binding + new sqlite class if needed; `VoiceRoom` migration history kept |
 | Video tool | `generateVideo` omitted from default `session.update` `allowed_tools` and from Phase 2–4 allowlists; Phase 5 / internal-only |
+| Skills | Talk v1 **single-image only**; pack skills rejected; pack confirmation is Phase 4+ / later |
+| Name | Consumer / spoken name is **Elsa**; brain is Grok; do not rename Elsa away |
 | Auth | Better Auth org gate; no provider keys in JS bundles or fal JWT payload we mint beyond fal's own token |
 | Money | Same ledger and per-image price; signup grant unchanged; no paid-plan copy |
 | Chat | Mastra `/api/chat` behaviour unchanged |
-| Ops | `FAL_KEY` in Secrets Store both envs; `/mcp` reachable from the provider on staging |
+| Ops | Shared `FAL_KEY` in Secrets Store, bound in both envs; `/mcp` reachable from the provider on staging |
+| Build order | MCP foundation (ping + `generateDoodle`) accepted before Full Talk UI / HUD polish |
 
 ---
 
 ## 12. Suggested later PR slices (not this PR)
 
-1. `FAL_KEY` + `POST /api/fal/realtime-token`  
-2. VoiceHud fal spike behind a flag  
-3. `/mcp` ping + VoiceSession Durable Object bound to `threadId`  
-4. generateDoodle MCP + SSE + job watch (same thread board)  
-5. digest + `readCanvas` / `editCanvas` + UI polish  
+1. Shared `FAL_KEY` + `POST /api/fal/realtime-token`  
+2. `/mcp` ping + VoiceSession Durable Object bound to `threadId`  
+3. generateDoodle MCP + SSE + job watch (same thread board, single-image)  
+4. Thin fal HUD spike behind a flag (hear Elsa; not polish) — may run in
+   parallel after slice 1; does not block slices 2–3 and is not Phase 4  
+5. digest + `readCanvas` / `editCanvas` + Full Talk UI polish  
 6. Remove Cloudflare voice + Phase 5 `generateVideo` MCP (not v1)  
 
 Each slice keeps Chat green and can roll back by flipping

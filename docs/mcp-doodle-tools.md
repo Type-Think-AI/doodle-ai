@@ -1,6 +1,9 @@
 # MCP doodle tools — schema + auth stub
 
 **Status:** proposed. Companion to [grok-voice-realtime-plan.md](./grok-voice-realtime-plan.md).
+Talk v1: single-image `generateDoodle` only; no packs; no `generateVideo`
+on `allowed_tools`. Consumer name Elsa lives in the Talk plan — this
+file is the tool contract.
 **Not WebMCP.** Browser `document.modelContext` tools in `docs/webmcp.md` must
 never spend credits. This server is the opposite: Grok Voice calls it
 server-side via `session.tools` (`type: "mcp"`) and the spend path is the
@@ -93,18 +96,23 @@ cannot be discovered. The hard gate is omitting the name from
 `allowed_tools` and from token `scp`. Chat Mastra may still run
 `generate-video`; Talk must not advertise it on day one.
 
+Talk v1 is **single-image only**. Pack skills are not in the Talk
+roster and must be rejected if Grok sends them. Pack confirmation /
+enabling packs is a later open or Phase 4+ decision.
+
 ### `generateDoodle`
 
 Wraps `src/mastra/tools/generate-doodle.ts` (`id: "generate-doodle"`).
 Does **not** go through Mastra. MCP handler calls the same execute path
 (extract a shared `runGenerateDoodle(input, requestContext)` during
-implementation).
+implementation). On Talk, reject pack `skill` values before spend;
+Chat keeps the full `GENERATION_MODES` list.
 
 **Input** (from the existing Zod schema):
 
 | Field | Type | Notes |
 |---|---|---|
-| `skill` | enum `GENERATION_MODES` | `src/lib/doodle-constants.ts` |
+| `skill` | enum `GENERATION_MODES` | Chat: full list. Talk v1: **single-image only**. Reject pack ids `moods`, `seasonal`, `expressions`, `style-roll`, `childhood`, `festival`, `webtoon`. |
 | `imageUrl` | string, optional | Required except `surprise`. Must pass the PicX CDN allowlist. |
 | `description` | string, optional | Surprise character text / gift occasion scan |
 | `refImageUrl` | string, optional | Extra style ref; ignored for `surprise` |
