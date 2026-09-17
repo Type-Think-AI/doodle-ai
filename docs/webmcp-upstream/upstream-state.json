@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-16T11:35:08.979Z",
+  "fetched_at": "2026-09-17T11:42:15.796Z",
   "latestCommit": {
-    "sha": "df2d824e2cd2cbf8e15e25dad9dfe85d20e25082",
-    "message": "Document Permissions Policy as a security mitigation (#275)",
-    "date": "2026-09-15T17:29:58Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/df2d824e2cd2cbf8e15e25dad9dfe85d20e25082"
+    "sha": "8a82bb7896ebee9c4155fe2aed59012ffcae78c2",
+    "message": "Add debugging member to ToolAnnotations (#253)",
+    "date": "2026-09-17T08:40:19Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/8a82bb7896ebee9c4155fe2aed59012ffcae78c2"
   },
   "files": {
     "index.bs": {
-      "hash": "f8366972d7c4442d1467580f489783fe82bff739b0c5cc618f845f4893fc1cf9",
+      "hash": "1aa1ad6859a3e9c0d7aa8f72491d5f740659f347566bd9b19e58179782eafa12",
       "exists": true,
-      "bytes": 82370
+      "bytes": 82926
     },
     "README.md": {
       "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
@@ -53,6 +53,7 @@
     "ToolExecuteCallbackOptions",
     "annotations",
     "consequentialHint",
+    "debugging",
     "description",
     "execute",
     "executeTool",
