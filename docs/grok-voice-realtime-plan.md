@@ -34,10 +34,12 @@ Pinned vendor facts (not training data):
 mic audio to fal `xai/grok-voice/realtime`. Grok speaks audio back on the same
 socket. Doodle product tools are **not** Mastra-in-the-voice-loop and **not**
 fal's coding MCP (`mcp.fal.ai`). Grok calls **our** HTTPS MCP
-(`https://doodleai.art/mcp`) through `session.tools` (`type: "mcp"`). Those
-tools wrap the existing `generateDoodle` / `generateVideo` / `readCanvas` /
-`editCanvas` execute paths, with the same Better Auth org gate, org-owned
-credits, KV rate limits, and PicX platform key.
+(`https://doodleai.art/mcp`) through `session.tools` (`type: "mcp"`). v1 tools
+wrap the existing `generateDoodle` / `readCanvas` / `editCanvas` execute paths,
+with the same Better Auth org gate, org-owned credits, KV rate limits, and
+PicX platform key. `generateVideo` stays documented as Phase 5 /
+internal-only wire-up — it is **not** in default `session.update`
+`allowed_tools` and is not day-one discoverable.
 
 **Chat mode does not move.** `POST /api/chat` keeps Mastra `doodleAgent` and
 the NDJSON `StreamEvent` stream.
@@ -56,8 +58,13 @@ Locked product constraints:
 - Never put `FAL_KEY` or an xAI key in the browser. Short-lived fal
   realtime JWT from our Worker (`tokenProvider`).
 - One tldraw island. Reuse `StreamEvent` + `apply-ops.ts` when tools return
-  media.
-- Do not claim paid plans or video as marketing-ready.
+  media. Canvas `persistenceKey` is thread-scoped (`doodleai-canvas-${threadId}`
+  on `/c/[id]`); Talk must bind `VoiceSession.sid` to that same `threadId`.
+- `VoiceSession` is a **Durable Object** (SSE fanout + event log + digest).
+  Not KV. New wrangler sqlite class / binding if needed; never delete
+  `VoiceRoom` migration history.
+- Do not claim paid plans or video as marketing-ready. Do not put
+  `generateVideo` on v1 `allowed_tools`.
 - Credits: free signup grant (`SIGNUP_GRANT_CREDITS = 10` in
   `src/lib/credits/costs.ts`), **1 credit per image**
   (`CREDITS_PER_IMAGE = 1`). Video remains **1 credit per second**, internal.
@@ -148,7 +155,7 @@ PicX images/videos complete via `POST /api/webhooks/picx`. Client watches
 | Client `type: "function"` tools as the product path | xAI would send `response.function_call_arguments.done` to the browser; we would re-implement the Worker. Remote MCP is the locked path. Function tools may be a **fallback** only if fal/xAI MCP transport fails the spike (open question). |
 | Second tldraw / `@tldraw/sync` island | Breaks the Cloudflare build. |
 | Mastra as the Talk brain | Chat only. Grok Voice **is** the Talk brain. |
-| Marketing video or paid plans | Not ready. Tools may still queue a clip. |
+| Marketing video or paid plans | Not ready. Talk omits `generateVideo` until Phase 5; chat Mastra may still queue a clip. |
 
 ---
 
@@ -160,8 +167,10 @@ Two sockets, one Worker, one canvas.
 ┌────────────────────────────────── BROWSER (Talk) ──────────────────────────────────┐
 │  Chat | Talk toggle · data-mode="voice" hides chat column                          │
 │                                                                                    │
+│  HUD Start → POST /api/voice/session { threadId }                                  │
+│              ← { sid, threadId, falJwt, mcpToken }                                 │
 │  Mic ── PCM/Opus ──► fal.realtime.connect("xai/grok-voice/realtime")               │
-│                      tokenProvider() → POST /api/fal/realtime-token                │
+│                      tokenProvider() → POST /api/fal/realtime-token (JWT refresh)  │
 │                      session.update { voice, instructions, turn_detection, tools } │
 │                      ◄── Grok audio + transcripts ── Speaker                       │
 │                                                                                    │
@@ -175,17 +184,17 @@ Two sockets, one Worker, one canvas.
                 │ fal JWT (short)                               │ cookie session
                 ▼                                               ▼
 ┌──────────────────────────── CLOUDFLARE WORKER (doodleai-agent) ────────────────────┐
-│  POST /api/fal/realtime-token                                                      │
+│  POST /api/fal/realtime-token  (tokenProvider refresh path)                        │
 │    requireOrg(generation:create) → rest.fal.ai/tokens/realtime                     │
 │    Authorization: Key ${FAL_KEY}  body: { allowed_apps, duration: 120 }            │
 │    FAL_KEY never leaves the Worker                                                 │
 │                                                                                    │
-│  POST /api/voice/session → { sid, falToken, mcpToken, expires }                    │
-│  VoiceSession DO/KV: uid, oid, digest, attachments, event log, closedAt            │
+│  POST /api/voice/session { threadId } → { sid, threadId, falJwt, mcpToken }         │
+│  VoiceSession Durable Object (firm): uid, oid, threadId, digest, event log, closedAt │
 │                                                                                    │
 │  /mcp  createMcpHandler (Streaming HTTP; SSE fallback if spike requires)           │
 │    verify mcpToken + X-Doodle-Session == sid                                       │
-│    tools → runGenerateDoodle / runGenerateVideo / read / edit                      │
+│    v1 tools → runGenerateDoodle / read / edit  (generateVideo = Phase 5)           │
 │    append StreamEvent → session SSE                                                │
 │                                                                                    │
 │  D1 ledger · KV SESSIONS rate limits · PICX_API_KEY · PICX webhook (unchanged)     │
@@ -198,7 +207,9 @@ Two sockets, one Worker, one canvas.
 │ realtime         │◄───────────────────────►│   type: mcp                          │
 │                  │                         │   server_url: https://doodleai.art/mcp│
 │                  │                         │   server_label: doodle               │
-│                  │                         │   allowed_tools: [generateDoodle, …] │
+│                  │                         │   allowed_tools: [generateDoodle,    │
+│                  │                         │     readCanvas, editCanvas]          │
+│                  │                         │   (no generateVideo until Phase 5)   │
 │                  │                         │   authorization: Bearer <mcpToken>   │
 └──────────────────┘                         └──────────────┬───────────────────────┘
                                                             │ HTTPS MCP
@@ -206,12 +217,32 @@ Two sockets, one Worker, one canvas.
                                                  our /mcp → PicX / canvas ops
 ```
 
+**threadId ↔ VoiceSession.sid (required):** Talk is the `/c/[id]` page.
+`DoodleCanvas` already scopes tldraw with
+`persistenceKey` `doodleai-canvas-${threadId}` — each chat thread is
+exactly one board. `VoiceSession` must store that same `threadId` and be
+minted from the Talk page with it (`POST /api/voice/session` body includes
+the open chat `threadId`; response echoes `{ sid, threadId, … }`). `sid`
+is the session instance; `threadId` is the board. Talk doodles/ops fan out
+on that session's SSE and must land on **that thread's board**, not an
+orphaned session with no thread binding. Reject mint without a thread id
+from `/c/[id]` (including `new` before a real id exists — create/resolve
+the thread first, same as chat).
+
+**VoiceSession is a Durable Object (firm):** SSE fanout, the StreamEvent
+log, and the canvas digest live in a `VoiceSession` DO keyed by **our**
+`sid`. Not KV, not “DO/KV”. Plan-level wrangler: add a `VOICE_SESSION`
+binding → `VoiceSession`, and a new sqlite class migration
+(`new_sqlite_classes: ["VoiceSession"]`) if it is a new class. **Never
+delete `VoiceRoom` from `wrangler.json` migration history** — Cloudflare
+forbids it. Stop exporting / binding the old class later; keep the
+historical tags.
+
 **Why a side channel exists:** xAI docs state MCP tools are executed
 **server-side**. Tool JSON returns to Grok so it can talk about the result.
 The browser never sees that payload. Canvas paint therefore cannot ride the
 fal audio socket the way it rides today's VoiceRoom WebSocket. We keep the
-**event schema** and move the **transport** to an SSE (or DO WebSocket) that
-we own.
+**event schema** and move the **transport** to SSE on the VoiceSession DO.
 
 **Why not run Mastra inside Talk:** Grok already chooses tools and speaks.
 A second LLM in the loop is the dead Cloudflare feel. MCP tools are thin
@@ -231,7 +262,10 @@ Feature name (consumer): **Talk**. Chat stays Chat.
 - **Chat** = today's split (thread + composer + canvas). Mastra.
 - **Talk** = canvas-only (`data-mode="voice"`). Chat column and resize
   handle hidden at every width (`src/styles/voice-mode.css`). Same
-  `DoodleCanvas`, same thread `persistenceKey`.
+  `DoodleCanvas`, same thread `persistenceKey`
+  (`doodleai-canvas-${threadId}` on `/c/[id]`). The VoiceSession created
+  on HUD Start is bound to that `threadId` so spoken doodles/ops hit this
+  board.
 
 Toggle already lives top-left of the stage in `src/pages/c/[id].astro`.
 Composer Talk button (`ComposerToolbar.astro`) and home
@@ -300,32 +334,47 @@ Full schemas: [mcp-doodle-tools.md](./mcp-doodle-tools.md).
 
 ### 4.1 Tools
 
-`generateDoodle`, `generateVideo`, `readCanvas`, `editCanvas`.
+v1 `allowed_tools` (default `session.update`, Phases 2–4): `generateDoodle`,
+`readCanvas`, `editCanvas`.
+
+`generateVideo` is **not** in that list. Keep the schema documented as
+Phase 5 / internal-only wire-up — not day-one discoverable. The hard gate
+is **omitting it from `allowed_tools`** (and from the minted token `scp`)
+until Phase 5. Documenting the tool is not enough if Grok can still see it.
 
 Implementation rule: **extract** the Mastra `execute` bodies into
 `src/lib/tools/run-*.ts` (or equivalent) callable from both Mastra
 `createTool` and the MCP handler. Do not copy-paste spend/refund/PicX
-submit. Chat must keep working on the same functions.
+submit. Chat must keep working on the same functions. Chat may still call
+`generate-video` via Mastra; Talk must not advertise it until Phase 5.
 
 ### 4.2 Auth and session binding
 
-1. Browser is signed in (Better Auth cookie or bearer — `requireOrg`).
-2. `POST /api/voice/session` mints `{ sid, falJwt, mcpToken }`.
-3. Browser connects fal with `tokenProvider` returning `falJwt` (and
-   refreshes it).
+1. Browser is signed in (Better Auth cookie or bearer — `requireOrg`) on
+   `/c/[id]`. The open chat `threadId` is the route param (same value
+   handed to `DoodleCanvas`).
+2. HUD Start → `POST /api/voice/session` with `{ threadId }`. Worker
+   creates the VoiceSession Durable Object, **stores `threadId` on the
+   session**, and returns `{ sid, threadId, falJwt, mcpToken }`.
+3. Browser connects fal with the minted `falJwt`. `tokenProvider`
+   refreshes via `POST /api/fal/realtime-token` (not the session mint).
 4. Browser sends `session.update` with
    `tools: [{ type: "mcp", server_url, server_label: "doodle",
    allowed_tools, authorization: "Bearer " + mcpToken,
    headers: { "X-Doodle-Session": sid } }]`.
+   v1 `allowed_tools` = `generateDoodle`, `readCanvas`, `editCanvas`.
 5. xAI/fal calls `/mcp` with those headers. We verify HMAC, expiry,
    `typ === "mcp"`, `sid` match, and that the session is open for that
-   `uid`/`oid`.
+   `uid`/`oid` **and still bound to the minted `threadId`**.
 6. Tool runs with `RequestContext` built like `buildVoiceRequestContext`.
+   Mutating tools append StreamEvents on this `sid`; the HUD on `/c/[id]`
+   applies them to `persistenceKey doodleai-canvas-${threadId}`.
 
 The MCP token **is** in the browser (it has to be, so the browser can put
 it on `session.update`). That is the same trust model as today's 120s
-voice token on `?token=`. Mitigations: short TTL, refresh, bind to `sid`,
-single-speaker session, revoke on `endCall` / Talk exit.
+voice token on `?token=`. Mitigations: short TTL (~5 minutes, refresh via
+`session.update`), bind to `sid` + `threadId`, single-speaker session,
+revoke on `endCall` / Talk exit.
 
 Do not put Better Auth session cookies on `session.tools.headers`. xAI
 would then hold a full login.
@@ -353,12 +402,12 @@ prefix, like `/agents/` today):
 
 | Route | Auth | Purpose |
 |---|---|---|
-| `POST /api/fal/realtime-token` | `requireOrg` + generation:create | mint fal JWT |
-| `POST /api/voice/session` | same | sid + both tokens; create VoiceSession |
-| `POST /api/voice/session/:sid/canvas` | session cookie **and** sid belongs to caller | digest upsert |
-| `GET /api/voice/session/:sid/events` | same | SSE StreamEvents |
+| `POST /api/fal/realtime-token` | `requireOrg` + generation:create | fal JWT refresh for `tokenProvider` |
+| `POST /api/voice/session` | same | body `{ threadId }`; create VoiceSession DO; return `{ sid, threadId, falJwt, mcpToken }` |
+| `POST /api/voice/session/:sid/canvas` | session cookie **and** sid belongs to caller | digest upsert on that thread-bound session |
+| `GET /api/voice/session/:sid/events` | same | SSE StreamEvents from the VoiceSession DO |
 | `POST /api/voice/session/:sid/close` | same | revoke mcp token, end session |
-| `/mcp` (+ `/mcp/sse` if needed) | MCP capability token | Grok tools |
+| `/mcp` (+ `/mcp/sse` if needed) | MCP capability token | Grok tools (v1 allowlist; no `generateVideo`) |
 
 Staging uses `https://dev.doodleai.art/...`. `session.update` must use
 the **current** origin so a staging Talk session cannot hit prod MCP
@@ -379,17 +428,20 @@ Workers MCP: `createMcpHandler` from the Agents SDK, factory-per-request
 ### 5.1 Connect
 
 1. User taps Start on the HUD (already signed in, or we fire
-   `doodleai:open-auth` — existing VoiceHud branch).
-2. `POST /api/voice/session` (JSON body `{}` so `wrangler dev --remote`
-   CSRF does not reject a bodyless POST — same lesson as today's
-   `/api/voice/token`).
+   `doodleai:open-auth` — existing VoiceHud branch). Talk is `/c/[id]`;
+   the HUD already has that page's `threadId`.
+2. `POST /api/voice/session` with JSON `{ threadId }` (a JSON body so
+   `wrangler dev --remote` CSRF does not reject a bodyless POST — same
+   lesson as today's `/api/voice/token`). Worker creates the VoiceSession
+   Durable Object, stores `threadId` on it, and returns
+   `{ sid, threadId, falJwt, mcpToken }`.
 3. `fal.realtime.connect("xai/grok-voice/realtime", { tokenProvider,
-   tokenExpirationSeconds: 120, … })`.
+   tokenExpirationSeconds: 120, … })`. Initial JWT may be the minted
+   `falJwt`; **refresh** is always `POST /api/fal/realtime-token`.
 4. On open, send `session.update` (below).
 5. Grok greets (instructions say to speak first). HUD shows the same line.
 
-`tokenProvider` calls `POST /api/fal/realtime-token` (or the session
-route's refresh). Worker:
+`tokenProvider` is the fal JWT refresh path. Worker:
 
 ```http
 POST https://rest.fal.ai/tokens/realtime
@@ -428,7 +480,7 @@ vs a fal-specific wrapper.
         "server_url": "https://doodleai.art/mcp",
         "server_label": "doodle",
         "server_description": "Doodle AI canvas and generation tools",
-        "allowed_tools": ["generateDoodle", "generateVideo", "readCanvas", "editCanvas"],
+        "allowed_tools": ["generateDoodle", "readCanvas", "editCanvas"],
         "authorization": "Bearer <mcpToken>",
         "headers": { "X-Doodle-Session": "<sid>" }
       }
@@ -451,21 +503,24 @@ roster into instructions).
 
 | Clock | Value | What we do |
 |---|---|---|
-| fal JWT | 120s, refresh at 90% (`tokenExpirationSeconds`) | `tokenProvider` re-mints |
-| MCP token | 15 min (proposed) | refresh + `session.update` |
+| fal JWT | 120s, refresh at 90% (`tokenExpirationSeconds`) | `tokenProvider` → `POST /api/fal/realtime-token` |
+| MCP token | **~5 min** (proposed) | refresh + `session.update` (same `sid` / `threadId`) |
 | Consumer Talk cap | **~3600s** | HUD ends the call with a kind "take a breath" line; user can Start again |
 | xAI max session | 120 minutes | we stop first |
-| Resumption idle | 30 minutes | new `sid` if they come back later |
+| Resumption idle | 30 minutes | new `sid` if they come back later (same `threadId`) |
 | Connect fail | 12s (existing HUD) | Failed state |
 
 On drop: if `resumption.enabled` and we have
 `conversation.created.conversation.id`, reconnect with `conversation_id`
 and the same opt-in. Re-send `session.update` (tools + fresh tokens).
 Keep buffering mic as xAI's reconnect guidance says. If resumption fails,
-new session, Elsa greets again — do not pretend she remembers.
+new session **on the same `threadId`**, Elsa greets again — do not pretend
+she remembers. Canvas events still target that thread's board.
 
-`VoiceSession` outlives a single fal socket so canvas events and digest
-survive a reconnect. Close it on HUD End or Talk → Chat.
+`VoiceSession` (the Durable Object) outlives a single fal socket so canvas
+events, digest, and the `threadId` binding survive a reconnect. Close it
+on HUD End or Talk → Chat. A session that is not bound to the open
+`threadId` is a bug: doodles must not land on an orphaned sid.
 
 Local: Talk **cannot** work on `astro dev` (port 4321) for the same
 reason as today — Worker entry / DO / secrets are on `pnpm dev`
@@ -497,9 +552,9 @@ runaway spend):
 - `insufficient-credits`: Grok speaks the tool message; HUD shows the
   existing notice. No "Upgrade" that implies Stripe.
 
-Video costs 5–15 credits per clip. Grok must not volunteer long clips.
-Instructions + the existing tool description already say so. Still not
-a marketed feature.
+Video remains 1 credit per second and is **not** on the Talk allowlist
+until Phase 5. Grok must not volunteer clips in v1 because it cannot
+see `generateVideo`. Still not a marketed feature.
 
 Signup: 10 free credits, 1 per image. Packs (expressions = 9, festival =
 6, etc.) can empty a new account in one spoken ask — same as chat. Elsa
@@ -534,6 +589,11 @@ still required for async image/video completion (docs/secrets.md);
 Talk inherits that dependency.
 
 ### 7.2 Token endpoint contract
+
+HUD Start is **`POST /api/voice/session`**, not this route. Session mint
+returns `{ sid, threadId, falJwt, mcpToken }`. This route is the
+`tokenProvider` **refresh** path (and any connect that wants a fresh JWT
+without minting a new VoiceSession).
 
 `POST /api/fal/realtime-token`
 
@@ -593,13 +653,25 @@ accepts) or a query `?voice=grok` for the spike only.
 | Remove | Why |
 |---|---|
 | `@cloudflare/voice` | Flux/Aura pipeline |
-| `VoiceRoom` class + `VOICE_ROOM` binding | After VoiceSession exists (new class or gutted DO). **Do not remove a sqlite DO class from `wrangler.json` migrations** — Cloudflare forbids deleting migration history. Stop exporting / binding the old class; add a new migration for `VoiceSession` if it is a new sqlite class |
+| `VoiceRoom` class + `VOICE_ROOM` binding | After the `VoiceSession` Durable Object exists. **VoiceSession is a new DO** (SSE fanout + event log + digest + `threadId`). Add wrangler binding `VOICE_SESSION` → `VoiceSession` and a new migration tag with `new_sqlite_classes: ["VoiceSession"]` if it is a new sqlite class. **Never delete `VoiceRoom` from migration history** — Cloudflare forbids it. Stop exporting / binding the old class later; leave historical tags in place |
 | `WorkersAIFluxSTT` / `WorkersAITTS` / `AI` binding | Only if nothing else uses Workers AI. Grep before dropping `ai` from wrangler |
 | `routeAgentRequest` `/agents/` branch in `entry.ts` | Only used for VoiceRoom today |
 | `useVoiceAgent` | Replaced by `@fal-ai/client` realtime |
 | `POST /api/voice/token` as a VoiceRoom-only mint | Replaced by `/api/voice/session` + `/api/fal/realtime-token` |
 
 `RoadmapRoom` / `BoardRoom` are unrelated. Do not touch them.
+
+### 8.3 VoiceSession wrangler (plan level)
+
+When implementation starts (not this PR):
+
+- New Durable Object class `VoiceSession` (sqlite). Binding name
+  `VOICE_SESSION` (or equivalent) on prod and `env.staging`.
+- New migration tag after current `v3` (`VoiceRoom`). Example shape:
+  `new_sqlite_classes: ["VoiceSession"]`.
+- Do **not** put `deleted_classes` / rewrite history for `VoiceRoom`.
+- Do **not** store session fanout/log/digest in KV as the source of
+  truth — the DO is the session.
 
 ---
 
@@ -675,28 +747,37 @@ still default for everyone else.
 
 ### Phase 2 — MCP ping
 
-- `/mcp` hello tool `ping` → `{ ok: true, sid }`.
-- `session.tools` with `allowed_tools: ["ping"]`.
+- VoiceSession Durable Object + wrangler binding/migration (new sqlite
+  class; do not delete `VoiceRoom` history).
+- `/mcp` hello tool `ping` → `{ ok: true, sid, threadId }`.
+- HUD Start → `POST /api/voice/session` `{ threadId }` →
+  `{ sid, threadId, falJwt, mcpToken }`.
+- `session.tools` with `allowed_tools: ["ping"]` only.
 - Capability token + `X-Doodle-Session`.
 - Prove xAI/fal can reach staging `/mcp` (Access decision recorded).
 
 **Accept:** spoken "ping the doodle tools" → Grok says ok and names
-`sid`. Unauthenticated MCP call 401. Wrong `sid` 401. Token from org A
-cannot read org B's session.
+`sid`. Session record has the Talk page `threadId`. Unauthenticated MCP
+call 401. Wrong `sid` 401. Token from org A cannot read org B's session.
+`generateVideo` is not in `allowed_tools` or token `scp`.
 
 ### Phase 3 — `generateDoodle` onto the canvas
 
-- Extract run-function; MCP `generateDoodle`; VoiceSession event log +
+- Extract run-function; MCP `generateDoodle`; VoiceSession DO event log +
   SSE.
 - HUD subscribes and handles `status` / `media` / `notice` / `credits`
   using chat's job watcher.
 - Surprise (no photo) first; then attach-photo + a photo skill.
+- `allowed_tools`: `generateDoodle` (and `ping` if still needed). No
+  `generateVideo`.
 
 **Accept:** "draw me a tiny red dragon" (surprise) spends 1 org credit,
-placeholder appears, webhook frame lands on the **same** tldraw board.
-Balance updates. Second spoken ask rate-limits with the same KV bucket
-as chat. Insufficient credits → notice, no silent charge. Chat
-`/api/chat` still generates.
+placeholder appears, webhook frame lands on the **same** tldraw board
+(`persistenceKey doodleai-canvas-${threadId}` for the open `/c/[id]`,
+`VoiceSession.threadId` matches). Not an orphaned sid. Balance updates.
+Second spoken ask rate-limits with the same KV bucket as chat.
+Insufficient credits → notice, no silent charge. Chat `/api/chat` still
+generates.
 
 ### Phase 4 — Full Talk UI
 
@@ -706,17 +787,22 @@ as chat. Insufficient credits → notice, no silent charge. Chat
   today's `sendText`).
 - Reconnect + 3600s cap + session close on exit.
 - Optional Talk session gen cap.
+- `allowed_tools`: `generateDoodle`, `readCanvas`, `editCanvas` only.
 
 **Accept:** Chat ↔ Talk toggle never remounts a second tldraw.
-Arranging after a pack works (digest not empty). Reconnect after a
-forced socket drop keeps the board. Reduced-motion static blob. No
-vendor words in the UI.
+Arranging after a pack works (digest not empty) on the bound thread
+board. Reconnect after a forced socket drop keeps the same `threadId`
+board. Reduced-motion static blob. No vendor words in the UI. Grok
+cannot call `generateVideo`.
 
 ### Phase 5 — Remove Cloudflare voice
 
 - Delete `@cloudflare/voice` usage, VoiceRoom export, `/agents/` router,
-  old token route, AI binding if unused.
-- `generateVideo` MCP wired but not marketed.
+  old token route, AI binding if unused. Keep `VoiceRoom` migration
+  history.
+- `generateVideo` MCP **wired** (internal-only, not marketed). This is
+  the first phase it may appear on `allowed_tools` / token `scp`. Until
+  then the hard gate is omit.
 - Docs: this file marked implemented; secrets.md lists `FAL_KEY`.
 
 **Accept:** `pnpm check` (or lint + tsc + dry-run) green. Staging Talk
@@ -736,6 +822,9 @@ PRs, not in this one.
 | Feel | Talk is speech-to-speech; Cloudflare pipeline gone from the default path |
 | Tools | Grok only uses **our** MCP; `mcp.fal.ai` never configured |
 | Canvas | One island; media/ops use existing StreamEvent + apply-ops |
+| threadId ↔ sid | `VoiceSession` stores the open `/c/[id]` `threadId`; HUD Start mints with it; Talk doodles/ops land on `persistenceKey doodleai-canvas-${threadId}`, never an orphaned session |
+| VoiceSession | Durable Object (SSE fanout + event log + digest + `threadId`); wrangler binding + new sqlite class if needed; `VoiceRoom` migration history kept |
+| Video tool | `generateVideo` omitted from default `session.update` `allowed_tools` and from Phase 2–4 allowlists; Phase 5 / internal-only |
 | Auth | Better Auth org gate; no provider keys in JS bundles or fal JWT payload we mint beyond fal's own token |
 | Money | Same ledger and per-image price; signup grant unchanged; no paid-plan copy |
 | Chat | Mastra `/api/chat` behaviour unchanged |
@@ -745,12 +834,12 @@ PRs, not in this one.
 
 ## 12. Suggested later PR slices (not this PR)
 
-1. `FAL_KEY` + token route  
+1. `FAL_KEY` + `POST /api/fal/realtime-token`  
 2. VoiceHud fal spike behind a flag  
-3. `/mcp` ping + VoiceSession  
-4. generateDoodle MCP + SSE + job watch  
-5. digest + canvas tools + UI polish  
-6. Remove Cloudflare voice + optional generateVideo MCP  
+3. `/mcp` ping + VoiceSession Durable Object bound to `threadId`  
+4. generateDoodle MCP + SSE + job watch (same thread board)  
+5. digest + `readCanvas` / `editCanvas` + UI polish  
+6. Remove Cloudflare voice + Phase 5 `generateVideo` MCP (not v1)  
 
 Each slice keeps Chat green and can roll back by flipping
 `VOICE_BACKEND`.

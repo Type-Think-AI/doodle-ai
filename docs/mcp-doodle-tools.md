@@ -21,8 +21,11 @@ IDE assistants, not Doodle product tools.
 Hosted on the existing Worker (`doodleai-agent` / `doodleai-agent-staging`).
 Prefer Cloudflare Agents `createMcpHandler` (stateless Streamable HTTP) over
 the deprecated `McpAgent` Durable Object. Session *business* state lives in a
-`VoiceSession` Durable Object / KV record keyed by **our** `sid`, not by an
-MCP protocol session id.
+`VoiceSession` **Durable Object** (firm — SSE fanout + event log + digest),
+keyed by **our** `sid`, not by an MCP protocol session id. The DO stores the
+open chat `threadId` from `/c/[id]` (`DoodleCanvas` `persistenceKey` is
+`doodleai-canvas-${threadId}`). Talk tools must paint that thread's board,
+not an orphaned session. Not KV.
 
 Pin `@modelcontextprotocol/sdk` **≥ 1.26.0** (CVE-2026-25536: cross-client
 leak when a Streamable HTTP transport is reused).
@@ -51,19 +54,28 @@ interface McpCapabilityClaims {
   typ: "mcp";
   uid: string;          // Better Auth user id
   oid: string;          // active org — credits spend here
-  sid: string;          // VoiceSession id
+  sid: string;          // VoiceSession id (DO)
   scp: McpToolName[];   // allowlist copy; server still enforces
   exp: number;          // unix seconds
 }
 ```
 
-Proposed TTL: **15 minutes**, refreshable from the signed-in browser via
-`POST /api/voice/session` (cookie/bearer). xAI keeps using the token we
-handed it on `session.update`; the browser re-sends `session.update` when
-it refreshes.
+Minted by HUD Start → `POST /api/voice/session` `{ threadId }` →
+`{ sid, threadId, falJwt, mcpToken }`. `threadId` is stored on the
+VoiceSession Durable Object (and must match the Talk page). `falJwt` is
+the initial fal JWT; refresh goes through `POST /api/fal/realtime-token`
+(`tokenProvider`), not a new session.
+
+Proposed TTL: **~5 minutes**. Remint for the same `sid` / `threadId` from
+the signed-in browser, then refresh Grok via `session.update`. xAI keeps
+using the token we last handed it; a new `session.update` replaces it.
 
 Reject if: missing/malformed/expired, `typ !== "mcp"`, `sid` header mismatch,
-tool name not in `scp`, or the `VoiceSession` row is closed.
+tool name not in `scp`, the `VoiceSession` is closed, or the session is not
+bound to the Talk `threadId`.
+
+v1 `scp` / `allowed_tools`: `generateDoodle`, `readCanvas`, `editCanvas`
+(plus `ping` in Phase 2). **`generateVideo` is omitted until Phase 5.**
 
 ---
 
@@ -74,8 +86,12 @@ Names are **camelCase**, matching the chat matcher aliases in
 (`generateDoodle` \| `generate-doodle`, etc.). Advertise camelCase only so
 Grok does not dual-call.
 
-`session.tools[0].allowed_tools` must be this exact list so a future admin
-tool on the same host cannot be discovered.
+v1 `session.tools[0].allowed_tools` must be exactly
+`["generateDoodle", "readCanvas", "editCanvas"]` (Phase 2 is `["ping"]`
+only) so a future admin tool — and **`generateVideo` before Phase 5** —
+cannot be discovered. The hard gate is omitting the name from
+`allowed_tools` and from token `scp`. Chat Mastra may still run
+`generate-video`; Talk must not advertise it on day one.
 
 ### `generateDoodle`
 
@@ -107,11 +123,18 @@ Do not return raw PicX URLs for Grok to read aloud. The canvas watcher
 (`startImageJob` in chat, reused from Talk) paints frames when the webhook
 completes the `generation` row.
 
-### `generateVideo`
+### `generateVideo` (Phase 5 / internal-only — not v1)
 
 Wraps `src/mastra/tools/generate-video.ts` (`id: "generate-video"`).
-**Internal / not marketing-ready.** Still expose the tool so Talk can
-animate a doodle; do not advertise video or paid plans in consumer copy.
+**Internal / not marketing-ready. Not day-one discoverable.**
+
+Do **not** put `generateVideo` on default `session.update` `allowed_tools`
+or on the minted token `scp` in Phases 2–4. The hard gate is **omitting
+the name** until Phase 5 wire-up. Schema is documented here so the later
+PR does not invent a second contract. Chat Mastra may still call
+`generate-video`; Talk Grok must not see this tool until Phase 5.
+
+Do not advertise video or paid plans in consumer copy.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -133,7 +156,8 @@ Output: `canvasDigestSchema` from `src/lib/canvas/ops.ts`, or
 
 The digest is **not** on the MCP request. The browser `POST`s it to
 `/api/voice/session/:sid/canvas` (same shape `/api/chat` already accepts as
-`canvas`). The tool reads `VoiceSession.canvasDigest`.
+`canvas`). The tool reads `VoiceSession.canvasDigest` on the Durable
+Object bound to this Talk `threadId`.
 
 ### `editCanvas`
 
@@ -189,9 +213,16 @@ taken from tool arguments.
 
 xAI executes MCP **server-side**. Tool JSON goes back to Grok, not to the
 browser. After every mutating tool, append the matching `StreamEvent` to
-`VoiceSession` and push it on `GET /api/voice/session/:sid/events` (SSE).
+the `VoiceSession` Durable Object and push it on
+`GET /api/voice/session/:sid/events` (SSE). That `sid` is bound to the
+Talk page `threadId`; the HUD on `/c/[id]` applies events to
+`persistenceKey doodleai-canvas-${threadId}`. Doodles/ops must not land
+on an orphaned session.
+
 The Talk HUD dispatches through the existing
 `handleVoiceCanvasEvent` / `doodleai:canvas-add` / `doodleai:canvas-ops`
 path, and must **also** handle `media` / `video` jobIds the way
 `src/scripts/app/chat/api-turn.ts` does (today's HUD only paints
 `image`+url, `video`+url, and `canvas` — that gap is in scope for Talk).
+v1 Talk will emit `media` from `generateDoodle`; `video` jobIds wait
+until Phase 5.
