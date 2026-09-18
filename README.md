@@ -34,7 +34,7 @@ There are **two ways in**:
 - **The chat studio** — describe what you want, attach a photo, and the agent picks the right skill. Full run of 23 skills.
 - **Free-tool pages** — single-purpose landing pages (e.g. `/photo-to-coloring-page/`, `/doodle-ideas/`) where the real prompt composer is the first thing on the page and the matching skill is already pre-pinned. 10 are live; the hub is at **[doodleai.art/tools](https://doodleai.art/tools)**. Same generator, same threads, just entered from a specific query instead of a blank chat.
 
-> **Try it now:** [doodleai.art](https://doodleai.art) — 5 free credits on signup, no credit card needed.
+> **Try it now:** [doodleai.art](https://doodleai.art) — 10 free credits on signup, no credit card needed.
 
 ---
 

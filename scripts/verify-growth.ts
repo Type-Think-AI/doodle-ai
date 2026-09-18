@@ -97,7 +97,11 @@ check("hero copy states photo-to-doodle without video or paid-plan claims", () =
   assert.equal(HERO_HEADLINE, "Turn your photo into a hand-drawn doodle");
   assert.match(HERO_SUBHEAD, /Stickers, couple portraits, pet doodles, and festival packs/);
   assert.doesNotMatch(HERO_HEADLINE + HERO_SUBHEAD, /video|paid plan|commercial rights/i);
-  assert.equal(heroProofLine(SIGNUP_GRANT_CREDITS), "10 free credits on signup · no card · results stay private");
+  assert.equal(
+    heroProofLine(SIGNUP_GRANT_CREDITS),
+    `${SIGNUP_GRANT_CREDITS} free credits on signup · no card · results stay private`,
+  );
+  assert.equal(SIGNUP_GRANT_CREDITS, 10);
   assert.equal(HERO_PRIMARY_CTA, "Upload a photo");
   assert.equal(HERO_SECONDARY_CTA, "Browse skills");
   assert.match(CREDITS_TESTING_NOTE, /Credit packs are coming/);

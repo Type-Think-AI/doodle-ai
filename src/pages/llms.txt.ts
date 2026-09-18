@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { SKILLS, getSkill } from '../lib/skills';
 import { getToolLinks, getArticlesByCategory } from '../lib/content/articles';
+import { SIGNUP_GRANT_CREDITS } from '../lib/credits/costs';
 
 export const prerender = true;
 
@@ -62,7 +63,7 @@ https://doodleai.art/cute-doodle/ is also https://doodleai.art/cute-doodle.md
 
 ## Product
 - Sign in with Google to upload, generate, save, and sync work. Browsing is open; creation requires an account.
-- New accounts receive a 10-credit signup grant. Single-image skills cost 1 credit; pack skills cost 1 credit per image they produce (Style Roll, Childhood Me, Emotional Modes, Seasonal Pack and Webtoon Caricature 4, Festival Pack 6, Expression Pack 9). Failed images are refunded.
+- New accounts receive a ${SIGNUP_GRANT_CREDITS}-credit signup grant. Single-image skills cost 1 credit; pack skills cost 1 credit per image they produce (Style Roll, Childhood Me, Emotional Modes, Seasonal Pack and Webtoon Caricature 4, Festival Pack 6, Expression Pack 9). Failed images are refunded.
 - Users do not enter a PicX API key. Generation uses Doodle AI's server-owned PicX connection.
 - Saved characters can be mentioned with @. Signed-in chats, characters, and moodboards sync across devices.
 

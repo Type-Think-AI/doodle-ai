@@ -28,6 +28,7 @@ interface Props {
 
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 import { THEME_STORAGE_KEY } from '../lib/theme';
+import { SIGNUP_GRANT_CREDITS } from '../lib/credits/costs';
 import WebMcpTools from '../components/agentic/WebMcpTools.astro';
 import '../styles/app.css';
 
@@ -75,7 +76,7 @@ const jsonLd = {
 				'@type': 'Offer',
 				price: '0',
 				priceCurrency: 'USD',
-				description: '5 free credits on signup',
+				description: `${SIGNUP_GRANT_CREDITS} free credits on signup`,
 			},
 		},
 		{
