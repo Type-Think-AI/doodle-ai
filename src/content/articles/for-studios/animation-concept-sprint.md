@@ -34,7 +34,7 @@ Taken together, those sources support a narrow operational claim: there is deman
 
 ## What Doodle AI actually is today
 
-Doodle AI is a chat-first creative studio built with Astro and Mastra. Image generation goes through a server-owned PicX connection. You sign in to upload, generate, and save. New accounts receive 5 signup credits. Each successful generation costs 1 credit. Failed generations refund credits.
+Doodle AI is a chat-first creative studio built with Astro and Mastra. Image generation goes through a server-owned PicX connection. You sign in to upload, generate, and save. New accounts receive 10 signup credits. Each successful generation costs 1 credit. Failed generations refund credits.
 
 The currently runnable image skills are:
 
@@ -73,7 +73,7 @@ The following brief is fictional. Harbor & Wick Animation is not a real studio. 
 **Hypothetical constraints the sprint must respect:**
 
 - One sitting, not a week of exploration.
-- Credit discipline. A new Doodle AI account has 5 signup credits. This hypothetical team already has an account and budgets 8 credits: two for avatar, two for close-ups, two for full-body action, two as redo buffer. Failed generations would refund, but the plan does not rely on failures.
+- Credit discipline. A new Doodle AI account has 10 signup credits. This hypothetical team already has an account and budgets 8 credits: two for avatar, two for close-ups, two for full-body action, two as redo buffer. Failed generations would refund, but the plan does not rely on failures.
 - No video in this sitting. No animatic. No “just generate the short.”
 - Sign-in before any upload, generation, or save.
 - Human gates after each skill. The producer can stop the sprint. The creative director can send a skill back. The designer can refuse to put a still on the board.
@@ -168,7 +168,7 @@ Gates fail when they become taste. Give each person a job.
 | C. Full-body action | Producer plus CD | Six verbs, thumbnail silhouette, lantern is in the body | Hero-shot grid, unreadable mass, flame as decoration | How long is the shot? |
 | D. Board assembly | Producer | A stranger can describe Lumen from the wall | The wall needs a verbal tour | Should we generate video? |
 
-The producer’s actual power is to spend the redo credits or to stop. With 5 signup credits on a new account, a first-time user may only get one full pass and no buffer. Plan for that. Do not perform the sprint as an open jam.
+The producer’s actual power is to spend the redo credits or to stop. With 10 signup credits on a new account, a first-time user may only get one full pass and no buffer. Plan for that. Do not perform the sprint as an open jam.
 
 ```mermaid
 flowchart TD
@@ -219,7 +219,7 @@ This table is a planning tool. It is not a price list for a subscription, becaus
 | What if Gate A fails once? | Avatar again | A second casting still | 1 | A “variant workflow”; this is just another generation |
 | What if a generation errors? | Same skill after refund | Another attempt | 0 if the failure refunds as specified | A reason to skip the gate |
 
-Hypothetical budget for Harbor & Wick: 2 + 2 + 2 + 2 = 8 planned credits, with the last two unused if Gates A–C pass on the second try or better. A brand-new account with 5 signup credits should treat this as a single pass plus one redo, not as a fishing trip. Surprise character, sticker sheet, mood captions, and gift each also cost 1 credit if someone gets bored and runs them. In this sprint, that is a leak. The sticker-pack sample illustrating this article is exactly that kind of adjacent stills sheet: useful as a product example, expensive as a distraction from locking Lumen.
+Hypothetical budget for Harbor & Wick: 2 + 2 + 2 + 2 = 8 planned credits, with the last two unused if Gates A–C pass on the second try or better. A brand-new account with 10 signup credits should treat this as a single pass plus one redo, not as a fishing trip. Surprise character, sticker sheet, mood captions, and gift each also cost 1 credit if someone gets bored and runs them. In this sprint, that is a leak. The sticker-pack sample illustrating this article is exactly that kind of adjacent stills sheet: useful as a product example, expensive as a distraction from locking Lumen.
 
 ## Worked example, assumptions labelled hypothetical
 
@@ -280,7 +280,7 @@ Print this. Tick it in the room.
 - [ ] Brief rewritten as stills questions, not as a shot list.
 - [ ] Fictional or real job: success test is “who is this,” not “here is the film.”
 - [ ] Everyone who will generate is signed in.
-- [ ] Credit budget on paper. New accounts: 5 signup credits. Do not spend them on surprise character, stickers, mood captions, or gift during this sprint.
+- [ ] Credit budget on paper. New accounts: 10 signup credits. Do not spend them on surprise character, stickers, mood captions, or gift during this sprint.
 - [ ] Written lock pasted once and reused.
 - [ ] Avatar generated. Gate A hired or rejected.
 - [ ] Close-up collage generated only after Gate A. Gate B: one performer, six states.

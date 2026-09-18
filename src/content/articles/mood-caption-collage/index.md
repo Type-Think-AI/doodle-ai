@@ -178,7 +178,7 @@ The public hub is [/skills/](https://doodleai.art/skills/), not the homepage. Th
 4. **Generate.** The Mastra agent selects the Mood Captions skill and calls the generation tool. The tool reserves **1 credit**, calls server-owned PicX, and refunds that credit if generation fails.
 5. **Inspect the still as a captioned page.** Use the checklist later in this article. Download or save it only if the six words are readable and the person still reads as one illustrated character.
 
-New accounts receive **5 signup credits** into their personal organization. Credits are pooled on the organization. Every runnable skill currently costs 1 credit. Emotional Modes and Seasonal Pack appear in the catalog as coming soon. They are **not runnable**. Do not plan a seasonal mood pack around them.
+New accounts receive **10 signup credits** into their personal organization. Credits are pooled on the organization. Every runnable skill currently costs 1 credit. Emotional Modes and Seasonal Pack appear in the catalog as coming soon. They are **not runnable**. Do not plan a seasonal mood pack around them.
 
 The Better Auth organization layer exists as a backend and API foundation: a personal organization on signup, up to 5 organizations, up to 25 members, owner/producer/artist/reviewer/client roles, an active organization on the session, membership and permission rechecks, and organization-scoped threads, saved references, moodboards, generation records, and pooled credits. That is shared data behavior. A polished team switcher, a finished B2B workspace UI, and verified end-to-end public workflows for projects, assets, share links, batch jobs, and review states were not confirmed as complete product surfaces. Do not treat this sitting as a studio production pipeline or a client review portal.
 
@@ -348,7 +348,7 @@ No. Transparent messaging stickers are a different job. Doodle AI does not expor
 
 ### How many credits does a mood grid cost?
 
-1 credit per generation. New accounts receive 5. Failed generations refund. A second try for a different random set costs a second credit.
+1 credit per generation. New accounts receive 10. Failed generations refund. A second try for a different random set costs a second credit.
 
 ### Do I need a PicX key?
 

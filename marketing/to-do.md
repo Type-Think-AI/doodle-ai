@@ -18,7 +18,7 @@ Every article must keep these layers separate. If a claim is not true in the liv
 - Doodle AI is an Astro and Mastra chat-first creative application.
 - Users can browse without an account. Sign-in is required for upload, generation, saving, and synced account work.
 - Generation uses a server-owned PicX connection. Users do not paste a PicX key into Settings. Live copy must not tell them to.
-- Generation is metered through an account credit ledger. New accounts receive **5 signup credits**. Every runnable skill costs **1 credit**. Credits are reserved before generation and refunded when a generation fails.
+- Generation is metered through an account credit ledger. New accounts receive **10 signup credits**. Every runnable skill costs **1 credit**. Credits are reserved before generation and refunded when a generation fails.
 - Runnable skills: doodle avatar (`/skills/normal/`), collage (`/skills/collage/`), full-body collage (`/skills/full-body/`), surprise (`/skills/surprise/`), stickers as a square die-cut sticker *sheet* (`/skills/stickers/`), mood captions (`/skills/mood-captions/`), and gift (`/skills/gift/`).
 - Emotional Modes and Seasonal Pack are catalog previews, not runnable skills.
 - Signed-in users can save characters, @-mention them in chat, and save results to moodboards. Those surfaces are account-scoped, not public marketing pages.
@@ -94,7 +94,7 @@ Status key:
 - **Intended reader:** A person with a selfie, portrait, or group photo who wants a hand-drawn cartoon, not a professional headshot.
 - **Search intent:** Transactional how-to around `turn photo into cartoon` (2,900 US searches/month, high paid competition) and `photo to cartoon` (4,400). Supporting terms: `cartoonize photo`, `cartoonify image`.
 - **CTA:** Upload a photo at doodleai.art and generate a doodle avatar on `/skills/normal/`. Secondary link to `/skills/` and `/about/`.
-- **Evidence / data needed:** Live four-step workflow; photo requirement and 1:1 output facts from the skill page; 5 signup credits and 1-credit generations; sign-in requirement; original before/after from the Normal skill; DataForSEO volumes dated 2026-08-24; PAA questions from the `photo to cartoon` SERP.
+- **Evidence / data needed:** Live four-step workflow; photo requirement and 1:1 output facts from the skill page; 10 signup credits and 1-credit generations; sign-in requirement; original before/after from the Normal skill; DataForSEO volumes dated 2026-08-24; PAA questions from the `photo to cartoon` SERP.
 - **Proposed visual:** Owned PicX-generated before/after pair (source photo with consent + doodle result), plus a simple four-step diagram: upload or describe, choose a doodle direction, generate, save or share. No competitor screenshots as proof.
 - **Status:** Not started. First article in the sequence.
 
@@ -261,7 +261,7 @@ Status key:
 - **Cluster:** AEO / trust
 - **Intended reader:** Anyone about to upload a likeness who needs account, credit, and provider-boundary facts before signing in.
 - **Search intent:** Trust and qualification. Directly supports assistant prompts such as “Is Doodle AI free?” and “Is Doodle AI safe for uploading personal photos?”
-- **CTA:** Browse `/skills/` freely, then sign in when ready to generate. Repeat: 5 signup credits, 1 credit per runnable skill, refunds on failure, server-owned PicX, no client-side provider key.
+- **CTA:** Browse `/skills/` freely, then sign in when ready to generate. Repeat: 10 signup credits, 1 credit per runnable skill, refunds on failure, server-owned PicX, no client-side provider key.
 - **Evidence / data needed:** Implementation-backed account rules; no invented deletion window or commercial license; list of runnable vs. coming-soon skills; date stamp.
 - **Proposed visual:** Simple table of browse vs. signed-in capabilities, plus a diagram of “your browser / Doodle AI server / PicX, credentials stay server-side.” No stock “lock icon” photography.
 - **Status:** Not started. Strong supporting article after Topic 1.
@@ -292,7 +292,7 @@ These rules apply to every article, including drafts that never publish.
 ### Length and substance
 
 - **Minimum 2,500 words** of original body copy. Frontmatter, alt text, and reference lists count only if they are part of the Markdown file, but padding, keyword stuffing, and repeated boilerplate do not count toward the spirit of the minimum.
-- Write for a human who will actually generate something. Prefer specific nouns: doodleai.art, PicX, Mastra, `/skills/stickers/`, 5 signup credits, 1 credit per generation.
+- Write for a human who will actually generate something. Prefer specific nouns: doodleai.art, PicX, Mastra, `/skills/stickers/`, 10 signup credits, 1 credit per generation.
 - One primary intent per article. Adjacent skills belong in a short “related” section with links, not as a second article glued underneath.
 
 ### Voice

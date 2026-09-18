@@ -74,7 +74,7 @@ Plan articles against **what the product currently runs**, not against schema na
 **Safe to plan as current product:**
 
 - Consumer how-tos for the seven runnable image skills only: **normal doodle avatar**, **close-up collage**, **full-body collage**, **surprise**, **stickers**, **mood-captions**, and **gift**.
-- Credit behavior that is implemented: **1 credit per generation**, **5-credit signup grant**, **failed generations refund**, **credits pooled per organization**.
+- Credit behavior that is implemented: **1 credit per generation**, **10-credit signup grant**, **failed generations refund**, **credits pooled per organization**.
 - Organization facts that are implemented in the API: personal org on signup, active organization on the session, roles listed above, `requireOrg` membership/permission recheck, and `GET /api/v1/me` fields.
 - Shared references that are organization-scoped in the API: **threads/messages**, **characters**, **moodboards**, and generation/credit accounting.
 
@@ -179,7 +179,7 @@ Use one source of truth: the matrix in section 2. Every format must name **curre
 **Include:**
 
 - Only one of: normal doodle avatar, close-up collage, full-body collage, surprise, stickers, mood-captions, gift.
-- Credit facts: 1 credit per generation, 5-credit signup grant, refund on failure.
+- Credit facts: 1 credit per generation, 10-credit signup grant, refund on failure.
 - If mentioning accounts: personal organization on signup; credits are pooled on the organization.
 
 **Exclude:**
@@ -196,7 +196,7 @@ Use one source of truth: the matrix in section 2. Every format must name **curre
 
 - Organization layer: Better Auth; personal org on signup; up to 5 organizations and 25 members; roles owner, producer, artist, reviewer, client; session active organization; `requireOrg` rechecks membership and permissions.
 - Scoped in the API: threads/messages, characters as shared references, moodboards, generation/credit accounting.
-- Credits: pooled per organization; 1 credit per generation; 5-credit signup grant; failed generations refund; org limits/rate caps exist.
+- Credits: pooled per organization; 1 credit per generation; 10-credit signup grant; failed generations refund; org limits/rate caps exist.
 - `GET /api/v1/me` returns active organization, organizations, role, balance, and member count.
 - Current image skills: the seven listed above.
 

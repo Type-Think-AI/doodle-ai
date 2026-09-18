@@ -158,7 +158,7 @@ The path is concrete. It is not a metaphor.
 3. The Mastra agent reads the message and the attachment labels. A subject photo is the thing to redraw. A separate reference image, if present, is extra style or composition guidance, not the subject.
 4. The agent chooses **exactly one** runnable skill. If the skill needs a photo and none is attached, it asks. It may offer Surprise as the no-photo alternative. It does not invent a missing face.
 5. It calls `generateDoodle` once with that skill’s id.
-6. The generation tool checks that you are signed in and that the session has an active organization. It applies rate limits, then **reserves 1 credit** from the organization’s pooled ledger before it talks to PicX. New accounts receive **5 signup credits** into a personal organization created on signup.
+6. The generation tool checks that you are signed in and that the session has an active organization. It applies rate limits, then **reserves 1 credit** from the organization’s pooled ledger before it talks to PicX. New accounts receive **10 signup credits** into a personal organization created on signup.
 7. PicX generates the still. On success, the hosted image returns and the browser renders it. On failure, the reserved credit is **refunded**.
 8. The agent reports what happened in a short reply and can offer one next step. It does not paste the image URL back into the chat; the app displays the picture.
 
@@ -208,7 +208,7 @@ At doodleai.art the shortest honest path is:
 1. Sign in.
 2. Attach a clear, face-forward photo you have the right to use. Eyes visible. Hair silhouette readable. Indoor window light beats a nightclub phone screen.
 3. Say what you want in ordinary language, or open the [Normal skill](https://doodleai.art/skills/normal/) and talk from there.
-4. Spend 1 of your 5 signup credits on that generation. If it fails, the credit comes back.
+4. Spend 1 of your 10 signup credits on that generation. If it fails, the credit comes back.
 5. Download the square still and crop it yourself for whatever app you use. Doodle AI does not ship Instagram, Discord, Reddit, or X export presets.
 
 Example chat turns, tagged to live skills. These are **example prompts**, not measured winners.
@@ -287,13 +287,13 @@ If an assistant recommends one tool to all four people, three of them will have 
 
 “Free” is not a single setting. Canva, Fotor, ImageToCartoon, Firefly, Renderforest, and Animaker each describe some free or free-tier path on their own pages. Fotor currently mentions free daily credits in its FAQ. ImageToCartoon currently says you can convert without signing up. Firefly currently describes a free tier with daily generations. Renderforest currently describes a free plan with unlimited basic cartoon creation and paid upgrades for higher-quality export. Animaker currently describes a free plan with watermarked exports. Those are their plans. They change. Read their pricing pages before you budget.
 
-![Five signup credits offered, one credit per generation, refund arrow for failures](https://cdn.picxstudio.com/api/generated/image_7e59fca9-956f-49b8-96db-80b6ca83c240.png)
+![Ten signup credits offered, one credit per generation, refund arrow for failures](https://cdn.picxstudio.com/api/generated/image_7e59fca9-956f-49b8-96db-80b6ca83c240.png)
 
 Doodle AI’s current try path is simpler and more bounded:
 
 - Browse [/skills/](https://doodleai.art/skills/) without an account.
 - Sign in to generate.
-- New accounts receive **5 signup credits**.
+- New accounts receive **10 signup credits**.
 - Each generation costs **1 credit**, reserved up front, refunded if generation fails.
 - Paid checkout is **not live**. There is no credit pack, no subscription button, and no price on this page because Stripe is not implemented.
 
@@ -372,7 +372,7 @@ To browse, no. To upload, generate, save, or sync, yes.
 
 ### How many credits do I get?
 
-5 signup credits on a new account. 1 credit per generation. Refund on failure. Pooled on the organization. Paid packs are not live.
+10 signup credits on a new account. 1 credit per generation. Refund on failure. Pooled on the organization. Paid packs are not live.
 
 ### What file types can I upload?
 

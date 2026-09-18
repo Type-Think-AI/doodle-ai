@@ -130,7 +130,7 @@ After you sign in, start from the Normal skill’s **Use this skill** path or fr
 flowchart TD
   A[Choose a face-forward photo you have the right to use] --> B[Browse the Normal skill page if you want]
   B --> C[Sign in with Google]
-  C --> D[Personal organization and 5 signup credits]
+  C --> D[Personal organization and 10 signup credits]
   D --> E[Attach the photo in chat]
   E --> F[Say you want a doodle avatar]
   F --> G[Agent runs skill normal]
@@ -188,11 +188,11 @@ That is one more credit if it runs. It is not a free undo. It is also not a batc
 
 ## Credit accounting for a first cartoon sitting
 
-New accounts receive **5 signup credits** into the personal organization. Every runnable skill costs **1 credit**. The ledger **reserves** that credit before PicX is called. If generation fails, the credit is **refunded**. If you are rate-limited, the request is a no-op against the ledger: nothing is reserved. If the organization balance is too low, generation does not start. Credits are pooled on the organization. Organization limits and rate caps exist; this article does not invent extra numeric thresholds beyond the published organization caps of 5 organizations and 25 members.
+New accounts receive **10 signup credits** into the personal organization. Every runnable skill costs **1 credit**. The ledger **reserves** that credit before PicX is called. If generation fails, the credit is **refunded**. If you are rate-limited, the request is a no-op against the ledger: nothing is reserved. If the organization balance is too low, generation does not start. Credits are pooled on the organization. Organization limits and rate caps exist; this article does not invent extra numeric thresholds beyond the published organization caps of 5 organizations and 25 members.
 
 ![Five credit tokens showing spend plan with doodle results and refund arrow](https://cdn.picxstudio.com/api/generated/image_51109468-c1b7-40ca-b6ac-24d346c179cb.png)
 
-Stripe checkout, paid credit packs, and subscriptions are **not live**. Do not plan this sitting as if you can buy more credits in the product today. Five attempts is the current starter grant. Spend them as if they are sitting tickets, because they are.
+Stripe checkout, paid credit packs, and subscriptions are **not live**. Do not plan this sitting as if you can buy more credits in the product today. Ten credits is the current starter grant. Spend them as if they are sitting tickets, because they are.
 
 ```mermaid
 flowchart TD
@@ -366,12 +366,12 @@ The following sitting is fictional. Jordan is not a real user. No time, quality 
 
 **Hypothetical photo:** front-camera kitchen selfie, window light, glasses, hair clip, oatmeal hoodie. Jordan took it. Jordan consents to processing it.
 
-**Hypothetical budget:** 5 signup credits. Stripe is not available, so there is no “buy three more.”
+**Hypothetical budget:** 10 signup credits. Stripe is not available, so there is no “buy three more.”
 
 **Hypothetical steps**
 
 1. Jordan reads [doodleai.art/skills/normal/](https://doodleai.art/skills/normal/), sees that a photo is required and the output is 1:1, then signs in.
-2. Personal organization appears with 5 credits. Jordan does not invite anyone. This is not a studio sprint.
+2. Personal organization appears with 10 credits. Jordan does not invite anyone. This is not a studio sprint.
 3. Jordan attaches the selfie and pastes: “Turn this photo into a doodle avatar. Keep my glasses, hair clip, and oatmeal hoodie. Closed-mouth smile. Warm-white background. No text.”
 4. One credit is reserved. A square doodle returns. Glasses survived. Hair clip did not.
 5. Jordan spends credit 2 on the hair-clip repair prompt above. The clip returns. Outline is a bit thin for a small avatar crop.
@@ -390,7 +390,7 @@ These questions show up around photo-to-cartoon searches. The answers below are 
 
 **Can I cartoonize a photo on my phone?** The current product is a browser app. You can sign in from a phone browser, attach a photo from the camera roll, and generate. This article does not claim a native iOS or Android app.
 
-**Is this free?** Browsing is open. The site does not charge you to read skill pages. Generation uses credits. New accounts receive 5 signup credits. Each generation costs 1 credit. Failed generations refund. Paid checkout is not live, so “free unlimited cartoons” is not the offer.
+**Is this free?** Browsing is open. The site does not charge you to read skill pages. Generation uses credits. New accounts receive 10 signup credits. Each generation costs 1 credit. Failed generations refund. Paid checkout is not live, so “free unlimited cartoons” is not the offer.
 
 **How do I create an AI cartoon of myself?** Use a photo of yourself that you have the right to process. Do not describe a stranger and hope the model invents you. Surprise invents a fictional person. Normal needs your picture.
 

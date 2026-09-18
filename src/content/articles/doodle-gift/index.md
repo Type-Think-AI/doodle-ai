@@ -25,7 +25,7 @@ faq:
 
 This article is for a buyer with a deadline. You already have a birthday, thank-you, anniversary, congratulations, or celebration on the calendar. You are not trying to become an illustrator. You are not ordering a mug. You need a personal visual you can actually send today.
 
-Doodle AI is an Astro and Mastra chat-first still-image studio. You can browse without an account. Sign-in is required to upload, generate, save, and sync account work. Generation uses a server-owned PicX connection; you do not paste a PicX key into Settings. New accounts receive **5 signup credits**. Each Gift generation reserves **1 credit** and refunds that credit if generation fails. Product facts below are current as of 2026-08-25. If a later screen disagrees with this page, trust the live product and the [privacy](https://doodleai.art/privacy-policy/) and [terms](https://doodleai.art/terms-of-service/) pages.
+Doodle AI is an Astro and Mastra chat-first still-image studio. You can browse without an account. Sign-in is required to upload, generate, save, and sync account work. Generation uses a server-owned PicX connection; you do not paste a PicX key into Settings. New accounts receive **10 signup credits**. Each Gift generation reserves **1 credit** and refunds that credit if generation fails. Product facts below are current as of 2026-08-25. If a later screen disagrees with this page, trust the live product and the [privacy](https://doodleai.art/privacy-policy/) and [terms](https://doodleai.art/terms-of-service/) pages.
 
 The people named later — Lena and Mira, Owen, Priya and Dev, Sam — are **hypothetical**. They are not customers, not measured sessions, and not proof of output quality.
 
@@ -166,7 +166,7 @@ Gift is a cheerful doodle. It is not a condolence product, not a memorial servic
 
 ## Run the sitting like a deadline, not like a studio
 
-You can browse [doodleai.art/skills/gift/](https://doodleai.art/skills/gift/) without an account. The skill page states that a photo is required and the output is 1:1. You cannot upload or generate until you sign in. Creation currently uses Google sign-in. On signup, Doodle AI creates a **personal organization** and grants **5 signup credits** into that organization’s pool. Configuration allows up to 5 organizations and up to 25 members, with owner, producer, artist, reviewer, and client roles in the Better Auth organization layer. Sessions carry an active organization. Membership and permissions are rechecked. That is a working backend and API foundation plus shared data behavior. It is not a polished team gift studio. For this sitting you are one person making one still.
+You can browse [doodleai.art/skills/gift/](https://doodleai.art/skills/gift/) without an account. The skill page states that a photo is required and the output is 1:1. You cannot upload or generate until you sign in. Creation currently uses Google sign-in. On signup, Doodle AI creates a **personal organization** and grants **10 signup credits** into that organization’s pool. Configuration allows up to 5 organizations and up to 25 members, with owner, producer, artist, reviewer, and client roles in the Better Auth organization layer. Sessions carry an active organization. Membership and permissions are rechecked. That is a working backend and API foundation plus shared data behavior. It is not a polished team gift studio. For this sitting you are one person making one still.
 
 ![Checklist with five steps from permission to download, clock showing deadline](https://cdn.picxstudio.com/api/generated/image_4859692e-0b2f-45b8-88b6-a569a9f579b7.png)
 
@@ -188,7 +188,7 @@ flowchart TD
   A[Confirm you may process this photo] --> B[Pick one clear portrait]
   B --> C[Decide the occasion word you want to match]
   C --> D[Sign in at doodleai.art]
-  D --> E[Personal organization and 5 signup credits]
+  D --> E[Personal organization and 10 signup credits]
   E --> F[Open Gift or ask for a gift doodle in chat]
   F --> G[Attach the photo]
   G --> H[Name the occasion and two or three landmarks]
@@ -211,7 +211,7 @@ If no photo is attached, Gift is specified to ask for one rather than invent a f
 
 ## Credits on a night when the party is tomorrow
 
-New accounts receive **5 signup credits**. Gift costs **1 credit**. The ledger **reserves** that credit before PicX is called. If generation fails — no usable hosted image URL — the credit is **refunded**. If you are rate-limited, the request is a no-op against the ledger. If the organization balance is too low, generation does not start. Credits are pooled per organization. Organization limits and rate caps exist. This article does not invent extra numeric thresholds beyond the published caps of 5 organizations and 25 members.
+New accounts receive **10 signup credits**. Gift costs **1 credit**. The ledger **reserves** that credit before PicX is called. If generation fails — no usable hosted image URL — the credit is **refunded**. If you are rate-limited, the request is a no-op against the ledger. If the organization balance is too low, generation does not start. Credits are pooled per organization. Organization limits and rate caps exist. This article does not invent extra numeric thresholds beyond the published caps of 5 organizations and 25 members.
 
 ![Five credit coins with first one dropping toward gift card generation](https://cdn.picxstudio.com/api/generated/image_64700049-fea8-4eb7-bd84-46fe146e0881.png)
 
@@ -336,7 +336,7 @@ It is **not a public gallery post**. Account-scoped chats, moodboards, saved cha
 
 **Can I write a longer thank-you on the card?** Not in the current Gift path. The thank-you line is “Thank You.” Write the rest in the text, email, or card you send alongside the image.
 
-**Is this a free gift maker?** Browsing is open. Generation uses credits. New accounts receive 5 signup credits. Each Gift run costs 1 credit. Failed generations refund. Paid checkout is not live, so “unlimited free gifts” is not the offer.
+**Is this a free gift maker?** Browsing is open. Generation uses credits. New accounts receive 10 signup credits. Each Gift run costs 1 credit. Failed generations refund. Paid checkout is not live, so “unlimited free gifts” is not the offer.
 
 **What if I run out of credits before the still is good?** You cannot currently buy more in the product. Stop while you still have a sendable result, or wait until a paid path exists. Do not treat Remix as a loophole.
 
