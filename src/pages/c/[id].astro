@@ -3,11 +3,13 @@ export const prerender = false;
 import AppShellLayout from '../../layouts/AppShellLayout.astro';
 import Lightbox from '../../components/app/Lightbox.astro';
 import PromptComposer from '../../components/app/PromptComposer.astro';
+import FirstWinNudge from '../../components/app/FirstWinNudge.astro';
 import DoodleCanvas from '../../components/app/DoodleCanvas.tsx';
 import { resolveTldrawLicenseKey } from '../../lib/tldraw-license';
 import '../../styles/chat-page.css';
 import '../../styles/chat-bubbles.css';
 import '../../styles/voice-mode.css';
+import '../../styles/growth.css';
 
 // Scopes the canvas's local persistence so each conversation keeps its own
 // board. Route param only — the thread's contents still live in localStorage
@@ -43,13 +45,15 @@ const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 
 			<div class="chat-thread" id="chatThread">
 				<div class="chat-empty" id="chatEmpty">
-					<h1>What should we doodle?</h1>
-					<p>Attach a photo and tell me what you want, or just describe a character for a surprise.</p>
+					<h1>Turn your photo into a hand-drawn doodle</h1>
+					<p>Attach a photo and try Sticker Pack — 1 credit to start.</p>
+					<FirstWinNudge />
 				</div>
 			</div>
 
 			<div class="chat-composer">
 				<PromptComposer id="chat" variant="compact" placeholder="Describe a doodle or attach a photo" />
+				<p class="composer-credit-hint" id="chatCreditHint" hidden></p>
 			</div>
 		</div>
 
@@ -110,6 +114,7 @@ const tldrawLicenseKey = await resolveTldrawLicenseKey(Astro.locals);
 </AppShellLayout>
 
 <script src="../../scripts/app/chat/index.ts"></script>
+<script src="../../scripts/app/composer-credit-hint.ts"></script>
 
 <script>
 	/* Chat | Talk mode toggle. Flips data-mode on the split (CSS hides the chat

@@ -1,0 +1,59 @@
+---
+import SkillCard from './SkillCard.astro';
+import { SKILLS } from '../../lib/skills';
+import { ART_FAMILIES, ART_FAMILY_STORAGE_KEY } from '../../lib/art-families';
+import { familiesForSkill } from '../../lib/skill-families';
+
+const HOME_STILL_COUNT = 20;
+const skillFamilies = new Map(SKILLS.map((skill) => [skill.id, familiesForSkill(skill)]));
+
+/* Stills first in catalogue order, then every Moves/video skill. The old
+   homepage sorted video to the top so those four made the 20-tile cut; putting
+   stills first without appending clips made the Moves filter empty. Keep clips
+   in the wall (and on the existing Moves chip), just not above Start here. */
+const featuredSkills = [
+	...SKILLS.filter((skill) => skill.kind !== 'video').slice(0, HOME_STILL_COUNT),
+	...SKILLS.filter((skill) => skill.kind === 'video'),
+];
+const shownFamilyIds = new Set(featuredSkills.flatMap((skill) => skillFamilies.get(skill.id) ?? []));
+const familyChips = ART_FAMILIES.filter((family) => shownFamilyIds.has(family.id));
+---
+
+<div class="home-skills">
+  <div class="home-skills-head">
+    <h2>Skills</h2>
+    <div class="home-filters" data-family-key={ART_FAMILY_STORAGE_KEY} role="group" aria-label="Filter skills">
+      <button type="button" class="home-chip" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="home-chip" data-kind="video" aria-pressed="false">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+        Moves
+      </button>
+      <button type="button" class="home-chip" data-kind="image" aria-pressed="false">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.6" y="5.2" width="16.8" height="13.6" rx="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><path d="M4.6 17.4 8.9 13l3 3 2.4-2.3 4.6 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        Pictures
+      </button>
+      {familyChips.length > 1 && <span class="home-chip-rule" aria-hidden="true"></span>}
+      {familyChips.map((family) => (
+        <button type="button" class="home-chip" data-family-id={family.id} title={family.blurb} aria-pressed="false">{family.label}</button>
+      ))}
+    </div>
+    <a class="home-skills-link" href="/skills">Browse all {SKILLS.length}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
+    </a>
+  </div>
+  <div class="home-skills-grid">
+    {featuredSkills.map((skill) => (
+      <div class="home-skill-item" data-kind={skill.kind} data-families={(skillFamilies.get(skill.id) ?? []).join(' ')}>
+        <SkillCard skill={skill} />
+      </div>
+    ))}
+  </div>
+  <p class="home-families-empty" hidden>
+    Nothing here matches that filter.
+    <a href="/skills">Browse all {SKILLS.length} skills</a>
+  </p>
+  <a class="home-skills-more" href="/skills">
+    See all {SKILLS.length} skills
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
+  </a>
+</div>

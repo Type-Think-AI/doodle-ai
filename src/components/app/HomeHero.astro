@@ -1,0 +1,41 @@
+---
+import PromptComposer from './PromptComposer.astro';
+import FirstWinNudge from './FirstWinNudge.astro';
+import { SIGNUP_GRANT_CREDITS } from '../../lib/credits/costs';
+import {
+  HERO_HEADLINE,
+  HERO_PRIMARY_CTA,
+  HERO_SECONDARY_CTA,
+  HERO_SUBHEAD,
+  heroProofLine,
+} from '../../lib/growth/copy';
+---
+
+<div class="home-hero">
+  <h1>{HERO_HEADLINE}</h1>
+  <p class="home-sub">{HERO_SUBHEAD}</p>
+  <p class="home-proof">{heroProofLine(SIGNUP_GRANT_CREDITS)}</p>
+  <div class="home-hero-actions">
+    <button type="button" class="home-cta-primary" id="homeUploadPhoto">{HERO_PRIMARY_CTA}</button>
+    <a class="home-cta-secondary" href="/skills">{HERO_SECONDARY_CTA}</a>
+  </div>
+  <FirstWinNudge />
+  <PromptComposer id="home" variant="hero" placeholder="Describe a doodle or attach a photo" />
+  <p class="composer-credit-hint" id="homeCreditHint" hidden></p>
+
+  <!-- Flagship voice mode entry point. Unchanged Talk path — do not invent a new
+       voice surface here. -->
+  <a class="home-talk" href="/c/new?voice=1">
+    <span class="home-talk-wave" aria-hidden="true">
+      <svg width="20" height="14" viewBox="0 0 22 14" fill="none"><path d="M1 7.5c1.6-4.2 2.8 3.6 4.4-.4 1.5-3.9 2.9 5.4 4.5 1.1 1.6-4.3 2.7 4.2 4.3.3C15.7 4.9 17.1 9.6 21 6.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    Talk to your doodle
+  </a>
+</div>
+
+<script>
+  document.getElementById("homeUploadPhoto")?.addEventListener("click", () => {
+    document.getElementById("homePlusBtn")?.click();
+    requestAnimationFrame(() => document.getElementById("homeAttachBtn")?.focus());
+  });
+</script>

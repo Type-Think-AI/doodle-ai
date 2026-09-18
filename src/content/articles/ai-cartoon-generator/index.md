@@ -14,7 +14,7 @@ faq:
   - question: "Does Doodle AI generate video or animation?"
     answer: "No. Doodle AI generates still images only -- square avatars, 3:2 collages, sticker sheets, and gift images. Video, animation, and timeline editing are not available."
   - question: "Is Doodle AI free to use?"
-    answer: "New accounts receive 5 free credits on signup. Each generation costs 1 credit. Failed generations are refunded. Paid credit packs are planned but not yet live."
+    answer: "New accounts receive 10 free credits on signup. Each generation costs 1 credit. Failed generations are refunded. Paid credit packs are planned but not yet live."
   - question: "What photo formats does Doodle AI accept?"
     answer: "Upload JPEG or PNG photos up to 20MB. A clear, face-forward photo with good lighting works best for the avatar and collage skills."
 ---

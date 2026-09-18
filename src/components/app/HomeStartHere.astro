@@ -1,0 +1,21 @@
+---
+import SkillCard from './SkillCard.astro';
+import { SKILLS } from '../../lib/skills';
+import { resolveStartHereSkills } from '../../lib/growth/start-here';
+import { START_HERE_HEADING } from '../../lib/growth/copy';
+
+const startHere = resolveStartHereSkills(SKILLS);
+---
+
+{startHere.length > 0 && (
+  <section class="home-start-here" aria-labelledby="homeStartHereHeading">
+    <h2 id="homeStartHereHeading">{START_HERE_HEADING}</h2>
+    <div class="home-start-grid">
+      {startHere.map((skill) => (
+        <div class="home-start-item">
+          <SkillCard skill={skill} priority={true} />
+        </div>
+      ))}
+    </div>
+  </section>
+)}
