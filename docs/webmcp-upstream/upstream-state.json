@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-17T11:42:15.796Z",
+  "fetched_at": "2026-09-18T11:15:50.327Z",
   "latestCommit": {
-    "sha": "8a82bb7896ebee9c4155fe2aed59012ffcae78c2",
-    "message": "Add debugging member to ToolAnnotations (#253)",
-    "date": "2026-09-17T08:40:19Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/8a82bb7896ebee9c4155fe2aed59012ffcae78c2"
+    "sha": "f5645e9aea51eb589599f181d104a2f49430608e",
+    "message": "Add `ToolActivatedEvent` and `ToolCancelEvent` event interfaces (#245)",
+    "date": "2026-09-17T14:43:37Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/f5645e9aea51eb589599f181d104a2f49430608e"
   },
   "files": {
     "index.bs": {
-      "hash": "1aa1ad6859a3e9c0d7aa8f72491d5f740659f347566bd9b19e58179782eafa12",
+      "hash": "79a82bd293353154f2b651206d54e870ed1238c9587bed9c50dc7e24f145b521",
       "exists": true,
-      "bytes": 82926
+      "bytes": 85101
     },
     "README.md": {
       "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
@@ -48,7 +48,11 @@
     "ModelContextRegisterToolOptions",
     "ModelContextTool",
     "RegisteredTool",
+    "ToolActivatedEvent",
+    "ToolActivatedEventInit",
     "ToolAnnotations",
+    "ToolCancelEvent",
+    "ToolCancelEventInit",
     "ToolExecuteCallback",
     "ToolExecuteCallbackOptions",
     "annotations",
@@ -63,12 +67,15 @@
     "inputSchema",
     "modelContext",
     "name",
+    "ontoolactivated",
+    "ontoolcancel",
     "ontoolchange",
     "origin",
     "readOnlyHint",
     "registerTool",
     "signal",
     "title",
+    "toolName",
     "toolchange",
     "untrustedContentHint",
     "window"
