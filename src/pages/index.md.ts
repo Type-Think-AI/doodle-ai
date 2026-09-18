@@ -56,8 +56,8 @@ export const GET: APIRoute = ({ site }) => {
 		body: [
 			DEFINITION,
 			`## Start here\n\n${[
-				`Open ${mdLink("doodleai.art", base.href)} and sign in with Google — creation needs an account, browsing does not.`,
-				`Attach a photo, @mention a saved character, or just describe someone for a surprise.`,
+				`Open ${mdLink("doodleai.art", base.href)} and sign in with Google — 10 free credits, no card, results stay private.`,
+				`Upload a photo, then try Sticker Pack, Couple Doodle, Pet Portrait, or Festival Pack.`,
 				`The agent picks one of the ${FIGURES.runnable} skills and draws it. No prompt engineering, no filter grid.`,
 				`Refine in plain language — "thicker outline", "warmer paper" — or take one of the three follow-ups it offers.`,
 			]

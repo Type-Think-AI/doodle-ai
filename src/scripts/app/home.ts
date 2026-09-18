@@ -220,7 +220,7 @@ function initHome(): void {
      it deliberately does NOT preventDefault on a modified click: cmd/ctrl/middle
      click, and "open in new tab", must still reach the real skill page. The href
      is untouched, so this degrades to plain navigation with JS off. */
-  document.querySelector(".home-skills-grid")?.addEventListener("click", (event) => {
+  document.querySelector(".home-page")?.addEventListener("click", (event) => {
     const mouseEvent = event as MouseEvent;
     if (mouseEvent.metaKey || mouseEvent.ctrlKey || mouseEvent.shiftKey || mouseEvent.button !== 0) return;
     const tile = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-skill-id]");

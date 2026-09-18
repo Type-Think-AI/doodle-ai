@@ -55,6 +55,7 @@
     "build": "astro build",
     "lint": "eslint .",
     "smoke": "node scripts/smoke-validate.mjs",
+    "test:growth": "node scripts/run-verify-growth.mjs",
     "test:webmcp": "node scripts/webmcp-smoke.mjs http://localhost:4321",
     "test:webmcp:prod": "node scripts/webmcp-smoke.mjs https://doodleai.art",
     "test:replay": "node scripts/replay-smoke.mjs http://localhost:4321/",

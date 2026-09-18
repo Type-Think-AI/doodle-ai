@@ -1,0 +1,46 @@
+/* Shared first-win nudge + pack credit hint. Imported on home and chat. */
+
+.first-win-nudge {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border2));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.first-win-nudge[hidden] { display: none; }
+.first-win-nudge p { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--text); }
+.first-win-nudge-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.first-win-nudge-go,
+.first-win-nudge-dismiss {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.first-win-nudge-go {
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border3));
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--text);
+}
+.first-win-nudge-dismiss {
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+}
+.first-win-nudge-dismiss:hover { color: var(--text); }
+.first-win-nudge-go:focus-visible,
+.first-win-nudge-dismiss:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.composer-credit-hint {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  text-align: left;
+}
+.composer-credit-hint[hidden] { display: none; }
