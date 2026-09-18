@@ -4,12 +4,17 @@ import { SKILLS } from '../../lib/skills';
 import { ART_FAMILIES, ART_FAMILY_STORAGE_KEY } from '../../lib/art-families';
 import { familiesForSkill } from '../../lib/skill-families';
 
-const HOME_SKILL_COUNT = 20;
+const HOME_STILL_COUNT = 20;
 const skillFamilies = new Map(SKILLS.map((skill) => [skill.id, familiesForSkill(skill)]));
 
-/* Catalogue order — do not hoist Moves/video to the first row. The Start-here
-   row already leads with stills; Moves stay available via the existing filter. */
-const featuredSkills = SKILLS.slice(0, HOME_SKILL_COUNT);
+/* Stills first in catalogue order, then every Moves/video skill. The old
+   homepage sorted video to the top so those four made the 20-tile cut; putting
+   stills first without appending clips made the Moves filter empty. Keep clips
+   in the wall (and on the existing Moves chip), just not above Start here. */
+const featuredSkills = [
+	...SKILLS.filter((skill) => skill.kind !== 'video').slice(0, HOME_STILL_COUNT),
+	...SKILLS.filter((skill) => skill.kind === 'video'),
+];
 const shownFamilyIds = new Set(featuredSkills.flatMap((skill) => skillFamilies.get(skill.id) ?? []));
 const familyChips = ART_FAMILIES.filter((family) => shownFamilyIds.has(family.id));
 ---
