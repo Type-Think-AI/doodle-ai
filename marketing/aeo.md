@@ -344,7 +344,7 @@ The goal is not simply to appear. The goal is to appear with the correct capabil
 2. **Homepage H1 is conversational but ambiguous:** “What should we doodle?” Add a nearby explicit product statement without sacrificing the design. The homepage is also **omitted from the sitemap**; `/skills/` is the real public hub.
 3. **No captured Doodle AI reference in the measured AI Overview.** Build the authoritative page and supporting citations before expecting visibility.
 4. **Public `llms.txt` was stale on 2026-08-25.** The live file still described a client PicX key and `/api/generate`. The repo copy is the source of truth and must stay in sync after deploy.
-5. **Product facts must be repeated consistently.** Current pages and future articles should agree on account requirements, the 5-credit signup grant, 1-credit generations, upload handling, and runnable vs coming-soon skills.
+5. **Product facts must be repeated consistently.** Current pages and future articles should agree on account requirements, the 10-credit signup grant, 1-credit generations, upload handling, and runnable vs coming-soon skills.
 6. **AEO needs evidence:** publish original examples, process steps, supported formats, output limitations, and comparisons grounded in actual Doodle AI behavior.
 7. **No unprimed Grok baseline exists yet.** Public `@grok` posts route cartoon requests to Grok Imagine and do not mention Doodle AI. Run section 8 in a fresh conversation before claiming a mention rate.
 8. **Entity collision is live.** doodleai.fun, InstaDoodle, cartoonize.ai/doodle-art, and LazyAvatar occupy “doodle avatar” language. `sameAs` and visible `doodleai.art` URLs are required, not optional.

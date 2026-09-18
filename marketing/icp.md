@@ -45,7 +45,7 @@ These facts are grounded in the current repository and should be treated as the 
 - Doodle AI is an Astro and Mastra chat-first creative application.
 - Users can browse without an account, but sign-in is required for upload, generation, saving, and synced account work.
 - Generation uses a server-owned PicX connection; users do not enter provider API credentials. Live public copy must not tell people to paste a PicX key into Settings.
-- Generation is metered through an organization-pooled credit ledger. New accounts receive **5 signup credits** into their personal organization. Every runnable skill costs **1 credit**. Credits are reserved before generation and refunded when a generation fails.
+- Generation is metered through an organization-pooled credit ledger. New accounts receive **10 signup credits** into their personal organization. Every runnable skill costs **1 credit**. Credits are reserved before generation and refunded when a generation fails.
 - The Better Auth organization layer supports personal organizations, up to 5 organizations, up to 25 members, owner/producer/artist/reviewer/client roles, active-organization sessions, and membership/permission rechecks.
 - Runnable skills: normal doodle avatar, collage, full-body collage, surprise, stickers (die-cut *sheet*), mood captions, and gift.
 - Not runnable, still shown as coming soon: Emotional Modes, Seasonal Pack.
@@ -762,7 +762,7 @@ Disqualifying the wrong use case is better than acquiring a user who will be dis
 
 1. Put real examples and answer copy on the existing `/skills/normal/` and `/skills/` pages; treat keyword landing pages as a second step.
 2. Validate the first-generation and second-generation funnel.
-3. Add clear credit copy: 5 signup credits, 1 credit per generation, refunds on failure.
+3. Add clear credit copy: 10 signup credits, 1 credit per generation, refunds on failure.
 4. Create an official X account and publish the prompt-plus-result posts in [social.md](./social.md).
 5. Measure which output users save, download, share, or regenerate.
 

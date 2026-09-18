@@ -92,7 +92,7 @@ The public hub is [/skills/](https://doodleai.art/skills/), not the homepage. Th
 4. **Generate.** The Mastra agent selects the Stickers skill and calls the generation tool. The tool reserves **1 credit**, calls server-owned PicX, and refunds that credit if generation fails.
 5. **Inspect the still.** Use the checklist later in this article. Download or save it only if the sheet still reads as separate die-cuts of one illustrated character.
 
-New accounts receive **5 signup credits** into their personal organization. Credits are pooled on the organization. Every runnable skill currently costs 1 credit. Emotional Modes and Seasonal Pack appear in the catalog as coming soon. They are **not runnable**.
+New accounts receive **10 signup credits** into their personal organization. Credits are pooled on the organization. Every runnable skill currently costs 1 credit. Emotional Modes and Seasonal Pack appear in the catalog as coming soon. They are **not runnable**.
 
 The Better Auth organization layer exists as a backend and API foundation: a personal organization on signup, up to 5 organizations, up to 25 members, owner/producer/artist/reviewer/client roles, an active organization on the session, membership and permission rechecks, and organization-scoped threads, saved references, moodboards, generation records, and pooled credits. That is shared data behavior. A polished team switcher, a finished B2B workspace UI, and verified end-to-end public workflows for projects, assets, share links, batch jobs, and review states were not confirmed as complete product surfaces. Do not treat this sitting as a studio production pipeline.
 
@@ -224,7 +224,7 @@ Two nearby names should stay separate for entity reasons:
 
 These four cases are teaching fiction. They are not sessions, not testimonials, and not quality claims.
 
-**Hypothetical 1 — Lila wanted WhatsApp, opened the wrong tab.** Lila searches `photo to sticker`, sees a doodle sheet in an image result, and assumes the download will land in WhatsApp. She signs in at doodleai.art, attaches a consented selfie, spends 1 of 5 signup credits, and receives a square sheet of four illustrated busts. The sheet is usable as a social image. It is not a pack. The next honest step is either to post the sheet as a photo, or to leave for WhatsApp’s own [custom sticker help](https://faq.whatsapp.com/1056840314992666) or ChatGPT Images. Spending the remaining four credits “until it becomes a pack” will not create an exporter.
+**Hypothetical 1 — Lila wanted WhatsApp, opened the wrong tab.** Lila searches `photo to sticker`, sees a doodle sheet in an image result, and assumes the download will land in WhatsApp. She signs in at doodleai.art, attaches a consented selfie, spends 1 of 10 signup credits, and receives a square sheet of four illustrated busts. The sheet is usable as a social image. It is not a pack. The next honest step is either to post the sheet as a photo, or to leave for WhatsApp’s own [custom sticker help](https://faq.whatsapp.com/1056840314992666) or ChatGPT Images. Spending the remaining four credits “until it becomes a pack” will not create an exporter.
 
 **Hypothetical 2 — Dev wanted a community object, not merch.** Dev mods a small Discord. He wants a recognizable doodle of the server’s frog mascot as a *sheet he can post in #welcome*. He has one clear photo of a plush frog. Stickers is the right skill: one credit, one square still, several poses, no claim that Discord will ingest it as a sticker pack. Discord sticker upload is Discord’s product. Dev’s job on doodleai.art ends at a downloadable still.
 
@@ -240,7 +240,7 @@ Use a photo you have permission to process. A sticker sheet that still reads as 
 
 Prefer one subject filling the frame, eyes visible, even light, hair or ears that read as a silhouette, and clothing you actually want repeated. Skip group huddles, motion blur, heavy beauty filters, screenshots of screenshots, and photos that already have stickers composited on them. Pets can be attached; the pose library is still human-gesture flavored, so a peace sign may land on a paw. That is a real limit.
 
-Credits, again, because sticker searches often collide with “free sticker maker” language. Browsing doodleai.art is open. Generation is metered. New accounts receive 5 signup credits. This skill costs 1 credit. The credit is reserved before PicX runs and refunded when generation fails. There is no live paid pack on this page. Stripe checkout is not implemented. Do not write “unlimited free stickers” into a prompt and expect the ledger to agree.
+Credits, again, because sticker searches often collide with “free sticker maker” language. Browsing doodleai.art is open. Generation is metered. New accounts receive 10 signup credits. This skill costs 1 credit. The credit is reserved before PicX runs and refunded when generation fails. There is no live paid pack on this page. Stripe checkout is not implemented. Do not write “unlimited free stickers” into a prompt and expect the ledger to agree.
 
 Provider credentials stay on the server. You do not paste a PicX key. Do not invent a deletion window or a commercial-use grant from this article. Read [privacy](https://doodleai.art/privacy-policy/) and [terms](https://doodleai.art/terms-of-service/) for the current policy text.
 
@@ -290,7 +290,7 @@ Follow [Apple Support](https://support.apple.com/guide/iphone/make-stickers-from
 
 ### Is there a free sticker maker app?
 
-Apple’s Photos sticker gesture is a built-in iPhone feature documented by Apple, not a Doodle AI claim about Apple’s pricing. WhatsApp documents in-app sticker creation. Doodle AI lets you browse without an account and grants 5 signup credits; each Stickers run then costs 1 credit. This page does not call Doodle AI a free unlimited sticker app.
+Apple’s Photos sticker gesture is a built-in iPhone feature documented by Apple, not a Doodle AI claim about Apple’s pricing. WhatsApp documents in-app sticker creation. Doodle AI lets you browse without an account and grants 10 signup credits; each Stickers run then costs 1 credit. This page does not call Doodle AI a free unlimited sticker app.
 
 ### Does the result have a transparent background?
 

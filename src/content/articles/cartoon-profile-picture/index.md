@@ -148,7 +148,7 @@ You do not paste a PicX key into Settings. Live copy that tells you to supply a 
 
 ## Sign in, then ask for a square doodle, not a headshot
 
-You can read [doodleai.art/skills/normal/](https://doodleai.art/skills/normal/) without an account. You cannot upload or generate until you sign in. On signup, Doodle AI creates a **personal organization** and grants **5 signup credits**. Credits are pooled on the organization. Every runnable skill costs **1 credit**. The ledger reserves that credit before PicX is called and refunds it when generation fails. If you are rate-limited, nothing is reserved. Stripe checkout, paid credit packs, and subscriptions are **not live**. Five attempts is the current starter grant.
+You can read [doodleai.art/skills/normal/](https://doodleai.art/skills/normal/) without an account. You cannot upload or generate until you sign in. On signup, Doodle AI creates a **personal organization** and grants **10 signup credits**. Credits are pooled on the organization. Every runnable skill costs **1 credit**. The ledger reserves that credit before PicX is called and refunds it when generation fails. If you are rate-limited, nothing is reserved. Stripe checkout, paid credit packs, and subscriptions are **not live**. Ten credits is the current starter grant.
 
 ![Doodle chat showing a profile picture prompt and resulting square avatar](https://cdn.picxstudio.com/api/generated/image_50502b5c-170f-4c3b-bc6d-9ab9bc66d488.png)
 
@@ -214,7 +214,7 @@ The following sitting is fictional. Rae is not a real user. No time, quality sco
 
 **Hypothetical photo:** bathroom-mirror selfie, overhead light, dark curls, one gold hoop in the left ear, forest-green crewneck, closed-mouth almost-smile. Rae took it. Rae consents to processing it. Rae also consents, in this fiction, to publishing a cartoon of that face on Instagram, knowing Instagram’s help text says a profile picture can be public even to people without an account.
 
-**Hypothetical budget:** 5 signup credits. Stripe is not available, so there is no “buy three more moods.”
+**Hypothetical budget:** 10 signup credits. Stripe is not available, so there is no “buy three more moods.”
 
 **Hypothetical three-mood plan**
 
@@ -354,7 +354,7 @@ These questions showed up around `ai profile picture` in a 2026-08-24 US mobile 
 
 **What is the best AI to create a profile picture?** This page does not rank tools. Doodle AI’s current offer is a playful hand-drawn square doodle from a photo, not a photoreal headshot and not a style catalog. If you want a corporate portrait, this is the wrong studio.
 
-**Is there a free AI profile picture generator?** Browsing doodleai.art is open. Generation uses credits. New accounts receive 5 signup credits. Each generation costs 1 credit. Failed generations refund. Paid checkout is not live, so “unlimited free PFPs” is not the offer.
+**Is there a free AI profile picture generator?** Browsing doodleai.art is open. Generation uses credits. New accounts receive 10 signup credits. Each generation costs 1 credit. Failed generations refund. Paid checkout is not live, so “unlimited free PFPs” is not the offer.
 
 **Will it look exactly like me?** It is instructed to keep recognizable landmarks. It does not guarantee identical characters across generations. Judge the still at the size you will actually display.
 

@@ -97,7 +97,7 @@ Small, low-risk, all measurable in Search Console / PageSpeed within 2 weeks.
   `aeo.md` §7 calls a stable entity the highest-impact AEO move. Currently only `WebSite` + `SoftwareApplication` exist. Add an `Organization` node with `name`, `url`, `logo`, and `sameAs` pointing at every owned profile (GitHub org, X, any others). This is what lets an assistant resolve "Doodle AI" to one entity instead of confusing it with doodleai.fun.
 
 - [ ] **T-12 · Add `offers` + `aggregateRating` to `SoftwareApplication`** — `1h` — *rich result eligibility*
-  Add `offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "5 free credits on signup" }`. **Do not add `aggregateRating` until real, displayed ratings exist** — fabricated ratings are a manual-action risk.
+  Add `offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "10 free credits on signup" }`. **Do not add `aggregateRating` until real, displayed ratings exist** — fabricated ratings are a manual-action risk.
 
 ---
 
@@ -195,7 +195,7 @@ Recorded so the reasoning is not lost and nobody re-proposes them.
 ## Phase 4 — Product pages that convert search traffic
 
 - [ ] **T-31 · `/pricing/` or `/credits/`** — `4h` — *"free ai cartoon generator" intent + conversion*
-  There is no public pricing page. "Free" is a top qualifier on every one of these keywords, and 5 free signup credits is a genuinely strong hook that is currently invisible to search. State honestly: 5 free credits, 1 credit per generation, failed generations refunded, no paid packs yet (per `llms.txt`).
+  There is no public pricing page. "Free" is a top qualifier on every one of these keywords, and 10 free signup credits is a genuinely strong hook that is currently invisible to search. State honestly: 10 free credits, 1 credit per generation, failed generations refunded, no paid packs yet (per `llms.txt`).
 
 - [ ] **T-32 · `/examples/` gallery** — `6h` — *image search + conversion proof*
   A visual product with no gallery. Every article hero and the 60 inline images are already generated and hosted. Build a filterable grid (by skill), with descriptive `alt` on every tile and `ImageObject` schema. Feeds Google Images, which is a real traffic channel for this category.

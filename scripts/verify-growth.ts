@@ -7,6 +7,8 @@
  * Run: node scripts/run-verify-growth.mjs
  */
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import {
   HERO_HEADLINE,
   HERO_PRIMARY_CTA,
@@ -106,6 +108,24 @@ check("hero copy states photo-to-doodle without video or paid-plan claims", () =
   assert.equal(HERO_SECONDARY_CTA, "Browse skills");
   assert.match(CREDITS_TESTING_NOTE, /Credit packs are coming/);
   assert.match(firstWinMessage("Sticker Pack", 1), /1-credit first doodle/);
+});
+
+check("public pages do not hardcode a 5-credit signup grant", () => {
+  const roots = ["src/content", "src/pages", "src/layouts", "src/components", "README.md"];
+  const stale = /5 signup credits|5-credit signup grant|5 free credits on signup/;
+  const hits: string[] = [];
+  const walk = (target: string): void => {
+    const st = statSync(target);
+    if (st.isDirectory()) {
+      for (const name of readdirSync(target)) walk(join(target, name));
+      return;
+    }
+    if (!/\.(md|ts|astro|txt)$/.test(target)) return;
+    const text = readFileSync(target, "utf8");
+    if (stale.test(text)) hits.push(target);
+  };
+  for (const root of roots) walk(root);
+  assert.deepEqual(hits, [], `stale 5-credit signup copy in ${hits.join(", ")}`);
 });
 
 if (failed) {

@@ -179,7 +179,7 @@ This article is not legal advice. If you need a rights answer for a paid portrai
 
 ## Three live digital options, and how to pick among them
 
-Once the photo is usable, pick the still that matches the job. All three skills below require a photo. Each generation costs **1 credit**. New accounts receive **5 signup credits**. Credits are reserved before generation and refunded when generation fails. Credits are pooled on the organization.
+Once the photo is usable, pick the still that matches the job. All three skills below require a photo. Each generation costs **1 credit**. New accounts receive **10 signup credits**. Credits are reserved before generation and refunded when generation fails. Credits are pooled on the organization.
 
 ![One pet shown as three outputs: Normal avatar, Gift card, and Stickers sheet](https://cdn.picxstudio.com/api/generated/image_02ace4b8-ad73-4970-b83f-65bee7b3c3ad.png)
 
@@ -231,7 +231,7 @@ The output is **one image of a sticker sheet**. It is not a transparent WhatsApp
 ## How to run the sitting
 
 1. **Browse first if you want.** The [skills catalog](https://doodleai.art/skills/) is public. You do not need an account to read what Normal, Gift, and Stickers are. You do need to sign in to upload and generate.
-2. **Sign in.** Creation uses Google sign-in. A personal organization is created on signup. The session carries an active organization. You receive 5 signup credits into that organization pool.
+2. **Sign in.** Creation uses Google sign-in. A personal organization is created on signup. The session carries an active organization. You receive 10 signup credits into that organization pool.
 3. **Attach one image file.** Uploads accept image files and reject empty files. Images must be 20 MB or smaller. Sign-in is required; the upload uses the server-owned PicX connection. Do not paste a provider key anywhere.
 4. **Ask for the skill by name.** “Doodle my dog with Normal,” “Gift doodle, birthday, this cat,” or “Sticker sheet of this rabbit” is clearer than “make it cute.” If no photo is attached, photo skills are instructed to ask for one rather than invent an animal.
 5. **Spend the credit on purpose.** The ledger reserves 1 credit, calls PicX, and refunds that credit if generation fails. A result you dislike is not a failure refund. Another attempt is another credit.
@@ -246,7 +246,7 @@ These are teaching stories. They are not case studies, not screenshots, and not 
 
 ![Three hypothetical pet portrait sittings with dog, cat, and rabbit](https://cdn.picxstudio.com/api/generated/image_a0849057-f6a5-4e5c-9be4-ba14b4dd1cce.png)
 
-**Hypothetical 1 — Mina and Bramble, a dog birthday avatar.** Mina has a Saturday morning photo of Bramble, a brindle mixed-breed, sitting on a kitchen mat. Window light from the left, both eyes open, red collar with a round tag, white chest blaze visible. She signs in at doodleai.art, attaches that photo, and asks the [Normal](https://doodleai.art/skills/normal/) skill: “Doodle my dog. Keep the brindle coat, white chest blaze, and red collar. Square naive marker-and-ink avatar, clean warm-white background.” She spends 1 of her 5 signup credits. If the still keeps the blaze and collar, she has a digital character. If the still turns Bramble into a generic tan dog, she can recrop tighter to the face and spend a second credit. She does not have a mailed poster.
+**Hypothetical 1 — Mina and Bramble, a dog birthday avatar.** Mina has a Saturday morning photo of Bramble, a brindle mixed-breed, sitting on a kitchen mat. Window light from the left, both eyes open, red collar with a round tag, white chest blaze visible. She signs in at doodleai.art, attaches that photo, and asks the [Normal](https://doodleai.art/skills/normal/) skill: “Doodle my dog. Keep the brindle coat, white chest blaze, and red collar. Square naive marker-and-ink avatar, clean warm-white background.” She spends 1 of her 10 signup credits. If the still keeps the blaze and collar, she has a digital character. If the still turns Bramble into a generic tan dog, she can recrop tighter to the face and spend a second credit. She does not have a mailed poster.
 
 **Hypothetical 2 — Cole and Noodle, a cat thank-you card.** Cole wants to thank a neighbor who fed Noodle, an orange tabby, for a week. The best photo is Noodle loafed on a windowsill, green collar bell visible, afternoon light on the face, no flash. Cole runs [Gift](https://doodleai.art/skills/gift/) with “thank you doodle of this cat, keep the orange tabby stripes and green collar bell.” The live occasion match is Thank You, so the card message will be “Thank You,” not Cole’s private joke about the wet food. Cole downloads the still and texts the file. That is a digital gift. It is not a stationery order.
 
@@ -307,7 +307,7 @@ Keep the emotional framing honest: a doodle you can send today is a keepsake. A 
 
 ## Credits, saving, and family sharing without a studio UI
 
-Current credit facts: **5 signup credits**, **1 credit per runnable generation**, reservation before the PicX call, refund if that generation fails. Credits are pooled per organization. Organization limits and rate caps exist. `GET /api/v1/me` returns the active organization, organizations, role, balance, and member count. That is backend and API behavior.
+Current credit facts: **10 signup credits**, **1 credit per runnable generation**, reservation before the PicX call, refund if that generation fails. Credits are pooled per organization. Organization limits and rate caps exist. `GET /api/v1/me` returns the active organization, organizations, role, balance, and member count. That is backend and API behavior.
 
 If two people in a household both want to doodle the same dog, they are not looking at a polished family workspace. A complete team switcher and B2B project UI were not verified as finished product surfaces. Roles exist in the organization layer. Shared threads, references, moodboards, and the credit pool are organization-scoped in the API. Treat a “family pet board” as a possible use of that foundation, not as a documented public workflow.
 
@@ -349,7 +349,7 @@ These prompts are starting text for the live skills. They are not a measured pro
 2. If the face was small, recrop and rerun the same skill.
 3. If the face was fine but the job was wrong — you needed a card, not a plain avatar — switch skills on purpose.
 4. If you wanted two pets, split into two sittings.
-5. Stop after a keeper. Five signup credits disappear quickly if you chase a continuity the product does not guarantee.
+5. Stop after a keeper. Ten signup credits disappear quickly if you chase a continuity the product does not guarantee.
 
 Collage, full-body, mood-captions, and surprise are usually the wrong next click for this job. Close-up collage and full-body collage use human pose sets (peace signs, shopping bags, karate kicks). Mood-captions letter human status words. Surprise invents a fictional character and needs no photo, so it will not be your pet. Adjacent how-tos for those skills belong on their own pages.
 
@@ -385,7 +385,7 @@ No. You may generate a doodle from a photo you have the right to use, including 
 
 ### How much does it cost?
 
-New accounts receive 5 signup credits. Each generation costs 1 credit and refunds on failure. Paid packs and subscriptions are not live.
+New accounts receive 10 signup credits. Each generation costs 1 credit and refunds on failure. Paid packs and subscriptions are not live.
 
 ### Do I need a PicX key?
 

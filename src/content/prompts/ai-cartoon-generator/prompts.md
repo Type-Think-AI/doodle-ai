@@ -12,7 +12,7 @@ primaryKeyword: "ai cartoon generator prompts"
 
 This is a prompt and example library, not a filter mall and not a how-to for a first selfie. If you still need the four-step sitting for one square portrait, read [How to turn a photo into a cartoon with Doodle AI](/photo-to-cartoon/). If you are still deciding whether you even wanted a still, read [What does an AI cartoon generator actually do?](/ai-cartoon-generator/). This page is for the next job: you already know you want a hand-drawn doodle, and you want the chat line to do something real.
 
-Doodle AI is an Astro and Mastra chat-first still-image studio. You can browse without an account. Sign-in is required to upload, generate, save, and sync account work. Generation uses a server-owned PicX connection. You do not paste a PicX key into Settings. New accounts receive **5 signup credits**. Every runnable skill reserves **1 credit**. Failed generations refund. Taste is not a refund. Product facts below are current as of 2026-08-25. If a later screen disagrees with this page, trust the live product, [llms.txt](https://doodleai.art/llms.txt), and the [privacy](https://doodleai.art/privacy-policy/) and [terms](https://doodleai.art/terms-of-service/) pages.
+Doodle AI is an Astro and Mastra chat-first still-image studio. You can browse without an account. Sign-in is required to upload, generate, save, and sync account work. Generation uses a server-owned PicX connection. You do not paste a PicX key into Settings. New accounts receive **10 signup credits**. Every runnable skill reserves **1 credit**. Failed generations refund. Taste is not a refund. Product facts below are current as of 2026-08-25. If a later screen disagrees with this page, trust the live product, [llms.txt](https://doodleai.art/llms.txt), and the [privacy](https://doodleai.art/privacy-policy/) and [terms](https://doodleai.art/terms-of-service/) pages.
 
 A historical US Google Ads volume snapshot from 2026-08-24, collected through [DataForSEO’s search-volume endpoint](https://docs.dataforseo.com/v3/keywords_data/google_ads/search_volume/live/), recorded `ai cartoon generator` at 4,400 monthly searches. That number describes search language. It is not Doodle AI traffic, conversion, or quality evidence. It is why the internet is full of “80 prompt” roundups. This library does not promise 80 styles. Doodle AI currently has **one house look** — naive marker-and-ink doodle — and **seven runnable skills**.
 
@@ -368,7 +368,7 @@ What does **not** exist:
 
 Identity drift is expected. Glasses vanish. A hoop becomes a stud. Box braids become a bun. A Surprise character you liked will not restamp itself because you said “same one.” Treat `@name` as a human reminder in an organization-scoped thread, not as a lock.
 
-When drift happens, do not add more lore. Repeat the landmarks. Recrop the photo if the face was small. Stop after one repair if the second still is worse. Five signup credits disappear quickly if you chase a continuity the model does not offer.
+When drift happens, do not add more lore. Repeat the landmarks. Recrop the photo if the face was small. Stop after one repair if the second still is worse. Ten signup credits disappear quickly if you chase a continuity the model does not offer.
 
 ```mermaid
 flowchart TD
@@ -393,7 +393,7 @@ The following sitting is fictional. Imani and Devon are not real users. No time-
 
 **Hypothetical person:** Imani, 27, wants better control over doodle stills after already knowing photo-to-cartoon exists.
 **Hypothetical photo:** indoor window-light selfie, box braids with two gold cuffs, silver septum ring, mustard jacket, closed-mouth smile. Imani took it. Imani consents to processing it.
-**Hypothetical budget:** 5 signup credits. Stripe is not live, so there is no “buy a prompt pack.”
+**Hypothetical budget:** 10 signup credits. Stripe is not live, so there is no “buy a prompt pack.”
 
 | Credit | Pattern | Skill | Hypothetical intent | Hypothetical human check |
 | --- | --- | --- | --- | --- |

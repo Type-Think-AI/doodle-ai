@@ -9,7 +9,7 @@ This page is a short, **`dev`-accurate** summary. Prefer `package.json` + `wrang
 | Topic | On `dev` now | Older [../tech-stack.md](../tech-stack.md) / root README |
 |---|---|---|
 | Astro | **7.3.1** (`astro`), adapter `@astrojs/cloudflare` **14.3.0** | Still says **Astro 5** |
-| Credits | Org ledger, signup **10**, **1 credit / image** | Architecture.md still sketches a user-id ledger; README still says 5 signup credits / 1-per-gen |
+| Credits | Org ledger, signup **10**, **1 credit / image** | Architecture.md still sketches a user-id ledger; README now matches `SIGNUP_GRANT_CREDITS` (10) |
 | Stripe | **Planned, not live** — no Stripe deps or `wrangler` bindings | Discussed as the payments choice; do not treat checkout as shipped |
 | Neon / Postgres | **Not used.** D1 is the database. Neon is only the documented escape hatch | Comparison section is still valid as a *decision*, not a live vendor |
 | Auth | Better Auth **1.7.1**, Google OAuth only | Mentions email/password + Apple as Better Auth capabilities; those are not wired |

@@ -34,7 +34,7 @@ Taken together, those sources support one operational claim: teams already need 
 
 ## What Doodle AI actually is today
 
-Doodle AI, at [doodleai.art](https://doodleai.art), is a chat-first creative studio built with Astro and Mastra. Image generation goes through a server-owned PicX connection. You can browse the public skill catalog without an account. Sign-in is required to upload, generate, save, and do synced account work. New accounts receive 5 signup credits. Each successful generation costs 1 credit. Failed generations refund. Credits are pooled on the organization. Organization limits and rate caps exist; this article does not invent their numeric thresholds beyond the published organization caps below.
+Doodle AI, at [doodleai.art](https://doodleai.art), is a chat-first creative studio built with Astro and Mastra. Image generation goes through a server-owned PicX connection. You can browse the public skill catalog without an account. Sign-in is required to upload, generate, save, and do synced account work. New accounts receive 10 signup credits. Each successful generation costs 1 credit. Failed generations refund. Credits are pooled on the organization. Organization limits and rate caps exist; this article does not invent their numeric thresholds beyond the published organization caps below.
 
 The currently runnable image skills are:
 
@@ -77,7 +77,7 @@ The following brief is fictional. Low Shelf Pictures is not a real company. *Qui
 **Hypothetical constraints:**
 
 - One sitting, not a week of look-dev.
-- Credit discipline. A new Doodle AI account has 5 signup credits. This hypothetical unit already has an account and budgets 10 credits: two for the first character still, two for close-ups, two for full-body action, one for a mood-caption page, one for a sticker sheet, two as redo buffer. Failed generations would refund, but the plan does not rely on failures.
+- Credit discipline. A new Doodle AI account has 10 signup credits. This hypothetical unit already has an account and budgets 10 credits: two for the first character still, two for close-ups, two for full-body action, one for a mood-caption page, one for a sticker sheet, two as redo buffer. Failed generations would refund, but the plan does not rely on failures.
 - No video in this sitting. No animatic. No “just generate the short.”
 - Sign-in before any upload, generation, or save.
 - Human gates after each skill. Either person can stop the sitting. Either person can refuse to put a still on the mood board.
@@ -276,7 +276,7 @@ Gates fail when they become taste. Give each person a job. In a two-person unit,
 | 4. Optional tone or teaser | Director | The page has a job: temperature, sticker object, or card | The page is being used as coverage or key art | Should we generate video now? |
 | 5. Board assembly | Both | A stranger can describe Ellis from the wall | The wall needs a verbal tour | Which video API should we buy? |
 
-The virtual-production lead’s actual power is to spend the redo credits or to stop. With 5 signup credits on a new account, a first-time user may only get one character still, one collage, and one full-body page, with no buffer. Plan for that. Do not perform the sitting as an open jam.
+The virtual-production lead’s actual power is to spend the redo credits or to stop. With 10 signup credits on a new account, a first-time user may only get one character still, one collage, and one full-body page, with no buffer. Plan for that. Do not perform the sitting as an open jam.
 
 ## Credit math you can defend
 
@@ -294,7 +294,7 @@ This table is a planning tool. It is not a price list for a subscription, becaus
 | What if Gate 1 fails once? | Same first skill again | 1 | A “variant workflow”; this is just another generation |
 | What if a generation errors? | Same skill after refund | 0 if the failure refunds as specified | A reason to skip the gate |
 
-Hypothetical budget for Low Shelf Pictures: 10 planned credits, with two unused if Gates 1–3 pass on the first or second try. A brand-new account with 5 signup credits should treat this as Surprise or avatar, close-up, full-body, and at most one redo — not as a fishing trip through stickers and gift. Those last two skills are useful. During a lock sitting they are also a leak.
+Hypothetical budget for Low Shelf Pictures: 10 planned credits, with two unused if Gates 1–3 pass on the first or second try. A brand-new account with 10 signup credits should treat this as Surprise or avatar, close-up, full-body, and at most one redo — not as a fishing trip through stickers and gift. Those last two skills are useful. During a lock sitting they are also a leak.
 
 Organization-pooled credits mean a second member of the active organization spends from the same balance. That is useful and dangerous. Write the budget on paper. Roles exist in the organization layer. They do not currently give you a review UI that will stop someone from spending the pool.
 
@@ -366,7 +366,7 @@ Print this. Tick it in the room.
 - [ ] Fictional or real job: success test is “who is this,” not “here is the film.”
 - [ ] Video path deliberately unchosen until the mood board exists.
 - [ ] Everyone who will generate is signed in.
-- [ ] Credit budget on paper. New accounts: 5 signup credits. Each generation costs 1 credit. Failed generations refund.
+- [ ] Credit budget on paper. New accounts: 10 signup credits. Each generation costs 1 credit. Failed generations refund.
 - [ ] Written lock pasted once and reused.
 - [ ] Surprise if there is no photo. Avatar if there is a consented photo. Gate 1: cast or reject.
 - [ ] Close-up collage only with a photo and only after Gate 1. Gate 2: one performer, six states.
