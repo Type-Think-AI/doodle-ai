@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-18T11:15:50.327Z",
+  "fetched_at": "2026-09-19T11:00:01.864Z",
   "latestCommit": {
     "sha": "f5645e9aea51eb589599f181d104a2f49430608e",
     "message": "Add `ToolActivatedEvent` and `ToolCancelEvent` event interfaces (#245)",
