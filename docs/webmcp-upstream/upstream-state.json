@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-24T11:47:32.637Z",
+  "fetched_at": "2026-09-25T11:51:39.804Z",
   "latestCommit": {
     "sha": "f5645e9aea51eb589599f181d104a2f49430608e",
     "message": "Add `ToolActivatedEvent` and `ToolCancelEvent` event interfaces (#245)",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 126,
-  "openPRsCount": 126
+  "openIssuesCount": 123,
+  "openPRsCount": 123
 }
