@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-25T11:51:39.804Z",
+  "fetched_at": "2026-09-26T11:25:48.908Z",
   "latestCommit": {
-    "sha": "f5645e9aea51eb589599f181d104a2f49430608e",
-    "message": "Add `ToolActivatedEvent` and `ToolCancelEvent` event interfaces (#245)",
-    "date": "2026-09-17T14:43:37Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/f5645e9aea51eb589599f181d104a2f49430608e"
+    "sha": "69b73b4ab821ccb2e95a8b8551b15ab133bc862b",
+    "message": "Clarify `executeTool()` input and schema values, and add an example (#279)",
+    "date": "2026-09-26T01:20:00Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/69b73b4ab821ccb2e95a8b8551b15ab133bc862b"
   },
   "files": {
     "index.bs": {
-      "hash": "79a82bd293353154f2b651206d54e870ed1238c9587bed9c50dc7e24f145b521",
+      "hash": "7ff42bf4d9c66805173b6dc83ccd1706ca07e902790f3fc060e90eedd70a6ef2",
       "exists": true,
-      "bytes": 85101
+      "bytes": 86193
     },
     "README.md": {
       "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 123,
-  "openPRsCount": 123
+  "openIssuesCount": 118,
+  "openPRsCount": 118
 }
