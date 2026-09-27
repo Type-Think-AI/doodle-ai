@@ -1,28 +1,28 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-26T11:25:48.908Z",
+  "fetched_at": "2026-09-27T12:03:30.456Z",
   "latestCommit": {
-    "sha": "69b73b4ab821ccb2e95a8b8551b15ab133bc862b",
-    "message": "Clarify `executeTool()` input and schema values, and add an example (#279)",
-    "date": "2026-09-26T01:20:00Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/69b73b4ab821ccb2e95a8b8551b15ab133bc862b"
+    "sha": "729ae01e68fc8aebfcd876cb05930b5bb0dd7e20",
+    "message": "Fix navigable lookup algorithms and completion steps parallelism (#301)",
+    "date": "2026-09-26T18:51:43Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/729ae01e68fc8aebfcd876cb05930b5bb0dd7e20"
   },
   "files": {
     "index.bs": {
-      "hash": "7ff42bf4d9c66805173b6dc83ccd1706ca07e902790f3fc060e90eedd70a6ef2",
+      "hash": "8c22494783dcf7ec9340f0ce9f77704633a603f3a14b0c7691392a596b3c3d49",
       "exists": true,
-      "bytes": 86193
+      "bytes": 86201
     },
     "README.md": {
-      "hash": "8578a7032b3f0b792d71d904b8347b6f50f20f5e6d8d63b2719b5d844b67da8c",
+      "hash": "5e5968bfa3c8f5c36f25bc1bcaffb1a9088c5aaf1e1356c72810773b79ebe04b",
       "exists": true,
-      "bytes": 36415
+      "bytes": 36416
     },
     "declarative-api-explainer.md": {
-      "hash": "ece80645d71b1a1e2ec9564067662ce56a7c2f2052ea8bab20449b5009893fc9",
+      "hash": "ca88aff9a8fe7d152fc8c712a352d35ef8628a8f736fe37bf7a957d748402249",
       "exists": true,
-      "bytes": 10413
+      "bytes": 10415
     },
     "implementation-status.md": {
       "hash": "fea441e56055009fcb20332c24f47a9a730e4c8083bb80fe15bd9b134176c4a8",
@@ -35,9 +35,9 @@
       "bytes": 9237
     },
     "docs/service-workers.md": {
-      "hash": "4d84c70fdb3e6bdfef49a3c9dee4655948372fc2117f49ffd93a3e47f77ac8e9",
+      "hash": "5a811973bee7c0c96e66a35990a0fe42d2547395698bd50b501da65e646b622a",
       "exists": true,
-      "bytes": 21808
+      "bytes": 21810
     }
   },
   "idlNames": [
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 118,
-  "openPRsCount": 118
+  "openIssuesCount": 117,
+  "openPRsCount": 117
 }
