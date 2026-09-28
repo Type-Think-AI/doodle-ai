@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-27T12:03:30.456Z",
+  "fetched_at": "2026-09-28T13:56:24.481Z",
   "latestCommit": {
-    "sha": "729ae01e68fc8aebfcd876cb05930b5bb0dd7e20",
-    "message": "Fix navigable lookup algorithms and completion steps parallelism (#301)",
-    "date": "2026-09-26T18:51:43Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/729ae01e68fc8aebfcd876cb05930b5bb0dd7e20"
+    "sha": "433a194814f6d4b93c1e9571cce1f11155d36df8",
+    "message": "Non-normatively reference the MCP specification (#315)",
+    "date": "2026-09-28T13:22:14Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/433a194814f6d4b93c1e9571cce1f11155d36df8"
   },
   "files": {
     "index.bs": {
-      "hash": "8c22494783dcf7ec9340f0ce9f77704633a603f3a14b0c7691392a596b3c3d49",
+      "hash": "4a88ed6ff14a37a820b5ecd7de26625eab570f93e6897d06999cec55a9cb5146",
       "exists": true,
-      "bytes": 86201
+      "bytes": 86200
     },
     "README.md": {
       "hash": "5e5968bfa3c8f5c36f25bc1bcaffb1a9088c5aaf1e1356c72810773b79ebe04b",
