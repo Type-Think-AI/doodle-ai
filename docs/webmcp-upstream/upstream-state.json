@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-28T13:56:24.481Z",
+  "fetched_at": "2026-09-29T12:54:09.393Z",
   "latestCommit": {
-    "sha": "433a194814f6d4b93c1e9571cce1f11155d36df8",
-    "message": "Non-normatively reference the MCP specification (#315)",
-    "date": "2026-09-28T13:22:14Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/433a194814f6d4b93c1e9571cce1f11155d36df8"
+    "sha": "57d396fe40cf39642609bbe3ea8d246842ec8a6f",
+    "message": "Add Meta Ray-Ban Display to implementation status (#325)",
+    "date": "2026-09-29T11:00:20Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/57d396fe40cf39642609bbe3ea8d246842ec8a6f"
   },
   "files": {
     "index.bs": {
-      "hash": "4a88ed6ff14a37a820b5ecd7de26625eab570f93e6897d06999cec55a9cb5146",
+      "hash": "2dd6fe81023dec18b63271d183998b65f5883985c0cc7f52bdd0a2d76fde7473",
       "exists": true,
-      "bytes": 86200
+      "bytes": 85962
     },
     "README.md": {
       "hash": "5e5968bfa3c8f5c36f25bc1bcaffb1a9088c5aaf1e1356c72810773b79ebe04b",
@@ -25,9 +25,9 @@
       "bytes": 10415
     },
     "implementation-status.md": {
-      "hash": "fea441e56055009fcb20332c24f47a9a730e4c8083bb80fe15bd9b134176c4a8",
+      "hash": "555b564af51df41c43f75ee887343d9a64c2728da00c8e5eb35102afd312a828",
       "exists": true,
-      "bytes": 2395
+      "bytes": 2818
     },
     "security-privacy-questionnaire.md": {
       "hash": "33907b97fc85fe2277f47eca8f72f5c0522b0444ebfd2be9b65b0110c475a247",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 117,
-  "openPRsCount": 117
+  "openIssuesCount": 113,
+  "openPRsCount": 113
 }
