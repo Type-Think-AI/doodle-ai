@@ -1,23 +1,23 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-29T12:54:09.393Z",
+  "fetched_at": "2026-09-30T12:35:37.788Z",
   "latestCommit": {
-    "sha": "57d396fe40cf39642609bbe3ea8d246842ec8a6f",
-    "message": "Add Meta Ray-Ban Display to implementation status (#325)",
-    "date": "2026-09-29T11:00:20Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/57d396fe40cf39642609bbe3ea8d246842ec8a6f"
+    "sha": "19fc56516057e2a190eeeab608e9ed5bf02de383",
+    "message": "Clarify observation context management (#264)",
+    "date": "2026-09-29T15:41:26Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/19fc56516057e2a190eeeab608e9ed5bf02de383"
   },
   "files": {
     "index.bs": {
-      "hash": "2dd6fe81023dec18b63271d183998b65f5883985c0cc7f52bdd0a2d76fde7473",
+      "hash": "e6c9b9790fd5cabc11662bbfeb296a6919388d8fd3f23bf7c85258059948b1b9",
       "exists": true,
-      "bytes": 85962
+      "bytes": 86547
     },
     "README.md": {
-      "hash": "5e5968bfa3c8f5c36f25bc1bcaffb1a9088c5aaf1e1356c72810773b79ebe04b",
+      "hash": "21e230914e47abae547a24d84ee8edf2e4ae55cb9af52957758b502cab22942c",
       "exists": true,
-      "bytes": 36416
+      "bytes": 37753
     },
     "declarative-api-explainer.md": {
       "hash": "ca88aff9a8fe7d152fc8c712a352d35ef8628a8f736fe37bf7a957d748402249",
