@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-09-30T12:35:37.788Z",
+  "fetched_at": "2026-10-01T13:16:24.345Z",
   "latestCommit": {
-    "sha": "19fc56516057e2a190eeeab608e9ed5bf02de383",
-    "message": "Clarify observation context management (#264)",
-    "date": "2026-09-29T15:41:26Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/19fc56516057e2a190eeeab608e9ed5bf02de383"
+    "sha": "d61d0e6d297ddb6bff3510b1330dbb215c6ef43c",
+    "message": "Remove origin-keyed agent cluster requirement (#330)",
+    "date": "2026-09-30T16:26:41Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/d61d0e6d297ddb6bff3510b1330dbb215c6ef43c"
   },
   "files": {
     "index.bs": {
-      "hash": "e6c9b9790fd5cabc11662bbfeb296a6919388d8fd3f23bf7c85258059948b1b9",
+      "hash": "4281d91203ff71a956374dd827c63b1bcd5555a047989efd669517a6bff2a9ed",
       "exists": true,
-      "bytes": 86547
+      "bytes": 85484
     },
     "README.md": {
       "hash": "21e230914e47abae547a24d84ee8edf2e4ae55cb9af52957758b502cab22942c",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 113,
-  "openPRsCount": 113
+  "openIssuesCount": 114,
+  "openPRsCount": 114
 }
