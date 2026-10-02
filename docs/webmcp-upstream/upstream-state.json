@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-01T13:16:24.345Z",
+  "fetched_at": "2026-10-02T12:35:59.191Z",
   "latestCommit": {
     "sha": "d61d0e6d297ddb6bff3510b1330dbb215c6ef43c",
     "message": "Remove origin-keyed agent cluster requirement (#330)",
