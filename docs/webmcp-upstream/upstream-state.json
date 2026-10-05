@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-04T12:22:35.913Z",
+  "fetched_at": "2026-10-05T14:40:46.187Z",
   "latestCommit": {
     "sha": "6891d0e857a0b35d8478aa8a01958565fb5466cd",
     "message": "Add explainer for WebMCP continuations. (#327)",
