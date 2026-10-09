@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-08T13:30:31.124Z",
+  "fetched_at": "2026-10-09T13:18:11.169Z",
   "latestCommit": {
-    "sha": "4999377f6aca0801c7fbb67edb0f9daa240b4aed",
-    "message": "Remove extra relevant realm argument when parsing JSON",
-    "date": "2026-10-08T12:43:31Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/4999377f6aca0801c7fbb67edb0f9daa240b4aed"
+    "sha": "d0e4e0e0f039358cc9d93f90074116622bfebd53",
+    "message": "Fix miscellaneous typos, cross-references, and biblio placement (#335)",
+    "date": "2026-10-09T12:54:36Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/d0e4e0e0f039358cc9d93f90074116622bfebd53"
   },
   "files": {
     "index.bs": {
-      "hash": "16d7b6f68514c477c4c60140257b97f7e65fb4343bd9bd96240ea8d8cd5ef229",
+      "hash": "feb4483db64bb32d6d5af998477fb6d318fa3eb7263e604d9d71069eb8299d9f",
       "exists": true,
-      "bytes": 83961
+      "bytes": 86183
     },
     "README.md": {
       "hash": "184c519af9ed728e77249423ff376c7d99367cd340e80a2d7f3a4a789e3fc7d6",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 115,
-  "openPRsCount": 115
+  "openIssuesCount": 114,
+  "openPRsCount": 114
 }
