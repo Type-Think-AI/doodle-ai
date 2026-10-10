@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-09T13:18:11.169Z",
+  "fetched_at": "2026-10-10T12:32:57.173Z",
   "latestCommit": {
     "sha": "d0e4e0e0f039358cc9d93f90074116622bfebd53",
     "message": "Fix miscellaneous typos, cross-references, and biblio placement (#335)",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 114,
-  "openPRsCount": 114
+  "openIssuesCount": 115,
+  "openPRsCount": 115
 }
