@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-12T15:26:38.091Z",
+  "fetched_at": "2026-10-13T14:12:38.377Z",
   "latestCommit": {
     "sha": "d0e4e0e0f039358cc9d93f90074116622bfebd53",
     "message": "Fix miscellaneous typos, cross-references, and biblio placement (#335)",
