@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-14T11:53:13.234Z",
+  "fetched_at": "2026-10-15T11:30:07.033Z",
   "latestCommit": {
-    "sha": "eada13b575187ba9a523adc0c52e294ebdb6b597",
-    "message": "Fix concurrency, detached document, and permissions checks in algorithms (#337)",
-    "date": "2026-10-13T17:20:19Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/eada13b575187ba9a523adc0c52e294ebdb6b597"
+    "sha": "32797985580b3ac0c7adc4e3cfa4cd4cd5fa7546",
+    "message": "Handle re-registration during input serialization (#347)",
+    "date": "2026-10-15T00:00:42Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/32797985580b3ac0c7adc4e3cfa4cd4cd5fa7546"
   },
   "files": {
     "index.bs": {
-      "hash": "2d76135f639e5f15562f4de508442d42f7a6da3d31b67b3b55a188d67eaa0702",
+      "hash": "eab56a31bc3b3934308f449587929809d04d2d47d3c10a165d3a0a197258c23e",
       "exists": true,
-      "bytes": 86877
+      "bytes": 87973
     },
     "README.md": {
       "hash": "184c519af9ed728e77249423ff376c7d99367cd340e80a2d7f3a4a789e3fc7d6",
