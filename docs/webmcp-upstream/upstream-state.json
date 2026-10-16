@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-15T11:30:07.033Z",
+  "fetched_at": "2026-10-16T11:25:29.118Z",
   "latestCommit": {
     "sha": "32797985580b3ac0c7adc4e3cfa4cd4cd5fa7546",
     "message": "Handle re-registration during input serialization (#347)",
