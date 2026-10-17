@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-16T11:25:29.118Z",
+  "fetched_at": "2026-10-17T10:45:02.935Z",
   "latestCommit": {
-    "sha": "32797985580b3ac0c7adc4e3cfa4cd4cd5fa7546",
-    "message": "Handle re-registration during input serialization (#347)",
-    "date": "2026-10-15T00:00:42Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/32797985580b3ac0c7adc4e3cfa4cd4cd5fa7546"
+    "sha": "f14762e63607bf96592b1a7a6392cd2b047b8209",
+    "message": "Editorial: sync explainers with spec (#350)",
+    "date": "2026-10-16T16:30:24Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/f14762e63607bf96592b1a7a6392cd2b047b8209"
   },
   "files": {
     "index.bs": {
@@ -20,9 +20,9 @@
       "bytes": 37575
     },
     "declarative-api-explainer.md": {
-      "hash": "ca88aff9a8fe7d152fc8c712a352d35ef8628a8f736fe37bf7a957d748402249",
+      "hash": "4587c9f2540b673210c4eb0221d12ceda39496910dcdd6e649dc8ffa968bbd28",
       "exists": true,
-      "bytes": 10415
+      "bytes": 10417
     },
     "implementation-status.md": {
       "hash": "555b564af51df41c43f75ee887343d9a64c2728da00c8e5eb35102afd312a828",
@@ -30,9 +30,9 @@
       "bytes": 2818
     },
     "security-privacy-questionnaire.md": {
-      "hash": "33907b97fc85fe2277f47eca8f72f5c0522b0444ebfd2be9b65b0110c475a247",
+      "hash": "76e65774f109f3f0b8ce296dda8116cb919ed616ddb00cb46841b9b5f75141c0",
       "exists": true,
-      "bytes": 9237
+      "bytes": 9229
     },
     "docs/service-workers.md": {
       "hash": "5a811973bee7c0c96e66a35990a0fe42d2547395698bd50b501da65e646b622a",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 116,
-  "openPRsCount": 116
+  "openIssuesCount": 118,
+  "openPRsCount": 118
 }
