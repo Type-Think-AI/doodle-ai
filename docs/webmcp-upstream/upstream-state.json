@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-18T11:06:30.522Z",
+  "fetched_at": "2026-10-19T13:16:59.338Z",
   "latestCommit": {
     "sha": "f14762e63607bf96592b1a7a6392cd2b047b8209",
     "message": "Editorial: sync explainers with spec (#350)",
