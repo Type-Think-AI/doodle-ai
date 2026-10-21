@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-20T11:37:58.080Z",
+  "fetched_at": "2026-10-21T11:50:06.034Z",
   "latestCommit": {
-    "sha": "cb3d16964ab3e92cfd5f09901ed0504373a906e8",
-    "message": "Add new editor (#352)",
-    "date": "2026-10-20T09:53:18Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/cb3d16964ab3e92cfd5f09901ed0504373a906e8"
+    "sha": "51ed75653aaa7f174f8dbe05d1bc327359bbc57c",
+    "message": "Discuss general agent ecosystem risks and link to agent security guidance (#334)",
+    "date": "2026-10-20T14:57:14Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/51ed75653aaa7f174f8dbe05d1bc327359bbc57c"
   },
   "files": {
     "index.bs": {
-      "hash": "dabc073a28a21131d6c175a0738f7554c8c6ab431c4997ce5f1450a4da834a39",
+      "hash": "76fcc35aa65183f60164f4f255ace43b82435efff2ace8d84dc2c35e4259a004",
       "exists": true,
-      "bytes": 88074
+      "bytes": 91001
     },
     "README.md": {
       "hash": "184c519af9ed728e77249423ff376c7d99367cd340e80a2d7f3a4a789e3fc7d6",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 120,
-  "openPRsCount": 120
+  "openIssuesCount": 124,
+  "openPRsCount": 124
 }
