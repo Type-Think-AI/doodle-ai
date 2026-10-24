@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-23T11:40:11.749Z",
+  "fetched_at": "2026-10-24T11:01:19.889Z",
   "latestCommit": {
     "sha": "51ed75653aaa7f174f8dbe05d1bc327359bbc57c",
     "message": "Discuss general agent ecosystem risks and link to agent security guidance (#334)",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 124,
-  "openPRsCount": 124
+  "openIssuesCount": 126,
+  "openPRsCount": 126
 }
