@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-26T13:04:03.102Z",
+  "fetched_at": "2026-10-27T12:12:49.832Z",
   "latestCommit": {
-    "sha": "51ed75653aaa7f174f8dbe05d1bc327359bbc57c",
-    "message": "Discuss general agent ecosystem risks and link to agent security guidance (#334)",
-    "date": "2026-10-20T14:57:14Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/51ed75653aaa7f174f8dbe05d1bc327359bbc57c"
+    "sha": "6838130ef3e930c8e1a9f98375c13d9133d61aba",
+    "message": "Document cross-origin tool exposure and two-sided opt-in in Section 6.3.4 (#326)",
+    "date": "2026-10-27T11:41:32Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/6838130ef3e930c8e1a9f98375c13d9133d61aba"
   },
   "files": {
     "index.bs": {
-      "hash": "76fcc35aa65183f60164f4f255ace43b82435efff2ace8d84dc2c35e4259a004",
+      "hash": "66fb2aaf8fa668c7312f36cda477bb4332ea42337ed006d9852fe02825e9ef39",
       "exists": true,
-      "bytes": 91001
+      "bytes": 97550
     },
     "README.md": {
       "hash": "184c519af9ed728e77249423ff376c7d99367cd340e80a2d7f3a4a789e3fc7d6",
