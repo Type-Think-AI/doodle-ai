@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-10-27T12:12:49.832Z",
+  "fetched_at": "2026-10-28T12:55:21.561Z",
   "latestCommit": {
     "sha": "6838130ef3e930c8e1a9f98375c13d9133d61aba",
     "message": "Document cross-origin tool exposure and two-sided opt-in in Section 6.3.4 (#326)",
@@ -83,6 +83,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 127,
-  "openPRsCount": 127
+  "openIssuesCount": 128,
+  "openPRsCount": 128
 }
