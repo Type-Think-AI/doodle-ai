@@ -1,23 +1,23 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-01T13:25:29.239Z",
+  "fetched_at": "2026-11-02T15:54:06.871Z",
   "latestCommit": {
-    "sha": "6838130ef3e930c8e1a9f98375c13d9133d61aba",
-    "message": "Document cross-origin tool exposure and two-sided opt-in in Section 6.3.4 (#326)",
-    "date": "2026-10-27T11:41:32Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/6838130ef3e930c8e1a9f98375c13d9133d61aba"
+    "sha": "6cd745ac8a186122bd3f4aeaeb1d6cfa820251d2",
+    "message": "Add `outputSchema` to `ModelContextTool` and `RegisteredTool` (#254)",
+    "date": "2026-11-02T13:10:19Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/6cd745ac8a186122bd3f4aeaeb1d6cfa820251d2"
   },
   "files": {
     "index.bs": {
-      "hash": "66fb2aaf8fa668c7312f36cda477bb4332ea42337ed006d9852fe02825e9ef39",
+      "hash": "06f0af213cf59f9cf662bd31f23556b462ed665fb2b80f5d42f9fae37735356b",
       "exists": true,
-      "bytes": 97550
+      "bytes": 100265
     },
     "README.md": {
-      "hash": "184c519af9ed728e77249423ff376c7d99367cd340e80a2d7f3a4a789e3fc7d6",
+      "hash": "8ac90b8bcaa8ae476de7f9f453e3178a9a658f7108d41057ed04f628edbe6714",
       "exists": true,
-      "bytes": 37575
+      "bytes": 37405
     },
     "declarative-api-explainer.md": {
       "hash": "4587c9f2540b673210c4eb0221d12ceda39496910dcdd6e649dc8ffa968bbd28",
@@ -30,9 +30,9 @@
       "bytes": 2818
     },
     "security-privacy-questionnaire.md": {
-      "hash": "76e65774f109f3f0b8ce296dda8116cb919ed616ddb00cb46841b9b5f75141c0",
+      "hash": "96cf76d213363f246ebc6446319b38ab21a3e375fcea4b5c1073a017b0849940",
       "exists": true,
-      "bytes": 9229
+      "bytes": 9247
     },
     "docs/service-workers.md": {
       "hash": "5a811973bee7c0c96e66a35990a0fe42d2547395698bd50b501da65e646b622a",
@@ -71,6 +71,7 @@
     "ontoolcancel",
     "ontoolchange",
     "origin",
+    "outputSchema",
     "readOnlyHint",
     "registerTool",
     "signal",
@@ -83,6 +84,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 130,
-  "openPRsCount": 130
+  "openIssuesCount": 129,
+  "openPRsCount": 129
 }
