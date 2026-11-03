@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-02T15:54:06.871Z",
+  "fetched_at": "2026-11-03T14:15:03.890Z",
   "latestCommit": {
     "sha": "6cd745ac8a186122bd3f4aeaeb1d6cfa820251d2",
     "message": "Add `outputSchema` to `ModelContextTool` and `RegisteredTool` (#254)",
