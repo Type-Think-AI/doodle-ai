@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-03T14:15:03.890Z",
+  "fetched_at": "2026-11-04T14:32:59.863Z",
   "latestCommit": {
     "sha": "6cd745ac8a186122bd3f4aeaeb1d6cfa820251d2",
     "message": "Add `outputSchema` to `ModelContextTool` and `RegisteredTool` (#254)",
@@ -84,6 +84,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 129,
-  "openPRsCount": 129
+  "openIssuesCount": 130,
+  "openPRsCount": 130
 }
