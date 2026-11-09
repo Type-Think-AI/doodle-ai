@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-08T13:25:31.844Z",
+  "fetched_at": "2026-11-09T16:20:39.018Z",
   "latestCommit": {
-    "sha": "6cd745ac8a186122bd3f4aeaeb1d6cfa820251d2",
-    "message": "Add `outputSchema` to `ModelContextTool` and `RegisteredTool` (#254)",
-    "date": "2026-11-02T13:10:19Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/6cd745ac8a186122bd3f4aeaeb1d6cfa820251d2"
+    "sha": "f2f2ae2294ede134bf90f9c7b35ab3e163e27379",
+    "message": "Fire `toolactivated` event after invoking execute (#371)",
+    "date": "2026-11-09T15:45:21Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/f2f2ae2294ede134bf90f9c7b35ab3e163e27379"
   },
   "files": {
     "index.bs": {
-      "hash": "06f0af213cf59f9cf662bd31f23556b462ed665fb2b80f5d42f9fae37735356b",
+      "hash": "1f48f31836ea1b6987d7f8bc51435502151be0c5a4a3708a282d43b6735f6254",
       "exists": true,
-      "bytes": 100265
+      "bytes": 100293
     },
     "README.md": {
       "hash": "8ac90b8bcaa8ae476de7f9f453e3178a9a658f7108d41057ed04f628edbe6714",
@@ -84,6 +84,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 130,
-  "openPRsCount": 130
+  "openIssuesCount": 128,
+  "openPRsCount": 128
 }
