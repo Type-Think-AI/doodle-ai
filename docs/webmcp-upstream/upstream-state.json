@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-09T16:20:39.018Z",
+  "fetched_at": "2026-11-10T14:53:47.044Z",
   "latestCommit": {
     "sha": "f2f2ae2294ede134bf90f9c7b35ab3e163e27379",
     "message": "Fire `toolactivated` event after invoking execute (#371)",
@@ -84,6 +84,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 128,
-  "openPRsCount": 128
+  "openIssuesCount": 129,
+  "openPRsCount": 129
 }
