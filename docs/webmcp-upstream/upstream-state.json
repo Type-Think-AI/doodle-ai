@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-11T14:23:56.485Z",
+  "fetched_at": "2026-11-12T15:15:33.043Z",
   "latestCommit": {
-    "sha": "aa1b51cf61aef6ed849b0e9e732617fd57872757",
-    "message": "Track each `ModelContext`'s associated Document (#380)",
-    "date": "2026-11-10T20:02:34Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/aa1b51cf61aef6ed849b0e9e732617fd57872757"
+    "sha": "0c3e712f1743638a299cd8e1a4777ceeaec3cbc8",
+    "message": "Describe the traversable scope of `getTools()` (#382)",
+    "date": "2026-11-11T16:21:29Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/0c3e712f1743638a299cd8e1a4777ceeaec3cbc8"
   },
   "files": {
     "index.bs": {
-      "hash": "6c2ad84d93d2dcfe67c4713ab01298864c7f9d2a5d3731e4768b9adc812b57c1",
+      "hash": "233f72ca9c23bd0f9d740f8c0695afe35b239b3bcc83981ff192167ae1d8cdb1",
       "exists": true,
-      "bytes": 100600
+      "bytes": 100610
     },
     "README.md": {
       "hash": "8ac90b8bcaa8ae476de7f9f453e3178a9a658f7108d41057ed04f628edbe6714",
