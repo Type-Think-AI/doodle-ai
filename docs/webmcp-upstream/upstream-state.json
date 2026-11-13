@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-12T15:15:33.043Z",
+  "fetched_at": "2026-11-13T14:35:41.885Z",
   "latestCommit": {
-    "sha": "0c3e712f1743638a299cd8e1a4777ceeaec3cbc8",
-    "message": "Describe the traversable scope of `getTools()` (#382)",
-    "date": "2026-11-11T16:21:29Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/0c3e712f1743638a299cd8e1a4777ceeaec3cbc8"
+    "sha": "56b8e7a74a312c4298858f8211388a536b835339",
+    "message": "Update Leo AI chat WebMCP support from experimental to default (#383)",
+    "date": "2026-11-12T15:17:01Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/56b8e7a74a312c4298858f8211388a536b835339"
   },
   "files": {
     "index.bs": {
@@ -25,9 +25,9 @@
       "bytes": 10417
     },
     "implementation-status.md": {
-      "hash": "555b564af51df41c43f75ee887343d9a64c2728da00c8e5eb35102afd312a828",
+      "hash": "c52caac1e7d908a2c08f739663368269b229845d9257b33805dd8c8d60836c78",
       "exists": true,
-      "bytes": 2818
+      "bytes": 2944
     },
     "security-privacy-questionnaire.md": {
       "hash": "d1f83266e54a8c570ca3bc896a6fad1eff4cf4f967e2a9113e3c59ac0a24905d",
@@ -84,6 +84,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 126,
-  "openPRsCount": 126
+  "openIssuesCount": 128,
+  "openPRsCount": 128
 }
