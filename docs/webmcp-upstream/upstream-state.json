@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-13T14:35:41.885Z",
+  "fetched_at": "2026-11-14T13:31:29.868Z",
   "latestCommit": {
-    "sha": "56b8e7a74a312c4298858f8211388a536b835339",
-    "message": "Update Leo AI chat WebMCP support from experimental to default (#383)",
-    "date": "2026-11-12T15:17:01Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/56b8e7a74a312c4298858f8211388a536b835339"
+    "sha": "4c7ed4455a22eaccd58918d56dd87a738ad502b1",
+    "message": "Update continuations explainer to match the implementation in Blink. (#381)",
+    "date": "2026-11-13T16:49:20Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/4c7ed4455a22eaccd58918d56dd87a738ad502b1"
   },
   "files": {
     "index.bs": {
