@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-15T13:56:28.911Z",
+  "fetched_at": "2026-11-16T15:47:57.962Z",
   "latestCommit": {
     "sha": "4c7ed4455a22eaccd58918d56dd87a738ad502b1",
     "message": "Update continuations explainer to match the implementation in Blink. (#381)",
