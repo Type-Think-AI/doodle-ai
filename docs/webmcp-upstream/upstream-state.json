@@ -1,23 +1,23 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-19T15:45:16.589Z",
+  "fetched_at": "2026-11-20T15:27:48.291Z",
   "latestCommit": {
-    "sha": "4c7ed4455a22eaccd58918d56dd87a738ad502b1",
-    "message": "Update continuations explainer to match the implementation in Blink. (#381)",
-    "date": "2026-11-13T16:49:20Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/4c7ed4455a22eaccd58918d56dd87a738ad502b1"
+    "sha": "14b6d535331f7130f457b5d4d3c1c7df1cd725ca",
+    "message": "Introduce the `Tool` interface (#348)",
+    "date": "2026-11-19T18:06:03Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/14b6d535331f7130f457b5d4d3c1c7df1cd725ca"
   },
   "files": {
     "index.bs": {
-      "hash": "233f72ca9c23bd0f9d740f8c0695afe35b239b3bcc83981ff192167ae1d8cdb1",
+      "hash": "bf4da7fcb9e2461fab3b2aa97e4b8ebb7d04b69da46bd694a064ac9b91cedfd6",
       "exists": true,
-      "bytes": 100610
+      "bytes": 105764
     },
     "README.md": {
-      "hash": "8ac90b8bcaa8ae476de7f9f453e3178a9a658f7108d41057ed04f628edbe6714",
+      "hash": "e3a19e397b455c417f4ac74b7e8ec7fa0ad435d8a4190594ea051719eee88fa0",
       "exists": true,
-      "bytes": 37405
+      "bytes": 37694
     },
     "declarative-api-explainer.md": {
       "hash": "4587c9f2540b673210c4eb0221d12ceda39496910dcdd6e649dc8ffa968bbd28",
@@ -47,7 +47,7 @@
     "ModelContextGetToolOptions",
     "ModelContextRegisterToolOptions",
     "ModelContextTool",
-    "RegisteredTool",
+    "Tool",
     "ToolActivatedEvent",
     "ToolActivatedEventInit",
     "ToolAnnotations",
@@ -75,15 +75,15 @@
     "readOnlyHint",
     "registerTool",
     "signal",
+    "source",
     "title",
     "toolName",
     "toolchange",
-    "untrustedContentHint",
-    "window"
+    "untrustedContentHint"
   ],
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 129,
-  "openPRsCount": 129
+  "openIssuesCount": 127,
+  "openPRsCount": 127
 }
