@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-21T14:39:56.857Z",
+  "fetched_at": "2026-11-22T14:35:32.789Z",
   "latestCommit": {
     "sha": "14b6d535331f7130f457b5d4d3c1c7df1cd725ca",
     "message": "Introduce the `Tool` interface (#348)",
