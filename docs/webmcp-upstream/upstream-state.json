@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-22T14:35:32.789Z",
+  "fetched_at": "2026-11-23T18:09:56.725Z",
   "latestCommit": {
-    "sha": "14b6d535331f7130f457b5d4d3c1c7df1cd725ca",
-    "message": "Introduce the `Tool` interface (#348)",
-    "date": "2026-11-19T18:06:03Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/14b6d535331f7130f457b5d4d3c1c7df1cd725ca"
+    "sha": "a768d04b4f9ac7f3d4357671db9686675d52c8e5",
+    "message": "Link to the @w3c/webmcp-polyfill npm package (#387)",
+    "date": "2026-11-23T10:50:07Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/a768d04b4f9ac7f3d4357671db9686675d52c8e5"
   },
   "files": {
     "index.bs": {
@@ -15,9 +15,9 @@
       "bytes": 105764
     },
     "README.md": {
-      "hash": "e3a19e397b455c417f4ac74b7e8ec7fa0ad435d8a4190594ea051719eee88fa0",
+      "hash": "6505e8a3ff7735775ae32f7530d56206ba61e06d8379f60ac1a659b2f231e66f",
       "exists": true,
-      "bytes": 37694
+      "bytes": 37819
     },
     "declarative-api-explainer.md": {
       "hash": "4587c9f2540b673210c4eb0221d12ceda39496910dcdd6e649dc8ffa968bbd28",
@@ -25,9 +25,9 @@
       "bytes": 10417
     },
     "implementation-status.md": {
-      "hash": "c52caac1e7d908a2c08f739663368269b229845d9257b33805dd8c8d60836c78",
+      "hash": "3ec70f24ffa198998c8b90a6eae8fecb743f45e027ed937a8e20203f789d38f4",
       "exists": true,
-      "bytes": 2944
+      "bytes": 3213
     },
     "security-privacy-questionnaire.md": {
       "hash": "d1f83266e54a8c570ca3bc896a6fad1eff4cf4f967e2a9113e3c59ac0a24905d",
