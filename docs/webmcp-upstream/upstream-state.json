@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-23T18:09:56.725Z",
+  "fetched_at": "2026-11-24T17:45:46.937Z",
   "latestCommit": {
-    "sha": "a768d04b4f9ac7f3d4357671db9686675d52c8e5",
-    "message": "Link to the @w3c/webmcp-polyfill npm package (#387)",
-    "date": "2026-11-23T10:50:07Z",
-    "url": "https://github.com/webmachinelearning/webmcp/commit/a768d04b4f9ac7f3d4357671db9686675d52c8e5"
+    "sha": "47e2b993ea9fd0599ffca3f58588eb3fd5f474f2",
+    "message": "Signal tool stability with waitForToolsUntil() for user agent observations (#373)",
+    "date": "2026-11-24T03:10:44Z",
+    "url": "https://github.com/webmachinelearning/webmcp/commit/47e2b993ea9fd0599ffca3f58588eb3fd5f474f2"
   },
   "files": {
     "index.bs": {
-      "hash": "bf4da7fcb9e2461fab3b2aa97e4b8ebb7d04b69da46bd694a064ac9b91cedfd6",
+      "hash": "a27a442b93371b41982513512bca6e6cd650b93e2655170543e6db052ceebafe",
       "exists": true,
-      "bytes": 105764
+      "bytes": 110691
     },
     "README.md": {
       "hash": "6505e8a3ff7735775ae32f7530d56206ba61e06d8379f60ac1a659b2f231e66f",
@@ -79,11 +79,12 @@
     "title",
     "toolName",
     "toolchange",
-    "untrustedContentHint"
+    "untrustedContentHint",
+    "waitForToolsUntil"
   ],
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 127,
-  "openPRsCount": 127
+  "openIssuesCount": 130,
+  "openPRsCount": 130
 }
