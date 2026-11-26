@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "upstream": "webmachinelearning/webmcp",
-  "fetched_at": "2026-11-25T17:13:35.640Z",
+  "fetched_at": "2026-11-26T16:54:51.443Z",
   "latestCommit": {
     "sha": "47e2b993ea9fd0599ffca3f58588eb3fd5f474f2",
     "message": "Signal tool stability with waitForToolsUntil() for user agent observations (#373)",
@@ -85,6 +85,6 @@
   "latestTag": null,
   "releaseCount": 0,
   "releases": [],
-  "openIssuesCount": 132,
-  "openPRsCount": 132
+  "openIssuesCount": 133,
+  "openPRsCount": 133
 }
